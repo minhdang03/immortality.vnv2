@@ -1,0 +1,9 @@
+/* ─── RSS BUTTON ─── */
+.rss-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(201,168,108,0.08); border: 1px solid rgba(201,168,108,0.2);
+  color: var(--gold); padding: 5px 12px; border-radius: 16px;
+  font-size: 0.72rem; cursor: pointer; font-family: var(--font-body);
+  transition: all 0.3s;
+}
+.rss-btn:hover { background: rgba(201,168,108,0.15); }

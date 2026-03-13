@@ -1,0 +1,37 @@
+/* Revelations / Khai Thị */
+.revelations-page { max-width: 640px; margin: 0 auto; }
+.revelations-header { text-align: center; padding: 40px 0 24px; }
+.revelations-sun { margin-bottom: 16px; }
+.revelations-title {
+  font-family: var(--font-display); font-size: 2.2rem; font-weight: 700;
+  color: var(--gold-bright); margin-bottom: 8px;
+}
+.revelations-subtitle {
+  font-size: 0.95rem; color: var(--text-dim); font-style: italic;
+}
+.revelations-list { display: flex; flex-direction: column; gap: 8px; }
+.revelation-item {
+  background: rgba(201,168,108,0.04); border: 1px solid rgba(201,168,108,0.08);
+  border-radius: 14px; overflow: hidden; transition: all 0.3s;
+}
+.revelation-item.open { background: rgba(201,168,108,0.08); }
+.revelation-question {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px; background: none; border: none;
+  color: var(--text); cursor: pointer; text-align: left; font-size: 0.92rem;
+}
+.revelation-num {
+  font-size: 0.8rem; font-weight: 700; color: var(--gold); opacity: 0.5; min-width: 24px;
+}
+.revelation-q-text { flex: 1; font-weight: 600; line-height: 1.5; }
+.revelation-arrow {
+  color: var(--gold); font-size: 0.8rem; transition: transform 0.3s; opacity: 0.6;
+}
+.revelation-arrow.open { transform: rotate(180deg); }
+.revelation-answer {
+  padding: 0 18px 18px 54px;
+}
+.revelation-answer p {
+  font-size: 0.88rem; color: var(--text-dim); line-height: 1.8; margin-bottom: 10px;
+}
+.revelation-answer p:last-child { margin-bottom: 0; }

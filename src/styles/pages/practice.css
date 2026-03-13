@@ -1,0 +1,43 @@
+/* ─── PRACTICE PAGE ─── */
+.practice-page { max-width: 640px; margin: 0 auto; }
+.practice-header { text-align: center; padding: 40px 0 24px; }
+.practice-sun { margin-bottom: 16px; }
+.practice-title {
+  font-family: var(--font-display); font-size: 2.2rem; font-weight: 700;
+  color: var(--gold-bright); margin-bottom: 8px;
+}
+.practice-subtitle {
+  font-size: 0.95rem; color: var(--text-dim); font-style: italic;
+}
+.practice-intro {
+  padding: 20px 24px; margin-bottom: 32px;
+  background: rgba(201,168,108,0.04); border: 1px solid rgba(201,168,108,0.08);
+  border-radius: 16px;
+}
+.practice-intro p {
+  font-size: 0.9rem; color: var(--text); line-height: 1.8; margin-bottom: 12px;
+}
+.practice-intro p:last-child { margin-bottom: 0; }
+.practice-section-title {
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 700;
+  color: var(--gold-bright); margin-bottom: 20px; text-align: center;
+}
+.practice-moves { display: flex; flex-direction: column; gap: 12px; }
+.practice-move {
+  display: flex; gap: 16px; padding: 18px 20px;
+  background: rgba(201,168,108,0.04); border: 1px solid rgba(201,168,108,0.08);
+  border-radius: 14px; transition: all 0.3s;
+}
+.practice-move:hover { background: rgba(201,168,108,0.08); }
+.practice-move-num {
+  font-family: var(--font-display); font-size: 1.8rem; font-weight: 700;
+  color: var(--gold); opacity: 0.3; min-width: 36px; line-height: 1;
+}
+.practice-move-content { flex: 1; }
+.practice-move-title {
+  font-family: var(--font-display); font-size: 1.05rem; font-weight: 600;
+  color: var(--gold-bright); margin-bottom: 6px;
+}
+.practice-move-desc {
+  font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; font-style: italic;
+}

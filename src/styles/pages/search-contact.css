@@ -1,0 +1,31 @@
+/* ─── SEARCH ─── */
+.search-input {
+  width: 100%; padding: 14px 20px; border-radius: 14px;
+  background: var(--card); border: 1px solid rgba(201,168,108,0.15);
+  color: var(--white); font-size: 0.9rem; font-family: var(--font-body);
+  outline: none; transition: border-color 0.3s; margin-bottom: 24px;
+}
+.search-input::placeholder { color: var(--text-dim); }
+.search-input:focus { border-color: var(--gold); }
+.no-results { text-align: center; color: var(--text-dim); padding: 40px 0; font-size: 0.9rem; }
+
+/* ─── CONTACT ─── */
+.contact-form { display: flex; flex-direction: column; gap: 16px; }
+.contact-form input, .contact-form textarea {
+  width: 100%; padding: 14px 18px; border-radius: 12px;
+  background: var(--card); border: 1px solid rgba(201,168,108,0.15);
+  color: var(--white); font-size: 0.88rem; font-family: var(--font-body);
+  outline: none; transition: border-color 0.3s;
+}
+.contact-form input:focus, .contact-form textarea:focus { border-color: var(--gold); }
+.contact-form input::placeholder, .contact-form textarea::placeholder { color: var(--text-dim); }
+.contact-form textarea { min-height: 140px; resize: vertical; }
+.submit-btn {
+  background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+  color: #0a0a0f; font-weight: 600; font-size: 0.9rem;
+  padding: 14px; border-radius: 14px; border: none;
+  cursor: pointer; font-family: var(--font-body); transition: box-shadow 0.3s;
+}
+[data-theme="light"] .submit-btn { color: #fff; }
+.submit-btn:hover { box-shadow: 0 4px 20px rgba(201,168,108,0.4); }
+.contact-thanks { text-align: center; color: var(--gold-bright); padding: 16px 0; font-size: 0.9rem; }
