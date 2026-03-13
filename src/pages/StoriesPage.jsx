@@ -107,8 +107,11 @@ function StoryDetail({ story, lang, t, navigate, fontSize, onFontIncrease, onFon
   const content = lang === 'vi' ? story.contentVi : story.contentEn
   const lesson = lang === 'vi' ? story.lessonVi : story.lessonEn
   const title = lang === 'vi' ? story.titleVi : story.titleEn
-  const highlights = STORY_HIGHLIGHTS[story.order]
-  const highlightList = highlights ? (lang === 'vi' ? highlights.vi : highlights.en) : null
+  // Highlights: from Firestore (newline-separated string) or fallback to hardcoded
+  const firestoreHL = lang === 'vi' ? story.highlightsVi : story.highlightsEn
+  const highlightList = firestoreHL
+    ? firestoreHL.split('\n').filter(l => l.trim())
+    : (STORY_HIGHLIGHTS[story.order] ? (lang === 'vi' ? STORY_HIGHLIGHTS[story.order].vi : STORY_HIGHLIGHTS[story.order].en) : null)
 
   // Next/prev stories
   const currentIndex = allStories.findIndex(s => s.id === story.id)
