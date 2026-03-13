@@ -1,125 +1,15 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from './firebase'
+import { TOPICS, DEFAULT_ARTICLES, T } from './data'
+import { useTheme } from './hooks/useTheme'
+import { useArticles } from './hooks/useFirestore'
+import ShareButtons from './components/ShareButtons'
+import Comments from './components/Comments'
+import AdminPanel from './components/AdminPanel'
+import RSSButton from './components/RSSButton'
 
-/* ───────── DATA ───────── */
-const TOPICS = [
-  { id: 'mat-ngu', icon: '🌙', vi: 'Mất Ngủ & Đau Đầu', en: 'Insomnia & Headaches', descVi: 'Phương pháp phi thuyền chữa mất ngủ', descEn: 'Spaceship method for insomnia', count: 12 },
-  { id: 'tam-linh', icon: '✦', vi: 'Tâm Linh & Tôn Giáo', en: 'Spirituality & Religion', descVi: 'Ánh sáng vượt qua mọi tôn giáo', descEn: 'Light beyond all religions', count: 18 },
-  { id: 'suc-khoe', icon: '❤', vi: 'Sức Khỏe Cơ Thể', en: 'Body Health', descVi: 'Năng lượng chữa lành cơ thể', descEn: 'Energy healing for the body', count: 15 },
-  { id: 'vu-tru', icon: '◎', vi: 'Y Học Vũ Trụ', en: 'Cosmic Medicine', descVi: 'Nguyên lý vũ trụ trong y học', descEn: 'Cosmic principles in medicine', count: 22 },
-  { id: 'tri-tue', icon: '◈', vi: 'Trí Tuệ Việt Nam', en: 'Vietnamese Wisdom', descVi: 'Kho tàng trí tuệ người Việt', descEn: 'Treasury of Vietnamese wisdom', count: 10 },
-  { id: 'thuc-hanh', icon: '△', vi: 'Thực Hành', en: 'Practice', descVi: 'Bài tập thực hành hàng ngày', descEn: 'Daily practice exercises', count: 8 },
-]
-
-const ARTICLES = [
-  {
-    id: 1, topic: 'mat-ngu', date: '2026-01-15', tag: { vi: 'Mất Ngủ', en: 'Insomnia' },
-    vi: {
-      title: 'Phi thuyền đưa linh hồn đi vào vũ trụ du lịch và an nghỉ ở khách sạn thiên đường',
-      question: 'Con bị đau đầu mất ngủ 4 năm, uống thuốc tây thì ngủ được, không uống là thức trắng.',
-      summary: 'Phương pháp phi thuyền: nhắm mắt, nhìn ra ánh sáng mờ ảo, phóng ra ngoài vũ trụ. Lắc qua lắc lại, du lịch không gian, tìm đến khách sạn thiên đường ánh sáng. Nằm trong phòng ngủ trắng có hoa thơm, sáng thức dậy đau đầu từ từ biến mất.',
-      body: 'Phương pháp phi thuyền là một kỹ thuật thiền định đặc biệt. Bạn nhắm mắt lại, tưởng tượng mình đang ngồi trong một phi thuyền ánh sáng. Nhìn ra phía trước, bạn thấy ánh sáng mờ ảo lung linh. Phi thuyền bắt đầu di chuyển, lắc nhẹ qua lại như đang bay qua các vì sao.\n\nBạn du lịch qua không gian vũ trụ bao la, qua các thiên hà lấp lánh. Cuối cùng, phi thuyền đưa bạn đến khách sạn thiên đường - một nơi tràn ngập ánh sáng vàng ấm áp.\n\nBạn bước vào phòng ngủ trắng tinh khiết, có hoa thơm ngát. Nằm xuống giường mềm mại, bạn cảm nhận năng lượng ánh sáng chữa lành từ từ thấm vào cơ thể. Sáng hôm sau thức dậy, đau đầu từ từ biến mất.',
-    },
-    en: {
-      title: 'Spaceship carrying the soul into cosmic travel and rest at the paradise hotel of light',
-      question: "I've had headaches and insomnia for 4 years. Western medicine helps me sleep, without it I stay up all night.",
-      summary: 'The spaceship method: close your eyes, look toward dim light, project outward into the universe. Sway gently, travel through space, find the paradise hotel of light. Rest in a white room with fragrant flowers, wake up and headaches gradually disappear.',
-      body: 'The spaceship method is a special meditation technique. Close your eyes and imagine sitting in a spaceship of light. Looking ahead, you see shimmering dim light. The spaceship begins to move, swaying gently as if flying past stars.\n\nYou travel through the vast cosmos, past sparkling galaxies. Finally, the spaceship brings you to the paradise hotel - a place overflowing with warm golden light.\n\nYou enter a pure white room filled with fragrant flowers. Lying on the soft bed, you feel healing light energy slowly permeating your body. The next morning when you wake, headaches gradually disappear.',
-    },
-  },
-  {
-    id: 2, topic: 'tam-linh', date: '2026-01-18', tag: { vi: 'Tâm Linh', en: 'Spirituality' },
-    vi: {
-      title: 'Thế giới loài người muốn có hòa bình thì không nên phân chia sắc tộc, tôn giáo',
-      question: 'Con theo đạo Công Giáo. Nhắm mắt nhìn sâu vào tim thì tim đập nhanh, thấy hình ảnh Chúa Giêsu.',
-      summary: 'Công giáo hay Phật giáo đều chung mục đích. Đừng niệm Chúa hay Phật vào tâm, hãy nhìn ra ánh sáng. Chúa nói \'Ta là ánh sáng\' thì nhìn ánh sáng, không nhìn tượng. Trái tim cần tự do, hấp thu năng lượng từ ánh sáng.',
-      body: 'Tất cả các tôn giáo trên thế giới đều hướng đến một mục đích chung: giải thoát con người khỏi khổ đau và đưa tâm hồn đến nơi an lạc.\n\nChúa Giêsu nói "Ta là ánh sáng thế gian." Đức Phật cũng dạy về ánh sáng giác ngộ. Vậy thì thay vì niệm danh hiệu, hãy nhìn thẳng vào ánh sáng - nguồn gốc chung của mọi tôn giáo.\n\nKhi bạn nhắm mắt và nhìn ra ánh sáng thay vì nhìn vào trong, trái tim được tự do. Nó không còn bị giam trong khuôn khổ tôn giáo nào. Trái tim hấp thu năng lượng trực tiếp từ ánh sáng vũ trụ, và đó chính là con đường hòa bình thật sự.',
-    },
-    en: {
-      title: 'For world peace, humanity should not divide by race or religion',
-      question: "I'm Catholic. When I close my eyes and look deep into my heart, it beats fast and I see Jesus.",
-      summary: "Catholicism and Buddhism share the same purpose. Don't recite Christ or Buddha into your heart, look outward to light. Christ said 'I am the light' so look at light, not statues. The heart needs freedom, absorbing energy from light.",
-      body: 'All religions in the world share a common purpose: to free humanity from suffering and guide the soul to peace.\n\nJesus Christ said "I am the light of the world." The Buddha also taught about the light of enlightenment. So instead of reciting names, look directly at the light - the common origin of all religions.\n\nWhen you close your eyes and look outward toward light instead of inward, the heart becomes free. It is no longer confined within any religious framework. The heart absorbs energy directly from cosmic light, and that is the true path to peace.',
-    },
-  },
-  {
-    id: 3, topic: 'vu-tru', date: '2026-01-22', tag: { vi: 'Vũ Trụ', en: 'Cosmic' },
-    vi: {
-      title: 'Nguyên lý đốt rác não và chuyển đổi năng lượng vũ trụ',
-      question: 'Tại sao con hay bị đau đầu và stress?',
-      summary: 'Hai con mắt thịt hút thông tin vào não giữa. Não giữa đốt rác thông tin, chuyển thành năng lượng. Không đốt được thì rác chất đống, não nóng như hiệu ứng nhà kính. Phi thuyền giúp đốt rác, giải phóng trí tuệ.',
-      body: 'Mỗi ngày, hai con mắt của bạn liên tục hút thông tin từ thế giới bên ngoài vào não. Thông tin này được chuyển đến não giữa - trung tâm xử lý của ý thức.\n\nNão giữa có nhiệm vụ "đốt rác" - tức là phân loại, xử lý và chuyển đổi thông tin thành năng lượng hữu ích. Giống như một lò đốt rác hoạt động hiệu quả.\n\nNhưng khi bạn tiếp nhận quá nhiều thông tin tiêu cực, lo âu, stress - lò đốt quá tải. Rác thông tin chất đống trong não, tạo ra nhiệt như hiệu ứng nhà kính. Đó là nguyên nhân đau đầu và mất ngủ.\n\nPhương pháp phi thuyền giúp kích hoạt lại lò đốt rác của não. Khi bạn nhắm mắt và phóng ra ngoài vũ trụ, bạn ngừng hút rác vào. Đồng thời, năng lượng vũ trụ giúp đốt sạch rác tồn đọng, giải phóng trí tuệ.',
-    },
-    en: {
-      title: 'The principle of brain waste burning and cosmic energy conversion',
-      question: 'Why do I always have headaches and stress?',
-      summary: "Two physical eyes absorb information into the mid-brain. The mid-brain burns information waste, converting it to energy. When it can't burn, waste piles up, the brain heats like a greenhouse effect. The spaceship method helps burn waste and release wisdom.",
-      body: 'Every day, your two eyes continuously absorb information from the outside world into the brain. This information is transferred to the mid-brain - the processing center of consciousness.\n\nThe mid-brain has the task of "burning waste" - that is, sorting, processing, and converting information into useful energy. Like an efficient waste incinerator.\n\nBut when you receive too much negative information, anxiety, stress - the incinerator overloads. Information waste piles up in the brain, generating heat like the greenhouse effect. That is the cause of headaches and insomnia.\n\nThe spaceship method helps reactivate the brain\'s waste incinerator. When you close your eyes and project outward into the universe, you stop absorbing waste. At the same time, cosmic energy helps burn accumulated waste, releasing wisdom.',
-    },
-  },
-]
-
-const T = {
-  vi: {
-    siteName: 'Bất Tử Đạo',
-    siteTagline: 'Trí Tuệ Người Việt Nam',
-    heroTitle: 'Phi Thuyền Trí Tuệ',
-    heroSub: 'Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời',
-    heroCta: 'Khám Phá Ngay',
-    topicsTitle: 'Chủ Đề',
-    articlesTitle: 'Bài Viết Mới',
-    articles: 'bài viết',
-    readMore: 'Đọc tiếp',
-    watchVideo: 'Xem video',
-    back: '← Quay lại',
-    videoPlaceholder: 'Video sẽ được cập nhật',
-    searchTitle: 'Tìm Kiếm',
-    searchPlaceholder: 'Tìm theo tiêu đề, câu hỏi...',
-    noResults: 'Không tìm thấy kết quả',
-    contactTitle: 'Liên Hệ',
-    contactName: 'Họ và tên',
-    contactEmail: 'Email',
-    contactMsg: 'Nội dung tin nhắn',
-    contactSend: 'Gửi Tin Nhắn',
-    contactThanks: 'Cảm ơn bạn! Tin nhắn đã được gửi.',
-    footer: '© 2026 Bất Tử Đạo. Nội dung mang tính chia sẻ cá nhân, không thay thế tư vấn y khoa chuyên nghiệp.',
-    navHome: 'Trang chủ',
-    navTopics: 'Chủ đề',
-    navSearch: 'Tìm kiếm',
-    navContact: 'Liên hệ',
-    menuOpen: 'Menu',
-  },
-  en: {
-    siteName: 'Immortality',
-    siteTagline: 'Vietnamese Wisdom',
-    heroTitle: 'Spaceship of Wisdom',
-    heroSub: 'Discover the light within you — a healing journey from timeless Vietnamese wisdom',
-    heroCta: 'Explore Now',
-    topicsTitle: 'Topics',
-    articlesTitle: 'Latest Articles',
-    articles: 'articles',
-    readMore: 'Read more',
-    watchVideo: 'Watch video',
-    back: '← Go back',
-    videoPlaceholder: 'Video coming soon',
-    searchTitle: 'Search',
-    searchPlaceholder: 'Search by title, question...',
-    noResults: 'No results found',
-    contactTitle: 'Contact',
-    contactName: 'Full name',
-    contactEmail: 'Email',
-    contactMsg: 'Message',
-    contactSend: 'Send Message',
-    contactThanks: 'Thank you! Your message has been sent.',
-    footer: '© 2026 Immortality. Content is personal sharing and does not replace professional medical advice.',
-    navHome: 'Home',
-    navTopics: 'Topics',
-    navSearch: 'Search',
-    navContact: 'Contact',
-    menuOpen: 'Menu',
-  },
-}
-
-/* ───────── ANIMATED SUN COMPONENT (inline) ───────── */
+/* ───────── ANIMATED SUN COMPONENT ───────── */
 function SunIcon({ size = 28 }) {
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} className="sun-icon" aria-hidden="true">
@@ -146,15 +36,27 @@ function SunIcon({ size = 28 }) {
 /* ───────── MAIN APP ───────── */
 export default function App() {
   const [lang, setLang] = useState('vi')
-  const [page, setPage] = useState('home')      // home | topic | article | search | contact
+  const [page, setPage] = useState('home')
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [selectedArticle, setSelectedArticle] = useState(null)
   const [search, setSearch] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [contactSent, setContactSent] = useState(false)
+  const [user, setUser] = useState(null)
+  const { dark, toggle: toggleTheme } = useTheme()
+  const { firestoreArticles, addArticle, updateArticle, deleteArticle } = useArticles()
   const t = T[lang]
 
-  // scroll to top on page change
+  // Merge default + Firestore articles
+  const allArticles = [...firestoreArticles, ...DEFAULT_ARTICLES]
+
+  // Firebase auth listener
+  useEffect(() => {
+    try {
+      return onAuthStateChanged(auth, setUser)
+    } catch { /* Firebase not configured */ }
+  }, [])
+
   useEffect(() => { window.scrollTo(0, 0) }, [page, selectedArticle])
 
   const navigate = (p, extra) => {
@@ -164,12 +66,12 @@ export default function App() {
     else { setPage(p) }
   }
 
-  const filteredArticles = (topicId) => ARTICLES.filter(a => !topicId || a.topic === topicId)
+  const filteredArticles = (topicId) => allArticles.filter(a => !topicId || a.topic === topicId)
 
-  const searchResults = ARTICLES.filter(a => {
+  const searchResults = allArticles.filter(a => {
     const q = search.toLowerCase()
     const d = a[lang]
-    return d.title.toLowerCase().includes(q) || d.question.toLowerCase().includes(q) || d.summary.toLowerCase().includes(q)
+    return d && (d.title.toLowerCase().includes(q) || d.question.toLowerCase().includes(q) || d.summary.toLowerCase().includes(q))
   })
 
   const handleContactSubmit = (e) => { e.preventDefault(); setContactSent(true); setTimeout(() => setContactSent(false), 3000) }
@@ -183,16 +85,15 @@ export default function App() {
         html { font-size: 16px; scroll-behavior: smooth; }
         body {
           font-family: 'Be Vietnam Pro', sans-serif;
-          background: #0a0a0f;
-          color: #b8b5ad;
           min-height: 100vh;
           overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
+          transition: background 0.3s, color 0.3s;
         }
         a { color: inherit; text-decoration: none; }
 
-        /* ─── VARIABLES ─── */
-        :root {
+        /* ─── THEME VARIABLES ─── */
+        :root, [data-theme="dark"] {
           --bg: #0a0a0f;
           --card: #12121a;
           --gold: #c9a86c;
@@ -200,42 +101,47 @@ export default function App() {
           --text: #b8b5ad;
           --text-dim: #8a8578;
           --white: #ffffff;
+          --header-bg: rgba(10,10,15,0.92);
+          --overlay-bg: rgba(10,10,15,0.97);
+          --bottom-bg: rgba(10,10,15,0.95);
           --font-display: 'Cormorant Garamond', serif;
           --font-body: 'Be Vietnam Pro', sans-serif;
           --max-w: 480px;
         }
+        [data-theme="light"] {
+          --bg: #faf8f5;
+          --card: #ffffff;
+          --gold: #9a7b4f;
+          --gold-bright: #7a5e38;
+          --text: #4a4540;
+          --text-dim: #8a8578;
+          --white: #1a1a1a;
+          --header-bg: rgba(250,248,245,0.95);
+          --overlay-bg: rgba(250,248,245,0.98);
+          --bottom-bg: rgba(250,248,245,0.95);
+        }
+        body { background: var(--bg); color: var(--text); }
         @media (min-width: 768px) { :root { --max-w: 640px; } }
 
         /* ─── ANIMATED SUN ─── */
-        .sun-icon .sun-ray {
-          animation: rayPulse 2.5s ease-in-out infinite;
-        }
-        .sun-icon .sun-glow {
-          animation: glowPulse 3s ease-in-out infinite;
-        }
-        @keyframes rayPulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 1; }
-        }
-        @keyframes glowPulse {
-          0%, 100% { r: 30; opacity: 0.2; }
-          50% { r: 36; opacity: 0.45; }
-        }
+        .sun-icon .sun-ray { animation: rayPulse 2.5s ease-in-out infinite; }
+        .sun-icon .sun-glow { animation: glowPulse 3s ease-in-out infinite; }
+        @keyframes rayPulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes glowPulse { 0%, 100% { r: 30; opacity: 0.2; } 50% { r: 36; opacity: 0.45; } }
 
         /* ─── FLOATING PARTICLES ─── */
         .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
         .particle {
           position: absolute; bottom: -10px; width: 3px; height: 3px;
           background: var(--gold); border-radius: 50%;
-          animation: floatUp linear infinite;
-          opacity: 0;
+          animation: floatUp linear infinite; opacity: 0;
         }
         @keyframes floatUp {
           0% { transform: translateY(0) scale(1); opacity: 0; }
-          10% { opacity: 0.7; }
-          90% { opacity: 0.3; }
+          10% { opacity: 0.7; } 90% { opacity: 0.3; }
           100% { transform: translateY(-100vh) scale(0.3); opacity: 0; }
         }
+        [data-theme="light"] .particles { opacity: 0.3; }
 
         /* ─── AMBIENT GLOW ─── */
         .ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
@@ -246,10 +152,8 @@ export default function App() {
         }
         .ambient::before { top: -20%; left: -10%; width: 80vw; height: 80vw; }
         .ambient::after { bottom: -30%; right: -20%; width: 90vw; height: 90vw; animation-delay: 3s; }
-        @keyframes ambientPulse {
-          0%, 100% { transform: scale(1); opacity: 0.5; }
-          50% { transform: scale(1.15); opacity: 1; }
-        }
+        @keyframes ambientPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 1; } }
+        [data-theme="light"] .ambient { opacity: 0.4; }
 
         /* ─── LIGHT RAYS ─── */
         .light-rays { position: fixed; top: 0; left: 0; right: 0; height: 100vh; pointer-events: none; z-index: 0; overflow: hidden; }
@@ -258,10 +162,8 @@ export default function App() {
           background: linear-gradient(to bottom, rgba(201,168,108,0.15), transparent 80%);
           animation: raySwing 8s ease-in-out infinite;
         }
-        @keyframes raySwing {
-          0%, 100% { transform: rotate(-15deg); opacity: 0.3; }
-          50% { transform: rotate(15deg); opacity: 0.7; }
-        }
+        @keyframes raySwing { 0%, 100% { transform: rotate(-15deg); opacity: 0.3; } 50% { transform: rotate(15deg); opacity: 0.7; } }
+        [data-theme="light"] .light-rays { opacity: 0.3; }
 
         /* ─── LAYOUT ─── */
         .app-wrap { position: relative; z-index: 1; }
@@ -270,7 +172,7 @@ export default function App() {
         /* ─── HEADER ─── */
         .header {
           position: sticky; top: 0; z-index: 100;
-          background: rgba(10,10,15,0.92); backdrop-filter: blur(12px);
+          background: var(--header-bg); backdrop-filter: blur(12px);
           border-bottom: 1px solid rgba(201,168,108,0.15);
           padding: 14px 0;
         }
@@ -280,14 +182,15 @@ export default function App() {
         }
         .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .logo-text { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--gold-bright); }
-        .header-actions { display: flex; align-items: center; gap: 12px; }
-        .lang-btn {
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .lang-btn, .theme-btn {
           background: rgba(201,168,108,0.12); border: 1px solid rgba(201,168,108,0.25);
           color: var(--gold-bright); padding: 5px 12px; border-radius: 20px;
           font-size: 0.78rem; font-weight: 500; cursor: pointer; font-family: var(--font-body);
           transition: all 0.3s;
         }
-        .lang-btn:hover { background: rgba(201,168,108,0.25); }
+        .theme-btn { padding: 5px 10px; font-size: 1rem; line-height: 1; }
+        .lang-btn:hover, .theme-btn:hover { background: rgba(201,168,108,0.25); }
         .hamburger {
           display: flex; flex-direction: column; gap: 5px; cursor: pointer;
           background: none; border: none; padding: 4px;
@@ -304,7 +207,7 @@ export default function App() {
         /* ─── MOBILE OVERLAY NAV ─── */
         .overlay-nav {
           position: fixed; inset: 0; z-index: 99;
-          background: rgba(10,10,15,0.97); backdrop-filter: blur(16px);
+          background: var(--overlay-bg); backdrop-filter: blur(16px);
           display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
           opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
@@ -329,20 +232,14 @@ export default function App() {
         }
 
         /* ─── HERO ─── */
-        .hero {
-          text-align: center; padding: 60px 20px 50px;
-          max-width: var(--max-w); margin: 0 auto;
-        }
+        .hero { text-align: center; padding: 60px 20px 50px; max-width: var(--max-w); margin: 0 auto; }
         .hero-sun { margin-bottom: 24px; filter: drop-shadow(0 0 20px rgba(201,168,108,0.4)); }
         .hero h1 {
           font-family: var(--font-display); font-size: 2.4rem; font-weight: 700;
           color: var(--white); line-height: 1.2; margin-bottom: 16px;
           text-shadow: 0 0 30px rgba(201,168,108,0.3);
         }
-        .hero p {
-          color: var(--text); font-size: 0.95rem; line-height: 1.7;
-          max-width: 360px; margin: 0 auto 28px;
-        }
+        .hero p { color: var(--text); font-size: 0.95rem; line-height: 1.7; max-width: 360px; margin: 0 auto 28px; }
         .cta-btn {
           display: inline-block; background: linear-gradient(135deg, var(--gold), var(--gold-bright));
           color: #0a0a0f; font-weight: 600; font-size: 0.9rem;
@@ -351,6 +248,7 @@ export default function App() {
           transition: transform 0.3s, box-shadow 0.3s;
           box-shadow: 0 4px 20px rgba(201,168,108,0.3);
         }
+        [data-theme="light"] .cta-btn { color: #fff; }
         .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(201,168,108,0.5); }
 
         /* ─── SECTION ─── */
@@ -362,9 +260,7 @@ export default function App() {
         }
 
         /* ─── TOPICS GRID ─── */
-        .topics-grid {
-          display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
-        }
+        .topics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         @media (min-width: 768px) { .topics-grid { grid-template-columns: repeat(3, 1fr); } }
         .topic-card {
           background: var(--card); border-radius: 16px; padding: 20px 16px;
@@ -378,21 +274,16 @@ export default function App() {
           border-color: rgba(201,168,108,0.3);
         }
         .topic-icon { font-size: 1.8rem; margin-bottom: 10px; display: block; }
-        .topic-name {
-          font-family: var(--font-display); font-size: 1rem; font-weight: 600;
-          color: var(--gold-bright); margin-bottom: 6px;
-        }
+        .topic-name { font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--gold-bright); margin-bottom: 6px; }
         .topic-desc { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; line-height: 1.4; }
         .topic-count {
           font-size: 0.7rem; color: var(--gold); opacity: 0.7;
-          background: rgba(201,168,108,0.08); padding: 3px 10px; border-radius: 12px;
-          display: inline-block;
+          background: rgba(201,168,108,0.08); padding: 3px 10px; border-radius: 12px; display: inline-block;
         }
 
         /* ─── ARTICLE CARD ─── */
         .article-card {
-          background: var(--card); border-radius: 16px; padding: 22px 20px;
-          margin-bottom: 16px;
+          background: var(--card); border-radius: 16px; padding: 22px 20px; margin-bottom: 16px;
           border: 1px solid rgba(201,168,108,0.08);
           transition: box-shadow 0.3s, border-color 0.3s;
         }
@@ -416,7 +307,7 @@ export default function App() {
           margin-bottom: 12px; line-height: 1.6;
         }
         .article-summary { font-size: 0.85rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 16px; }
-        .article-actions { display: flex; gap: 10px; }
+        .article-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .btn-read, .btn-video {
           font-size: 0.8rem; font-weight: 500; padding: 8px 18px;
           border-radius: 20px; border: none; cursor: pointer;
@@ -426,12 +317,29 @@ export default function App() {
           background: linear-gradient(135deg, var(--gold), var(--gold-bright));
           color: #0a0a0f;
         }
+        [data-theme="light"] .btn-read { color: #fff; }
         .btn-read:hover { box-shadow: 0 4px 15px rgba(201,168,108,0.4); }
         .btn-video {
           background: transparent; border: 1px solid rgba(201,168,108,0.3);
           color: var(--gold-bright);
         }
         .btn-video:hover { border-color: var(--gold-bright); background: rgba(201,168,108,0.08); }
+
+        /* ─── SHARE BUTTONS ─── */
+        .share-buttons {
+          display: flex; align-items: center; gap: 8px; margin-left: auto;
+        }
+        .share-label { font-size: 0.75rem; color: var(--text-dim); }
+        .share-btn {
+          display: flex; align-items: center; justify-content: center;
+          width: 32px; height: 32px; border-radius: 50%;
+          border: 1px solid rgba(201,168,108,0.2); background: rgba(201,168,108,0.06);
+          color: var(--gold); cursor: pointer; transition: all 0.3s;
+        }
+        .share-btn:hover { background: rgba(201,168,108,0.15); border-color: var(--gold); }
+        .share-fb:hover { color: #1877f2; border-color: #1877f2; }
+        .share-zalo:hover { color: #0068ff; border-color: #0068ff; }
+        .copied-text { font-size: 0.65rem; color: var(--gold-bright); white-space: nowrap; }
 
         /* ─── ARTICLE DETAIL ─── */
         .detail-back {
@@ -458,16 +366,54 @@ export default function App() {
         }
         .detail-body {
           font-size: 0.92rem; line-height: 1.8; color: var(--text);
-          white-space: pre-line;
+          white-space: pre-line; margin-bottom: 32px;
         }
+        .detail-share { margin-bottom: 32px; }
+
+        /* ─── COMMENTS ─── */
+        .comments-section {
+          margin-top: 32px; padding-top: 32px;
+          border-top: 1px solid rgba(201,168,108,0.15);
+        }
+        .comments-title {
+          font-family: var(--font-display); font-size: 1.2rem; font-weight: 600;
+          color: var(--gold-bright); margin-bottom: 20px;
+        }
+        .comments-empty { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 20px; }
+        .comments-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+        .comment-item {
+          background: var(--card); border-radius: 12px; padding: 14px 16px;
+          border: 1px solid rgba(201,168,108,0.08);
+        }
+        .comment-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .comment-author { font-weight: 600; font-size: 0.85rem; color: var(--gold-bright); }
+        .comment-date { font-size: 0.72rem; color: var(--text-dim); }
+        .comment-text { font-size: 0.85rem; color: var(--text); line-height: 1.6; }
+        .comment-form { display: flex; flex-direction: column; gap: 12px; }
+        .comment-form input, .comment-form textarea {
+          width: 100%; padding: 12px 16px; border-radius: 12px;
+          background: var(--card); border: 1px solid rgba(201,168,108,0.15);
+          color: var(--white); font-size: 0.85rem; font-family: var(--font-body);
+          outline: none; transition: border-color 0.3s;
+        }
+        .comment-form input:focus, .comment-form textarea:focus { border-color: var(--gold); }
+        .comment-form input::placeholder, .comment-form textarea::placeholder { color: var(--text-dim); }
+        .comment-form button {
+          align-self: flex-end;
+          background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+          color: #0a0a0f; font-weight: 600; font-size: 0.8rem;
+          padding: 10px 24px; border-radius: 20px; border: none;
+          cursor: pointer; font-family: var(--font-body);
+        }
+        [data-theme="light"] .comment-form button { color: #fff; }
+        .comment-form button:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* ─── SEARCH ─── */
         .search-input {
           width: 100%; padding: 14px 20px; border-radius: 14px;
           background: var(--card); border: 1px solid rgba(201,168,108,0.15);
           color: var(--white); font-size: 0.9rem; font-family: var(--font-body);
-          outline: none; transition: border-color 0.3s;
-          margin-bottom: 24px;
+          outline: none; transition: border-color 0.3s; margin-bottom: 24px;
         }
         .search-input::placeholder { color: var(--text-dim); }
         .search-input:focus { border-color: var(--gold); }
@@ -488,11 +434,68 @@ export default function App() {
           background: linear-gradient(135deg, var(--gold), var(--gold-bright));
           color: #0a0a0f; font-weight: 600; font-size: 0.9rem;
           padding: 14px; border-radius: 14px; border: none;
-          cursor: pointer; font-family: var(--font-body);
-          transition: box-shadow 0.3s;
+          cursor: pointer; font-family: var(--font-body); transition: box-shadow 0.3s;
         }
+        [data-theme="light"] .submit-btn { color: #fff; }
         .submit-btn:hover { box-shadow: 0 4px 20px rgba(201,168,108,0.4); }
         .contact-thanks { text-align: center; color: var(--gold-bright); padding: 16px 0; font-size: 0.9rem; }
+
+        /* ─── ADMIN ─── */
+        .admin-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+        .admin-actions-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .admin-user { font-size: 0.75rem; color: var(--text-dim); }
+        .admin-login-form { display: flex; flex-direction: column; gap: 14px; max-width: 320px; }
+        .admin-login-form input {
+          width: 100%; padding: 12px 16px; border-radius: 12px;
+          background: var(--card); border: 1px solid rgba(201,168,108,0.15);
+          color: var(--white); font-size: 0.88rem; font-family: var(--font-body);
+          outline: none;
+        }
+        .admin-login-form input::placeholder { color: var(--text-dim); }
+        .admin-error { color: #e74c3c; font-size: 0.85rem; margin-bottom: 12px; }
+        .admin-form {
+          background: var(--card); border-radius: 16px; padding: 24px 20px;
+          border: 1px solid rgba(201,168,108,0.15); margin-bottom: 24px;
+        }
+        .admin-form label { display: block; font-size: 0.78rem; color: var(--text-dim); margin-bottom: 6px; margin-top: 14px; }
+        .admin-form input, .admin-form textarea, .admin-form select {
+          width: 100%; padding: 10px 14px; border-radius: 10px;
+          background: var(--bg); border: 1px solid rgba(201,168,108,0.12);
+          color: var(--white); font-size: 0.85rem; font-family: var(--font-body);
+          outline: none;
+        }
+        .admin-form textarea { resize: vertical; }
+        .admin-form-row { margin-bottom: 4px; }
+        .admin-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 600px) { .admin-form-grid { grid-template-columns: 1fr; } }
+        .admin-form-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .admin-articles { display: flex; flex-direction: column; gap: 10px; }
+        .admin-article-item {
+          display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          background: var(--card); border-radius: 12px; padding: 14px 16px;
+          border: 1px solid rgba(201,168,108,0.08);
+        }
+        .admin-article-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .admin-article-title { font-size: 0.85rem; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .admin-article-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .btn-sm {
+          font-size: 0.72rem; padding: 5px 12px; border-radius: 14px;
+          border: 1px solid rgba(201,168,108,0.25); background: transparent;
+          color: var(--gold-bright); cursor: pointer; font-family: var(--font-body);
+        }
+        .btn-sm:hover { background: rgba(201,168,108,0.1); }
+        .btn-danger { border-color: rgba(231,76,60,0.3); color: #e74c3c; }
+        .btn-danger:hover { background: rgba(231,76,60,0.1); }
+
+        /* ─── RSS BUTTON ─── */
+        .rss-btn {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: rgba(201,168,108,0.08); border: 1px solid rgba(201,168,108,0.2);
+          color: var(--gold); padding: 5px 12px; border-radius: 16px;
+          font-size: 0.72rem; cursor: pointer; font-family: var(--font-body);
+          transition: all 0.3s;
+        }
+        .rss-btn:hover { background: rgba(201,168,108,0.15); }
 
         /* ─── FOOTER ─── */
         .footer {
@@ -500,12 +503,18 @@ export default function App() {
           font-size: 0.75rem; color: var(--text-dim); line-height: 1.6;
           max-width: var(--max-w); margin: 0 auto;
         }
+        .footer-links { display: flex; justify-content: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+        .footer-link {
+          font-size: 0.72rem; color: var(--gold); cursor: pointer;
+          background: none; border: none; font-family: var(--font-body);
+        }
+        .footer-link:hover { color: var(--gold-bright); }
         @media (min-width: 768px) { .footer { padding-bottom: 30px; } }
 
         /* ─── BOTTOM NAV ─── */
         .bottom-nav {
           position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-          background: rgba(10,10,15,0.95); backdrop-filter: blur(12px);
+          background: var(--bottom-bg); backdrop-filter: blur(12px);
           border-top: 1px solid rgba(201,168,108,0.12);
           display: flex; justify-content: space-around; padding: 10px 0 14px;
         }
@@ -520,13 +529,8 @@ export default function App() {
         .bottom-nav button svg { width: 22px; height: 22px; }
 
         /* ─── FADE-UP ANIMATION ─── */
-        .fade-up {
-          opacity: 0; transform: translateY(24px);
-          animation: fadeUp 0.6s ease forwards;
-        }
-        @keyframes fadeUp {
-          to { opacity: 1; transform: translateY(0); }
-        }
+        .fade-up { opacity: 0; transform: translateY(24px); animation: fadeUp 0.6s ease forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
         .fade-up-d1 { animation-delay: 0.1s; }
         .fade-up-d2 { animation-delay: 0.2s; }
         .fade-up-d3 { animation-delay: 0.3s; }
@@ -569,6 +573,9 @@ export default function App() {
               <button className={page === 'contact' ? 'active' : ''} onClick={() => navigate('contact')}>{t.navContact}</button>
             </div>
             <div className="header-actions">
+              <button className="theme-btn" onClick={toggleTheme} title={dark ? t.lightMode : t.darkMode}>
+                {dark ? '☀' : '☾'}
+              </button>
               <button className="lang-btn" onClick={() => setLang(l => l === 'vi' ? 'en' : 'vi')}>
                 {lang === 'vi' ? 'EN' : 'VI'}
               </button>
@@ -614,12 +621,13 @@ export default function App() {
 
               <section className="section">
                 <h2 className="section-title fade-up"><SunIcon size={20} /> {t.articlesTitle}</h2>
-                {ARTICLES.map((a, i) => {
+                {allArticles.map((a, i) => {
                   const d = a[lang]
+                  if (!d) return null
                   return (
                     <div key={a.id} className={`article-card fade-up fade-up-d${i + 1}`}>
                       <div className="article-meta">
-                        <span className="article-tag">{a.tag[lang]}</span>
+                        <span className="article-tag">{a.tag?.[lang]}</span>
                         <span className="article-date">{a.date}</span>
                       </div>
                       <div className="article-title">{d.title}</div>
@@ -628,6 +636,7 @@ export default function App() {
                       <div className="article-actions">
                         <button className="btn-read" onClick={() => navigate('article', a)}>{t.readMore}</button>
                         <button className="btn-video">{t.watchVideo}</button>
+                        <ShareButtons title={d.title} articleId={a.id} t={t} />
                       </div>
                     </div>
                   )
@@ -647,10 +656,11 @@ export default function App() {
               {filteredArticles(selectedTopic).length === 0 && <div className="no-results">{t.noResults}</div>}
               {filteredArticles(selectedTopic).map((a, i) => {
                 const d = a[lang]
+                if (!d) return null
                 return (
                   <div key={a.id} className={`article-card fade-up fade-up-d${i + 1}`}>
                     <div className="article-meta">
-                      <span className="article-tag">{a.tag[lang]}</span>
+                      <span className="article-tag">{a.tag?.[lang]}</span>
                       <span className="article-date">{a.date}</span>
                     </div>
                     <div className="article-title">{d.title}</div>
@@ -659,6 +669,7 @@ export default function App() {
                     <div className="article-actions">
                       <button className="btn-read" onClick={() => navigate('article', a)}>{t.readMore}</button>
                       <button className="btn-video">{t.watchVideo}</button>
+                      <ShareButtons title={d.title} articleId={a.id} t={t} />
                     </div>
                   </div>
                 )
@@ -671,9 +682,13 @@ export default function App() {
             <section className="section fade-up">
               <button className="detail-back" onClick={() => navigate('home')}>{t.back}</button>
               <div className="video-placeholder">{t.videoPlaceholder}</div>
-              <h1 className="detail-title">{selectedArticle[lang].title}</h1>
-              <div className="detail-question">{selectedArticle[lang].question}</div>
-              <div className="detail-body">{selectedArticle[lang].body}</div>
+              <h1 className="detail-title">{selectedArticle[lang]?.title}</h1>
+              <div className="detail-question">{selectedArticle[lang]?.question}</div>
+              <div className="detail-body">{selectedArticle[lang]?.body}</div>
+              <div className="detail-share">
+                <ShareButtons title={selectedArticle[lang]?.title || ''} articleId={selectedArticle.id} t={t} />
+              </div>
+              <Comments articleId={selectedArticle.id} t={t} />
             </section>
           )}
 
@@ -689,12 +704,13 @@ export default function App() {
                 onChange={e => setSearch(e.target.value)}
               />
               {search && searchResults.length === 0 && <div className="no-results">{t.noResults}</div>}
-              {(search ? searchResults : ARTICLES).map((a, i) => {
+              {(search ? searchResults : allArticles).map((a, i) => {
                 const d = a[lang]
+                if (!d) return null
                 return (
                   <div key={a.id} className={`article-card fade-up fade-up-d${Math.min(i + 1, 6)}`}>
                     <div className="article-meta">
-                      <span className="article-tag">{a.tag[lang]}</span>
+                      <span className="article-tag">{a.tag?.[lang]}</span>
                       <span className="article-date">{a.date}</span>
                     </div>
                     <div className="article-title">{d.title}</div>
@@ -703,6 +719,7 @@ export default function App() {
                     <div className="article-actions">
                       <button className="btn-read" onClick={() => navigate('article', a)}>{t.readMore}</button>
                       <button className="btn-video">{t.watchVideo}</button>
+                      <ShareButtons title={d.title} articleId={a.id} t={t} />
                     </div>
                   </div>
                 )
@@ -723,10 +740,28 @@ export default function App() {
               </form>
             </section>
           )}
+
+          {/* ADMIN */}
+          {page === 'admin' && (
+            <AdminPanel
+              t={t}
+              user={user}
+              articles={allArticles}
+              onAdd={addArticle}
+              onUpdate={updateArticle}
+              onDelete={deleteArticle}
+            />
+          )}
         </main>
 
         {/* FOOTER */}
-        <footer className="footer">{t.footer}</footer>
+        <footer className="footer">
+          <div className="footer-links">
+            <RSSButton articles={allArticles} lang={lang} />
+            <button className="footer-link" onClick={() => navigate('admin')}>Admin</button>
+          </div>
+          {t.footer}
+        </footer>
 
         {/* BOTTOM NAV */}
         <nav className="bottom-nav">
