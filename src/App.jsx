@@ -19,6 +19,7 @@ import TopicPage from './pages/TopicPage'
 import ArticleDetail from './pages/ArticleDetail'
 import SearchPage from './pages/SearchPage'
 import ContactPage from './pages/ContactPage'
+import AboutPage from './pages/AboutPage'
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
@@ -55,6 +56,7 @@ export default function App() {
     }
     if (hash === '/search') { setPage('search'); return }
     if (hash === '/contact') { setPage('contact'); return }
+    if (hash === '/about') { setPage('about'); return }
     if (hash === '/admin') { setPage('admin'); return }
   }
 
@@ -133,6 +135,9 @@ export default function App() {
           )}
           {page === 'search' && (
             <SearchPage t={t} lang={lang} articles={allArticles} navigate={navigate} />
+          )}
+          {page === 'about' && (
+            <AboutPage t={t} lang={lang} />
           )}
           {page === 'contact' && (
             <ContactPage t={t} />

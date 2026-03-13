@@ -24,6 +24,7 @@ export const DEFAULT_T = {
     contactThanks: 'Cảm ơn bạn! Tin nhắn đã được gửi.',
     footer: '© 2026 Bất Tử Đạo. Nội dung mang tính chia sẻ cá nhân, không thay thế tư vấn y khoa chuyên nghiệp.',
     navHome: 'Trang chủ',
+    navAbout: 'Giới thiệu',
     navTopics: 'Chủ đề',
     navSearch: 'Tìm kiếm',
     navContact: 'Liên hệ',
@@ -91,6 +92,7 @@ export const DEFAULT_T = {
     contactThanks: 'Thank you! Your message has been sent.',
     footer: '© 2026 Immortality. Content is personal sharing and does not replace professional medical advice.',
     navHome: 'Home',
+    navAbout: 'About',
     navTopics: 'Topics',
     navSearch: 'Search',
     navContact: 'Contact',
@@ -138,7 +140,7 @@ export const DEFAULT_T = {
 
 export const TRANSLATION_GROUPS = [
   { id: 'site', label: 'Trang chủ / Site', keys: ['siteName', 'siteTagline', 'heroTitle', 'heroSub', 'heroCta', 'footer'] },
-  { id: 'nav', label: 'Điều hướng / Navigation', keys: ['navHome', 'navTopics', 'navSearch', 'navContact', 'menuOpen'] },
+  { id: 'nav', label: 'Điều hướng / Navigation', keys: ['navHome', 'navAbout', 'navTopics', 'navSearch', 'navContact', 'menuOpen'] },
   { id: 'content', label: 'Nội dung / Content', keys: ['topicsTitle', 'articlesTitle', 'articles', 'readMore', 'watchVideo', 'back', 'videoPlaceholder'] },
   { id: 'search', label: 'Tìm kiếm / Search', keys: ['searchTitle', 'searchPlaceholder', 'noResults'] },
   { id: 'contact', label: 'Liên hệ / Contact', keys: ['contactTitle', 'contactName', 'contactEmail', 'contactMsg', 'contactSend', 'contactThanks'] },
