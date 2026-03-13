@@ -103,6 +103,15 @@ body { background: var(--bg); color: var(--text); }
 .logo { display: flex; align-items: center; gap: 8px; cursor: pointer; flex-shrink: 0; }
 .logo-text { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--gold-bright); white-space: nowrap; }
 .header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.header-action-nav {
+  display: none; background: none; border: none;
+  color: var(--text-dim); font-family: var(--font-body); font-size: 0.8rem;
+  font-weight: 500; cursor: pointer; padding: 5px 10px; white-space: nowrap;
+  transition: color 0.3s;
+}
+.header-action-nav:hover { color: var(--gold-bright); }
+.header-action-nav.active { color: var(--gold-bright); font-weight: 600; }
+@media (min-width: 768px) { .header-action-nav { display: inline-block; } }
 .lang-btn, .theme-btn, .login-btn {
   background: rgba(201,168,108,0.12); border: 1px solid rgba(201,168,108,0.25);
   color: var(--gold-bright); padding: 5px 12px; border-radius: 20px;

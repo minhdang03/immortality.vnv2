@@ -1,8 +1,13 @@
 import SunIcon from './SunIcon'
 import { DEFAULT_NAV_ITEMS } from '../hooks/useFirestore'
 
+// Items that go in the right actions group instead of main nav
+const ACTION_IDS = ['contact']
+
 export default function Header({ t, lang, dark, page, menuOpen, navigate, toggleTheme, setLang, setMenuOpen, user, navItems }) {
-  const items = (navItems || DEFAULT_NAV_ITEMS).filter(i => i.visible)
+  const allItems = (navItems || DEFAULT_NAV_ITEMS).filter(i => i.visible)
+  const mainNav = allItems.filter(i => !ACTION_IDS.includes(i.id))
+  const actionNav = allItems.filter(i => ACTION_IDS.includes(i.id))
 
   return (
     <>
@@ -13,13 +18,18 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
             <span className="logo-text">{t.siteName}</span>
           </div>
           <div className="desktop-nav">
-            {items.map(item => (
+            {mainNav.map(item => (
               <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => navigate(item.id)}>
                 {lang === 'vi' ? item.labelVi : item.labelEn}
               </button>
             ))}
           </div>
           <div className="header-actions">
+            {actionNav.map(item => (
+              <button key={item.id} className={`header-action-nav ${page === item.id ? 'active' : ''}`} onClick={() => navigate(item.id)}>
+                {lang === 'vi' ? item.labelVi : item.labelEn}
+              </button>
+            ))}
             <button
               className={`login-btn ${page === 'admin' ? 'active' : ''}`}
               onClick={() => navigate('admin')}
@@ -48,7 +58,7 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
       <div className={`overlay-nav ${menuOpen ? 'open' : ''}`}>
         <button className="overlay-close" onClick={() => setMenuOpen(false)} aria-label="Close">✕</button>
         <nav className="overlay-links">
-          {items.map(item => (
+          {allItems.map(item => (
             <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => navigate(item.id)}>
               {lang === 'vi' ? item.labelVi : item.labelEn}
             </button>
