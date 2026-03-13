@@ -164,20 +164,25 @@ body { background: var(--bg); color: var(--text); }
 .overlay-login.active { opacity: 1; }
 
 /* ─── DESKTOP NAV ─── */
-.desktop-nav { display: none; gap: 6px; }
+.desktop-nav { display: none; gap: 2px; }
 @media (min-width: 768px) {
-  .desktop-nav { display: flex; }
+  .desktop-nav { display: flex; align-items: center; }
   .desktop-nav button {
     background: none; border: none; color: var(--text-dim);
-    font-family: var(--font-body); font-size: 0.82rem; font-weight: 500;
-    cursor: pointer; transition: all 0.3s;
-    padding: 6px 14px; border-radius: 20px; position: relative;
+    font-family: var(--font-body); font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; transition: color 0.3s;
+    padding: 6px 10px; white-space: nowrap; position: relative;
   }
-  .desktop-nav button:hover { color: var(--gold-bright); background: rgba(201,168,108,0.08); }
-  .desktop-nav button.active {
-    color: var(--gold-bright); background: rgba(201,168,108,0.12);
-    font-weight: 600;
+  .desktop-nav button:hover { color: var(--gold-bright); }
+  .desktop-nav button.active { color: var(--gold-bright); font-weight: 600; }
+  .desktop-nav button.active::after {
+    content: ''; position: absolute; bottom: 0; left: 10px; right: 10px;
+    height: 2px; background: var(--gold); border-radius: 2px;
   }
+}
+@media (min-width: 1024px) {
+  .desktop-nav { gap: 4px; }
+  .desktop-nav button { padding: 6px 12px; font-size: 0.83rem; }
 }
 
 /* ─── HERO ─── */
