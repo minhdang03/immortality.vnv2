@@ -113,6 +113,33 @@ export function useComments(articleId) {
   return { comments, addComment }
 }
 
+/* ─── STORIES CRUD (with localStorage cache) ─── */
+export function useStories() {
+  const [stories, setStories] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('cached_stories')) || [] } catch { return [] }
+  })
+  const [loading, setLoading] = useState(() => !localStorage.getItem('cached_stories'))
+
+  useEffect(() => {
+    try {
+      const q = query(collection(db, 'stories'), orderBy('order', 'asc'))
+      const unsub = onSnapshot(q, (snap) => {
+        const s = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        setStories(s)
+        setLoading(false)
+        try { localStorage.setItem('cached_stories', JSON.stringify(s)) } catch {}
+      }, () => { setLoading(false) })
+      return unsub
+    } catch { setLoading(false) }
+  }, [])
+
+  const addStory = async (story) => { await addDoc(collection(db, 'stories'), { ...story, createdAt: serverTimestamp() }) }
+  const updateStory = async (id, data) => { await updateDoc(doc(db, 'stories', id), data) }
+  const deleteStory = async (id) => { await deleteDoc(doc(db, 'stories', id)) }
+
+  return { stories, loading, addStory, updateStory, deleteStory }
+}
+
 /* ─── TOPICS CRUD (with localStorage cache) ─── */
 export function useTopics() {
   const [topics, setTopics] = useState(() => {

@@ -4,8 +4,9 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import ArticlesTab from './admin/ArticlesTab'
 import TopicsTab from './admin/TopicsTab'
 import TranslationsTab from './admin/TranslationsTab'
+import StoriesTab from './admin/StoriesTab'
 
-export default function AdminPanel({ t, lang, user, articles, topics, firestoreVi, firestoreEn, onAddArticle, onUpdateArticle, onDeleteArticle, onAddTopic, onUpdateTopic, onDeleteTopic, onUpdateTranslations }) {
+export default function AdminPanel({ t, lang, user, articles, topics, stories, firestoreVi, firestoreEn, onAddArticle, onUpdateArticle, onDeleteArticle, onAddTopic, onUpdateTopic, onDeleteTopic, onAddStory, onUpdateStory, onDeleteStory, onUpdateTranslations }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -48,6 +49,7 @@ export default function AdminPanel({ t, lang, user, articles, topics, firestoreV
       <div className="admin-tabs">
         {[
           { id: 'articles', vi: 'Bài viết', en: 'Articles' },
+          { id: 'stories', vi: 'Câu chuyện', en: 'Stories' },
           { id: 'topics', vi: 'Chủ đề', en: 'Topics' },
           { id: 'translations', vi: 'Ngôn ngữ', en: 'Translations' },
         ].map(tb => (
@@ -58,6 +60,7 @@ export default function AdminPanel({ t, lang, user, articles, topics, firestoreV
       </div>
 
       {tab === 'articles' && <ArticlesTab t={t} lang={lang} articles={articles} topics={topics} onAdd={onAddArticle} onUpdate={onUpdateArticle} onDelete={onDeleteArticle} />}
+      {tab === 'stories' && <StoriesTab t={t} lang={lang} stories={stories} onAdd={onAddStory} onUpdate={onUpdateStory} onDelete={onDeleteStory} />}
       {tab === 'topics' && <TopicsTab t={t} lang={lang} topics={topics} onAdd={onAddTopic} onUpdate={onUpdateTopic} onDelete={onDeleteTopic} />}
       {tab === 'translations' && <TranslationsTab lang={lang} firestoreVi={firestoreVi} firestoreEn={firestoreEn} onUpdate={onUpdateTranslations} />}
     </section>

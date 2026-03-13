@@ -39,7 +39,9 @@ a { color: inherit; text-decoration: none; }
   --bottom-bg: rgba(250,248,245,0.95);
 }
 body { background: var(--bg); color: var(--text); }
-@media (min-width: 768px) { :root { --max-w: 640px; } }
+@media (min-width: 768px) { :root { --max-w: 720px; } }
+@media (min-width: 1024px) { :root { --max-w: 900px; } }
+@media (min-width: 1280px) { :root { --max-w: 960px; } }
 
 /* ─── ANIMATED SUN ─── */
 .sun-icon .sun-ray { animation: rayPulse 2.5s ease-in-out infinite; }
@@ -703,9 +705,77 @@ body { background: var(--bg); color: var(--text); }
   color: var(--gold-bright); line-height: 1.3; margin-bottom: 24px;
 }
 .story-detail-body p {
-  font-size: 0.92rem; color: var(--text); line-height: 1.9; margin-bottom: 14px;
+  font-size: calc(0.92rem * var(--reader-scale)); color: var(--text); line-height: 1.9; margin-bottom: 14px;
 }
+.story-detail-body { max-width: 700px; }
 .story-placeholder { color: var(--text-dim); font-style: italic; }
+.story-lesson {
+  margin-top: 32px; padding: 20px 24px;
+  background: rgba(10,10,15,0.5); border-left: 3px solid var(--gold);
+  border-radius: 0 14px 14px 0;
+}
+[data-theme="light"] .story-lesson { background: rgba(201,168,108,0.06); }
+.story-lesson-title {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 700;
+  color: var(--gold-bright); margin-bottom: 14px;
+}
+.story-lesson-body p {
+  font-size: calc(0.9rem * var(--reader-scale)); color: var(--text); line-height: 1.85; margin-bottom: 12px;
+}
+.story-lesson-body p:last-child { margin-bottom: 0; }
+
+/* Story Highlights */
+.story-highlights {
+  margin-top: 24px; padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(201,168,108,0.08), rgba(201,168,108,0.03));
+  border: 1px solid rgba(201,168,108,0.15);
+  border-radius: 14px;
+}
+[data-theme="light"] .story-highlights {
+  background: linear-gradient(135deg, rgba(201,168,108,0.1), rgba(201,168,108,0.04));
+}
+.story-highlights-title {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-display); font-size: 1rem; font-weight: 700;
+  color: var(--gold-bright); margin-bottom: 14px;
+}
+.story-highlights-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.story-highlight-item {
+  position: relative; padding-left: 20px;
+  font-size: 0.88rem; color: var(--text); line-height: 1.6;
+}
+.story-highlight-item::before {
+  content: ''; position: absolute; left: 0; top: 8px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+  box-shadow: 0 0 6px rgba(201,168,108,0.4);
+}
+.story-nav {
+  display: flex; justify-content: space-between; gap: 16px;
+  margin-top: 40px; padding-top: 24px;
+  border-top: 1px solid rgba(201,168,108,0.15);
+}
+.story-nav-btn {
+  background: none; border: 1px solid rgba(201,168,108,0.15);
+  border-radius: 12px; padding: 14px 18px; cursor: pointer;
+  max-width: 48%; transition: all 0.3s; text-align: left;
+}
+.story-nav-next { text-align: right; margin-left: auto; }
+.story-nav-btn:hover { border-color: var(--gold); background: rgba(201,168,108,0.05); }
+.story-nav-label {
+  display: block; font-size: 0.72rem; color: var(--text-dim);
+  margin-bottom: 4px; font-family: var(--font-body);
+}
+.story-nav-title {
+  font-size: 0.82rem; color: var(--gold-bright);
+  font-family: var(--font-display); font-weight: 600; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 /* ─── PRACTICE PAGE ─── */
 .practice-page { max-width: 640px; margin: 0 auto; }
@@ -819,6 +889,83 @@ body { background: var(--bg); color: var(--text); }
 .skeleton-line.w40 { width: 40%; height: 10px; }
 .skeleton-line.thick { height: 20px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ─── TABLET & DESKTOP RESPONSIVE ─── */
+@media (min-width: 768px) {
+  .header-inner { max-width: var(--max-w); }
+  .hero { padding: 80px 20px 60px; }
+  .hero h1 { font-size: 3rem; }
+  .hero p { font-size: 1.05rem; max-width: 480px; }
+  .section-title { font-size: 1.8rem; }
+  .topics-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .article-card { padding: 28px 26px; }
+  .article-title { font-size: 1.25rem; }
+  .article-summary { font-size: 0.9rem; }
+  .detail-title { font-size: 1.8rem; }
+  .detail-body { font-size: calc(1.05rem * var(--reader-scale)); max-width: 700px; }
+
+  /* Stories */
+  .stories-page { max-width: var(--max-w); }
+  .stories-title { font-size: 2.4rem; }
+  .stories-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .story-item { padding: 16px 18px; }
+  .story-detail { max-width: var(--max-w); }
+  .story-detail-title { font-size: 1.8rem; }
+  .story-detail-body p { font-size: calc(1rem * var(--reader-scale)); }
+
+  /* About */
+  .about-page { max-width: var(--max-w); }
+  .about-main-title { font-size: 2.6rem; }
+  .about-section { padding: 28px 32px; }
+  .about-body p { font-size: 1rem; }
+  .about-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+  /* Practice */
+  .practice-page { max-width: var(--max-w); }
+  .practice-title { font-size: 2.6rem; }
+  .practice-moves { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+  /* Admin */
+  .admin-form { padding: 28px 32px; }
+}
+
+@media (min-width: 1024px) {
+  .header-inner { padding: 0 32px; }
+  .desktop-nav { gap: 32px; }
+  .desktop-nav button { font-size: 0.9rem; }
+  .hero h1 { font-size: 3.4rem; }
+  .hero p { font-size: 1.1rem; max-width: 520px; }
+  .topics-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .stories-list { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .story-item-title { font-size: 0.92rem; }
+  .story-detail-body p { font-size: calc(1.05rem * var(--reader-scale)); line-height: 2; }
+  .story-lesson-body p { font-size: calc(0.95rem * var(--reader-scale)); }
+  .about-list { grid-template-columns: repeat(2, 1fr); }
+  .about-section { padding: 32px 36px; }
+  .detail-body { max-width: 760px; }
+  .comment-item { padding: 18px 22px; }
+}
+
+/* Galaxy Fold (folded ~280px) */
+@media (max-width: 300px) {
+  .hero h1 { font-size: 1.5rem; }
+  .hero p { font-size: 0.8rem; }
+  .logo-text { font-size: 1.05rem; }
+  .stories-title { font-size: 1.4rem; }
+  .about-main-title { font-size: 1.5rem; }
+  .practice-title { font-size: 1.5rem; }
+  .story-item { padding: 10px 12px; gap: 8px; }
+  .story-item-title { font-size: 0.78rem; }
+  .story-num { font-size: 0.9rem; min-width: 22px; }
+  .story-arrow { display: none; }
+  .about-section { padding: 16px; }
+  .about-section-title { font-size: 1.1rem; }
+  .practice-move { padding: 14px 12px; gap: 10px; }
+  .cta-btn { padding: 11px 24px; font-size: 0.82rem; }
+  .section-title { font-size: 1.15rem; }
+  .topic-card { padding: 14px 10px; }
+  .topic-name { font-size: 0.88rem; }
+}
 
 /* ─── MOBILE RESPONSIVE FIXES ─── */
 @media (max-width: 400px) {

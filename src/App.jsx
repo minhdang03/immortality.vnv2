@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { useTheme } from './hooks/useTheme'
-import { useArticles, useTranslations, useTopics } from './hooks/useFirestore'
+import { useArticles, useTranslations, useTopics, useStories } from './hooks/useFirestore'
 import { useFontSize } from './hooks/useFontSize'
 import { articleSlug } from './utils/slug'
 import './styles/app.css'
@@ -36,6 +36,7 @@ export default function App() {
   const { firestoreArticles, loading, addArticle, updateArticle, deleteArticle } = useArticles()
   const { getT, firestoreVi, firestoreEn, updateTranslations } = useTranslations()
   const { topics: TOPICS, addTopic, updateTopic, deleteTopic } = useTopics()
+  const { stories: firestoreStories, addStory, updateStory, deleteStory } = useStories()
   const t = getT(lang)
   const allArticles = firestoreArticles
 
@@ -59,7 +60,7 @@ export default function App() {
     if (hash === '/search') { setPage('search'); return }
     if (hash === '/contact') { setPage('contact'); return }
     if (hash === '/about') { setPage('about'); return }
-    if (hash === '/stories') { setPage('stories'); return }
+    if (hash === '/stories' || hash.startsWith('/story/')) { setPage('stories'); return }
     if (hash === '/practice') { setPage('practice'); return }
     if (hash === '/admin') { setPage('admin'); return }
   }
@@ -144,7 +145,9 @@ export default function App() {
             <AboutPage t={t} lang={lang} />
           )}
           {page === 'stories' && (
-            <StoriesPage t={t} lang={lang} />
+            <StoriesPage t={t} lang={lang} firestoreStories={firestoreStories} navigate={navigate}
+              fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
+            />
           )}
           {page === 'practice' && (
             <PracticePage t={t} lang={lang} />
@@ -156,10 +159,11 @@ export default function App() {
             <Suspense fallback={<div style={{ textAlign: 'center', padding: 40, color: 'var(--text-dim)' }}>Loading...</div>}>
             <AdminPanel
               t={t} lang={lang} user={user}
-              articles={allArticles} topics={TOPICS}
+              articles={allArticles} topics={TOPICS} stories={firestoreStories}
               firestoreVi={firestoreVi} firestoreEn={firestoreEn}
               onAddArticle={addArticle} onUpdateArticle={updateArticle} onDeleteArticle={deleteArticle}
               onAddTopic={addTopic} onUpdateTopic={updateTopic} onDeleteTopic={deleteTopic}
+              onAddStory={addStory} onUpdateStory={updateStory} onDeleteStory={deleteStory}
               onUpdateTranslations={updateTranslations}
             />
             </Suspense>

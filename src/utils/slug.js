@@ -32,3 +32,14 @@ export function articleSlug(article) {
   const title = article?.vi?.title || article?.en?.title || ''
   return toSlug(title) || article.id
 }
+
+/**
+ * Get slug for a story — uses order + VI title
+ * e.g. "01-thoat-chet-duoi-duoi-ao-nuoc"
+ */
+export function storySlug(story) {
+  const num = String(story.order || 1).padStart(2, '0')
+  const title = story.titleVi || story.titleEn || ''
+  const slug = toSlug(title)
+  return slug ? `${num}-${slug}` : num
+}
