@@ -797,22 +797,35 @@ body { background: var(--bg); color: var(--text); }
 
 /* Thread / Xuyên Suốt */
 .story-thread-v2 {
-  margin-top: 32px; padding: 20px 22px;
-  background: linear-gradient(135deg, rgba(201,168,108,0.05), rgba(201,168,108,0.02));
-  border-left: 3px solid rgba(201,168,108,0.4);
-  border-radius: 12px;
+  margin-top: 36px; padding: 24px 20px;
+  background: linear-gradient(180deg, #c9a86c20, #c9a86c08);
+  border-top: 1px solid #c9a86c44;
+  border-bottom: 1px solid #c9a86c44;
+  border-left: none; border-right: none; border-radius: 0;
 }
+.thread-v2-icon {
+  display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+}
+.thread-v2-icon svg { width: 48px; height: 10px; }
+.thread-v2-icon .thread-dot { fill: #c9a86c; }
+.thread-v2-icon .thread-line { stroke: #c9a86c; stroke-width: 1.5; }
 .thread-v2-header {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 0.95rem; font-weight: 700;
-  color: var(--gold); margin: 0 0 12px; opacity: 0.9;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.2rem; font-weight: 700; letter-spacing: 0.03em;
+  color: #ffffff; margin: 0 0 16px;
+  text-shadow: 0 0 12px rgba(201,168,108,0.35);
 }
 .thread-v2-body {
-  font-size: calc(0.88rem * var(--reader-scale));
-  color: #c9b88a; line-height: 1.9;
-  margin: 0; font-style: italic;
+  font-size: calc(0.92rem * var(--reader-scale));
+  color: #e4c78a; line-height: 2.0; font-weight: 400;
+  margin: 0; text-align: center;
 }
-[data-theme="light"] .thread-v2-body { color: #6b5d3e; }
+[data-theme="light"] .story-thread-v2 { background: linear-gradient(180deg, #c9a86c18, #c9a86c08); }
+[data-theme="light"] .thread-v2-header { color: #3a3020; text-shadow: none; }
+[data-theme="light"] .thread-v2-body { color: #7a6b4a; }
+[data-theme="light"] .thread-v2-icon .thread-dot { fill: #9a7b4f; }
+[data-theme="light"] .thread-v2-icon .thread-line { stroke: #9a7b4f; }
 
 .story-nav {
   display: flex; justify-content: space-between; gap: 16px;
