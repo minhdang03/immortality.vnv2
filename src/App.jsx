@@ -20,6 +20,8 @@ import ArticleDetail from './pages/ArticleDetail'
 import SearchPage from './pages/SearchPage'
 import ContactPage from './pages/ContactPage'
 import AboutPage from './pages/AboutPage'
+import StoriesPage from './pages/StoriesPage'
+import PracticePage from './pages/PracticePage'
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
@@ -57,6 +59,8 @@ export default function App() {
     if (hash === '/search') { setPage('search'); return }
     if (hash === '/contact') { setPage('contact'); return }
     if (hash === '/about') { setPage('about'); return }
+    if (hash === '/stories') { setPage('stories'); return }
+    if (hash === '/practice') { setPage('practice'); return }
     if (hash === '/admin') { setPage('admin'); return }
   }
 
@@ -139,6 +143,12 @@ export default function App() {
           {page === 'about' && (
             <AboutPage t={t} lang={lang} />
           )}
+          {page === 'stories' && (
+            <StoriesPage t={t} lang={lang} />
+          )}
+          {page === 'practice' && (
+            <PracticePage t={t} lang={lang} />
+          )}
           {page === 'contact' && (
             <ContactPage t={t} />
           )}
@@ -163,7 +173,7 @@ export default function App() {
           {t.footer}
         </footer>
 
-        <BottomNav t={t} page={page} navigate={navigate} />
+        <BottomNav t={t} lang={lang} page={page} navigate={navigate} />
       </div>
     </>
   )

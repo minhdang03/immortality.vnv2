@@ -1,0 +1,62 @@
+export const STORY_TAGS = {
+  escape: { vi: 'Thoát nạn', en: 'Escape' },
+  martial: { vi: 'Võ thuật', en: 'Martial Arts' },
+  spiritual: { vi: 'Tâm linh', en: 'Spiritual' },
+  battle: { vi: 'Chiến đấu', en: 'Battle' },
+  explore: { vi: 'Khám phá', en: 'Discovery' },
+}
+
+export const STORIES = [
+  { id: 1, tag: 'escape', vi: 'Thoát chết đuối dưới ao nước, khai mở bộ não người (Tiểu Vũ Trụ)', en: 'Escaping drowning in a pond, awakening the human brain (Micro Universe)' },
+  { id: 2, tag: 'escape', vi: 'Thoát chết đuối, Ma Sông, Q4. Bến Tàu cá', en: 'Escaping drowning, River Ghost, District 4. Fishing Boat Dock' },
+  { id: 3, tag: 'escape', vi: 'Cứu người sắp chết đuối giữa sông, Q4-Q7', en: 'Saving a drowning person in the river, District 4-7' },
+  { id: 4, tag: 'martial', vi: 'Học võ, Cần Giuộc Long An', en: 'Learning martial arts, Can Giuoc Long An' },
+  { id: 5, tag: 'martial', vi: 'Dạy võ và chữa bệnh', en: 'Teaching martial arts and healing' },
+  { id: 6, tag: 'spiritual', vi: 'Bệnh sốt rét Ma', en: 'Ghost Malaria Disease' },
+  { id: 7, tag: 'martial', vi: 'Hắc hổ xà quyền đấu với kỳ lân quyền', en: 'Black Tiger Snake Fist vs Unicorn Fist' },
+  { id: 8, tag: 'spiritual', vi: '12h Phi thuyền, xuất hồn, đấu với Ma Cây Dừa', en: '12h Spacecraft, astral projection, fighting the Coconut Tree Ghost' },
+  { id: 9, tag: 'spiritual', vi: 'Thần Hổ đấu với người bị Hổ hoang nhập', en: 'Tiger God fights person possessed by Wild Tiger' },
+  { id: 10, tag: 'battle', vi: 'Chiến thắng Bão Quỷ, Kỷ niệm Sài Gòn 300 năm', en: 'Defeating the Devil Storm, Saigon 300th Anniversary' },
+  { id: 11, tag: 'battle', vi: 'Y2K, Quỷ bão mặt trời', en: 'Y2K, Solar Storm Devil' },
+  { id: 12, tag: 'explore', vi: 'Động đất sóng thần châu Á', en: 'Asian Earthquake Tsunami' },
+  { id: 13, tag: 'spiritual', vi: 'Phẫu thuật tâm linh, chữa lành bệnh ung thư gan, giai đoạn 2', en: 'Spiritual surgery, healing liver cancer, stage 2' },
+  { id: 14, tag: 'spiritual', vi: 'Phẫu thuật tâm linh, chữa bệnh gai gót chân', en: 'Spiritual surgery, healing heel spurs' },
+  { id: 15, tag: 'spiritual', vi: 'Chữa bệnh stress và trầm cảm, rối loạn ngôn ngữ hình ảnh', en: 'Healing stress, depression, language and image disorders' },
+  { id: 16, tag: 'spiritual', vi: 'Chữa bệnh u nang, đa nhân xơ buồng trứng, u ngực', en: 'Healing cysts, polycystic ovaries, breast tumors' },
+  { id: 17, tag: 'spiritual', vi: 'Chữa bệnh thư ếm 3 cây kim vàng ADN tiền kiếp', en: 'Healing curse of 3 golden needles, past-life DNA' },
+  { id: 18, tag: 'spiritual', vi: 'Giải mã bệnh thổ tả, vong Ma', en: 'Decoding cholera disease, ghost spirits' },
+  { id: 19, tag: 'battle', vi: 'Chiến đấu quỷ 300 tuổi nhập xác người ở Cần Thơ', en: 'Fighting a 300-year-old demon possessing a person in Can Tho' },
+  { id: 20, tag: 'spiritual', vi: 'Bệnh trầm cảm, vì xăm hình quỷ trên mình', en: 'Depression from demon tattoos on the body' },
+  { id: 21, tag: 'spiritual', vi: 'Chữa bệnh hoàn hồn giúp Ma Quỷ', en: 'Soul restoration healing for ghosts and demons' },
+  { id: 22, tag: 'battle', vi: 'Chiến đấu với ma thầy bùa, cứu hồn cô gái ma không đầu', en: 'Fighting the sorcerer ghost, saving the headless ghost girl' },
+  { id: 23, tag: 'spiritual', vi: 'Chữa bệnh ADN tiền kiếp', en: 'Healing past-life DNA disease' },
+  { id: 24, tag: 'battle', vi: 'Cứu người bệnh, chiến đấu với 7 đời ma tiền kiếp', en: 'Saving the sick, fighting 7 generations of past-life ghosts' },
+  { id: 25, tag: 'spiritual', vi: 'Chữa bệnh duyên ma âm và duyên ma dương', en: 'Healing yin ghost bonds and yang ghost bonds' },
+  { id: 26, tag: 'explore', vi: 'Phi thuyền bay xuyên Kim Tự Tháp, chữa bệnh hoàn hồn', en: 'Spacecraft flying through the Pyramid, soul restoration healing' },
+  { id: 27, tag: 'battle', vi: 'Phá giải trận đồ bát quái, trấn yểm sông Tô Lịch', en: 'Breaking the Eight Trigrams formation, To Lich River curse' },
+  { id: 28, tag: 'martial', vi: 'Thái Dương Quyền, chữa lành bệnh siêu vi gan B', en: 'Solar Fist, healing Hepatitis B' },
+  { id: 29, tag: 'explore', vi: 'Tăng IQ, EQ, AQ, OQ Trí Tuệ chính chủ', en: 'Increasing IQ, EQ, AQ, OQ — Original Intelligence' },
+  { id: 30, tag: 'battle', vi: 'Chiến đấu với Ma nước, bệnh hen suyễn', en: 'Fighting Water Ghost, asthma disease' },
+  { id: 31, tag: 'spiritual', vi: 'Chữa bệnh hoàn hồn Ma, vết thương tiền kiếp ADN', en: 'Ghost soul restoration, past-life DNA wounds' },
+  { id: 32, tag: 'spiritual', vi: 'Chữa bệnh hoàn hồn, cứu vong hồn bị sư tam đế bắt nhốt', en: 'Soul restoration, saving spirits imprisoned by the Triple Emperor Monk' },
+  { id: 33, tag: 'explore', vi: 'Chùa cổ Núi Chứa Chan Gia Lào, ma suối vàng', en: 'Ancient Temple of Chua Chan Mountain, Golden Spring Ghost' },
+  { id: 34, tag: 'battle', vi: 'Cuộc chiến với ma cá sấu 3 mắt và 6 chân', en: 'Battle with the 3-eyed 6-legged crocodile ghost' },
+  { id: 35, tag: 'battle', vi: 'Tế đàn Ma, cuộc chiến với thất tinh Bắc Đẩu trận', en: 'Ghost altar ritual, battle with the Big Dipper formation' },
+  { id: 36, tag: 'explore', vi: 'Phi thuyền bay ngược không gian, thời gian, về 6.000 năm trước CN', en: 'Spacecraft flying back through space and time, 6,000 years BCE' },
+  { id: 37, tag: 'explore', vi: 'Dịch chuyển áp thấp, chữa cháy rừng ở nước Mỹ', en: 'Shifting low pressure, fighting wildfires in America' },
+]
+
+export const STORY_CONTENT = {
+  1: {
+    vi: 'Nội dung đang cập nhật...',
+    en: 'Content being updated...',
+  },
+  2: {
+    vi: 'Nội dung đang cập nhật...',
+    en: 'Content being updated...',
+  },
+  3: {
+    vi: 'Nội dung đang cập nhật...',
+    en: 'Content being updated...',
+  },
+}

@@ -11,8 +11,9 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
           </div>
           <div className="desktop-nav">
             <button className={page === 'home' ? 'active' : ''} onClick={() => navigate('home')}>{t.navHome}</button>
+            <button className={page === 'stories' ? 'active' : ''} onClick={() => navigate('stories')}>{lang === 'vi' ? '37 Chuyện' : 'Stories'}</button>
+            <button className={page === 'practice' ? 'active' : ''} onClick={() => navigate('practice')}>{lang === 'vi' ? 'Luyện tập' : 'Practice'}</button>
             <button className={page === 'about' ? 'active' : ''} onClick={() => navigate('about')}>{lang === 'vi' ? 'Giới thiệu' : 'About'}</button>
-            <button className={page === 'search' ? 'active' : ''} onClick={() => navigate('search')}>{t.navSearch}</button>
             <button className={page === 'contact' ? 'active' : ''} onClick={() => navigate('contact')}>{t.navContact}</button>
           </div>
           <div className="header-actions">
@@ -45,8 +46,9 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
         <button className="overlay-close" onClick={() => setMenuOpen(false)} aria-label="Close">✕</button>
         <nav className="overlay-links">
           <button className={page === 'home' ? 'active' : ''} onClick={() => navigate('home')}>{t.navHome}</button>
+          <button className={page === 'stories' ? 'active' : ''} onClick={() => navigate('stories')}>{lang === 'vi' ? '37 Câu Chuyện' : '37 Stories'}</button>
+          <button className={page === 'practice' ? 'active' : ''} onClick={() => navigate('practice')}>{lang === 'vi' ? 'Thái Dương Quyền' : 'Solar Fist'}</button>
           <button className={page === 'about' ? 'active' : ''} onClick={() => navigate('about')}>{lang === 'vi' ? 'Giới thiệu' : 'About'}</button>
-          <button className={page === 'search' ? 'active' : ''} onClick={() => navigate('search')}>{t.navSearch}</button>
           <button className={page === 'contact' ? 'active' : ''} onClick={() => navigate('contact')}>{t.navContact}</button>
           <div className="overlay-divider" />
           <button className={`overlay-login ${page === 'admin' ? 'active' : ''}`} onClick={() => navigate('admin')}>
