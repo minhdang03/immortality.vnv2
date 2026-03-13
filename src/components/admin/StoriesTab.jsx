@@ -97,6 +97,42 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
     setSeeding(false)
   }
 
+  const [syncing, setSyncing] = useState(false)
+
+  const handleSync = async () => {
+    // Count how many stories have updated content in hardcoded data
+    const updatable = STORIES.filter(s => {
+      const hasContent = !!(STORY_CONTENT[s.id]?.vi || STORY_LESSONS[s.id]?.vi || STORY_HIGHLIGHTS[s.id])
+      return hasContent
+    })
+    if (!window.confirm(lang === 'vi'
+      ? `Cập nhật ${updatable.length} câu chuyện từ dữ liệu code mới nhất? (Ghi đè nội dung, bài học, điểm nhấn)`
+      : `Update ${updatable.length} stories from latest code data? (Overwrites content, lessons, highlights)`))
+      return
+    setSyncing(true)
+    for (const s of STORIES) {
+      const existing = stories.find(fs => Number(fs.order) === s.id)
+      const hl = STORY_HIGHLIGHTS[s.id]
+      const data = {
+        tag: s.tag,
+        titleVi: s.vi,
+        titleEn: s.en,
+        contentVi: STORY_CONTENT[s.id]?.vi || '',
+        contentEn: STORY_CONTENT[s.id]?.en || '',
+        lessonVi: STORY_LESSONS[s.id]?.vi || '',
+        lessonEn: STORY_LESSONS[s.id]?.en || '',
+        highlightsVi: hl?.vi?.join('\n') || '',
+        highlightsEn: hl?.en?.join('\n') || '',
+      }
+      if (existing) {
+        await onUpdate(existing.id, data)
+      } else {
+        await onAdd({ order: s.id, ...data })
+      }
+    }
+    setSyncing(false)
+  }
+
   return (
     <>
       <div style={{ marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -106,6 +142,14 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
             {seeding
               ? (lang === 'vi' ? 'Đang tải...' : 'Seeding...')
               : (lang === 'vi' ? 'Tải 37 chuyện mặc định' : 'Seed 37 default stories')
+            }
+          </button>
+        )}
+        {stories.length > 0 && (
+          <button className="btn-video" onClick={handleSync} disabled={syncing}>
+            {syncing
+              ? (lang === 'vi' ? 'Đang cập nhật...' : 'Syncing...')
+              : (lang === 'vi' ? 'Cập nhật từ code mới' : 'Sync from latest code')
             }
           </button>
         )}
