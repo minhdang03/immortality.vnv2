@@ -98,7 +98,7 @@ body { background: var(--bg); color: var(--text); }
 }
 .header-inner {
   display: flex; align-items: center; justify-content: space-between;
-  max-width: 1200px; margin: 0 auto; padding: 0 20px;
+  padding: 0 20px;
 }
 .logo { display: flex; align-items: center; gap: 8px; cursor: pointer; flex-shrink: 0; }
 .logo-text { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--gold-bright); white-space: nowrap; }
