@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { useTheme } from './hooks/useTheme'
-import { useArticles, useTranslations, useTopics, useStories } from './hooks/useFirestore'
+import { useArticles, useTranslations, useTopics, useStories, useRevelations, useTeachings, usePractices } from './hooks/useFirestore'
 import { useFontSize } from './hooks/useFontSize'
 import { articleSlug } from './utils/slug'
 import './styles/app.css'
@@ -22,6 +22,7 @@ import ContactPage from './pages/ContactPage'
 import AboutPage from './pages/AboutPage'
 import StoriesPage from './pages/StoriesPage'
 import PracticePage from './pages/PracticePage'
+import RevelationsPage from './pages/RevelationsPage'
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
@@ -37,6 +38,9 @@ export default function App() {
   const { getT, firestoreVi, firestoreEn, updateTranslations } = useTranslations()
   const { topics: TOPICS, addTopic, updateTopic, deleteTopic } = useTopics()
   const { stories: firestoreStories, addStory, updateStory, deleteStory } = useStories()
+  const { revelations, addRevelation, updateRevelation, deleteRevelation } = useRevelations()
+  const { teachings, addTeaching, updateTeaching, deleteTeaching } = useTeachings()
+  const { practices, addPractice, updatePractice, deletePractice } = usePractices()
   const t = getT(lang)
   const allArticles = firestoreArticles
 
@@ -62,6 +66,7 @@ export default function App() {
     if (hash === '/about') { setPage('about'); return }
     if (hash === '/stories' || hash.startsWith('/story/')) { setPage('stories'); return }
     if (hash === '/practice') { setPage('practice'); return }
+    if (hash === '/revelations') { setPage('revelations'); return }
     if (hash === '/admin') { setPage('admin'); return }
   }
 
@@ -142,7 +147,7 @@ export default function App() {
             <SearchPage t={t} lang={lang} articles={allArticles} navigate={navigate} />
           )}
           {page === 'about' && (
-            <AboutPage t={t} lang={lang} />
+            <AboutPage t={t} lang={lang} teachings={teachings} />
           )}
           {page === 'stories' && (
             <StoriesPage t={t} lang={lang} firestoreStories={firestoreStories} navigate={navigate}
@@ -150,7 +155,10 @@ export default function App() {
             />
           )}
           {page === 'practice' && (
-            <PracticePage t={t} lang={lang} />
+            <PracticePage t={t} lang={lang} practices={practices} />
+          )}
+          {page === 'revelations' && (
+            <RevelationsPage t={t} lang={lang} revelations={revelations} />
           )}
           {page === 'contact' && (
             <ContactPage t={t} />
@@ -160,10 +168,14 @@ export default function App() {
             <AdminPanel
               t={t} lang={lang} user={user}
               articles={allArticles} topics={TOPICS} stories={firestoreStories}
+              revelations={revelations} teachings={teachings} practices={practices}
               firestoreVi={firestoreVi} firestoreEn={firestoreEn}
               onAddArticle={addArticle} onUpdateArticle={updateArticle} onDeleteArticle={deleteArticle}
               onAddTopic={addTopic} onUpdateTopic={updateTopic} onDeleteTopic={deleteTopic}
               onAddStory={addStory} onUpdateStory={updateStory} onDeleteStory={deleteStory}
+              onAddRevelation={addRevelation} onUpdateRevelation={updateRevelation} onDeleteRevelation={deleteRevelation}
+              onAddTeaching={addTeaching} onUpdateTeaching={updateTeaching} onDeleteTeaching={deleteTeaching}
+              onAddPractice={addPractice} onUpdatePractice={updatePractice} onDeletePractice={deletePractice}
               onUpdateTranslations={updateTranslations}
             />
             </Suspense>

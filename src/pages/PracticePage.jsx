@@ -1,19 +1,27 @@
+import { useMemo } from 'react'
 import SunIcon from '../components/SunIcon'
 
-const MOVES = [
-  { vi: 'Khởi Động Năng Lượng Mặt Trời', en: 'Solar Energy Activation' },
-  { vi: 'Thái Dương Chưởng — Chưởng Mặt Trời', en: 'Solar Palm — Sun Palm Strike' },
-  { vi: 'Hỏa Xà Quyền — Quyền Rắn Lửa', en: 'Fire Snake Fist' },
-  { vi: 'Nhật Nguyệt Liên Hoàn — Mặt Trời Mặt Trăng Liên Kết', en: 'Sun-Moon Chain Strike' },
-  { vi: 'Thiên Địa Quy Nhất — Trời Đất Hợp Nhất', en: 'Heaven-Earth Unification' },
-  { vi: 'Vũ Trụ Xoay Chuyển — Xoáy Năng Lượng', en: 'Universe Rotation — Energy Vortex' },
-  { vi: 'Kim Cương Bất Hoại — Thân Kim Cương', en: 'Diamond Indestructible Body' },
-  { vi: 'Phi Thuyền Quyền — Quyền Bay', en: 'Spacecraft Fist — Flying Fist' },
-  { vi: 'Hạt Bất Tử — Kích Hoạt Hạt Nguyên Tử', en: 'Immortal Particle — Atomic Activation' },
-  { vi: 'Thái Dương Đại Pháp — Hoàn Thiện Năng Lượng', en: 'Grand Solar Method — Energy Completion' },
+const DEFAULT_MOVES = [
+  { order: 1, titleVi: 'Khởi Động Năng Lượng Mặt Trời', titleEn: 'Solar Energy Activation', descVi: '', descEn: '' },
+  { order: 2, titleVi: 'Thái Dương Chưởng — Chưởng Mặt Trời', titleEn: 'Solar Palm — Sun Palm Strike', descVi: '', descEn: '' },
+  { order: 3, titleVi: 'Hỏa Xà Quyền — Quyền Rắn Lửa', titleEn: 'Fire Snake Fist', descVi: '', descEn: '' },
+  { order: 4, titleVi: 'Nhật Nguyệt Liên Hoàn — Mặt Trời Mặt Trăng Liên Kết', titleEn: 'Sun-Moon Chain Strike', descVi: '', descEn: '' },
+  { order: 5, titleVi: 'Thiên Địa Quy Nhất — Trời Đất Hợp Nhất', titleEn: 'Heaven-Earth Unification', descVi: '', descEn: '' },
+  { order: 6, titleVi: 'Vũ Trụ Xoay Chuyển — Xoáy Năng Lượng', titleEn: 'Universe Rotation — Energy Vortex', descVi: '', descEn: '' },
+  { order: 7, titleVi: 'Kim Cương Bất Hoại — Thân Kim Cương', titleEn: 'Diamond Indestructible Body', descVi: '', descEn: '' },
+  { order: 8, titleVi: 'Phi Thuyền Quyền — Quyền Bay', titleEn: 'Spacecraft Fist — Flying Fist', descVi: '', descEn: '' },
+  { order: 9, titleVi: 'Hạt Bất Tử — Kích Hoạt Hạt Nguyên Tử', titleEn: 'Immortal Particle — Atomic Activation', descVi: '', descEn: '' },
+  { order: 10, titleVi: 'Thái Dương Đại Pháp — Hoàn Thiện Năng Lượng', titleEn: 'Grand Solar Method — Energy Completion', descVi: '', descEn: '' },
 ]
 
-export default function PracticePage({ t, lang }) {
+function mergeMoves(firestorePractices) {
+  if (firestorePractices && firestorePractices.length > 0) return firestorePractices
+  return DEFAULT_MOVES
+}
+
+export default function PracticePage({ t, lang, practices }) {
+  const moves = useMemo(() => mergeMoves(practices), [practices])
+
   return (
     <section className="practice-page fade-up">
       <div className="practice-header">
@@ -44,17 +52,21 @@ export default function PracticePage({ t, lang }) {
       </h2>
 
       <div className="practice-moves">
-        {MOVES.map((move, i) => (
-          <div key={i} className={`practice-move fade-up fade-up-d${(i % 4) + 1}`}>
-            <div className="practice-move-num">{String(i + 1).padStart(2, '0')}</div>
-            <div className="practice-move-content">
-              <h3 className="practice-move-title">{lang === 'vi' ? move.vi : move.en}</h3>
-              <p className="practice-move-desc">
-                {lang === 'vi' ? 'Hướng dẫn chi tiết đang cập nhật...' : 'Detailed instructions being updated...'}
-              </p>
+        {moves.map((move, i) => {
+          const title = lang === 'vi' ? move.titleVi : move.titleEn
+          const desc = lang === 'vi' ? move.descVi : move.descEn
+          return (
+            <div key={move.id || i} className={`practice-move fade-up fade-up-d${(i % 4) + 1}`}>
+              <div className="practice-move-num">{String(move.order || i + 1).padStart(2, '0')}</div>
+              <div className="practice-move-content">
+                <h3 className="practice-move-title">{title}</h3>
+                <p className="practice-move-desc">
+                  {desc || (lang === 'vi' ? 'Hướng dẫn chi tiết đang cập nhật...' : 'Detailed instructions being updated...')}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
   )

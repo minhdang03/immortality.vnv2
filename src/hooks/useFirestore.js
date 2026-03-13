@@ -166,3 +166,48 @@ export function useTopics() {
 
   return { topics, loading, addTopic, updateTopic, deleteTopic }
 }
+
+/* ─── GENERIC CRUD (for revelations, teachings, practices) ─── */
+function useCRUD(collectionName, orderField = 'order') {
+  const [items, setItems] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(`cached_${collectionName}`)) || [] } catch { return [] }
+  })
+  const [loading, setLoading] = useState(() => !localStorage.getItem(`cached_${collectionName}`))
+
+  useEffect(() => {
+    try {
+      const q = query(collection(db, collectionName), orderBy(orderField, 'asc'))
+      const unsub = onSnapshot(q, (snap) => {
+        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        setItems(data)
+        setLoading(false)
+        try { localStorage.setItem(`cached_${collectionName}`, JSON.stringify(data)) } catch {}
+      }, () => { setLoading(false) })
+      return unsub
+    } catch { setLoading(false) }
+  }, [])
+
+  const add = async (item) => { await addDoc(collection(db, collectionName), { ...item, createdAt: serverTimestamp() }) }
+  const update = async (id, data) => { await updateDoc(doc(db, collectionName, id), data) }
+  const remove = async (id) => { await deleteDoc(doc(db, collectionName, id)) }
+
+  return { items, loading, add, update, remove }
+}
+
+/* ─── REVELATIONS (Khai Thị) ─── */
+export function useRevelations() {
+  const { items, loading, add, update, remove } = useCRUD('revelations')
+  return { revelations: items, loading, addRevelation: add, updateRevelation: update, deleteRevelation: remove }
+}
+
+/* ─── TEACHINGS (Giới Thiệu / Đô Tỷ Pháp) ─── */
+export function useTeachings() {
+  const { items, loading, add, update, remove } = useCRUD('teachings')
+  return { teachings: items, loading, addTeaching: add, updateTeaching: update, deleteTeaching: remove }
+}
+
+/* ─── PRACTICES (Thái Dương Quyền movements) ─── */
+export function usePractices() {
+  const { items, loading, add, update, remove } = useCRUD('practices')
+  return { practices: items, loading, addPractice: add, updatePractice: update, deletePractice: remove }
+}

@@ -1,8 +1,9 @@
+import { useMemo } from 'react'
 import SunIcon from '../components/SunIcon'
 
-const SECTIONS = [
+const DEFAULT_SECTIONS = [
   {
-    id: 'formula',
+    order: 1,
     titleVi: 'Đô Tỷ Pháp: Công Thức Sáng Tạo',
     titleEn: 'Đô Tỷ Pháp: The Creative Formula',
     bodyVi: `Mục tiêu: Xây dựng một thế giới lấy tình yêu thương làm trung tâm, không phân biệt tôn giáo, sắc tộc, ngôn ngữ. Không chiến tranh, không nghèo khổ. Một "Thiên Đàng Trên Trái Đất" nơi mọi người bình đẳng, tự do, hạnh phúc. Khám phá bí mật về sự bất tử của loài người.
@@ -17,7 +18,7 @@ General Formula: Programming the Super Brain of the Immortal Human
 Transform and upgrade the human brain from the limited DNA neurological energy system (plant and animal energy sources, short lifespan) to a new structure: cosmic space DNA, super-evolution, particle operating system through the multiverse and super-universe network. Wireless atomic energy originating from the pre-Big Bang "Immortal Particle," opening the possibility of living beyond 1,000 years.`,
   },
   {
-    id: 'introduction',
+    order: 2,
     titleVi: 'Lời Mở Đầu của Người Bất Tử (NBT)',
     titleEn: 'Introduction by The Immortal (NBT)',
     bodyVi: `Chết vì bệnh tật, đau nhức, đột quỵ, đột tử, ung thư, tai nạn? Không phải. Đó chỉ là những hiện tượng cảm báo từ các kinh mạch, cơ quan tạng phủ truyền thông tin đến trung tâm hệ thống dây thần kinh não bộ.
@@ -36,7 +37,7 @@ The reincarnation brain backs up pain, disease, cancer, stroke, sudden death, th
 Humans only need to practice activating the switch according to the Immortal Brain Formula, connecting with pre-Big Bang cosmic magnetic wave energy to the brain center, and there will be no suffering, disease, cancer, no stroke or sudden death, no accidents. Humans will be very hard to kill. The high evolution of cosmic super-medicine will help humans increase EQ, AQ, IQ, OQ, live joyfully and healthily, increase lifespan beyond a thousand years and achieve immortality.`,
   },
   {
-    id: 'reality',
+    order: 3,
     titleVi: 'Thực trạng loài người',
     titleEn: 'The Reality of Humanity',
     bodyVi: `Theo Tổ chức Y tế Thế giới (WHO), tuổi thọ trung bình toàn cầu khoảng 70 tuổi. Mỗi năm, hàng trăm ngàn người qua đời vì béo phì, tim mạch, ung thư, tai nạn giao thông. Có những người chết non từ khi còn trong bào thai, trong khi số khác sống thọ hơn 120 tuổi, phụ thuộc vào di truyền ADN.
@@ -55,66 +56,54 @@ The secret of life and death lies in black hole DNA, storing genetic information
 Currently humans use regenerative energy from plant and animal food, with risk of DNA cancer infection from plants and animals. Premature death, early death, death from natural disasters, catastrophes, and human-animal calamities.`,
   },
   {
-    id: 'brain',
+    order: 4,
     titleVi: '7 Phần Não Bộ theo Y Học Vũ Trụ',
     titleEn: '7 Brain Parts according to Cosmic Medicine',
-    listVi: [
-      { label: 'Bán cầu não trái (Mắt phải)', desc: 'Nhìn thấy ánh sáng, màu sắc, hình tướng muôn loài vạn vật. Va chạm và xử lý thông tin.' },
-      { label: 'Bán cầu não phải (Mắt trái)', desc: 'Nhìn thấy bóng tối, màu sắc, hình tướng muôn loài vạn vật. Va chạm và xử lý thông tin.' },
-      { label: 'Não giữa (Mắt thứ 3)', desc: 'Trung tâm tổng hợp. Nhìn thấy tất cả màu sắc, âm thanh, hình tướng. Va chạm và xử lý thông tin.' },
-      { label: 'Não trước (Ý thức)', desc: 'Tổng hợp tất cả màu sắc, âm thanh, hình tướng. Va chạm và xử lý thông tin.' },
-      { label: 'Não giữa (Vô tỷ thức)', desc: 'Trung tâm vô tỷ thức. Tổng hợp tất cả màu sắc, âm thanh, hình tướng. Va chạm và xử lý thông tin.' },
-      { label: 'Não sau (Tàng thức)', desc: 'Sao lưu và tổng hợp tất cả màu sắc, âm thanh, hình tướng. Va chạm và xử lý thông tin.' },
-      { label: 'Bộ não dưới (Bộ sinh dục nam nữ)', desc: 'Con chip Luân Hồi. Tổng hợp tất cả màu sắc, âm thanh, ngôn ngữ, hình tướng, sự sống chết ADN. Va chạm và xử lý thông tin để di truyền luân hồi.' },
-      { label: 'Vô tâm não', desc: 'ADN, con chip Bất Tử. Hợp nhất với đại não, trước vũ trụ Big Bang.' },
-    ],
-    listEn: [
-      { label: 'Left Hemisphere (Right Eye)', desc: 'Sees light, color, forms of all species and things. Collides and processes information.' },
-      { label: 'Right Hemisphere (Left Eye)', desc: 'Sees darkness, color, forms of all species and things. Collides and processes information.' },
-      { label: 'Middle Brain (Third Eye)', desc: 'Central synthesis. Sees all colors, sounds, forms. Collides and processes information.' },
-      { label: 'Front Brain (Consciousness)', desc: 'Synthesizes all colors, sounds, forms. Collides and processes information.' },
-      { label: 'Middle Brain (Sub-consciousness)', desc: 'Sub-consciousness center. Synthesizes all colors, sounds, forms. Collides and processes information.' },
-      { label: 'Back Brain (Storage Consciousness)', desc: 'Backs up and synthesizes all colors, sounds, forms. Collides and processes information.' },
-      { label: 'Lower Brain (Reproductive System)', desc: 'Reincarnation Chip. Synthesizes all colors, sounds, language, forms, life-death DNA. Processes information for genetic reincarnation.' },
-      { label: 'Heartless Brain', desc: 'DNA, Immortal Chip. United with the cerebrum, before the Big Bang universe.' },
-    ],
+    bodyVi: `1. Bán cầu não trái (Mắt phải) — Nhìn thấy ánh sáng, màu sắc, hình tướng muôn loài vạn vật. Va chạm và xử lý thông tin.
+2. Bán cầu não phải (Mắt trái) — Nhìn thấy bóng tối, màu sắc, hình tướng muôn loài vạn vật. Va chạm và xử lý thông tin.
+3. Não giữa (Mắt thứ 3) — Trung tâm tổng hợp. Nhìn thấy tất cả màu sắc, âm thanh, hình tướng. Va chạm và xử lý thông tin.
+4. Não trước (Ý thức) — Tổng hợp tất cả màu sắc, âm thanh, hình tướng. Va chạm và xử lý thông tin.
+5. Não giữa (Vô tỷ thức) — Trung tâm vô tỷ thức. Tổng hợp tất cả màu sắc, âm thanh, hình tướng. Va chạm và xử lý thông tin.
+6. Não sau (Tàng thức) — Sao lưu và tổng hợp tất cả màu sắc, âm thanh, hình tướng. Va chạm và xử lý thông tin.
+7. Bộ não dưới (Bộ sinh dục nam nữ) — Con chip Luân Hồi. Tổng hợp tất cả màu sắc, âm thanh, ngôn ngữ, hình tướng, sự sống chết ADN. Va chạm và xử lý thông tin để di truyền luân hồi.
+8. Vô tâm não — ADN, con chip Bất Tử. Hợp nhất với đại não, trước vũ trụ Big Bang.`,
+    bodyEn: `1. Left Hemisphere (Right Eye) — Sees light, color, forms of all species and things. Collides and processes information.
+2. Right Hemisphere (Left Eye) — Sees darkness, color, forms of all species and things. Collides and processes information.
+3. Middle Brain (Third Eye) — Central synthesis. Sees all colors, sounds, forms. Collides and processes information.
+4. Front Brain (Consciousness) — Synthesizes all colors, sounds, forms. Collides and processes information.
+5. Middle Brain (Sub-consciousness) — Sub-consciousness center. Synthesizes all colors, sounds, forms. Collides and processes information.
+6. Back Brain (Storage Consciousness) — Backs up and synthesizes all colors, sounds, forms. Collides and processes information.
+7. Lower Brain (Reproductive System) — Reincarnation Chip. Synthesizes all colors, sounds, language, forms, life-death DNA. Processes information for genetic reincarnation.
+8. Heartless Brain — DNA, Immortal Chip. United with the cerebrum, before the Big Bang universe.`,
   },
   {
-    id: 'energy',
+    order: 5,
     titleVi: '4 Hệ Thống Thần Kinh Năng Lượng',
     titleEn: '4 Neurological Energy Systems',
-    listVi: [
-      { label: 'Hệ thống dây thần kinh ADN năng lượng Động Vật', desc: 'Loài rùa sống thọ hơn 200 năm. Loài thủy sinh, sứa biển 500 tuổi. Loài sống dưới mặt đất 500 tuổi.' },
-      { label: 'Hệ thống dây thần kinh ADN năng lượng Thực Vật', desc: 'Loài đại cổ thụ sống thọ hơn 4.000 năm.' },
-      { label: 'Hệ thống dây thần kinh ADN năng lượng Big Bang', desc: '' },
-      { label: 'Hệ thống hạt thần kinh không dây', desc: 'Từ vũ trụ trước Big Bang (Hạt Bất Tử).' },
-    ],
-    listEn: [
-      { label: 'Animal Energy DNA Nervous System', desc: 'Turtles live over 200 years. Aquatic species, jellyfish 500 years. Underground species 500 years.' },
-      { label: 'Plant Energy DNA Nervous System', desc: 'Ancient trees live over 4,000 years.' },
-      { label: 'Big Bang Energy DNA Nervous System', desc: '' },
-      { label: 'Wireless Particle Nervous System', desc: 'From the pre-Big Bang universe (Immortal Particle).' },
-    ],
+    bodyVi: `1. Hệ thống dây thần kinh ADN năng lượng Động Vật — Loài rùa sống thọ hơn 200 năm. Loài thủy sinh, sứa biển 500 tuổi. Loài sống dưới mặt đất 500 tuổi.
+2. Hệ thống dây thần kinh ADN năng lượng Thực Vật — Loài đại cổ thụ sống thọ hơn 4.000 năm.
+3. Hệ thống dây thần kinh ADN năng lượng Big Bang
+4. Hệ thống hạt thần kinh không dây — Từ vũ trụ trước Big Bang (Hạt Bất Tử).`,
+    bodyEn: `1. Animal Energy DNA Nervous System — Turtles live over 200 years. Aquatic species, jellyfish 500 years. Underground species 500 years.
+2. Plant Energy DNA Nervous System — Ancient trees live over 4,000 years.
+3. Big Bang Energy DNA Nervous System
+4. Wireless Particle Nervous System — From the pre-Big Bang universe (Immortal Particle).`,
   },
   {
-    id: 'support',
+    order: 6,
     titleVi: 'Các Hệ Thống Phụ Trợ',
     titleEn: 'Support Systems',
-    listVi: [
-      { label: 'Tuyến nội tiết', desc: 'Tuyến tùng, tuyến yên, tuyến thượng thận, tuyến ức, tuyến sinh dục nam nữ.' },
-      { label: 'Lục phủ, ngũ tạng', desc: '' },
-      { label: 'Hơn 100 tỷ nhân tế bào', desc: 'Cảm thụ nguồn năng lượng động thực vật.' },
-      { label: 'Công thức chuyển đổi', desc: 'Nhân tế bào động thực vật thành "Linh bào" — năng lượng vũ trụ, nguyên tử, Hạt Bất Tử.' },
-    ],
-    listEn: [
-      { label: 'Endocrine glands', desc: 'Pineal, pituitary, adrenal, thymus, male and female reproductive glands.' },
-      { label: 'Six hollow organs, five solid organs', desc: '' },
-      { label: 'Over 100 billion cell nuclei', desc: 'Absorbing plant and animal energy sources.' },
-      { label: 'Conversion formula', desc: 'Transform plant and animal cell nuclei into "Spirit Cells" — cosmic energy, atomic, Immortal Particle.' },
-    ],
+    bodyVi: `1. Tuyến nội tiết — Tuyến tùng, tuyến yên, tuyến thượng thận, tuyến ức, tuyến sinh dục nam nữ.
+2. Lục phủ, ngũ tạng
+3. Hơn 100 tỷ nhân tế bào — Cảm thụ nguồn năng lượng động thực vật.
+4. Công thức chuyển đổi — Nhân tế bào động thực vật thành "Linh bào" — năng lượng vũ trụ, nguyên tử, Hạt Bất Tử.`,
+    bodyEn: `1. Endocrine glands — Pineal, pituitary, adrenal, thymus, male and female reproductive glands.
+2. Six hollow organs, five solid organs
+3. Over 100 billion cell nuclei — Absorbing plant and animal energy sources.
+4. Conversion formula — Transform plant and animal cell nuclei into "Spirit Cells" — cosmic energy, atomic, Immortal Particle.`,
   },
   {
-    id: 'journey',
+    order: 7,
     titleVi: 'Hành Trình Người Bất Tử',
     titleEn: 'The Immortal\'s Journey',
     bodyVi: `Từ ngàn xưa đến nay, loài người luôn có một ước mơ lớn nhất: có được một cơ thể thiên đường hạnh phúc. Cuộc sống vui khỏe, giàu sang, trí tuệ, không đau bệnh, không đột quỵ đột tử, không ung thư di truyền ADN, không thiên tai địa họa nhân thú nạn.
@@ -138,48 +127,47 @@ For those who want freedom from disease and immortality, there is only one path:
   },
 ]
 
-export default function AboutPage({ t, lang }) {
+function mergeSections(firestoreTeachings) {
+  if (firestoreTeachings && firestoreTeachings.length > 0) return firestoreTeachings
+  return DEFAULT_SECTIONS
+}
+
+export default function AboutPage({ t, lang, teachings }) {
+  const sections = useMemo(() => mergeSections(teachings), [teachings])
+
   return (
     <section className="about-page fade-up">
       <div className="about-header">
         <div className="about-sun"><SunIcon size={60} /></div>
         <h1 className="about-main-title">
-          {lang === 'vi' ? 'Giới Thiệu' : 'About'}
+          {lang === 'vi' ? 'Giới Thiệu — Đô Tỷ Pháp' : 'About — Đô Tỷ Pháp'}
         </h1>
         <p className="about-subtitle">
           {lang === 'vi'
-            ? 'Bất Tử Đạo — Phi Thuyền Trí Tuệ Việt Nam'
-            : 'Immortality — Vietnamese Wisdom Spacecraft'}
+            ? 'Lý thuyết nền tảng — Bất Tử Đạo'
+            : 'Foundation Theory — Immortality'}
         </p>
       </div>
 
-      {SECTIONS.map((sec, i) => (
-        <div key={sec.id} className={`about-section fade-up fade-up-d${(i % 4) + 1}`}>
-          <h2 className="about-section-title">
-            <span className="about-section-num">{String(i + 1).padStart(2, '0')}</span>
-            {lang === 'vi' ? sec.titleVi : sec.titleEn}
-          </h2>
-
-          {sec.bodyVi && (
-            <div className="about-body">
-              {(lang === 'vi' ? sec.bodyVi : sec.bodyEn).split('\n\n').map((p, j) => (
-                <p key={j}>{p}</p>
-              ))}
-            </div>
-          )}
-
-          {sec.listVi && (
-            <div className="about-list">
-              {(lang === 'vi' ? sec.listVi : sec.listEn).map((item, j) => (
-                <div key={j} className="about-list-item">
-                  <div className="about-list-label">{item.label}</div>
-                  {item.desc && <div className="about-list-desc">{item.desc}</div>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+      {sections.map((sec, i) => {
+        const title = lang === 'vi' ? sec.titleVi : sec.titleEn
+        const body = lang === 'vi' ? sec.bodyVi : sec.bodyEn
+        return (
+          <div key={sec.id || i} className={`about-section fade-up fade-up-d${(i % 4) + 1}`}>
+            <h2 className="about-section-title">
+              <span className="about-section-num">{String(sec.order || i + 1).padStart(2, '0')}</span>
+              {title}
+            </h2>
+            {body && (
+              <div className="about-body">
+                {body.split('\n\n').map((p, j) => (
+                  <p key={j}>{p}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </section>
   )
 }
