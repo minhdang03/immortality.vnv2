@@ -132,7 +132,7 @@ export default function App() {
 
         <main className="container">
           {page === 'home' && (
-            <HomePage t={t} lang={lang} topics={TOPICS} articles={allArticles} loading={loading} navigate={navigate} />
+            <HomePage t={t} lang={lang} topics={TOPICS} articles={allArticles} loading={loading} navigate={navigate} siteSettings={siteSettings} />
           )}
           {page === 'topic' && (
             <TopicPage t={t} lang={lang} topics={TOPICS} articles={allArticles} selectedTopic={selectedTopic} navigate={navigate} />

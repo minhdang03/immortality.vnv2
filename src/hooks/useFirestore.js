@@ -212,7 +212,23 @@ export function usePractices() {
   return { practices: items, loading, addPractice: add, updatePractice: update, deletePractice: remove }
 }
 
-/* ─── SITE SETTINGS (navigation structure, etc.) ─── */
+/* ─── SITE SETTINGS (navigation, home page, etc.) ─── */
+export const DEFAULT_HOME_CARDS = [
+  { id: 'stories', icon: 'book', labelVi: '37 Câu Chuyện', labelEn: '37 Stories', descVi: 'Hành trình tu luyện siêu trí tuệ qua những câu chuyện có thật', descEn: 'The journey of super-intelligence cultivation through true stories', visible: true },
+  { id: 'revelations', icon: 'layers', labelVi: 'Khai Thị', labelEn: 'Revelations', descVi: 'Hỏi đáp với Người Bất Tử về chân lý cuộc sống', descEn: 'Q&A with the Immortal about life truths', visible: true },
+  { id: 'about', icon: 'info', labelVi: 'Đô Tỷ Pháp', labelEn: 'Đô Tỷ Pháp Theory', descVi: 'Lý thuyết nền tảng về siêu trí tuệ và con đường bất tử', descEn: 'Foundational theory of super-intelligence and the path to immortality', visible: true },
+  { id: 'practice', icon: 'sun', labelVi: 'Thái Dương Quyền', labelEn: 'Solar Fist', descVi: '10 chiêu thức luyện năng lượng mặt trời', descEn: '10 movements of solar energy cultivation', visible: true },
+]
+
+export const DEFAULT_HERO = {
+  titleVi: '', titleEn: '',
+  subtitleVi: '', subtitleEn: '',
+  ctaPrimaryVi: 'Khám Phá Câu Chuyện', ctaPrimaryEn: 'Explore Stories',
+  ctaPrimaryLink: 'stories',
+  ctaSecondaryVi: '', ctaSecondaryEn: '',
+  ctaSecondaryLink: 'search',
+}
+
 export const DEFAULT_NAV_ITEMS = [
   { id: 'home', labelVi: 'Trang Chủ', labelEn: 'Home', visible: true, showInBottom: true },
   { id: 'stories', labelVi: '37 Chuyện', labelEn: 'Stories', visible: true, showInBottom: true },
@@ -226,8 +242,8 @@ export function useSiteSettings() {
   const [settings, setSettings] = useState(() => {
     try {
       const cached = JSON.parse(localStorage.getItem('cached_site_settings'))
-      return cached || { navItems: DEFAULT_NAV_ITEMS }
-    } catch { return { navItems: DEFAULT_NAV_ITEMS } }
+      return cached || { navItems: DEFAULT_NAV_ITEMS, homeCards: DEFAULT_HOME_CARDS, hero: DEFAULT_HERO }
+    } catch { return { navItems: DEFAULT_NAV_ITEMS, homeCards: DEFAULT_HOME_CARDS, hero: DEFAULT_HERO } }
   })
   const [loading, setLoading] = useState(true)
 
