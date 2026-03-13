@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { useTheme } from './hooks/useTheme'
-import { useArticles, useTranslations, useTopics, useStories, useRevelations, useTeachings, usePractices } from './hooks/useFirestore'
+import { useArticles, useTranslations, useTopics, useStories, useRevelations, useTeachings, usePractices, useSiteSettings } from './hooks/useFirestore'
 import { useFontSize } from './hooks/useFontSize'
 import { articleSlug } from './utils/slug'
 import './styles/app.css'
@@ -41,6 +41,7 @@ export default function App() {
   const { revelations, addRevelation, updateRevelation, deleteRevelation } = useRevelations()
   const { teachings, addTeaching, updateTeaching, deleteTeaching } = useTeachings()
   const { practices, addPractice, updatePractice, deletePractice } = usePractices()
+  const { settings: siteSettings, updateSettings } = useSiteSettings()
   const t = getT(lang)
   const allArticles = firestoreArticles
 
@@ -126,7 +127,7 @@ export default function App() {
           t={t} lang={lang} dark={dark} page={page} menuOpen={menuOpen}
           navigate={navigate} toggleTheme={toggleTheme}
           setLang={setLang} setMenuOpen={setMenuOpen}
-          user={user}
+          user={user} navItems={siteSettings.navItems}
         />
 
         <main className="container">
@@ -177,6 +178,7 @@ export default function App() {
               onAddTeaching={addTeaching} onUpdateTeaching={updateTeaching} onDeleteTeaching={deleteTeaching}
               onAddPractice={addPractice} onUpdatePractice={updatePractice} onDeletePractice={deletePractice}
               onUpdateTranslations={updateTranslations}
+              siteSettings={siteSettings} onUpdateSettings={updateSettings}
             />
             </Suspense>
           )}
@@ -189,7 +191,7 @@ export default function App() {
           {t.footer}
         </footer>
 
-        <BottomNav t={t} lang={lang} page={page} navigate={navigate} />
+        <BottomNav t={t} lang={lang} page={page} navigate={navigate} navItems={siteSettings.navItems} />
       </div>
     </>
   )

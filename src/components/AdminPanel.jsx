@@ -8,6 +8,7 @@ import StoriesTab from './admin/StoriesTab'
 import RevelationsTab from './admin/RevelationsTab'
 import TeachingsTab from './admin/TeachingsTab'
 import PracticesTab from './admin/PracticesTab'
+import SettingsTab from './admin/SettingsTab'
 
 export default function AdminPanel({
   t, lang, user, articles, topics, stories, firestoreVi, firestoreEn,
@@ -19,6 +20,7 @@ export default function AdminPanel({
   onAddTeaching, onUpdateTeaching, onDeleteTeaching,
   onAddPractice, onUpdatePractice, onDeletePractice,
   onUpdateTranslations,
+  siteSettings, onUpdateSettings,
 }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -57,6 +59,7 @@ export default function AdminPanel({
     { id: 'practices', vi: 'Thái Dương Quyền', en: 'Solar Fist' },
     { id: 'topics', vi: 'Chủ đề', en: 'Topics' },
     { id: 'translations', vi: 'Ngôn ngữ', en: 'Translations' },
+    { id: 'settings', vi: 'Cài đặt', en: 'Settings' },
   ]
 
   return (
@@ -84,6 +87,7 @@ export default function AdminPanel({
       {tab === 'practices' && <PracticesTab t={t} lang={lang} items={practices} onAdd={onAddPractice} onUpdate={onUpdatePractice} onDelete={onDeletePractice} />}
       {tab === 'topics' && <TopicsTab t={t} lang={lang} topics={topics} onAdd={onAddTopic} onUpdate={onUpdateTopic} onDelete={onDeleteTopic} />}
       {tab === 'translations' && <TranslationsTab lang={lang} firestoreVi={firestoreVi} firestoreEn={firestoreEn} onUpdate={onUpdateTranslations} />}
+      {tab === 'settings' && <SettingsTab lang={lang} settings={siteSettings} onUpdate={onUpdateSettings} />}
     </section>
   )
 }

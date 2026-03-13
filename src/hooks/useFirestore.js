@@ -211,3 +211,44 @@ export function usePractices() {
   const { items, loading, add, update, remove } = useCRUD('practices')
   return { practices: items, loading, addPractice: add, updatePractice: update, deletePractice: remove }
 }
+
+/* ─── SITE SETTINGS (navigation structure, etc.) ─── */
+export const DEFAULT_NAV_ITEMS = [
+  { id: 'home', labelVi: 'Trang Chủ', labelEn: 'Home', visible: true, showInBottom: true },
+  { id: 'stories', labelVi: '37 Chuyện', labelEn: 'Stories', visible: true, showInBottom: true },
+  { id: 'revelations', labelVi: 'Khai Thị', labelEn: 'Revelations', visible: true, showInBottom: true },
+  { id: 'about', labelVi: 'Giới Thiệu', labelEn: 'About', visible: true, showInBottom: false },
+  { id: 'practice', labelVi: 'Thái Dương Quyền', labelEn: 'Solar Fist', visible: true, showInBottom: true },
+  { id: 'contact', labelVi: 'Liên Hệ', labelEn: 'Contact', visible: true, showInBottom: true },
+]
+
+export function useSiteSettings() {
+  const [settings, setSettings] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('cached_site_settings'))
+      return cached || { navItems: DEFAULT_NAV_ITEMS }
+    } catch { return { navItems: DEFAULT_NAV_ITEMS } }
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    try {
+      const unsub = onSnapshot(doc(db, 'settings', 'site'), (snap) => {
+        if (snap.exists()) {
+          const data = snap.data()
+          setSettings(data)
+          try { localStorage.setItem('cached_site_settings', JSON.stringify(data)) } catch {}
+        }
+        setLoading(false)
+      }, () => { setLoading(false) })
+      return unsub
+    } catch { setLoading(false) }
+  }, [])
+
+  const updateSettings = async (data) => {
+    const { setDoc } = await import('firebase/firestore')
+    await setDoc(doc(db, 'settings', 'site'), data, { merge: true })
+  }
+
+  return { settings, loading, updateSettings }
+}

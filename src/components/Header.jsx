@@ -1,6 +1,9 @@
 import SunIcon from './SunIcon'
+import { DEFAULT_NAV_ITEMS } from '../hooks/useFirestore'
 
-export default function Header({ t, lang, dark, page, menuOpen, navigate, toggleTheme, setLang, setMenuOpen, user }) {
+export default function Header({ t, lang, dark, page, menuOpen, navigate, toggleTheme, setLang, setMenuOpen, user, navItems }) {
+  const items = (navItems || DEFAULT_NAV_ITEMS).filter(i => i.visible)
+
   return (
     <>
       <header className="header">
@@ -10,12 +13,11 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
             <span className="logo-text">{t.siteName}</span>
           </div>
           <div className="desktop-nav">
-            <button className={page === 'home' ? 'active' : ''} onClick={() => navigate('home')}>{t.navHome}</button>
-            <button className={page === 'stories' ? 'active' : ''} onClick={() => navigate('stories')}>{lang === 'vi' ? '37 Chuyện' : 'Stories'}</button>
-            <button className={page === 'revelations' ? 'active' : ''} onClick={() => navigate('revelations')}>{lang === 'vi' ? 'Khai Thị' : 'Revelations'}</button>
-            <button className={page === 'about' ? 'active' : ''} onClick={() => navigate('about')}>{lang === 'vi' ? 'Giới thiệu' : 'About'}</button>
-            <button className={page === 'practice' ? 'active' : ''} onClick={() => navigate('practice')}>{lang === 'vi' ? 'Thái Dương Quyền' : 'Solar Fist'}</button>
-            <button className={page === 'contact' ? 'active' : ''} onClick={() => navigate('contact')}>{t.navContact}</button>
+            {items.map(item => (
+              <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => navigate(item.id)}>
+                {lang === 'vi' ? item.labelVi : item.labelEn}
+              </button>
+            ))}
           </div>
           <div className="header-actions">
             <button
@@ -46,12 +48,11 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
       <div className={`overlay-nav ${menuOpen ? 'open' : ''}`}>
         <button className="overlay-close" onClick={() => setMenuOpen(false)} aria-label="Close">✕</button>
         <nav className="overlay-links">
-          <button className={page === 'home' ? 'active' : ''} onClick={() => navigate('home')}>{t.navHome}</button>
-          <button className={page === 'stories' ? 'active' : ''} onClick={() => navigate('stories')}>{lang === 'vi' ? '37 Câu Chuyện' : '37 Stories'}</button>
-          <button className={page === 'revelations' ? 'active' : ''} onClick={() => navigate('revelations')}>{lang === 'vi' ? 'Khai Thị' : 'Revelations'}</button>
-          <button className={page === 'about' ? 'active' : ''} onClick={() => navigate('about')}>{lang === 'vi' ? 'Giới Thiệu' : 'About'}</button>
-          <button className={page === 'practice' ? 'active' : ''} onClick={() => navigate('practice')}>{lang === 'vi' ? 'Thái Dương Quyền' : 'Solar Fist'}</button>
-          <button className={page === 'contact' ? 'active' : ''} onClick={() => navigate('contact')}>{t.navContact}</button>
+          {items.map(item => (
+            <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => navigate(item.id)}>
+              {lang === 'vi' ? item.labelVi : item.labelEn}
+            </button>
+          ))}
           <div className="overlay-divider" />
           <button className={`overlay-login ${page === 'admin' ? 'active' : ''}`} onClick={() => navigate('admin')}>
             {user ? (lang === 'vi' ? 'Quản trị' : 'Admin') : (lang === 'vi' ? 'Đăng nhập' : 'Sign in')}
