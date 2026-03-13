@@ -2,3 +2,8 @@ node_modules
 dist
 .DS_Store
 *.local
+.env
+
+# Firebase Admin SDK key
+*firebase-adminsdk*
+scripts/serviceAccountKey.json
