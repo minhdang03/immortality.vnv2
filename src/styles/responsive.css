@@ -1,0 +1,94 @@
+/* ─── TABLET & DESKTOP RESPONSIVE ─── */
+@media (min-width: 768px) {
+  .hero { padding: 80px 20px 60px; }
+  .hero h1 { font-size: 3rem; }
+  .hero p { font-size: 1.05rem; max-width: 480px; }
+  .section-title { font-size: 1.8rem; }
+  .topics-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .article-card { padding: 28px 26px; }
+  .article-title { font-size: 1.25rem; }
+  .article-summary { font-size: 0.9rem; }
+  .detail-title { font-size: 1.8rem; }
+  .detail-body { font-size: calc(1.05rem * var(--reader-scale)); max-width: 700px; }
+
+  /* Stories */
+  .stories-page { max-width: var(--max-w); }
+  .stories-title { font-size: 2.4rem; }
+  .stories-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .story-item { padding: 16px 18px; }
+  .story-detail { max-width: var(--max-w); }
+  .story-detail-title { font-size: 1.8rem; }
+  .story-detail-body p { font-size: calc(1rem * var(--reader-scale)); }
+
+  /* About */
+  .about-page { max-width: var(--max-w); }
+  .about-main-title { font-size: 2.6rem; }
+  .about-section { padding: 28px 32px; }
+  .about-body p { font-size: 1rem; }
+  .about-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+  /* Practice */
+  .practice-page { max-width: var(--max-w); }
+  .practice-title { font-size: 2.6rem; }
+  .practice-moves { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+  /* Admin */
+  .admin-form { padding: 28px 32px; }
+}
+
+@media (min-width: 1024px) {
+  .hero h1 { font-size: 3.4rem; }
+  .hero p { font-size: 1.1rem; max-width: 520px; }
+  .topics-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .stories-list { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .story-item-title { font-size: 0.92rem; }
+  .story-detail-body p { font-size: calc(1.05rem * var(--reader-scale)); line-height: 2; }
+  .lesson-card-body p { font-size: calc(0.9rem * var(--reader-scale)); }
+  .lesson-card-title { font-size: 0.95rem; }
+  .about-list { grid-template-columns: repeat(2, 1fr); }
+  .about-section { padding: 32px 36px; }
+  .detail-body { max-width: 760px; }
+  .comment-item { padding: 18px 22px; }
+}
+
+/* Galaxy Fold (folded ~280px) */
+@media (max-width: 300px) {
+  .hero h1 { font-size: 1.5rem; }
+  .hero p { font-size: 0.8rem; }
+  .logo-text { font-size: 1.05rem; }
+  .stories-title { font-size: 1.4rem; }
+  .about-main-title { font-size: 1.5rem; }
+  .practice-title { font-size: 1.5rem; }
+  .story-item { padding: 10px 12px; gap: 8px; }
+  .story-item-title { font-size: 0.78rem; }
+  .story-num { font-size: 0.9rem; min-width: 22px; }
+  .story-arrow { display: none; }
+  .about-section { padding: 16px; }
+  .about-section-title { font-size: 1.1rem; }
+  .practice-move { padding: 14px 12px; gap: 10px; }
+  .cta-btn { padding: 11px 24px; font-size: 0.82rem; }
+  .section-title { font-size: 1.15rem; }
+  .topic-card { padding: 14px 10px; }
+  .topic-name { font-size: 0.88rem; }
+}
+
+/* ─── MOBILE RESPONSIVE FIXES ─── */
+@media (max-width: 400px) {
+  .hero h1 { font-size: 1.8rem; }
+  .hero p { font-size: 0.85rem; }
+  .section-title { font-size: 1.3rem; }
+  .article-title { font-size: 1rem; }
+  .detail-title { font-size: 1.25rem; }
+  .article-actions { flex-direction: column; gap: 8px; }
+  .share-buttons { margin-left: 0; }
+  .admin-form-grid { grid-template-columns: 1fr; }
+  .admin-article-item { flex-direction: column; align-items: flex-start; }
+  .admin-actions-top { flex-direction: column; align-items: flex-start; }
+  .comment-form input, .comment-form textarea { padding: 10px 12px; font-size: 0.82rem; }
+}
+@media (max-width: 360px) {
+  .topics-grid { grid-template-columns: 1fr; }
+  .header-actions { gap: 6px; }
+  .lang-btn, .theme-btn, .login-btn { padding: 4px 8px; font-size: 0.72rem; }
+}
+

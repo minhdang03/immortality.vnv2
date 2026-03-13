@@ -1,0 +1,89 @@
+/* ─── HERO ─── */
+.hero { text-align: center; padding: 70px 20px 50px; max-width: var(--max-w); margin: 0 auto; }
+.hero-sun { margin-bottom: 28px; filter: drop-shadow(0 0 24px rgba(201,168,108,0.5)); }
+.hero h1 {
+  font-family: var(--font-display); font-size: 2.6rem; font-weight: 700;
+  color: var(--white); line-height: 1.15; margin-bottom: 16px;
+  text-shadow: 0 0 40px rgba(201,168,108,0.3);
+}
+.hero-tagline { color: var(--text); font-size: 0.95rem; line-height: 1.7; max-width: 380px; margin: 0 auto 32px; }
+.hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.cta-btn {
+  display: inline-block; background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+  color: #0a0a0f; font-weight: 600; font-size: 0.88rem;
+  padding: 13px 32px; border-radius: 30px; border: none;
+  cursor: pointer; font-family: var(--font-body);
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 4px 20px rgba(201,168,108,0.3);
+}
+[data-theme="light"] .cta-btn { color: #fff; }
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(201,168,108,0.5); }
+.cta-btn-outline {
+  display: inline-block; background: transparent;
+  border: 1px solid rgba(201,168,108,0.4); color: var(--gold-bright);
+  font-weight: 500; font-size: 0.88rem;
+  padding: 12px 28px; border-radius: 30px;
+  cursor: pointer; font-family: var(--font-body);
+  transition: all 0.3s;
+}
+.cta-btn-outline:hover { border-color: var(--gold-bright); background: rgba(201,168,108,0.08); }
+
+/* ─── HOME GRID ─── */
+.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (min-width: 768px) { .home-grid { grid-template-columns: repeat(4, 1fr); } }
+.home-card {
+  background: var(--card); border-radius: 16px; padding: 22px 16px 18px;
+  text-align: center; cursor: pointer; position: relative;
+  border: 1px solid rgba(201,168,108,0.08);
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+.home-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(201,168,108,0.18);
+  border-color: rgba(201,168,108,0.35);
+}
+.home-card-icon { color: var(--gold); margin-bottom: 12px; display: flex; justify-content: center; }
+.home-card-title {
+  font-family: var(--font-display); font-size: 0.95rem; font-weight: 700;
+  color: var(--gold-bright); margin-bottom: 8px; line-height: 1.3;
+}
+.home-card-desc {
+  font-size: 0.72rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 10px;
+}
+.home-card-arrow {
+  font-size: 1rem; color: var(--gold); opacity: 0;
+  transition: opacity 0.3s, transform 0.3s; display: inline-block;
+}
+.home-card:hover .home-card-arrow { opacity: 1; transform: translateX(4px); }
+.home-see-all { text-align: center; margin-top: 20px; }
+
+/* ─── SECTION ─── */
+.section { padding: 40px 0; }
+.section-title {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-display); font-size: 1.6rem; font-weight: 700;
+  color: var(--gold-bright); margin-bottom: 24px;
+}
+
+/* ─── TOPICS GRID ─── */
+.topics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+@media (min-width: 768px) { .topics-grid { grid-template-columns: repeat(3, 1fr); } }
+.topic-card {
+  background: var(--card); border-radius: 16px; padding: 20px 16px;
+  text-align: center; cursor: pointer;
+  border: 1px solid rgba(201,168,108,0.08);
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+.topic-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(201,168,108,0.15);
+  border-color: rgba(201,168,108,0.3);
+}
+.topic-icon { font-size: 1.8rem; margin-bottom: 10px; display: block; }
+.topic-name { font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--gold-bright); margin-bottom: 6px; }
+.topic-desc { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; line-height: 1.4; }
+.topic-count {
+  font-size: 0.7rem; color: var(--gold); opacity: 0.7;
+  background: rgba(201,168,108,0.08); padding: 3px 10px; border-radius: 12px; display: inline-block;
+}
+

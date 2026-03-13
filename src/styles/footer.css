@@ -1,0 +1,13 @@
+/* ─── FOOTER ─── */
+.footer {
+  text-align: center; padding: 30px 20px 100px;
+  font-size: 0.75rem; color: var(--text-dim); line-height: 1.6;
+  max-width: var(--max-w); margin: 0 auto;
+}
+.footer-links { display: flex; justify-content: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+.footer-link {
+  font-size: 0.72rem; color: var(--gold); cursor: pointer;
+  background: none; border: none; font-family: var(--font-body);
+}
+.footer-link:hover { color: var(--gold-bright); }
+@media (min-width: 768px) { .footer { padding-bottom: 30px; } }
