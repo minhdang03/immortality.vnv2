@@ -175,7 +175,7 @@ body { background: var(--bg); color: var(--text); }
 /* ─── DESKTOP NAV ─── */
 .desktop-nav { display: none; gap: 2px; }
 @media (min-width: 768px) {
-  .desktop-nav { display: flex; align-items: center; }
+  .desktop-nav { display: flex; align-items: center; margin-left: auto; }
   .desktop-nav button {
     background: none; border: none; color: var(--text-dim);
     font-family: var(--font-body); font-size: 0.8rem; font-weight: 500;
