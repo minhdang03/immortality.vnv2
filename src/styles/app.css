@@ -98,7 +98,13 @@ body { background: var(--bg); color: var(--text); }
 }
 .header-inner {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px; position: relative;
+  padding: 0 20px;
+}
+@media (min-width: 768px) {
+  .header-inner {
+    display: grid; grid-template-columns: auto 1fr auto;
+    align-items: center; gap: 16px;
+  }
 }
 .logo { display: flex; align-items: center; gap: 8px; cursor: pointer; flex-shrink: 0; }
 .logo-text { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--gold-bright); white-space: nowrap; }
@@ -176,8 +182,7 @@ body { background: var(--bg); color: var(--text); }
 .desktop-nav { display: none; gap: 2px; }
 @media (min-width: 768px) {
   .desktop-nav {
-    display: flex; align-items: center;
-    position: absolute; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; justify-content: center;
   }
   .desktop-nav button {
     background: none; border: none; color: var(--text-dim);
