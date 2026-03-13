@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { TOPICS, DEFAULT_ARTICLES, T } from './data'
@@ -44,7 +44,7 @@ export default function App() {
   const [contactSent, setContactSent] = useState(false)
   const [user, setUser] = useState(null)
   const { dark, toggle: toggleTheme } = useTheme()
-  const { firestoreArticles, addArticle, updateArticle, deleteArticle } = useArticles()
+  const { firestoreArticles, loading, addArticle, updateArticle, deleteArticle } = useArticles()
   const t = T[lang]
 
   // Merge default + Firestore articles
@@ -57,13 +57,69 @@ export default function App() {
     } catch { /* Firebase not configured */ }
   }, [])
 
+  // Hash routing: parse URL on load + listen for changes
+  const applyHash = () => {
+    const hash = window.location.hash.slice(1) // remove #
+    if (!hash || hash === '/') { setPage('home'); return }
+    if (hash.startsWith('/topic/')) { setSelectedTopic(hash.slice(7)); setPage('topic'); return }
+    if (hash.startsWith('/article/')) {
+      const id = hash.slice(9)
+      const found = allArticles.find(a => String(a.id) === id)
+      if (found) { setSelectedArticle(found); setPage('article') }
+      return
+    }
+    if (hash === '/search') { setPage('search'); return }
+    if (hash === '/contact') { setPage('contact'); return }
+    if (hash === '/admin') { setPage('admin'); return }
+  }
+
+  // Apply hash on mount and when allArticles change (for deep links to articles)
+  const hashAppliedRef = useRef(false)
+  useEffect(() => {
+    if (!hashAppliedRef.current && allArticles.length > 0) {
+      applyHash()
+      hashAppliedRef.current = true
+    }
+  }, [allArticles.length])
+
+  useEffect(() => {
+    const onHashChange = () => applyHash()
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  })
+
   useEffect(() => { window.scrollTo(0, 0) }, [page, selectedArticle])
+
+  // Update SEO meta tags dynamically
+  useEffect(() => {
+    if (page === 'article' && selectedArticle) {
+      const d = selectedArticle[lang]
+      if (d) {
+        document.title = `${d.title} | ${t.siteName}`
+        document.querySelector('meta[property="og:title"]')?.setAttribute('content', d.title)
+        document.querySelector('meta[property="og:description"]')?.setAttribute('content', d.summary)
+        document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', d.title)
+        document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', d.summary)
+      }
+    } else {
+      document.title = `${t.siteName} - ${t.siteTagline}`
+      document.querySelector('meta[property="og:title"]')?.setAttribute('content', `${t.siteName} - ${t.heroTitle}`)
+      document.querySelector('meta[property="og:description"]')?.setAttribute('content', t.heroSub)
+    }
+  }, [page, selectedArticle, lang])
 
   const navigate = (p, extra) => {
     setMenuOpen(false)
-    if (p === 'topic') { setSelectedTopic(extra); setPage('topic') }
-    else if (p === 'article') { setSelectedArticle(extra); setPage('article') }
-    else { setPage(p) }
+    if (p === 'topic') {
+      setSelectedTopic(extra); setPage('topic')
+      window.location.hash = `/topic/${extra}`
+    } else if (p === 'article') {
+      setSelectedArticle(extra); setPage('article')
+      window.location.hash = `/article/${extra.id}`
+    } else {
+      setPage(p)
+      window.location.hash = p === 'home' ? '/' : `/${p}`
+    }
   }
 
   const filteredArticles = (topicId) => allArticles.filter(a => !topicId || a.topic === topicId)
@@ -537,6 +593,47 @@ export default function App() {
         .fade-up-d4 { animation-delay: 0.4s; }
         .fade-up-d5 { animation-delay: 0.5s; }
         .fade-up-d6 { animation-delay: 0.6s; }
+
+        /* ─── SKELETON LOADING ─── */
+        .skeleton-card {
+          background: var(--card); border-radius: 16px; padding: 22px 20px;
+          margin-bottom: 16px; border: 1px solid rgba(201,168,108,0.08);
+        }
+        .skeleton-line {
+          height: 14px; border-radius: 8px; margin-bottom: 12px;
+          background: linear-gradient(90deg, rgba(201,168,108,0.06) 25%, rgba(201,168,108,0.12) 50%, rgba(201,168,108,0.06) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s ease-in-out infinite;
+        }
+        .skeleton-line.w60 { width: 60%; }
+        .skeleton-line.w80 { width: 80%; }
+        .skeleton-line.w100 { width: 100%; }
+        .skeleton-line.w40 { width: 40%; height: 10px; }
+        .skeleton-line.thick { height: 20px; }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+
+        /* ─── MOBILE RESPONSIVE FIXES ─── */
+        @media (max-width: 400px) {
+          .hero h1 { font-size: 1.8rem; }
+          .hero p { font-size: 0.85rem; }
+          .section-title { font-size: 1.3rem; }
+          .article-title { font-size: 1rem; }
+          .detail-title { font-size: 1.25rem; }
+          .article-actions { flex-direction: column; gap: 8px; }
+          .share-buttons { margin-left: 0; }
+          .admin-form-grid { grid-template-columns: 1fr; }
+          .admin-article-item { flex-direction: column; align-items: flex-start; }
+          .admin-actions-top { flex-direction: column; align-items: flex-start; }
+          .comment-form input, .comment-form textarea { padding: 10px 12px; font-size: 0.82rem; }
+        }
+        @media (max-width: 360px) {
+          .topics-grid { grid-template-columns: 1fr; }
+          .header-actions { gap: 6px; }
+          .lang-btn, .theme-btn { padding: 4px 8px; font-size: 0.72rem; }
+        }
       `}</style>
 
       {/* ─── BACKGROUND EFFECTS ─── */}
@@ -621,7 +718,15 @@ export default function App() {
 
               <section className="section">
                 <h2 className="section-title fade-up"><SunIcon size={20} /> {t.articlesTitle}</h2>
-                {allArticles.map((a, i) => {
+                {loading && [1,2,3].map(i => (
+                  <div key={i} className="skeleton-card fade-up">
+                    <div className="skeleton-line w40" />
+                    <div className="skeleton-line w80 thick" />
+                    <div className="skeleton-line w100" />
+                    <div className="skeleton-line w60" />
+                  </div>
+                ))}
+                {!loading && allArticles.map((a, i) => {
                   const d = a[lang]
                   if (!d) return null
                   return (
