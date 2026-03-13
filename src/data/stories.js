@@ -885,6 +885,508 @@ Cousin Thuan:
 
 -- You've already unleashed your fists. Go home and keep practicing.`,
   },
+  5: {
+    vi: `Quận 4, khoảng 7 giờ sáng. Mặt trời vừa nhô lên, ánh sáng màu trắng vàng lan đỏ trên nền trời xanh tuyệt đẹp. Người Bất Tử ra sân tập luyện võ công Thái Dương Quyền.
+
+Anh Ba đứng nhìn, thích thú:
+-- Em đang tập luyện võ gì đấy?
+
+Người Bất Tử ngừng tay:
+-- Đây là Võ Mặt Trời, hay gọi là Võ Năng Lượng cũng được. Rất tốt cho sức khỏe và để tự vệ, đối kháng.
+
+Anh Ba:
+-- Anh cũng muốn học, nhưng có khó không? Học bao lâu mới đấu đối kháng được?
+
+Người Bất Tử:
+-- Tùy theo thể trạng sức khỏe mỗi người mà xuất chiêu chậm hay nhanh. Anh đứng thẳng người, mặt hướng về ánh sáng, không cần nhìn trực tiếp vào mặt trời. Đưa hai bàn tay hướng thẳng về phía mặt trời, mười ngón tay hướng lên trên để thu hút năng lượng. Lòng bàn tay phóng thẳng vào ánh sáng. Rồi cúi đầu xuống chào Thần Mặt Trời. Khi cảm thấy lòng bàn tay nóng, năng lượng chạy vào cơ thể, sẽ kích hoạt hệ thống thần kinh vận động. Khi tay chân, thân hình chuyển động, thì anh cứ chuyển động theo là được.
+
+Anh Ba toàn thân xoay chuyển, tay phải đánh móc vào má trái, chân phải đạp vào ngực.
+Người Bất Tử nghiêng đầu lùi lại tránh cú đấm móc, nhưng bị dính cú đạp vào ngực. Bình! Thân hình bay đụng vách tường. Rầm!
+
+Anh Ba bay tới tung thêm một cú đá bằng chân phải vào má trái.
+Người Bất Tử tay trái đưa cùi chỏ lên đỡ, bụp, tay phải đấm vào mặt rồi tung một cú đạp vào ngực.
+
+Anh Ba chân lùi về sau một bước, tay phải đấm vào lòng bàn chân Người Bất Tử. Bụp! Chân bị thốn, người hơi lảo đảo.
+Anh Ba:
+-- Em có sao không?
+Người Bất Tử:
+-- Em không sao. Anh đã xuất quyền rồi. Mỗi đêm ra sân tập nâng cao nhé.
+
+Anh Tư đứng nhìn, lên tiếng:
+-- Cái này cũng hay đấy.
+Anh Ba:
+-- Chú Tư có thích học võ không? Nói chú Năm dạy cho.
+
+Anh Tư, 25 tuổi, mập lùn, da trắng:
+-- Trong doanh trại bộ đội, anh học 36 bài võ đối kháng rồi.
+Người Bất Tử:
+-- Khi nào anh Tư cần học võ thì nói với em.
+Anh Tư:
+-- Thôi bây giờ anh phải về đơn vị rồi. Khi nào cần học thì anh sẽ nhờ chú Năm.
+
+Ba ngày sau, anh Tư quay về nhà.
+-- Chú Năm, dạy võ cho anh đi.
+Người Bất Tử:
+-- Anh học võ để làm gì mà quay về gấp quá vậy?
+Anh Tư:
+-- Tao bị một thằng bạn trong quân đội đánh tơi tả.
+
+Người Bất Tử:
+-- Anh đứng thẳng người, mặt hướng về ánh sáng, không cần nhìn trực tiếp vào mặt trời. Đưa hai bàn tay hướng thẳng về phía mặt trời, mười ngón tay hướng lên trên để thu hút năng lượng. Lòng bàn tay phóng thẳng vào ánh sáng. Cúi đầu xuống chào Thần Mặt Trời. Khi lòng bàn tay nóng, năng lượng chạy vào cơ thể, kích hoạt hệ thống thần kinh vận động. Tay chân chuyển động thì anh cứ chuyển động theo.
+
+Anh Tư vừa làm xong thủ tục chào Tổ, hai bàn tay đánh ra nhanh chóp vào mặt.
+Người Bất Tử đưa hai tay lên đỡ. Bụp bụp!
+Anh Tư chân phải đá quét vào má trái, gót chân trái đá vào sau đầu.
+Người Bất Tử né đầu tránh cú đá ngang, nhưng bị trúng cú đá lái. Thân hình bay lùi đụng vách nhà. Rầm!
+
+Anh Tư bay tới tung cú đá thẳng vào ngực.
+Người Bất Tử nhào người xuống đất lăn một vòng, tung cú đá quét vào mắt cá chân trái.
+Anh Tư bay người lên tung cú đá vào đầu.
+Người Bất Tử hụp đầu xuống, lùi lại tránh.
+
+Anh Tư:
+-- Dừng lại đi. Tao sẽ về doanh trại tập luyện tiếp.
+Người Bất Tử:
+-- Ừ, cũng được.
+
+Một tháng sau, anh Tư quay lại nhà Quận 4.
+Người Bất Tử:
+-- Anh về phép nữa hả?
+Anh Tư nét mặt vui cười kể:
+-- Mỗi tối tao ra sân trống gần cột cờ luyện võ công.
+Người Bất Tử:
+-- Anh có đấu với thằng bạn đó hay không?
+Anh Tư:
+-- Tao luyện công được 7 ngày. Một buổi chiều, tao rủ nó: ê Bình, đấu võ không?
+
+Bình, bộ đội, 22 tuổi, da ngăm đen, 1m67, ốm, khuôn mặt xương, quần xà lỏn, áo thun trắng, khuôn mặt kiêu ngạo:
+-- Mới bị tao đánh bầm dập, chưa sợ hả?
+Anh Tư:
+-- Mày đai đen nhất đẳng mà sợ tao à?
+Bình:
+-- Mày thích thì tao chiều. Chấp mày đánh trước đó.
+
+Anh Tư bay vào, tay trái đấm vào má phải, tay phải đấm vào má trái, cùi chỏ phải đánh vào mặt.
+Bình đưa hai tay lên đỡ, bụp bụp, chân lùi một bước tránh đòn chỏ, rồi tung cú đá xoáy.
+Anh Tư xoay người tránh khỏi cú đá xoáy, tay phải đấm vào mặt. Bụp! Bình thân hình lảo đảo, lùi về phía sau.
+
+Anh Tư bay tới, hai bàn tay đánh liên hoàn vào mặt.
+Bình hai tay chống đỡ chậm, bị trúng đòn liên tiếp. Mặt sưng vù bầm tím, miệng rỉ máu.
+Anh Tư tung cú đá bụp trúng vào ngực. Bình thân hình té ngã, sập chuồng heo.
+
+Anh Tư bay vào chuồng heo, chân đạp xuống đầu.
+Bình giơ hai tay:
+-- Tao xin thua!
+
+Anh Tư dừng chân, nắm tay kéo Bình đứng lên.
+Bình:
+-- Mày đánh võ gì mà tao không kịp nhìn thấy hai bàn tay mày? Làm sao mà tao đỡ được?
+Anh Tư:
+-- Thái Dương Quyền.
+Bình:
+-- Võ Việt Nam hả?
+Anh Tư:
+-- Võ cổ truyền Việt Nam. Trống đồng Đông Sơn.
+Bình:
+-- Võ bùa phải không?
+Anh Tư:
+-- Tao học Võ Năng Lượng Mặt Trời.
+Bình:
+-- Mày dạy tao học với.
+Anh Tư:
+-- Được rồi. Hôm nào rảnh tao sẽ dạy cho mày.`,
+    en: `District 4, around 7 AM. The sun had just risen, white-golden light spreading red across the stunningly blue sky. The Immortal went out to the yard to practice Solar Fist martial arts.
+
+Brother Ba stood watching, intrigued:
+-- What kind of martial arts are you practicing?
+
+The Immortal paused:
+-- This is Sun Martial Arts, also called Energy Martial Arts. Very good for health and for self-defense, combat.
+
+Brother Ba:
+-- I want to learn too, but is it hard? How long until I can spar?
+
+The Immortal:
+-- Depending on each person's physical condition, they strike slow or fast. Stand straight, face toward the light, no need to look directly at the sun. Raise both hands toward the sun, ten fingers pointing up to absorb energy. Palms facing straight into the light. Then bow your head to salute the Sun God. When your palms feel hot, energy flows into your body, it will activate the motor nervous system. When your hands, feet, and body start moving, just follow the movement.
+
+Brother Ba's whole body spun and shifted, right hand throwing a hook at the left cheek, right foot stomping into the chest.
+The Immortal tilted his head back to dodge the hook punch, but took the stomp to the chest. Bang! His body flew into the wall. Crash!
+
+Brother Ba flew forward and launched another kick with his right foot at the left cheek.
+The Immortal raised his left elbow to block — thwack — then punched with his right hand at the face and launched a stomp kick to the chest.
+
+Brother Ba stepped back one step, his right fist punching into the sole of The Immortal's foot. Thwack! The foot stung, his body staggered slightly.
+Brother Ba:
+-- Are you okay?
+The Immortal:
+-- I'm fine. You've already unleashed your fists. Practice every night to improve.
+
+Brother Tu stood watching, spoke up:
+-- That's pretty interesting.
+Brother Ba:
+-- Brother Tu, want to learn martial arts? Ask Brother Nam to teach you.
+
+Brother Tu, 25 years old, stocky and short, fair-skinned:
+-- In the military barracks, I already learned 36 combat sparring forms.
+The Immortal:
+-- Whenever you need to learn, just tell me.
+Brother Tu:
+-- I need to return to my unit now. When I need to learn, I'll ask you.
+
+Three days later, Brother Tu returned home.
+-- Brother Nam, teach me martial arts.
+The Immortal:
+-- What do you need martial arts for that you came back so urgently?
+Brother Tu:
+-- I got beaten up badly by a friend in the military.
+
+The Immortal:
+-- Stand straight, face toward the light, no need to look directly at the sun. Raise both hands toward the sun, ten fingers pointing up to absorb energy. Palms facing straight into the light. Bow your head to salute the Sun God. When your palms feel hot, energy flows into your body, activating the motor nervous system. When your hands and feet move, just follow the movement.
+
+Brother Tu had just finished the ancestral salute ceremony when both hands struck out lightning-fast at the face.
+The Immortal raised both hands to block. Thwack thwack!
+Brother Tu swept his right foot at the left cheek, left heel kicked at the back of the head.
+The Immortal dodged the horizontal kick, but got hit by the reverse kick. His body flew back into the house wall. Crash!
+
+Brother Tu flew forward and launched a straight kick to the chest.
+The Immortal dove to the ground, rolled once, and swept a kick at the left ankle.
+Brother Tu leaped up and launched a kick at the head.
+The Immortal ducked his head down and backed away.
+
+Brother Tu:
+-- Stop. I'll go back to the barracks and keep training.
+The Immortal:
+-- Alright then.
+
+A month later, Brother Tu returned to the house in District 4.
+The Immortal:
+-- On leave again?
+Brother Tu smiled and told his story:
+-- Every night I went out to the open field near the flagpole to practice martial arts.
+The Immortal:
+-- Did you fight that friend of yours?
+Brother Tu:
+-- I trained for 7 days. One afternoon, I challenged him: hey Binh, want to spar?
+
+Binh, soldier, 22 years old, dark-skinned, 1m67, thin, bony face, shorts, white T-shirt, arrogant expression:
+-- Just got beaten black and blue by me, not scared yet?
+Brother Tu:
+-- You're a first-dan black belt and you're scared of me?
+Binh:
+-- If you want it, I'll oblige. I'll even let you strike first.
+
+Brother Tu flew in, left fist to the right cheek, right fist to the left cheek, right elbow strike to the face.
+Binh raised both hands to block — thwack thwack — stepped back to avoid the elbow, then launched a spinning kick.
+Brother Tu spun to dodge the spinning kick, right fist punched the face. Thwack! Binh staggered, retreating backward.
+
+Brother Tu flew forward, both hands striking rapid combinations at the face.
+Binh's defense was too slow, hit by consecutive blows. Face swollen and bruised purple, blood seeping from his mouth.
+Brother Tu launched a kick — thwack — straight to the chest. Binh's body fell, crashing into the pig pen.
+
+Brother Tu flew into the pig pen, foot stomping down toward the head.
+Binh raised both hands:
+-- I surrender!
+
+Brother Tu stopped, grabbed Binh's hand and pulled him up.
+Binh:
+-- What kind of martial arts is that? I couldn't even see your hands! How could I block?
+Brother Tu:
+-- Solar Fist.
+Binh:
+-- Vietnamese martial arts?
+Brother Tu:
+-- Traditional Vietnamese martial arts. Dong Son Bronze Drum.
+Binh:
+-- Is it magic fighting?
+Brother Tu:
+-- I learned Sun Energy Martial Arts.
+Binh:
+-- Teach me too.
+Brother Tu:
+-- Sure. When I have time, I'll teach you.`,
+  },
+  6: {
+    vi: `Một ngày kia, Người Bất Tử đột nhiên cơ thể bị lạnh run. Răng đánh vào nhau nghe lọc cọc. Liền để một chậu lửa than nóng ở dưới gầm giường, leo lên nằm, trùm mền kín mít. Nhưng cơ thể vẫn lạnh run. Nước lạnh trong người rỉ ra.
+
+Tiếng lạ (Off) vang lên:
+"Con còn nhớ lúc nhỏ đi tắm mưa rồi bị chìm dưới đáy ao hay không?"
+
+Người Bất Tử:
+-- Dạ, con còn nhớ.
+
+Tiếng lạ (Off):
+"Bây giờ con nhắm mắt và nhớ lại cảnh lúc bị chìm xuống đáy nước."
+
+Người Bất Tử nhắm mắt, nhìn thấy ma nước 3 đang lẩn trốn trong bụi rễ cây dưới nước.
+
+Tiếng lạ (Off):
+"Nhìn kỹ. Lúc con đang leo lên bờ, ma nước 3 bơi tới, hai tay ôm cổ."
+
+Người Bất Tử:
+-- Hèn gì mỗi khi con bị lạnh run là nước chảy ra đầy người. Thì ra là con ma nước. Nhưng ma nước 3 đang theo con để làm gì?
+
+Tiếng lạ (Off):
+"Ma nước 3 làm cho con bị bệnh, để con đi tìm thầy chữa bệnh. Nếu có thầy nào nhìn thấy ma nước 3 mà giúp được, thì ma nước 3 mới buông con ra và con mới hết bệnh."
+
+Người Bất Tử:
+-- Đưa ma nước 3 ra bằng cách nào?
+
+Tiếng lạ (Off):
+"Phải giao tiếp với ma nước 3 bằng ngôn ngữ vũ trụ."
+
+Người Bất Tử:
+-- Ngôn ngữ vũ trụ là gì?
+
+Tiếng lạ (Off):
+"Ngôn ngữ vũ trụ là một loại âm thanh cổ, có chức năng chuyển đổi ngôn ngữ của vạn vật muôn loài trong vũ trụ, để bộ não hiểu và nói được."
+
+Người Bất Tử:
+-- Làm sao nói được tiếng lạ?
+
+Tiếng lạ (Off):
+"Đơn giản lắm. Con nhìn ra ngoài ánh sáng vũ trụ. Ánh sáng sẽ phản xạ lại bộ não. Ngôn ngữ vũ trụ sẽ chạy xuống miệng lưỡi và con cứ nói ra là được."
+
+Người Bất Tử bắt đầu nói được tiếng lạ. Rồi nhìn ma nước 3 và nói chuyện:
+-- Mày có phải là con ma nữ chết nước hay không?
+
+Ma nước 3 ú ớ không ra tiếng.
+
+Tiếng lạ (Off):
+"Con kêu ma nước 3 há miệng, ói hết bùn nước trong họng ra, thì mới nói chuyện được."
+
+Ma nước 3 nghe xong, liền há miệng, ói một đống bùn nước, rong rêu ra ngoài. Rồi nói:
+-- Xin thầy giúp tôi được giải thoát.
+
+Người Bất Tử:
+-- Làm sao con có thể giúp được ma nước 3 thoát kiếp nạn?
+
+Tiếng lạ (Off):
+"Con lấy ánh sáng vũ trụ chiếu vào cơ thể ma nước 3 để chữa bệnh, rồi kêu ma nước 3 nhìn về vũ trụ kết nối. Ma nước 3 sẽ được giải thoát."
+
+Người Bất Tử bàn tay phóng ra ánh sáng vàng vào đầu ma nước 3. Một luồng nước đen lạnh, hôi thối từ cơ thể ma nước 3 tan chảy xuống lòng đất rồi biến mất. Linh hồn ma nước 3 sáng lấp lánh, bay vào vũ trụ.
+
+Tiếng lạ (Off):
+"Còn hai con ma nước bị sét đánh và những con ma nước chết trước đó đang chờ con cứu."
+
+Hai con ma nước xuất hiện:
+-- Xin thầy cứu chúng tôi thoát khỏi nơi đây với.
+
+Người Bất Tử bàn tay phóng ánh sáng lên vũ trụ kích hoạt năng lượng. Ánh sáng vũ trụ chiếu xuống, một vòng tròn ánh sáng màu vàng đỏ chiếu xuống mặt nước, xoáy nhanh, hút những con ma nước bay lên vũ trụ.
+
+Tiếng lạ (Off):
+"Con cảm thấy cơ thể mình như thế nào?"
+
+Người Bất Tử:
+-- Cơ thể bình thường. Không còn sốt rét ma nữa.
+
+Tiếng lạ (Off):
+"Đây là một bài học để cứu thoát những vong hồn người chết. Con ghi nhớ và thực hành đúng thì sẽ tăng tuổi thọ."
+
+Người Bất Tử:
+-- Dạ, con sẽ ghi nhớ.`,
+    en: `One day, The Immortal's body suddenly went cold and shivering. His teeth chattered loudly. He placed a basin of hot coals under the bed, climbed up, and wrapped himself completely in blankets. But his body still shivered with cold. Cold water seeped out from within him.
+
+The Strange Voice (Off) spoke:
+"Do you remember when you were young, playing in the rain, and sank to the bottom of the pond?"
+
+The Immortal:
+-- Yes, I remember.
+
+The Strange Voice (Off):
+"Now close your eyes and recall the scene when you sank to the bottom."
+
+The Immortal closed his eyes and saw Water Ghost 3 hiding among the underwater tree roots.
+
+The Strange Voice (Off):
+"Look carefully. When you were climbing to shore, Water Ghost 3 swam over and wrapped both arms around your neck."
+
+The Immortal:
+-- No wonder every time I get cold shivers, water pours out all over my body. So it was the water ghost. But what is Water Ghost 3 following me for?
+
+The Strange Voice (Off):
+"Water Ghost 3 made you sick so that you would go find a healer. If any healer could see Water Ghost 3 and help, then Water Ghost 3 would release you and your illness would end."
+
+The Immortal:
+-- How do I get Water Ghost 3 out?
+
+The Strange Voice (Off):
+"You must communicate with Water Ghost 3 using cosmic language."
+
+The Immortal:
+-- What is cosmic language?
+
+The Strange Voice (Off):
+"Cosmic language is an ancient type of sound that functions to translate the languages of all things and all species in the universe, so the brain can understand and speak them."
+
+The Immortal:
+-- How can I speak this strange language?
+
+The Strange Voice (Off):
+"It's very simple. Look out at the cosmic light. The light will reflect back into your brain. Cosmic language will flow down to your mouth and tongue, and you just speak it out."
+
+The Immortal began speaking the strange language. Then he looked at Water Ghost 3 and spoke:
+-- Are you the female water ghost who drowned?
+
+Water Ghost 3 mumbled incoherently.
+
+The Strange Voice (Off):
+"Tell Water Ghost 3 to open her mouth and vomit out all the mud and water stuck in her throat, then she can speak."
+
+Water Ghost 3 heard this, opened her mouth, and vomited out a mass of mud, water, and algae. Then she spoke:
+-- Please, master, help me be freed.
+
+The Immortal:
+-- How can I help Water Ghost 3 escape her fate?
+
+The Strange Voice (Off):
+"Shine cosmic light onto Water Ghost 3's body to heal her, then tell Water Ghost 3 to look toward the universe and connect. Water Ghost 3 will be freed."
+
+The Immortal's hand projected golden light onto Water Ghost 3's head. A stream of black, cold, foul-smelling water from Water Ghost 3's body melted down into the earth and disappeared. Water Ghost 3's soul sparkled brightly and flew into the universe.
+
+The Strange Voice (Off):
+"There are still two water ghosts struck by lightning and other water ghosts who died before, waiting for you to save them."
+
+Two water ghosts appeared:
+-- Please, master, save us from this place.
+
+The Immortal's hand projected light up to the universe to activate energy. Cosmic light shone down, a circle of golden-red light illuminated the water surface, spinning rapidly, pulling the water ghosts upward into the universe.
+
+The Strange Voice (Off):
+"How does your body feel now?"
+
+The Immortal:
+-- My body feels normal. No more ghost malaria.
+
+The Strange Voice (Off):
+"This is a lesson for saving the souls of the dead. Remember it and practice correctly, and you will extend your lifespan."
+
+The Immortal:
+-- Yes, I will remember.`,
+  },
+  7: {
+    vi: `Người Bất Tử đang luyện võ trước sân nhà thì cu Tèo đi vào:
+-- Nếu ngày đó không có anh cứu giúp thì em đã bị chết nước rồi.
+
+Người Bất Tử:
+-- Chuyện đã qua rồi, em hãy quên đi. Em có muốn học võ không?
+
+Cu Tèo:
+-- Em đã học võ. Hắc Hổ Xà Quyền.
+
+Người Bất Tử:
+-- Em có thể biểu diễn cho anh xem được không?
+
+Cu Tèo chân bước ra sân, miệng đọc câu thần chú: "Ava maduna." Ma Hắc Hổ, Ma Xà Quyền nhập vào cơ thể.
+
+Cu Tèo miệng gầm gừ, xòe hai bàn tay Ma Hổ ra, cào vào mặt.
+Người Bất Tử đưa hai tay lên đỡ gạt, đấm vào ngực. Ma Hắc Hổ lùi lại.
+
+Ma Xà Quyền bò sát đất, uốn éo, hai bàn tay chụp lại giống đầu hai con rắn hổ phùng mang, mổ vào bàn chân.
+Người Bất Tử co chân lên, tung hai cú đá liên hoàn vào đầu hai con rắn. Bụp bụp!
+
+Cu Tèo lộn người tới trước, tung cú đá quét ngang chân.
+Người Bất Tử bay cao người lên, hai bàn tay xòe ra như đại bàng, hai bàn chân đạp xuống.
+
+Ma Rắn cơ thể bò sát mặt đất tránh cú đạp. Cu Tèo hai đầu gối lê lết dưới đất, bị trầy trụa và chảy máu.
+
+Người Bất Tử dừng chân lại:
+-- Em học võ bùa này của ai? Không tốt cho sức khỏe đâu.
+
+Cu Tèo:
+-- Em học võ từ anh Sơn, anh rể của em.
+
+Anh Sơn, 39 tuổi:
+-- Anh với em giao lưu võ thuật nhé.
+
+Người Bất Tử:
+-- Mời anh xuất chiêu.
+
+Anh Sơn miệng hổ gầm gừ, tay trái xòe ra chụp vào cổ họng, tay phải hổ móc vào bụng.
+Người Bất Tử dùng chiêu Kỳ Lân Quyền, tay trái đưa lên đỡ, tay phải đấm xuống, chân phải tung cú đạp trúng vào ngực. Bụp! Thân hình anh Sơn dội lại phía sau 1 mét.
+
+Cơ thể anh Sơn uốn éo, bò sát mặt đất, hai tay rắn mổ vào bàn chân.
+Người Bất Tử chân lùi về, tung cú đá quét vào đầu.
+Anh Sơn đưa cùi chỏ ra chắn. Bụp! Trúng mu bàn chân.
+
+Người Bất Tử hai bàn tay hạc mổ vào đầu mắt rắn.
+Anh Sơn đưa hai cùi chỏ ra đỡ, bụp bụp, tay rắn mổ vào mắt.
+
+Người Bất Tử nhào người, chống hai bàn tay xuống đất, lộn một vòng, đập hai gót chân từ trên cao xuống đỉnh đầu.
+Anh Sơn nghiêng ngửa người, đưa hai cùi chỏ lên đỡ. Bụp bụp! Người Bất Tử bị trúng một cùi chỏ vào chân. Anh Sơn bị trúng một bàn chân đập vào lưng. Bụp!
+
+Người Bất Tử dùng chiêu Sư Tử Hống, há miệng: À OM... Âm thanh vang dội.
+Đám đông người đứng xem: "Sư Tử Hống! Hôm nay mới nghe thấy!"
+
+Anh Ba:
+-- Dừng lại đi, người qua đường đứng xem đông quá.
+
+Người Bất Tử bắt tay anh Sơn:
+-- Võ của anh lợi hại lắm.
+
+Anh Sơn:
+-- Sư Tử Hống lợi hại lắm.`,
+    en: `The Immortal was practicing martial arts in front of the house when Cu Teo walked in:
+-- If you hadn't saved me that day, I would have drowned.
+
+The Immortal:
+-- That's in the past, forget about it. Do you want to learn martial arts?
+
+Cu Teo:
+-- I already learned martial arts. Black Tiger Snake Fist.
+
+The Immortal:
+-- Can you demonstrate for me?
+
+Cu Teo stepped into the yard, chanting the incantation: "Ava maduna." The Black Tiger Ghost and Snake Fist Ghost entered his body.
+
+Cu Teo growled, spreading both hands like Tiger Claws, clawing at the face.
+The Immortal raised both hands to block and deflect, then punched the chest. The Black Tiger retreated.
+
+The Snake Fist crawled close to the ground, writhing, both hands cupped together like the heads of two cobras with flared hoods, striking at the feet.
+The Immortal pulled his feet up and launched two consecutive kicks at the two snake heads. Thwack thwack!
+
+Cu Teo flipped forward, launching a sweeping kick across the legs.
+The Immortal leaped high, both hands spread like an eagle, both feet stomping down.
+
+The Snake body crawled flat against the ground to dodge the stomp. Cu Teo's knees dragged on the ground, scraped raw and bleeding.
+
+The Immortal stopped:
+-- Who taught you this magic fighting? It's not good for your health.
+
+Cu Teo:
+-- I learned from Brother Son, my brother-in-law.
+
+Brother Son, 39 years old:
+-- Let's exchange martial arts, you and me.
+
+The Immortal:
+-- Please, make your move.
+
+Brother Son growled like a tiger, left hand spreading to grab the throat, right hand hooking like a tiger claw at the stomach.
+The Immortal used the Unicorn Fist technique, left hand blocking up, right hand punching down, right foot launching a stomp kick to the chest. Thwack! Brother Son's body recoiled back one meter.
+
+Brother Son's body writhed, crawling on the ground, snake hands striking at the feet.
+The Immortal stepped back, launching a sweeping kick at the head.
+Brother Son raised his elbow to block. Thwack! It hit the top of the foot.
+
+The Immortal's hands struck like crane beaks at the snake's head and eyes.
+Brother Son raised both elbows to block — thwack thwack — snake hands striking at the eyes.
+
+The Immortal dove forward, hands planted on the ground, flipped one full rotation, and slammed both heels down from above onto the crown of the head.
+Brother Son leaned back, raised both elbows to block. Thwack thwack! The Immortal took an elbow to the leg. Brother Son took a foot slam to the back. Thwack!
+
+The Immortal used the Lion's Roar technique, opening his mouth: AH OM... The sound echoed thunderously.
+The crowd watching: "Lion's Roar! First time hearing it!"
+
+Brother Ba:
+-- Stop, too many passersby watching.
+
+The Immortal shook Brother Son's hand:
+-- Your martial arts are very formidable.
+
+Brother Son:
+-- Lion's Roar is very formidable.`,
+  },
 }
 
 export const STORY_LESSONS = {
@@ -956,6 +1458,34 @@ The brothers and friends around him — Brother Hai Teo, Brother Ba, Brother Nho
 
 And one small but important detail: the rusted grenade at the bottom of the river. War relics buried in the mud, kids throwing them at each other for fun without knowing. Life in District 4 in the 1970s — death lay everywhere, at the bottom of rivers and ponds, on shore and underwater. Surviving each day was already a miracle.`,
   },
+  5: {
+    vi: `Người dạy bị học trò đánh bay đụng tường. Anh Ba vừa học xong thủ tục chào Thần Mặt Trời, lập tức xuất quyền đạp Người Bất Tử bay đụng vách tường. Rầm! Anh Tư cũng vậy, vừa chào Tổ xong, đá Người Bất Tử bay đụng vách nhà. Rầm! Người dạy bị người học đánh trúng liên tục. Bài học siêu trí tuệ: Thái Dương Quyền không phải thầy giỏi hơn trò. Năng lượng mặt trời vào ai mạnh thì người đó mạnh. Thầy chỉ là người mở cánh cửa, năng lượng không phân biệt thầy trò. Ai kết nối được thì ai cũng xuất quyền được.
+
+Công thức dạy võ chỉ có một, dạy ai cũng y chang. Anh Ba hỏi học, Người Bất Tử dạy: đứng thẳng, hướng mặt trời, đưa tay lên, chào Thần Mặt Trời, chờ năng lượng vào, chuyển động theo. Anh Tư hỏi học, Người Bất Tử dạy y hệt, từng chữ một. Không có giáo trình riêng cho từng người. Không có level 1, level 2. Không có bí kíp cao cấp dành cho ai. Một công thức duy nhất, ai cũng nhận được giống nhau. Bài học siêu trí tuệ: chân lý thật sự thì đơn giản và bình đẳng. Không cần phân cấp, không cần giấu nghề. Mặt trời chiếu cho tất cả, không chọn ai.
+
+36 bài võ đối kháng thua 7 ngày Thái Dương Quyền. Anh Tư học 36 bài võ đối kháng trong quân đội, bị Bình đai đen nhất đẳng đánh tơi tả. Học Thái Dương Quyền 7 ngày, quay lại đánh Bình sập chuồng heo. Bình nói: "Tao không kịp nhìn thấy hai bàn tay mày." Bài học siêu trí tuệ: võ kỹ thuật đánh bằng chiêu thức, đối phương nhìn thấy chiêu thì đỡ được. Võ năng lượng đánh bằng tốc độ mà năng lượng tạo ra, không có chiêu cố định, đối phương không thể đoán trước. Kỹ thuật có giới hạn, năng lượng thì không.
+
+"Võ bùa phải không?" - "Tao học Võ Năng Lượng Mặt Trời." Bình hỏi "Võ bùa phải không?" vì trong đầu Bình chỉ có hai loại: võ kỹ thuật và võ bùa. Cái gì nhanh bất thường thì phải là bùa. Anh Tư trả lời thẳng: "Võ Năng Lượng Mặt Trời." Không phải bùa, không phải ma thuật, mà là năng lượng có thật từ mặt trời. Bài học siêu trí tuệ: khi con người chứng kiến điều vượt ngoài hiểu biết, phản ứng đầu tiên là gán cho bùa ngải, thần bí, siêu nhiên. Nhưng bản chất chỉ là năng lượng tự nhiên mà đa số chưa biết cách kết nối.
+
+Từ được dạy sang dạy người, trong cùng một câu chuyện. Câu 4, Người Bất Tử là học trò, bị cậu Thanh đá té. Câu 5, Người Bất Tử là thầy, dạy anh Ba và anh Tư. Nhưng khi dạy, Người Bất Tử vẫn bị học trò đánh bay đụng tường. Không hề giấu việc mình bị đánh trúng. Bài học siêu trí tuệ: thầy thật sự không phải người không bao giờ thua. Thầy thật sự là người biết cách mở cửa cho người khác, dù bản thân vẫn đang trên đường học. Dạy không phải vì đã giỏi hoàn hảo, mà vì biết cách truyền lại con đường.
+
+Bình thua rồi xin học. Vòng tròn tiếp tục. Bình đai đen nhất đẳng, kiêu ngạo, chấp anh Tư đánh trước. Bị đánh sập chuồng heo, xin thua, rồi hỏi: "Mày dạy tao học với." Anh Tư đồng ý. Tức là Thái Dương Quyền lan truyền theo chuỗi: Người Bất Tử dạy anh Tư, anh Tư dạy Bình, Bình sẽ dạy người khác. Không giấu nghề, không độc quyền, không giữ riêng. Bài học siêu trí tuệ: tri thức thật sự thì lan tỏa. Ai nhận được thì tự nhiên muốn truyền lại. Đó là bản chất của ánh sáng mặt trời: chiếu ra, không giữ lại.
+
+Câu chuyện 5 là bản thiết kế của toàn bộ hệ thống Thái Dương Quyền: một công thức, bình đẳng cho tất cả, không phân cấp thầy trò, không giấu nghề, kết quả nhanh nếu kết nối đúng, và tự lan truyền từ người này sang người khác. Mặt trời không cần marketing. Ai đứng dưới ánh sáng thì nhận được.`,
+    en: `The teacher gets knocked into the wall by his students. Brother Ba had just learned the Sun God salute ceremony and immediately unleashed a kick that sent The Immortal flying into the wall. Crash! Brother Tu did the same — just finished the ancestral salute, kicked The Immortal into the house wall. Crash! The teacher kept getting hit by his students. Deep wisdom lesson: Solar Fist doesn't mean the teacher is better than the student. Whoever receives solar energy more strongly becomes stronger. The teacher only opens the door — energy doesn't discriminate between teacher and student. Whoever connects can unleash their fists.
+
+There is only one formula, taught the same to everyone. Brother Ba asked to learn, The Immortal taught: stand straight, face the sun, raise your hands, salute the Sun God, wait for energy to enter, follow the movement. Brother Tu asked to learn, The Immortal taught exactly the same, word for word. No separate curriculum for each person. No level 1, level 2. No advanced secrets reserved for anyone. One single formula, everyone receives the same. Deep wisdom lesson: true truth is simple and equal. No hierarchy needed, no secrets to guard. The sun shines for all, choosing no one.
+
+36 combat sparring forms lost to 7 days of Solar Fist. Brother Tu learned 36 combat forms in the military, got beaten badly by Binh, a first-dan black belt. Learned Solar Fist for 7 days, came back and beat Binh into the pig pen. Binh said: "I couldn't even see your hands!" Deep wisdom lesson: technical martial arts fight with set moves — opponents can see the technique and block it. Energy martial arts fight with speed that energy creates — no fixed moves, opponents cannot predict. Technique has limits; energy does not.
+
+"Is it magic fighting?" - "I learned Sun Energy Martial Arts." Binh asked "Is it magic?" because in Binh's mind there were only two kinds: technical martial arts and magic fighting. Anything abnormally fast must be magic. Brother Tu answered directly: "Sun Energy Martial Arts." Not magic, not sorcery, but real energy from the sun. Deep wisdom lesson: when humans witness something beyond their understanding, the first reaction is to label it magic, mystical, supernatural. But the essence is simply natural energy that most people haven't learned to connect with.
+
+From being taught to teaching others, within the same story. In Story 4, The Immortal was the student, kicked down by Cousin Thanh. In Story 5, The Immortal is the teacher, teaching Brother Ba and Brother Tu. But while teaching, The Immortal still got knocked into the wall by his students. Never hiding that he was hit. Deep wisdom lesson: a true teacher is not someone who never loses. A true teacher is someone who knows how to open the door for others, even while still on the learning path themselves. Teaching is not because you're perfectly skilled, but because you know how to pass on the way.
+
+Binh lost then asked to learn. The circle continues. Binh, first-dan black belt, arrogant, letting Brother Tu strike first. Got beaten into the pig pen, surrendered, then asked: "Teach me too." Brother Tu agreed. This means Solar Fist spreads in a chain: The Immortal teaches Brother Tu, Brother Tu teaches Binh, Binh will teach others. No secrets, no monopoly, no hoarding. Deep wisdom lesson: true knowledge spreads naturally. Whoever receives it naturally wants to pass it on. That is the nature of sunlight: it shines outward, never holding back.
+
+Story 5 is the blueprint of the entire Solar Fist system: one formula, equal for all, no teacher-student hierarchy, no hidden secrets, quick results when properly connected, and self-propagating from person to person. The sun needs no marketing. Whoever stands in the light receives it.`,
+  },
   4: {
     vi: `Muốn học, phải chịu thua trước. Người Bất Tử bước vào, bị cậu Thanh đá giò lái trúng mông ngay từ đòn đầu. Đi cà nhắc. Không có màn oai phong. Không có thiên tài bẩm sinh. Bài học đầu tiên của võ thuật, cũng là bài học đầu tiên của mọi con đường: phải chịu thua, chịu đau, chịu xấu hổ trước, rồi mới học được.
 
@@ -983,6 +1513,66 @@ Close your eyes to unleash fists, open your eyes to get used to fighting. True t
 Cousin Thuan made The Immortal spar with Cousin Thanh before starting to learn. Not to test his skill. But so The Immortal would know where he was weak, where it hurt when struck, what he was lacking. You must taste defeat first, so that when energy activates, the body knows what to compensate for. The first loss is not failure — it's a map for the journey ahead.
 
 Story 4 marks a turning point: from survivor (Stories 1-3) to practitioner. In the first three stories, the universe saved The Immortal. From Story 4, The Immortal began training himself so he would no longer need saving. And the core principle emerged: relax, connect to energy, let the body operate on its own. No forcing. No memorizing. No imitating. Let energy lead the way.`,
+  },
+  6: {
+    vi: `Bệnh tật không phải lúc nào cũng đến từ vi khuẩn hay vi rút. Người Bất Tử bị sốt rét: lạnh run, răng lọc cọc, nước rỉ ra từ cơ thể. Than nóng dưới gầm giường, trùm mền kín mít vẫn không hết lạnh. Triệu chứng giống y sốt rét thông thường. Nhưng nguyên nhân thật sự là ma nước 3 từ câu chuyện 1, đeo bám từ lúc 9 tuổi. Bài học siêu trí tuệ: có những căn bệnh mà y khoa nhìn thấy triệu chứng nhưng không tìm được gốc rễ. Gốc rễ nằm sâu hơn cơ thể vật chất, nằm trong ký ức, trong quá khứ, trong những mối liên kết mà mắt thường không thấy.
+
+Ma nước 3 không phải kẻ thù. Ma nước 3 là bệnh nhân. Ở câu chuyện 1, ma nước 3 nói "tha cho nó sống, mình đeo theo nó để tìm con đường giải thoát." Ma nước 3 không hại Người Bất Tử vì ác. Ma nước 3 làm Người Bất Tử bị bệnh để Người Bất Tử đi tìm thầy. Ma nước 3 hy vọng thầy nào đó nhìn thấy mình mà cứu. Bài học siêu trí tuệ: nhiều "kẻ gây hại" trong cuộc sống thực ra là những linh hồn đang kêu cứu bằng cách duy nhất mà họ biết. Người gây rắc rối cho ta có khi chỉ đang tìm người hiểu được mình. Đừng vội đánh đuổi, hãy hỏi: "Mày cần gì?"
+
+Muốn chữa bệnh, phải học ngôn ngữ của bệnh. Tiếng lạ (Off) không nói "đuổi ma nước 3 đi." Tiếng lạ (Off) nói "phải giao tiếp với ma nước 3 bằng ngôn ngữ vũ trụ." Không phải đánh, không phải trừ, không phải tụng kinh xua đuổi. Mà là nói chuyện. Giao tiếp. Hiểu. Bài học siêu trí tuệ: chữa bệnh thật sự bắt đầu từ giao tiếp. Hiểu nguyên nhân. Hỏi bệnh nhân (dù bệnh nhân là ma). Lắng nghe câu trả lời. Không có bước này thì mọi phương pháp chữa chỉ là đuổi triệu chứng, không chạm vào gốc.
+
+"Nhìn ra ánh sáng, ánh sáng phản xạ lại bộ não, ngôn ngữ vũ trụ chạy xuống miệng lưỡi." Đây là công thức học ngôn ngữ vũ trụ. Không phải học thuộc. Không phải ai dạy từng chữ. Nhìn ánh sáng, não tiếp nhận, miệng tự nói. Giống hệt nguyên lý Thái Dương Quyền ở câu 4-5: nhìn ánh sáng, năng lượng vào, cơ thể tự chuyển động. Bài học siêu trí tuệ: não người không chỉ xử lý ngôn ngữ đã học. Não người có khả năng tiếp nhận ngôn ngữ trực tiếp từ năng lượng ánh sáng. Ánh sáng là thầy dạy gốc, trước cả ngôn ngữ con người.
+
+Ma nước 3 phải ói bùn ra mới nói được. Chi tiết nhỏ nhưng cực kỳ sâu. Ma nước 3 ú ớ không ra tiếng. Tiếng lạ (Off) chỉ: "Kêu ma nước 3 há miệng, ói hết bùn nước trong họng ra thì mới nói chuyện được." Ma nước 3 chết đuối, bùn nước tắc trong họng, mấy chục năm vẫn chưa ói ra. Linh hồn mang theo trạng thái lúc chết. Bài học siêu trí tuệ: nhiều người sống mà cũng bị "bùn tắc họng," nói không ra, diễn đạt không được, kêu cứu mà không ai nghe. Muốn giao tiếp thật sự, bước đầu tiên là giúp đối phương "ói bùn ra," tức là giải phóng nỗi đau đang tắc nghẽn, rồi mới nghe được tiếng nói thật.
+
+Ánh sáng chữa bệnh cho ma, rồi chính bệnh của Người Bất Tử cũng hết. Người Bất Tử chiếu ánh sáng vũ trụ vào ma nước 3. Nước đen hôi thối tan chảy xuống đất. Ma nước 3 sáng lên, bay đi. Rồi Tiếng lạ (Off) hỏi: "Con cảm thấy cơ thể mình như thế nào?" Người Bất Tử: "Bình thường, không còn sốt rét ma nữa." Bài học siêu trí tuệ: chữa bệnh cho người khác chính là chữa bệnh cho mình. Ma nước 3 được giải thoát thì bệnh sốt rét của Người Bất Tử cũng hết. Khi ta giúp người khác thoát khổ, chính ta cũng thoát khổ. Đây không phải triết lý đạo đức, mà là cơ chế thực tế: nguồn gốc bệnh biến mất thì triệu chứng biến mất.
+
+"Thực hành đúng thì sẽ tăng tuổi thọ." Câu cuối cùng của Tiếng lạ (Off) trong câu chuyện này. Không nói "con sẽ thành thần." Không nói "con sẽ đắc đạo." Nói rất thực tế: "tăng tuổi thọ." Bài học siêu trí tuệ: mục đích cuối cùng không phải siêu nhiên, không phải giác ngộ trừu tượng. Mục đích là sống lâu, sống khỏe, sống đủ lâu để cứu thêm nhiều người. Đây là nền tảng của toàn bộ hệ thống "Người Bất Tử": bất tử không phải phép thuật, mà là hệ quả tự nhiên khi sống đúng, chữa đúng, giúp đúng.
+
+Câu chuyện 6 khép lại vòng tròn mở ra từ câu chuyện thứ 1. Ma nước 3 xuất hiện lần đầu ở đáy ao năm 1970, nói "tha cho nó sống, mình đeo theo nó tìm đường giải thoát." Đeo bám bao nhiêu năm, gây bệnh sốt rét, chờ đợi. Đến câu 6 mới được cứu. Bài học xuyên suốt: mọi sự kiện trong cuộc đời đều kết nối. Tai nạn năm 9 tuổi không phải chuyện đã xong. Căn bệnh hôm nay có thể bắt nguồn từ một khoảnh khắc mấy chục năm trước. Và giải pháp không phải thuốc men, mà là quay lại đúng nơi bắt đầu, nhìn thẳng vào gốc rễ, giao tiếp với gốc rễ đó, rồi dùng ánh sáng chữa lành.`,
+    en: `Illness doesn't always come from bacteria or viruses. The Immortal had malaria: cold shivers, chattering teeth, water seeping from the body. Hot coals under the bed, wrapped in blankets, still couldn't stop the cold. Symptoms identical to regular malaria. But the true cause was Water Ghost 3 from Story 1, clinging since age 9. Deep wisdom lesson: some diseases show symptoms that medicine can see but cannot find the root cause. The root lies deeper than the physical body — in memory, in the past, in connections invisible to the naked eye.
+
+Water Ghost 3 is not the enemy. Water Ghost 3 is a patient. In Story 1, Water Ghost 3 said "spare him, I'll follow him to find a path to liberation." Water Ghost 3 didn't harm The Immortal out of malice. Water Ghost 3 made The Immortal sick so he would seek a healer. Water Ghost 3 hoped some healer would see her and help. Deep wisdom lesson: many "troublemakers" in life are actually souls crying for help in the only way they know. The person causing you trouble may simply be searching for someone who understands them. Don't rush to drive them away — ask: "What do you need?"
+
+To heal a disease, you must learn its language. The Strange Voice (Off) didn't say "drive Water Ghost 3 away." The Strange Voice said "you must communicate with Water Ghost 3 using cosmic language." Not fighting, not exorcising, not chanting to drive away. But speaking. Communicating. Understanding. Deep wisdom lesson: true healing begins with communication. Understanding the cause. Asking the patient (even if the patient is a ghost). Listening to the answer. Without this step, all treatments merely chase symptoms, never touching the root.
+
+"Look at the light, the light reflects back into the brain, cosmic language flows down to the mouth and tongue." This is the formula for learning cosmic language. Not memorization. Not someone teaching word by word. Look at light, the brain receives, the mouth speaks on its own. Exactly like the Solar Fist principle from Stories 4-5: look at light, energy enters, the body moves on its own. Deep wisdom lesson: the human brain doesn't only process learned languages. The human brain can receive language directly from light energy. Light is the original teacher, before any human language.
+
+Water Ghost 3 had to vomit mud before she could speak. A small but profoundly deep detail. Water Ghost 3 mumbled incoherently. The Strange Voice instructed: "Tell Water Ghost 3 to open her mouth and vomit out all the mud and water in her throat, then she can speak." Water Ghost 3 drowned, mud and water clogged in her throat for decades without being expelled. The soul carries the state at the moment of death. Deep wisdom lesson: many living people also have "mud clogging their throat" — unable to speak, unable to express, crying for help but no one hears. For true communication, the first step is to help the other person "vomit the mud out" — that is, release the pain that's been blocked — only then can you hear their true voice.
+
+Light healed the ghost, then The Immortal's own illness disappeared. The Immortal projected cosmic light onto Water Ghost 3. Black, foul water melted into the earth. Water Ghost 3 lit up and flew away. Then the Strange Voice asked: "How does your body feel?" The Immortal: "Normal, no more ghost malaria." Deep wisdom lesson: healing others is healing yourself. When Water Ghost 3 was freed, The Immortal's malaria also ended. When we help others escape suffering, we ourselves escape suffering too. This isn't moral philosophy — it's a practical mechanism: when the source of illness disappears, symptoms disappear.
+
+"Practice correctly and you will extend your lifespan." The Strange Voice's final words in this story. Didn't say "you will become a god." Didn't say "you will achieve enlightenment." Said something very practical: "extend your lifespan." Deep wisdom lesson: the ultimate goal isn't supernatural, isn't abstract enlightenment. The goal is to live long, live healthy, live long enough to save more people. This is the foundation of the entire "Immortal" system: immortality isn't magic — it's the natural consequence of living right, healing right, and helping right.
+
+Story 6 closes the circle opened in Story 1. Water Ghost 3 first appeared at the bottom of the pond in 1970, saying "spare him, I'll follow him to find liberation." Clinging for years, causing malaria, waiting. Not saved until Story 6. The connecting lesson: every event in life is connected. The accident at age 9 wasn't a closed chapter. Today's illness may originate from a moment decades ago. And the solution isn't medicine — it's returning to where it began, looking straight at the root, communicating with that root, then using light to heal.`,
+  },
+  7: {
+    vi: `Mượn sức mạnh bên ngoài phải trả giá trên thân xác mình. "Cu Tèo hai đầu gối lê lết dưới đất, bị trầy trụa và chảy máu." Cu Tèo đọc thần chú "ava maduna," mời Ma Hắc Hổ và Ma Xà Quyền nhập vào cơ thể. Đánh mạnh, đánh nhanh, nhưng cơ thể cu Tèo là cái giá: đầu gối lê lết trầy trụa chảy máu. Ma dùng xác cu Tèo như công cụ, không quan tâm xác đó có đau hay không. Đây là nguyên lý sâu nhất: mọi con đường tắt đều có cái giá. Mượn sức mạnh từ bên ngoài, dù là ma quỷ, bùa ngải, hay bất cứ nguồn lực nào không thuộc về mình, thì chính thân xác và linh hồn mình phải gánh chịu hậu quả.
+
+Năng lượng bên trong không tổn thương bản thân. Người Bất Tử dùng Kỳ Lân Quyền, không đọc thần chú, không mời ai nhập xác. Đánh bằng năng lượng tự thân. Bị trúng đòn thì đau, nhưng cơ thể không tự hủy hoại chính mình. Khác biệt cốt lõi: võ bùa ngải hại cả đối thủ lẫn người tập, võ năng lượng chỉ hại đối thủ khi cần, không hại người tập. Con đường chính đạo bảo vệ cả thân lẫn tâm. Con đường tắt phá hủy từ bên trong.
+
+Đứa trẻ được cứu quay lại mang theo bài học. "Nếu ngày đó không có anh cứu giúp thì em đã bị chết nước rồi." Cu Tèo ở câu chuyện 3 suýt chết đuối, được Người Bất Tử cứu. Giờ cu Tèo quay lại, mang theo Hắc Hổ Xà Quyền. Ơn cứu mạng tạo ra mối duyên, mối duyên dẫn cu Tèo trở lại, và qua cu Tèo, Người Bất Tử gặp anh Sơn, chạm mặt hệ thống võ bùa ngải. Không có câu chuyện 3 thì không có câu chuyện 7. Mỗi lần cứu người, vũ trụ gửi lại một bài học mới qua chính người được cứu.
+
+Thầy dạy võ bùa ngải không biết mình đang hại học trò. Anh Sơn dạy cu Tèo Hắc Hổ Xà Quyền. Anh Sơn 39 tuổi, võ công lợi hại, đánh đối kháng rất mạnh. Nhưng anh Sơn không thấy đầu gối cu Tèo chảy máu. Hoặc thấy mà nghĩ đó là chuyện bình thường. Người truyền dạy con đường sai không phải lúc nào cũng ác ý. Có khi chính người thầy cũng không biết con đường mình đi đang gây hại. Bài học siêu trí tuệ: đừng chỉ nhìn kết quả (đánh mạnh, thắng đối thủ), hãy nhìn cái giá phải trả (đầu gối chảy máu, linh hồn bị ma chiếm dụng).
+
+Sư Tử Hống: âm thanh là vũ khí, không chỉ nắm đấm. "Há miệng à om... Âm thanh vang dội." Giữa trận đấu, Người Bất Tử không dùng tay chân mà dùng miệng: Sư Tử Hống. Một tiếng "à om" vang dội khiến đám đông kinh ngạc. Câu chuyện 6 vừa dạy ngôn ngữ vũ trụ, câu chuyện 7 đã ứng dụng: âm thanh là năng lượng, âm thanh là vũ khí, âm thanh chữa bệnh lẫn chiến đấu. Thái Dương Quyền không chỉ là tay chân, mà bao gồm cả giọng nói, hơi thở, sóng âm. Toàn bộ cơ thể là vũ khí khi kết nối đúng nguồn năng lượng.
+
+Tôn trọng đối thủ sau trận đấu. "Bắt tay anh Sơn, võ của anh lợi hại lắm." Người Bất Tử không khinh thường Hắc Hổ Xà Quyền. Không nói "võ bùa dở, võ mình hay hơn." Bắt tay, khen thật lòng. Anh Sơn cũng khen ngược: "Sư Tử Hống lợi hại lắm." Hai hệ thống khác nhau, nhưng người tập tôn trọng nhau. Bài học siêu trí tuệ: phân biệt đúng sai ở phương pháp, không phân biệt đúng sai ở con người. Người đi đường sai vẫn xứng đáng được tôn trọng. Chỉ ra con đường tốt hơn bằng kết quả, không bằng miệt thị.
+
+Câu chuyện 7 đặt ra câu hỏi trung tâm cho toàn bộ hành trình: sức mạnh đến từ đâu? Mượn từ bên ngoài (ma, bùa, thần chú) thì mạnh nhanh nhưng trả giá trên thân xác. Kích hoạt từ bên trong (năng lượng mặt trời, vũ trụ) thì cần thời gian nhưng không tự hại. Cu Tèo đầu gối chảy máu là hình ảnh rõ nhất: con đường tắt luôn để lại vết thương trên chính người đi.`,
+    en: `Borrowing external power means paying with your own body. "Cu Teo's knees dragged on the ground, scraped raw and bleeding." Cu Teo chanted "ava maduna," inviting the Black Tiger Ghost and Snake Fist Ghost into his body. He struck hard and fast, but Cu Teo's body was the price: knees scraped raw and bleeding. The ghosts used Cu Teo's body as a tool, not caring whether that body was in pain. This is the deepest principle: every shortcut has a price. Borrowing power from the outside — whether ghosts, sorcery, or any resource that isn't yours — means your own body and soul must bear the consequences.
+
+Internal energy doesn't harm the practitioner. The Immortal used Unicorn Fist, no incantations, no spirit possession. Fighting with self-generated energy. Getting hit hurts, but the body doesn't destroy itself. The core difference: sorcery martial arts harm both the opponent and the practitioner; energy martial arts only harm the opponent when needed, never the practitioner. The righteous path protects both body and spirit. The shortcut destroys from within.
+
+The saved child returns carrying a lesson. "If you hadn't saved me that day, I would have drowned." Cu Teo from Story 3 nearly drowned and was saved by The Immortal. Now Cu Teo returned, bringing Black Tiger Snake Fist. The debt of saving a life created a bond, the bond led Cu Teo back, and through Cu Teo, The Immortal met Brother Son and encountered the sorcery martial arts system. Without Story 3, there would be no Story 7. Each time you save someone, the universe sends back a new lesson through the very person saved.
+
+The sorcery teacher doesn't know he's harming his student. Brother Son taught Cu Teo Black Tiger Snake Fist. Brother Son, 39 years old, formidable fighting skills, very strong in combat. But Brother Son didn't see Cu Teo's knees bleeding. Or saw it but thought it was normal. Those who teach the wrong path aren't always malicious. Sometimes even the teacher doesn't know the path they walk is causing harm. Deep wisdom lesson: don't just look at results (striking hard, defeating opponents) — look at the price paid (bleeding knees, soul occupied by ghosts).
+
+Lion's Roar: sound is a weapon, not just fists. "Opening his mouth: AH OM... The sound echoed thunderously." Mid-battle, The Immortal didn't use hands or feet but his mouth: Lion's Roar. A thunderous "AH OM" that amazed the crowd. Story 6 just taught cosmic language; Story 7 already applies it: sound is energy, sound is a weapon, sound both heals and fights. Solar Fist isn't just about limbs — it includes voice, breath, sound waves. The entire body is a weapon when connected to the right energy source.
+
+Respecting the opponent after battle. "Shaking Brother Son's hand: 'Your martial arts are very formidable.'" The Immortal didn't look down on Black Tiger Snake Fist. Didn't say "sorcery fighting is inferior, mine is better." Shook hands, praised sincerely. Brother Son also praised back: "Lion's Roar is very formidable." Two different systems, but the practitioners respected each other. Deep wisdom lesson: distinguish right from wrong in the method, not in the person. Those on the wrong path still deserve respect. Show a better way through results, not through contempt.
+
+Story 7 poses the central question for the entire journey: where does strength come from? Borrowed from outside (ghosts, sorcery, incantations) — quick power but the body pays the price. Activated from within (solar energy, cosmic energy) — takes time but causes no self-harm. Cu Teo's bleeding knees are the clearest image: shortcuts always leave wounds on the person walking them.`,
   },
 }
 
@@ -1056,5 +1646,93 @@ export const STORY_HIGHLIGHTS = {
       'The first loss is not failure — it\'s a map for the journey',
       'Relax, connect to energy, let the body operate on its own',
     ],
+  },
+  5: {
+    vi: [
+      'Thầy chỉ là người mở cánh cửa, năng lượng không phân biệt thầy trò',
+      'Một công thức duy nhất, bình đẳng cho tất cả',
+      '36 bài võ đối kháng thua 7 ngày Thái Dương Quyền',
+      'Kỹ thuật có giới hạn, năng lượng thì không',
+      'Điều vượt ngoài hiểu biết không phải bùa ngải, mà là năng lượng tự nhiên',
+      'Thầy thật sự là người biết mở cửa, dù bản thân vẫn đang học',
+      'Tri thức thật sự thì lan tỏa — ánh sáng chiếu ra, không giữ lại',
+    ],
+    en: [
+      'The teacher only opens the door — energy doesn\'t discriminate between teacher and student',
+      'One single formula, equal for all',
+      '36 combat forms lost to 7 days of Solar Fist',
+      'Technique has limits; energy does not',
+      'What\'s beyond understanding isn\'t magic — it\'s natural energy',
+      'A true teacher opens doors, even while still learning',
+      'True knowledge spreads naturally — sunlight shines out, never holding back',
+    ],
+  },
+  6: {
+    vi: [
+      'Bệnh tật có thể bắt nguồn từ ký ức và quá khứ, không chỉ vi khuẩn',
+      'Kẻ gây hại có khi chỉ là linh hồn đang kêu cứu',
+      'Chữa bệnh thật sự bắt đầu từ giao tiếp, không phải đánh đuổi',
+      'Ánh sáng là thầy dạy gốc, trước cả ngôn ngữ con người',
+      'Phải ói bùn ra mới nói được — giải phóng nỗi đau trước khi giao tiếp',
+      'Chữa bệnh cho người khác chính là chữa bệnh cho mình',
+      'Bất tử không phải phép thuật, mà là hệ quả khi sống đúng, chữa đúng, giúp đúng',
+    ],
+    en: [
+      'Illness can originate from memory and the past, not just bacteria',
+      'Troublemakers may be souls crying for help the only way they know',
+      'True healing begins with communication, not exorcism',
+      'Light is the original teacher, before any human language',
+      'Must vomit the mud before speaking — release pain before communication',
+      'Healing others is healing yourself',
+      'Immortality isn\'t magic — it\'s the natural consequence of living, healing, and helping right',
+    ],
+  },
+  7: {
+    vi: [
+      'Cu Tèo, người được cứu ở câu 3, quay lại — ơn cứu mạng tạo duyên mới',
+      'Võ bùa ngải mượn ma nhập xác, đầu gối cu Tèo trầy trụa chảy máu',
+      'Kỳ Lân Quyền dùng năng lượng ánh sáng, không tổn thương bản thân',
+      'Hai hệ thống đối đầu: mượn sức ngoài vs kích hoạt sức trong',
+      'Sư Tử Hống: âm thanh cũng là năng lượng, không chỉ nắm đấm và cú đá',
+      'Tôn trọng đối thủ sau trận đấu — phân biệt phương pháp, không phân biệt con người',
+    ],
+    en: [
+      'Cu Teo, saved in Story 3, returns — saving a life creates new bonds',
+      'Sorcery fighting borrows ghost possession, Cu Teo\'s knees scraped and bleeding',
+      'Unicorn Fist uses light energy, no self-harm',
+      'Two systems clash: borrowing external power vs activating internal power',
+      'Lion\'s Roar: sound is also energy, not just fists and kicks',
+      'Respecting opponents after battle — judge the method, not the person',
+    ],
+  },
+}
+export const STORY_THREADS = {
+  1: {
+    vi: 'Người trải qua đau khổ cực điểm mà sống sót, không phải để quên đi, mà để mang theo trách nhiệm giúp người khác thoát khổ. Đó là khởi đầu của Người Bất Tử.',
+    en: 'Those who endure extreme suffering and survive are not meant to forget, but to carry the responsibility of helping others escape suffering. That is the origin of The Immortal.',
+  },
+  2: {
+    vi: 'Cuộc sống ở Quận 4 thập niên 70, cái chết nằm khắp nơi, dưới đáy sông lẫn dưới đáy ao, trên bờ lẫn dưới nước. Sống được qua mỗi ngày đã là một phép màu.',
+    en: 'Life in District 4 in the 1970s — death lay everywhere, at the bottom of rivers and ponds, on shore and underwater. Surviving each day was already a miracle.',
+  },
+  3: {
+    vi: 'Ba câu chuyện đầu, ba lần chạm mặt cái chết dưới nước, đặt nền cho toàn bộ 34 câu chuyện còn lại: Người Bất Tử không phải sinh ra đã mạnh. Mạnh lên từ mỗi lần suýt chết. Và mỗi lần mạnh hơn, trách nhiệm cũng lớn hơn.',
+    en: 'The first three stories, three encounters with death underwater, lay the foundation for all 34 remaining stories: The Immortal was not born strong. He grew stronger from each near-death experience. And each time he grew stronger, the responsibility also grew greater.',
+  },
+  4: {
+    vi: 'Câu chuyện 4 đánh dấu bước ngoặt: từ người sống sót (câu 1-3) sang người bắt đầu tu luyện. Ba câu đầu, vũ trụ cứu Người Bất Tử. Từ câu 4, Người Bất Tử bắt đầu tự rèn luyện để không cần được cứu nữa. Và nguyên lý cốt lõi đã xuất hiện: buông lỏng, kết nối năng lượng, để cơ thể tự vận hành. Không cưỡng ép. Không học thuộc lòng. Không bắt chước. Để năng lượng dẫn đường.',
+    en: 'Story 4 marks a turning point: from survivor (Stories 1-3) to practitioner. In the first three stories, the universe saved The Immortal. From Story 4, The Immortal began training himself so he would no longer need saving. And the core principle emerged: relax, connect to energy, let the body operate on its own. No forcing. No memorizing. No imitating. Let energy lead the way.',
+  },
+  5: {
+    vi: 'Câu chuyện 5 là bản thiết kế của toàn bộ hệ thống Thái Dương Quyền: một công thức, bình đẳng cho tất cả, không phân cấp thầy trò, không giấu nghề, kết quả nhanh nếu kết nối đúng, và tự lan truyền từ người này sang người khác. Mặt trời không cần marketing. Ai đứng dưới ánh sáng thì nhận được.',
+    en: 'Story 5 is the blueprint of the entire Solar Fist system: one formula, equal for all, no teacher-student hierarchy, no hidden secrets, quick results when properly connected, and self-propagating from person to person. The sun needs no marketing. Whoever stands in the light receives it.',
+  },
+  6: {
+    vi: 'Câu chuyện 6 khép lại vòng tròn mở ra từ câu chuyện thứ 1. Ma nước 3 xuất hiện lần đầu ở đáy ao năm 1970, nói "tha cho nó sống, mình đeo theo nó tìm đường giải thoát." Đeo bám bao nhiêu năm, gây bệnh sốt rét, chờ đợi. Đến câu 6 mới được cứu. Bài học xuyên suốt: mọi sự kiện trong cuộc đời đều kết nối. Tai nạn năm 9 tuổi không phải chuyện đã xong. Căn bệnh hôm nay có thể bắt nguồn từ một khoảnh khắc mấy chục năm trước. Và giải pháp không phải thuốc men, mà là quay lại đúng nơi bắt đầu, nhìn thẳng vào gốc rễ, giao tiếp với gốc rễ đó, rồi dùng ánh sáng chữa lành.',
+    en: 'Story 6 closes the circle opened in Story 1. Water Ghost 3 first appeared at the bottom of the pond in 1970, saying "spare him, I\'ll follow him to find liberation." Clinging for years, causing malaria, waiting. Not saved until Story 6. The connecting lesson: every event in life is connected. The accident at age 9 wasn\'t a closed chapter. Today\'s illness may originate from a moment decades ago. And the solution isn\'t medicine — it\'s returning to where it began, looking straight at the root, communicating with that root, then using light to heal.',
+  },
+  7: {
+    vi: 'Câu chuyện 7 đặt ra câu hỏi trung tâm cho toàn bộ hành trình: sức mạnh đến từ đâu? Mượn từ bên ngoài (ma, bùa, thần chú) thì mạnh nhanh nhưng trả giá trên thân xác. Kích hoạt từ bên trong (năng lượng mặt trời, vũ trụ) thì cần thời gian nhưng không tự hại. Cu Tèo đầu gối chảy máu là hình ảnh rõ nhất: con đường tắt luôn để lại vết thương trên chính người đi.',
+    en: 'Story 7 poses the central question for the entire journey: where does strength come from? Borrowed from outside (ghosts, sorcery, incantations) — quick power but the body pays the price. Activated from within (solar energy, cosmic energy) — takes time but causes no self-harm. Cu Teo\'s bleeding knees are the clearest image: shortcuts always leave wounds on the person walking them.',
   },
 }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { STORY_TAGS, STORIES, STORY_CONTENT, STORY_LESSONS, STORY_HIGHLIGHTS } from '../../data/stories'
+import { STORY_TAGS, STORIES, STORY_CONTENT, STORY_LESSONS, STORY_HIGHLIGHTS, STORY_THREADS } from '../../data/stories'
 
 const TAGS = Object.keys(STORY_TAGS)
 
@@ -31,6 +31,7 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
     contentVi: '', contentEn: '',
     lessonVi: '', lessonEn: '',
     highlightsVi: '', highlightsEn: '',
+    threadVi: '', threadEn: '',
   }
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY)
@@ -46,6 +47,7 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
       contentVi: s.contentVi || '', contentEn: s.contentEn || '',
       lessonVi: s.lessonVi || '', lessonEn: s.lessonEn || '',
       highlightsVi: s.highlightsVi || '', highlightsEn: s.highlightsEn || '',
+      threadVi: s.threadVi || '', threadEn: s.threadEn || '',
     })
     setEditing(s.id)
   }
@@ -58,6 +60,7 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
       contentVi: form.contentVi, contentEn: form.contentEn,
       lessonVi: form.lessonVi, lessonEn: form.lessonEn,
       highlightsVi: form.highlightsVi, highlightsEn: form.highlightsEn,
+      threadVi: form.threadVi, threadEn: form.threadEn,
     }
     if (editing === 'new') await onAdd(data)
     else await onUpdate(editing, data)
@@ -81,6 +84,7 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
     setSeeding(true)
     for (const s of STORIES) {
       const hl = STORY_HIGHLIGHTS[s.id]
+      const th = STORY_THREADS[s.id]
       await onAdd({
         order: s.id,
         tag: s.tag,
@@ -92,6 +96,8 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
         lessonEn: STORY_LESSONS[s.id]?.en || '',
         highlightsVi: hl?.vi?.join('\n') || '',
         highlightsEn: hl?.en?.join('\n') || '',
+        threadVi: th?.vi || '',
+        threadEn: th?.en || '',
       })
     }
     setSeeding(false)
@@ -113,6 +119,7 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
     for (const s of STORIES) {
       const existing = stories.find(fs => Number(fs.order) === s.id)
       const hl = STORY_HIGHLIGHTS[s.id]
+      const th = STORY_THREADS[s.id]
       const data = {
         tag: s.tag,
         titleVi: s.vi,
@@ -123,6 +130,8 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
         lessonEn: STORY_LESSONS[s.id]?.en || '',
         highlightsVi: hl?.vi?.join('\n') || '',
         highlightsEn: hl?.en?.join('\n') || '',
+        threadVi: th?.vi || '',
+        threadEn: th?.en || '',
       }
       if (existing) {
         await onUpdate(existing.id, data)
@@ -223,6 +232,16 @@ export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete
                 value={formLang === 'vi' ? form.lessonVi : form.lessonEn}
                 onChange={e => setField(formLang === 'vi' ? 'lessonVi' : 'lessonEn', e.target.value)}
                 placeholder={formLang === 'vi' ? 'Bài học từ câu chuyện (mỗi đoạn cách 1 dòng trống)...' : 'Lesson from the story (separate paragraphs with blank lines)...'}
+              />
+            </div>
+
+            <div className="admin-field">
+              <label>{lang === 'vi' ? 'Xuyên suốt (nối với hành trình lớn)' : 'The Thread (connecting to the greater journey)'}</label>
+              <AutoTextarea
+                value={formLang === 'vi' ? form.threadVi : form.threadEn}
+                onChange={e => setField(formLang === 'vi' ? 'threadVi' : 'threadEn', e.target.value)}
+                placeholder={formLang === 'vi' ? 'Câu chuyện này kết nối với hành trình lớn như thế nào...' : 'How this story connects to the greater journey...'}
+                minHeight={80}
               />
             </div>
           </div>

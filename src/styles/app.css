@@ -794,6 +794,26 @@ body { background: var(--bg); color: var(--text); }
   margin: 8px 0;
 }
 [data-theme="light"] .lesson-quote { color: #8b7340; }
+
+/* Thread / Xuyên Suốt */
+.story-thread-v2 {
+  margin-top: 32px; padding: 20px 22px;
+  background: linear-gradient(135deg, rgba(201,168,108,0.05), rgba(201,168,108,0.02));
+  border-left: 3px solid rgba(201,168,108,0.4);
+  border-radius: 12px;
+}
+.thread-v2-header {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--gold); margin: 0 0 12px; opacity: 0.9;
+}
+.thread-v2-body {
+  font-size: calc(0.88rem * var(--reader-scale));
+  color: #c9b88a; line-height: 1.9;
+  margin: 0; font-style: italic;
+}
+[data-theme="light"] .thread-v2-body { color: #6b5d3e; }
+
 .story-nav {
   display: flex; justify-content: space-between; gap: 16px;
   margin-top: 40px; padding-top: 24px;

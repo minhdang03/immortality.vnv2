@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { STORIES, STORY_TAGS, STORY_CONTENT, STORY_LESSONS, STORY_HIGHLIGHTS } from '../data/stories'
+import { STORIES, STORY_TAGS, STORY_CONTENT, STORY_LESSONS, STORY_HIGHLIGHTS, STORY_THREADS } from '../data/stories'
 import { storySlug } from '../utils/slug'
 import SunIcon from '../components/SunIcon'
 import ShareButtons from '../components/ShareButtons'
@@ -113,6 +113,11 @@ function StoryDetail({ story, lang, t, navigate, fontSize, onFontIncrease, onFon
     ? firestoreHL.split('\n').filter(l => l.trim())
     : (STORY_HIGHLIGHTS[story.order] ? (lang === 'vi' ? STORY_HIGHLIGHTS[story.order].vi : STORY_HIGHLIGHTS[story.order].en) : null)
 
+  // Thread: from Firestore or fallback to hardcoded
+  const firestoreThread = lang === 'vi' ? story.threadVi : story.threadEn
+  const thread = firestoreThread
+    || (STORY_THREADS[story.order] ? (lang === 'vi' ? STORY_THREADS[story.order].vi : STORY_THREADS[story.order].en) : null)
+
   // Next/prev stories
   const currentIndex = allStories.findIndex(s => s.id === story.id)
   const prevStory = currentIndex > 0 ? allStories[currentIndex - 1] : null
@@ -198,6 +203,17 @@ function StoryDetail({ story, lang, t, navigate, fontSize, onFontIncrease, onFon
             </div>
           )
         })()}
+
+        {/* Part 3: Xuyên Suốt / The Thread */}
+        {thread && (
+          <div className="story-thread-v2">
+            <h3 className="thread-v2-header">
+              <SunIcon size={16} />
+              {lang === 'vi' ? 'Xuyên Suốt' : 'The Thread'}
+            </h3>
+            <p className="thread-v2-body">{thread}</p>
+          </div>
+        )}
 
         {/* Share bottom */}
         <div className="detail-share">
