@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { auth } from '../firebase'
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { ADMIN_TABS } from '../config/pages'
 import ArticlesTab from './admin/ArticlesTab'
 import TopicsTab from './admin/TopicsTab'
 import TranslationsTab from './admin/TranslationsTab'
@@ -10,18 +11,6 @@ import TeachingsTab from './admin/TeachingsTab'
 import PracticesTab from './admin/PracticesTab'
 import SettingsTab from './admin/SettingsTab'
 import HomeSettingsTab from './admin/HomeSettingsTab'
-
-const TABS = [
-  { id: 'articles', icon: '📝', vi: 'Bài viết', en: 'Articles' },
-  { id: 'stories', icon: '📖', vi: 'Câu chuyện', en: 'Stories' },
-  { id: 'khaitri', icon: '💡', vi: 'Khai Trí', en: 'Khai Trí' },
-  { id: 'teachings', icon: 'ℹ️', vi: 'Giới Thiệu', en: 'Teachings' },
-  { id: 'practices', icon: '☀️', vi: 'Thái Dương Quyền', en: 'Solar Fist' },
-  { id: 'topics', icon: '🏷️', vi: 'Chủ đề', en: 'Topics' },
-  { id: 'translations', icon: '🌐', vi: 'Ngôn ngữ', en: 'Translations' },
-  { id: 'homepage', icon: '🏠', vi: 'Trang chủ', en: 'Home Page' },
-  { id: 'settings', icon: '⚙️', vi: 'Cài đặt', en: 'Settings' },
-]
 
 export default function AdminPanel({
   t, lang, user, articles, topics, stories, firestoreVi, firestoreEn,
@@ -81,7 +70,7 @@ export default function AdminPanel({
     topics: topics.length,
   }
 
-  const activeTab = TABS.find(tb => tb.id === tab)
+  const activeTab = ADMIN_TABS.find(tb => tb.id === tab)
 
   return (
     <div className="fade-up">
@@ -102,7 +91,7 @@ export default function AdminPanel({
             </button>
           </div>
           <nav className="admin-nav">
-            {TABS.map(tb => (
+            {ADMIN_TABS.map(tb => (
               <button
                 key={tb.id}
                 className={`admin-nav-item ${tab === tb.id ? 'active' : ''}`}

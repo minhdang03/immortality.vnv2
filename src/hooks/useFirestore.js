@@ -243,12 +243,9 @@ export function usePractices() {
 }
 
 /* ─── SITE SETTINGS (navigation, home page, etc.) ─── */
-export const DEFAULT_HOME_CARDS = [
-  { id: 'stories', icon: 'book', labelVi: '37 Câu Chuyện', labelEn: '37 Stories', descVi: 'Hành trình tu luyện siêu trí tuệ qua những câu chuyện có thật', descEn: 'The journey of super-intelligence cultivation through true stories', visible: true },
-  { id: 'khaitri', icon: 'layers', labelVi: 'Khai Trí', labelEn: 'Enlightenment Q&A', descVi: 'Hỏi đáp với Người Bất Tử về chân lý cuộc sống', descEn: 'Q&A with the Immortal about life truths', visible: true },
-  { id: 'about', icon: 'info', labelVi: 'Đô Tỷ Pháp', labelEn: 'Đô Tỷ Pháp Theory', descVi: 'Lý thuyết nền tảng về siêu trí tuệ và con đường bất tử', descEn: 'Foundational theory of super-intelligence and the path to immortality', visible: true },
-  { id: 'practice', icon: 'sun', labelVi: 'Thái Dương Quyền', labelEn: 'Solar Fist', descVi: '10 chiêu thức luyện năng lượng mặt trời', descEn: '10 movements of solar energy cultivation', visible: true },
-]
+// Page config imported from centralized config
+import { DEFAULT_HOME_CARDS, DEFAULT_NAV_ITEMS } from '../config/pages'
+export { DEFAULT_HOME_CARDS, DEFAULT_NAV_ITEMS }
 
 export const DEFAULT_HERO = {
   showSun: true,
@@ -262,25 +259,6 @@ export const DEFAULT_HERO = {
   ctaSecondaryLink: 'search',
 }
 
-export const ALL_NAV_PAGES = [
-  { id: 'home', labelVi: 'Trang Chủ', labelEn: 'Home' },
-  { id: 'articles', labelVi: 'Bài Viết', labelEn: 'Articles' },
-  { id: 'stories', labelVi: '37 Chuyện', labelEn: 'Stories' },
-  { id: 'khaitri', labelVi: 'Khai Trí', labelEn: 'Khai Trí' },
-  { id: 'about', labelVi: 'Giới Thiệu', labelEn: 'About' },
-  { id: 'practice', labelVi: 'Thái Dương Quyền', labelEn: 'Solar Fist' },
-  { id: 'contact', labelVi: 'Liên Hệ', labelEn: 'Contact' },
-  { id: 'search', labelVi: 'Tìm Kiếm', labelEn: 'Search' },
-]
-
-export const DEFAULT_NAV_ITEMS = [
-  { id: 'home', labelVi: 'Trang Chủ', labelEn: 'Home', visible: true, showInBottom: true },
-  { id: 'stories', labelVi: '37 Chuyện', labelEn: 'Stories', visible: true, showInBottom: true },
-  { id: 'khaitri', labelVi: 'Khai Trí', labelEn: 'Khai Trí', visible: true, showInBottom: true },
-  { id: 'about', labelVi: 'Giới Thiệu', labelEn: 'About', visible: true, showInBottom: false },
-  { id: 'practice', labelVi: 'Thái Dương Quyền', labelEn: 'Solar Fist', visible: true, showInBottom: true },
-  { id: 'contact', labelVi: 'Liên Hệ', labelEn: 'Contact', visible: true, showInBottom: true },
-]
 
 // Migrate old 'revelations' references to 'khaitri' in settings
 function migrateSettings(data) {

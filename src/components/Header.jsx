@@ -1,5 +1,5 @@
 import SunIcon from './SunIcon'
-import { DEFAULT_NAV_ITEMS } from '../hooks/useFirestore'
+import { DEFAULT_NAV_ITEMS } from '../config/pages'
 
 // Items that go in the right actions group instead of main nav
 const ACTION_IDS = ['contact']

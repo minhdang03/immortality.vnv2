@@ -1,10 +1,5 @@
 import { useState } from 'react'
-import { DEFAULT_NAV_ITEMS, ALL_NAV_PAGES } from '../../hooks/useFirestore'
-
-const NAV_ICONS = {
-  home: '🏠', articles: '📝', stories: '📖', khaitri: '💡', about: 'ℹ️',
-  practice: '☀️', contact: '✉️', search: '🔍',
-}
+import { DEFAULT_NAV_ITEMS, ALL_NAV_PAGES, NAV_ICONS } from '../../config/pages'
 
 export default function SettingsTab({ lang, settings, onUpdate }) {
   const [navItems, setNavItems] = useState(() => settings.navItems || DEFAULT_NAV_ITEMS)

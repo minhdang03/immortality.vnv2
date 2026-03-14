@@ -5,6 +5,7 @@ import { useTheme } from './hooks/useTheme'
 import { useArticles, useTranslations, useTopics, useStories, useKhaiTri, useTeachings, usePractices, useSiteSettings } from './hooks/useFirestore'
 import { useFontSize } from './hooks/useFontSize'
 import { articleSlug } from './utils/slug'
+import { PAGE_TITLES, PAGE_DESCRIPTIONS, matchRoute } from './config/pages'
 import './styles/app.css'
 
 // Layout
@@ -56,6 +57,8 @@ export default function App() {
   const applyPath = () => {
     const path = window.location.pathname
     if (!path || path === '/') { setPage('home'); return }
+
+    // Special parameterized routes
     if (path.startsWith('/topic/')) { setSelectedTopic(path.slice(7)); setPage('topic'); return }
     if (path.startsWith('/article/')) {
       const slug = path.slice(9)
@@ -63,14 +66,13 @@ export default function App() {
       if (found) { setSelectedArticle(found); setPage('article') }
       return
     }
-    if (path === '/articles') { setPage('articles'); return }
-    if (path === '/search') { setPage('search'); return }
-    if (path === '/contact') { setPage('contact'); return }
-    if (path === '/about') { setPage('about'); return }
-    if (path === '/stories' || path.startsWith('/story/')) { setPage('stories'); return }
-    if (path === '/practice') { setPage('practice'); return }
-    if (path === '/khaitri' || path.startsWith('/khaitri/') || path === '/revelations') { setPage('khaitri'); if (path === '/revelations') history.replaceState({}, '', '/khaitri'); return }
-    if (path === '/admin') { setPage('admin'); return }
+
+    // Data-driven simple routes
+    const match = matchRoute(path)
+    if (match) {
+      setPage(match.id)
+      if (match.redirect) history.replaceState({}, '', match.redirect)
+    }
   }
 
   const pathAppliedRef = useRef(false)
@@ -91,16 +93,6 @@ export default function App() {
   useEffect(() => { window.scrollTo(0, 0) }, [page, selectedArticle])
 
   // SEO - page titles
-  const PAGE_TITLES = {
-    articles: { vi: 'Bài Viết', en: 'Articles' },
-    stories: { vi: '37 Câu Chuyện', en: '37 Stories' },
-    khaitri: { vi: 'Khai Trí', en: 'Khai Trí' },
-    about: { vi: 'Giới Thiệu', en: 'About' },
-    practice: { vi: 'Thái Dương Quyền', en: 'Solar Fist' },
-    contact: { vi: 'Liên Hệ', en: 'Contact' },
-    search: { vi: 'Tìm Kiếm', en: 'Search' },
-    admin: { vi: 'Quản Trị', en: 'Admin' },
-  }
   const setMeta = (title, description) => {
     document.title = title
     document.querySelector('meta[name="description"]')?.setAttribute('content', description)
@@ -108,17 +100,6 @@ export default function App() {
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', description)
     document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title)
     document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', description)
-  }
-
-  const PAGE_DESCRIPTIONS = {
-    articles: { vi: 'Tất cả bài viết về tâm linh, sức khỏe và bất tử.', en: 'All articles on spirituality, health and immortality.' },
-    stories: { vi: 'Những câu chuyện thật về hành trình chữa lành và giác ngộ tâm linh.', en: 'True stories of healing and spiritual awakening.' },
-    khaitri: { vi: 'Hỏi đáp trí tuệ — giải đáp những câu hỏi về tâm linh, sức khỏe và bất tử.', en: 'Q&A wisdom — answers on spirituality, health, and immortality.' },
-    about: { vi: 'Tìm hiểu về Bất Tử Đạo và phương pháp năng lượng Mặt Trời.', en: 'Learn about the Path of Immortality and the Solar Energy method.' },
-    practice: { vi: 'Học Thái Dương Quyền — bài tập năng lượng mặt trời cho sức khỏe và trí tuệ.', en: 'Learn Solar Fist — sun energy exercises for health and wisdom.' },
-    contact: { vi: 'Liên hệ với chúng tôi để được hỗ trợ và tư vấn.', en: 'Contact us for support and guidance.' },
-    search: { vi: 'Tìm kiếm bài viết, câu chuyện và nội dung trên Bất Tử Đạo.', en: 'Search articles, stories and content on Immortality.' },
-    admin: { vi: 'Trang quản trị nội dung Bất Tử Đạo.', en: 'Immortality content management panel.' },
   }
 
   useEffect(() => {

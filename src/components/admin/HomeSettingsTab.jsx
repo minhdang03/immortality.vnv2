@@ -1,17 +1,7 @@
 import { useState } from 'react'
-import { DEFAULT_HOME_CARDS, DEFAULT_HERO } from '../../hooks/useFirestore'
+import { DEFAULT_HOME_CARDS, PAGE_OPTIONS } from '../../config/pages'
+import { DEFAULT_HERO } from '../../hooks/useFirestore'
 import HomeCardsGrid from './HomeCardsGrid'
-
-const PAGE_OPTIONS = [
-  { id: 'home', vi: 'Trang Chủ', en: 'Home' },
-  { id: 'articles', vi: 'Bài Viết', en: 'Articles' },
-  { id: 'stories', vi: '37 Chuyện', en: 'Stories' },
-  { id: 'khaitri', vi: 'Khai Trí', en: 'Khai Trí' },
-  { id: 'about', vi: 'Giới Thiệu', en: 'About' },
-  { id: 'practice', vi: 'Thái Dương Quyền', en: 'Solar Fist' },
-  { id: 'contact', vi: 'Liên Hệ', en: 'Contact' },
-  { id: 'search', vi: 'Tìm kiếm', en: 'Search' },
-]
 
 const inputStyle = {
   flex: 1, minWidth: 100, padding: '5px 10px', fontSize: '0.82rem',
