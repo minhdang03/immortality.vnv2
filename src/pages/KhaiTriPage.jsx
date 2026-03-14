@@ -15,12 +15,12 @@ export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFont
     }
   }, [items])
 
-  // Apply hash on mount: /khaitri/{slug}
+  // Apply path on mount: /khaitri/{slug}
   useEffect(() => {
     if (hashApplied.current || items.length === 0) return
-    const hash = window.location.hash.slice(1)
-    if (hash.startsWith('/khaitri/')) {
-      const slug = hash.slice(9)
+    const path = window.location.pathname
+    if (path.startsWith('/khaitri/')) {
+      const slug = path.slice(9)
       const found = items.find(it => khaitriSlug(it) === slug || String(it.order) === slug || it.id === slug)
       if (found) setSelected(found)
     }
@@ -40,7 +40,7 @@ export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFont
 
   const selectItem = (item) => {
     setSelected(item)
-    window.location.hash = `/khaitri/${khaitriSlug(item)}`
+    history.pushState({}, '', `/khaitri/${khaitriSlug(item)}`)
     window.scrollTo(0, 0)
   }
 
@@ -49,7 +49,7 @@ export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFont
       selectItem(nextItem)
     } else {
       setSelected(null)
-      window.location.hash = '/khaitri'
+      history.pushState({}, '', '/khaitri')
     }
   }
 

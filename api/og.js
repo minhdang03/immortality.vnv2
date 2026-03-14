@@ -1,5 +1,7 @@
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import { initializeApp, getApps } from 'firebase/app'
-import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore'
+import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: process.env.VITE_FIREBASE_API_KEY,
@@ -22,14 +24,28 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+function isCrawler(req) {
+  const ua = req.headers['user-agent'] || ''
+  return /bot|crawler|spider|facebook|twitter|linkedin|whatsapp|slack|telegram|discord|google|bing|yahoo|baidu|applebot|sogou|exabot|ia_archiver/i.test(ua)
+}
+
+async function serveApp(res) {
+  try {
+    const html = readFileSync(join(process.cwd(), 'dist/index.html'), 'utf8')
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    return res.send(html)
+  } catch {
+    const html = await fetch(`${SITE_URL}/`).then(r => r.text())
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    return res.send(html)
+  }
+}
+
 function renderOgPage({ title, description, image, url }) {
   const t = escapeHtml(title || SITE_NAME)
   const d = escapeHtml(description || DEFAULT_DESC)
   const img = escapeHtml(image || DEFAULT_IMAGE)
   const u = escapeHtml(url || SITE_URL)
-  // hashUrl for client redirect
-  const hashPath = url ? url.replace(SITE_URL, '') : '/'
-  const redirectUrl = `${SITE_URL}/#${hashPath}`
 
   return `<!DOCTYPE html>
 <html lang="vi">
@@ -48,11 +64,8 @@ function renderOgPage({ title, description, image, url }) {
 <meta name="twitter:title" content="${t}">
 <meta name="twitter:description" content="${d}">
 <meta name="twitter:image" content="${img}">
-<meta http-equiv="refresh" content="0;url=${escapeHtml(redirectUrl)}">
 </head>
-<body>
-<p>Redirecting to <a href="${escapeHtml(redirectUrl)}">${t}</a>...</p>
-</body>
+<body><p><a href="${u}">${t}</a></p></body>
 </html>`
 }
 
@@ -117,6 +130,9 @@ async function findKhaiTri(slug) {
 export default async function handler(req, res) {
   const p = req.query.p || '/'
 
+  // Non-crawlers: serve the SPA directly so URL stays clean
+  if (!isCrawler(req)) return serveApp(res)
+
   try {
     // /story/{slug}
     const storyMatch = p.match(/^\/story\/(.+)$/)
@@ -172,7 +188,7 @@ export default async function handler(req, res) {
     console.error('OG handler error:', e)
   }
 
-  // Default fallback
+  // Fallback: serve OG default for crawlers, app for browsers
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.send(renderOgPage({ url: SITE_URL }))
 }

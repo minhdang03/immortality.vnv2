@@ -21,12 +21,12 @@ export default function StoriesPage({ t, lang, firestoreStories, navigate, fontS
     }
   }, [allStories])
 
-  // Apply hash on mount: /story/01-thoat-chet-duoi...
+  // Apply path on mount: /story/01-thoat-chet-duoi...
   useEffect(() => {
     if (hashApplied.current || allStories.length === 0) return
-    const hash = window.location.hash.slice(1)
-    if (hash.startsWith('/story/')) {
-      const slug = hash.slice(7)
+    const path = window.location.pathname
+    if (path.startsWith('/story/')) {
+      const slug = path.slice(7)
       const found = allStories.find(s => storySlug(s) === slug || String(s.order) === slug)
       if (found) setSelected(found)
     }
@@ -45,13 +45,13 @@ export default function StoriesPage({ t, lang, firestoreStories, navigate, fontS
 
   const selectStory = (story) => {
     setSelected(story)
-    window.location.hash = `/story/${storySlug(story)}`
+    history.pushState({}, '', `/story/${storySlug(story)}`)
     window.scrollTo(0, 0)
   }
 
   const goBack = () => {
     setSelected(null)
-    window.location.hash = '/stories'
+    history.pushState({}, '', '/stories')
   }
 
   if (selected) {
