@@ -58,7 +58,7 @@ export default function KhaiTriDetail({ item, lang, t, navigate, fontSize, onFon
         {/* Toolbar */}
         <div className="detail-toolbar">
           <FontSizeControls fontSize={fontSize} onIncrease={onFontIncrease} onDecrease={onFontDecrease} onReset={onFontReset} />
-          <ShareButtons title={d.title || ''} shareUrl={`${window.location.origin}/khaitri/${khaitriSlug(item)}`} t={t} />
+          <ShareButtons title={d.title || ''} shareUrl={`${window.location.origin}/#/khaitri/${khaitriSlug(item)}`} t={t} />
         </div>
 
         {/* Question */}
@@ -96,7 +96,7 @@ export default function KhaiTriDetail({ item, lang, t, navigate, fontSize, onFon
 
         {/* Share bottom */}
         <div className="detail-share">
-          <ShareButtons title={d.title || ''} shareUrl={`${window.location.origin}/khaitri/${khaitriSlug(item)}`} t={t} />
+          <ShareButtons title={d.title || ''} shareUrl={`${window.location.origin}/#/khaitri/${khaitriSlug(item)}`} t={t} />
         </div>
 
         {/* Prev/Next */}

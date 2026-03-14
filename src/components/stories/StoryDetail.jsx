@@ -67,7 +67,7 @@ export default function StoryDetail({ story, lang, t, navigate, fontSize, onFont
             onDecrease={onFontDecrease}
             onReset={onFontReset}
           />
-          <ShareButtons title={title || ''} shareUrl={`${window.location.origin}/story/${storySlug(story)}`} t={t} />
+          <ShareButtons title={title || ''} shareUrl={`${window.location.origin}/#/story/${storySlug(story)}`} t={t} />
         </div>
 
         {/* Body */}
@@ -121,7 +121,7 @@ export default function StoryDetail({ story, lang, t, navigate, fontSize, onFont
 
         {/* Share bottom */}
         <div className="detail-share">
-          <ShareButtons title={title || ''} shareUrl={`${window.location.origin}/story/${storySlug(story)}`} t={t} />
+          <ShareButtons title={title || ''} shareUrl={`${window.location.origin}/#/story/${storySlug(story)}`} t={t} />
         </div>
 
         {/* Prev/Next navigation */}

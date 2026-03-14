@@ -262,6 +262,16 @@ export const DEFAULT_HERO = {
   ctaSecondaryLink: 'search',
 }
 
+export const ALL_NAV_PAGES = [
+  { id: 'home', labelVi: 'Trang Chủ', labelEn: 'Home' },
+  { id: 'stories', labelVi: '37 Chuyện', labelEn: 'Stories' },
+  { id: 'khaitri', labelVi: 'Khai Trí', labelEn: 'Khai Trí' },
+  { id: 'about', labelVi: 'Giới Thiệu', labelEn: 'About' },
+  { id: 'practice', labelVi: 'Thái Dương Quyền', labelEn: 'Solar Fist' },
+  { id: 'contact', labelVi: 'Liên Hệ', labelEn: 'Contact' },
+  { id: 'search', labelVi: 'Tìm Kiếm', labelEn: 'Search' },
+]
+
 export const DEFAULT_NAV_ITEMS = [
   { id: 'home', labelVi: 'Trang Chủ', labelEn: 'Home', visible: true, showInBottom: true },
   { id: 'stories', labelVi: '37 Chuyện', labelEn: 'Stories', visible: true, showInBottom: true },

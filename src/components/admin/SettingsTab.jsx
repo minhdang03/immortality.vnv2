@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DEFAULT_NAV_ITEMS } from '../../hooks/useFirestore'
+import { DEFAULT_NAV_ITEMS, ALL_NAV_PAGES } from '../../hooks/useFirestore'
 
 const NAV_ICONS = {
   home: '🏠', stories: '📖', khaitri: '💡', about: 'ℹ️',
@@ -33,6 +33,16 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
     items[idx] = { ...items[idx], [field]: value }
     setNavItems(items)
   }
+
+  const addItem = (pageId) => {
+    const page = ALL_NAV_PAGES.find(p => p.id === pageId)
+    if (!page) return
+    setNavItems([...navItems, { id: page.id, labelVi: page.labelVi, labelEn: page.labelEn, visible: true, showInBottom: false }])
+  }
+
+  const removeItem = (idx) => setNavItems(navItems.filter((_, i) => i !== idx))
+
+  const availablePages = ALL_NAV_PAGES.filter(p => !navItems.some(n => n.id === p.id))
 
   const handleSave = async () => {
     setSaving(true)
@@ -88,12 +98,26 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
 
       {/* Navigation */}
       <div className="admin-settings-section">
-        <h3 className="admin-settings-title">
-          {vi ? '🧭 Cấu trúc điều hướng' : '🧭 Navigation Structure'}
-          <span style={{ fontWeight: 400, fontSize: '0.78rem', color: 'var(--text-dim)' }}>
-            (Bottom: {bottomCount}/5)
-          </span>
-        </h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <h3 className="admin-settings-title" style={{ marginBottom: 0 }}>
+            {vi ? '🧭 Cấu trúc điều hướng' : '🧭 Navigation Structure'}
+            <span style={{ fontWeight: 400, fontSize: '0.78rem', color: 'var(--text-dim)' }}>
+              {' '}(Bottom: {bottomCount}/5)
+            </span>
+          </h3>
+          {availablePages.length > 0 && (
+            <select
+              style={{ marginLeft: 'auto', padding: '4px 8px', fontSize: '0.78rem', background: 'var(--bg)', border: '1px solid rgba(201,168,108,0.2)', borderRadius: 6, color: 'var(--text)' }}
+              value=""
+              onChange={e => { if (e.target.value) addItem(e.target.value) }}
+            >
+              <option value="">+ {vi ? 'Thêm trang' : 'Add page'}</option>
+              {availablePages.map(p => (
+                <option key={p.id} value={p.id}>{vi ? p.labelVi : p.labelEn}</option>
+              ))}
+            </select>
+          )}
+        </div>
 
         <div className="admin-articles">
           {navItems.map((item, idx) => (
@@ -145,6 +169,7 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
                 </button>
                 <button className="btn-sm" onClick={() => moveItem(idx, idx - 1)} disabled={idx === 0}>↑</button>
                 <button className="btn-sm" onClick={() => moveItem(idx, idx + 1)} disabled={idx === navItems.length - 1}>↓</button>
+                <button className="btn-sm btn-danger" onClick={() => removeItem(idx)} title={vi ? 'Xóa' : 'Remove'}>✕</button>
               </div>
             </div>
           ))}
