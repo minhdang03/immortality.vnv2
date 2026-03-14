@@ -15,8 +15,8 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
 const db = getFirestore(app)
 
 const SITE_NAME = 'Bất Tử Đạo - Immortality'
-const SITE_URL = 'https://immortality.vn'
-const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`
+const CANONICAL_URL = 'https://immortality.vn'
+const DEFAULT_IMAGE = `${CANONICAL_URL}/og-image.png`
 const DEFAULT_DESC = 'Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời.'
 
 function escapeHtml(str) {
@@ -41,11 +41,11 @@ async function serveApp(res) {
   }
 }
 
-function renderOgPage({ title, description, image, url }) {
+function renderOgPage({ title, description, image, url, siteUrl }) {
   const t = escapeHtml(title || SITE_NAME)
   const d = escapeHtml(description || DEFAULT_DESC)
-  const img = escapeHtml(image || DEFAULT_IMAGE)
-  const u = escapeHtml(url || SITE_URL)
+  const img = escapeHtml(image || (siteUrl ? `${siteUrl}/og-image.png` : DEFAULT_IMAGE))
+  const u = escapeHtml(url || siteUrl || CANONICAL_URL)
 
   return `<!DOCTYPE html>
 <html lang="vi">
@@ -129,6 +129,8 @@ async function findKhaiTri(slug) {
 
 export default async function handler(req, res) {
   const p = req.query.p || '/'
+  const host = req.headers.host || 'immortality.vn'
+  const SITE_URL = `https://${host}`
 
   // Non-crawlers: serve the SPA directly so URL stays clean
   if (!isCrawler(req)) return serveApp(res)
@@ -147,6 +149,7 @@ export default async function handler(req, res) {
           title: `${title} | ${SITE_NAME}`,
           description: desc,
           url: `${SITE_URL}/story/${storyMatch[1]}`,
+          siteUrl: SITE_URL,
         }))
       }
     }
@@ -164,6 +167,7 @@ export default async function handler(req, res) {
           title: `${title} | ${SITE_NAME}`,
           description: desc,
           url: `${SITE_URL}/article/${articleMatch[1]}`,
+          siteUrl: SITE_URL,
         }))
       }
     }
@@ -181,6 +185,7 @@ export default async function handler(req, res) {
           title: `${title} | Khai Trí`,
           description: desc,
           url: `${SITE_URL}/khaitri/${khaitriMatch[1]}`,
+          siteUrl: SITE_URL,
         }))
       }
     }
@@ -188,7 +193,7 @@ export default async function handler(req, res) {
     console.error('OG handler error:', e)
   }
 
-  // Fallback: serve OG default for crawlers, app for browsers
+  // Fallback
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.send(renderOgPage({ url: SITE_URL }))
+  res.send(renderOgPage({ url: SITE_URL, siteUrl: SITE_URL }))
 }
