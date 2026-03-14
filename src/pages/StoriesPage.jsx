@@ -4,21 +4,26 @@ import { storySlug } from '../utils/slug'
 import StoryDetail from '../components/stories/StoryDetail'
 import StoryList from '../components/stories/StoryList'
 
-// Merge Firestore stories with hardcoded fallback
+// Merge Firestore stories with hardcoded fallback per-story
 function mergeStories(firestoreStories) {
-  if (firestoreStories && firestoreStories.length > 0) return firestoreStories
+  const fsMap = {}
+  if (firestoreStories) firestoreStories.forEach(s => { fsMap[s.order ?? s.id] = s })
 
-  return STORIES.map(s => ({
-    id: s.id,
-    order: s.id,
-    tag: s.tag,
-    titleVi: s.vi,
-    titleEn: s.en,
-    contentVi: STORY_CONTENT[s.id]?.vi || '',
-    contentEn: STORY_CONTENT[s.id]?.en || '',
-    lessonVi: STORY_LESSONS[s.id]?.vi || '',
-    lessonEn: STORY_LESSONS[s.id]?.en || '',
-  }))
+  return STORIES.map(s => {
+    const fs = fsMap[s.id] || {}
+    return {
+      ...fs,
+      id: fs.id || s.id,
+      order: fs.order ?? s.id,
+      tag: fs.tag || s.tag,
+      titleVi: fs.titleVi || s.vi,
+      titleEn: fs.titleEn || s.en,
+      contentVi: fs.contentVi || STORY_CONTENT[s.id]?.vi || '',
+      contentEn: fs.contentEn || STORY_CONTENT[s.id]?.en || '',
+      lessonVi: fs.lessonVi || STORY_LESSONS[s.id]?.vi || '',
+      lessonEn: fs.lessonEn || STORY_LESSONS[s.id]?.en || '',
+    }
+  })
 }
 
 export default function StoriesPage({ t, lang, firestoreStories, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset }) {
