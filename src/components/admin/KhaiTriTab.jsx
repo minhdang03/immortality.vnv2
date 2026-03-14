@@ -1,19 +1,5 @@
-import { useState, useRef } from 'react'
-
-function AutoTextarea({ value, onChange, placeholder, minRows = 3 }) {
-  const ref = useRef(null)
-  const handleChange = (e) => {
-    onChange(e)
-    if (ref.current) { ref.current.style.height = 'auto'; ref.current.style.height = ref.current.scrollHeight + 'px' }
-  }
-  return (
-    <textarea
-      ref={ref} value={value} onChange={handleChange} placeholder={placeholder}
-      rows={minRows} style={{ overflow: 'hidden', resize: 'vertical' }}
-      onFocus={(e) => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
-    />
-  )
-}
+import { useState } from 'react'
+import AutoTextarea from './AutoTextarea'
 
 export default function KhaiTriTab({ t, lang, items, onAdd, onUpdate, onDelete }) {
   const EMPTY = {

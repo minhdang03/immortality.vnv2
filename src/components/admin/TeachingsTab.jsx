@@ -1,15 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-
-function AutoTextarea({ value, onChange, placeholder, minHeight = 120 }) {
-  const ref = useRef(null)
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.style.height = 'auto'
-      ref.current.style.height = ref.current.scrollHeight + 'px'
-    }
-  }, [value])
-  return <textarea ref={ref} value={value} onChange={onChange} placeholder={placeholder} style={{ minHeight, resize: 'vertical' }} />
-}
+import { useState } from 'react'
+import AutoTextarea from './AutoTextarea'
 
 export default function TeachingsTab({ t, lang, items, onAdd, onUpdate, onDelete }) {
   const EMPTY = { order: items.length + 1, titleVi: '', titleEn: '', bodyVi: '', bodyEn: '' }

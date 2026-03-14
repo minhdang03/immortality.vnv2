@@ -1,42 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import ShareButtons from '../components/ShareButtons'
 import Comments from '../components/Comments'
 import ArticleCard from '../components/ArticleCard'
 import InlineEdit from '../components/InlineEdit'
-
-function ReadingTime({ body, lang }) {
-  if (!body) return null
-  const words = body.split(/\s+/).length
-  const min = Math.max(1, Math.round(words / 200))
-  return (
-    <span className="reading-time">
-      {lang === 'vi' ? `${min} phút đọc` : `${min} min read`}
-    </span>
-  )
-}
-
-function FontSizeControls({ onDecrease, onIncrease, onReset, fontSize }) {
-  return (
-    <div className="font-size-controls">
-      <button className="font-size-btn" onClick={onDecrease} title="Nhỏ hơn">A-</button>
-      <button className="font-size-btn font-size-reset" onClick={onReset} title="Mặc định">{fontSize}%</button>
-      <button className="font-size-btn" onClick={onIncrease} title="Lớn hơn">A+</button>
-    </div>
-  )
-}
-
-function ReadingProgress() {
-  const [progress, setProgress] = useState(0)
-  useEffect(() => {
-    const onScroll = () => {
-      const h = document.documentElement.scrollHeight - window.innerHeight
-      setProgress(h > 0 ? Math.min((window.scrollY / h) * 100, 100) : 0)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-  return <div className="reading-progress" style={{ width: `${progress}%` }} />
-}
+import { ReadingProgress, ReadingTime, FontSizeControls } from '../components/ReadingHelpers'
 
 function TableOfContents({ body, lang }) {
   const paragraphs = useMemo(() => {
@@ -125,7 +92,7 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
         <div className="detail-meta">
           {article.tag?.[lang] && <span className="article-tag">{article.tag[lang]}</span>}
           <span className="article-date">{article.date}</span>
-          <ReadingTime body={d?.body} lang={lang} />
+          <ReadingTime text={d?.body} lang={lang} />
         </div>
 
         <h1 className="detail-title">{d?.title}</h1>

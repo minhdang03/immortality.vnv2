@@ -1,27 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { STORY_TAGS } from '../../data/stories'
+import AutoTextarea from './AutoTextarea'
 
 const TAGS = Object.keys(STORY_TAGS)
-
-function AutoTextarea({ value, onChange, placeholder, className, minHeight = 120 }) {
-  const ref = useRef(null)
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.style.height = 'auto'
-      ref.current.style.height = ref.current.scrollHeight + 'px'
-    }
-  }, [value])
-  return (
-    <textarea
-      ref={ref}
-      className={className}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      style={{ minHeight, resize: 'vertical' }}
-    />
-  )
-}
 
 export default function StoriesTab({ t, lang, stories, onAdd, onUpdate, onDelete }) {
   const EMPTY = {

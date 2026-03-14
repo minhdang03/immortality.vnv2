@@ -1,50 +1,8 @@
-import { useState, useEffect } from 'react'
 import { khaitriSlug } from '../../utils/slug'
 import SunIcon from '../SunIcon'
 import ShareButtons from '../ShareButtons'
 import InlineEdit from '../InlineEdit'
-
-function renderText(text) {
-  return text.split('\n\n').map((block, i) => (
-    <p key={i}>{block.split('\n').map((line, j, arr) => (
-      j < arr.length - 1 ? <span key={j}>{line}<br/></span> : line
-    ))}</p>
-  ))
-}
-
-function ReadingProgress() {
-  const [progress, setProgress] = useState(0)
-  useEffect(() => {
-    const onScroll = () => {
-      const h = document.documentElement.scrollHeight - window.innerHeight
-      setProgress(h > 0 ? Math.min((window.scrollY / h) * 100, 100) : 0)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-  return <div className="reading-progress" style={{ width: `${progress}%` }} />
-}
-
-function ReadingTime({ text, lang }) {
-  if (!text) return null
-  const words = text.split(/\s+/).length
-  const min = Math.max(1, Math.round(words / 200))
-  return (
-    <span className="reading-time">
-      {lang === 'vi' ? `${min} phút đọc` : `${min} min read`}
-    </span>
-  )
-}
-
-function FontSizeControls({ fontSize, onIncrease, onDecrease, onReset }) {
-  return (
-    <div className="font-size-controls">
-      <button className="font-size-btn" onClick={onDecrease} title="A-">A-</button>
-      <button className="font-size-btn font-size-reset" onClick={onReset} title="Reset">{fontSize}%</button>
-      <button className="font-size-btn" onClick={onIncrease} title="A+">A+</button>
-    </div>
-  )
-}
+import { ReadingProgress, ReadingTime, FontSizeControls, renderText } from '../ReadingHelpers'
 
 export default function KhaiTriDetail({ item, lang, t, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, onBack, allItems, user, onUpdate }) {
   const langKey = lang === 'vi' ? 'vi' : 'en'
