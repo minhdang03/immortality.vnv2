@@ -116,7 +116,7 @@
   background: rgba(201,168,108,0.04); border-radius: 10px;
 }
 .khaitri-detail-body p {
-  font-size: 0.92rem; line-height: 1.9; color: var(--text-dim);
+  font-size: calc(0.92rem * var(--reader-scale)); line-height: 1.9; color: var(--text-dim);
   margin-bottom: 14px;
 }
 .khaitri-detail-body p:last-child { margin-bottom: 0; }

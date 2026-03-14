@@ -35,7 +35,7 @@ async function serveApp(res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     return res.send(html)
   } catch {
-    const html = await fetch(`${SITE_URL}/`).then(r => r.text())
+    const html = await fetch(`${CANONICAL_URL}/`).then(r => r.text())
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     return res.send(html)
   }
