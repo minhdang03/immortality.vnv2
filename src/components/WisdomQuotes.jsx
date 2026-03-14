@@ -14,17 +14,19 @@ export default function WisdomQuotes({ stories, lang }) {
   }, [stories, lang])
 
   const [active, setActive] = useState(0)
+  const [paused, setPaused] = useState(false)
 
   useEffect(() => {
-    if (quotes.length <= 1) return
-    const timer = setInterval(() => setActive(i => (i + 1) % quotes.length), 8000)
+    if (quotes.length <= 1 || paused) return
+    const timer = setInterval(() => setActive(i => (i + 1) % quotes.length), 15000)
     return () => clearInterval(timer)
-  }, [quotes.length])
+  }, [quotes.length, paused])
 
   if (quotes.length === 0) return null
 
   const q = quotes[active]
-  const thread = lang === 'vi' ? q.threadVi : q.threadEn
+  const fullThread = lang === 'vi' ? q.threadVi : q.threadEn
+  const thread = fullThread.length > 180 ? fullThread.slice(0, 180).replace(/\s\S*$/, '') + '…' : fullThread
 
   return (
     <section className="wisdom-section fade-up">
@@ -32,7 +34,7 @@ export default function WisdomQuotes({ stories, lang }) {
         <SunIcon size={18} />
         {lang === 'vi' ? 'Loài người Kim Cương, bình đẳng Tự do Hạnh phúc Thiên Đường tại thế' : 'Diamond Humanity, Equality, Freedom, Happiness, Paradise on Earth'}
       </h2>
-      <div className="wisdom-card">
+      <div className="wisdom-card" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onTouchStart={() => setPaused(true)} onTouchEnd={() => setPaused(false)}>
         <div className="wisdom-quote-mark">&ldquo;</div>
         <blockquote className="wisdom-text" key={active}>{thread}</blockquote>
       </div>
