@@ -33,6 +33,16 @@ export default function StoriesPage({ t, lang, firestoreStories, navigate, fontS
     hashApplied.current = true
   }, [allStories])
 
+  // Update document title when viewing a story
+  useEffect(() => {
+    if (selected) {
+      const title = lang === 'vi' ? selected.titleVi : selected.titleEn
+      if (title) document.title = `${title} | ${t.siteName}`
+    } else {
+      document.title = `${lang === 'vi' ? '37 Câu Chuyện' : '37 Stories'} | ${t.siteName}`
+    }
+  }, [selected, lang])
+
   const selectStory = (story) => {
     setSelected(story)
     window.location.hash = `/story/${storySlug(story)}`

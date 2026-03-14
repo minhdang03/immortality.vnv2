@@ -33,7 +33,6 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState(null)
   const { dark, toggle: toggleTheme } = useTheme()
-  const { fontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useFontSize()
   const { firestoreArticles, loading, addArticle, updateArticle, deleteArticle } = useArticles()
   const { getT, firestoreVi, firestoreEn, updateTranslations } = useTranslations()
   const { topics: TOPICS, addTopic, updateTopic, deleteTopic } = useTopics()
@@ -42,6 +41,7 @@ export default function App() {
   const { teachings, addTeaching, updateTeaching, deleteTeaching } = useTeachings()
   const { practices, addPractice, updatePractice, deletePractice } = usePractices()
   const { settings: siteSettings, updateSettings } = useSiteSettings()
+  const { fontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useFontSize(siteSettings?.defaultFontSize)
   const t = getT(lang)
   const allArticles = firestoreArticles
 
@@ -89,7 +89,16 @@ export default function App() {
 
   useEffect(() => { window.scrollTo(0, 0) }, [page, selectedArticle])
 
-  // SEO
+  // SEO - page titles
+  const PAGE_TITLES = {
+    stories: { vi: '37 Câu Chuyện', en: '37 Stories' },
+    khaitri: { vi: 'Khai Trí', en: 'Khai Trí' },
+    about: { vi: 'Giới Thiệu', en: 'About' },
+    practice: { vi: 'Thái Dương Quyền', en: 'Solar Fist' },
+    contact: { vi: 'Liên Hệ', en: 'Contact' },
+    search: { vi: 'Tìm Kiếm', en: 'Search' },
+    admin: { vi: 'Quản Trị', en: 'Admin' },
+  }
   useEffect(() => {
     if (page === 'article' && selectedArticle) {
       const d = selectedArticle[lang]
@@ -100,12 +109,22 @@ export default function App() {
         document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', d.title)
         document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', d.summary)
       }
+    } else if (page === 'topic' && selectedTopic) {
+      const tp = TOPICS.find(t => t.id === selectedTopic)
+      const topicName = tp ? (lang === 'vi' ? tp.vi : tp.en) : selectedTopic
+      document.title = `${topicName} | ${t.siteName}`
+    } else if (PAGE_TITLES[page]) {
+      const pt = PAGE_TITLES[page]
+      document.title = `${lang === 'vi' ? pt.vi : pt.en} | ${t.siteName}`
     } else {
       document.title = `${t.siteName} - ${t.siteTagline}`
+    }
+    // Reset OG tags for non-article pages
+    if (page !== 'article') {
       document.querySelector('meta[property="og:title"]')?.setAttribute('content', `${t.siteName} - ${t.heroTitle}`)
       document.querySelector('meta[property="og:description"]')?.setAttribute('content', t.heroSub)
     }
-  }, [page, selectedArticle, lang])
+  }, [page, selectedArticle, selectedTopic, lang])
 
   const navigate = (p, extra) => {
     setMenuOpen(false)

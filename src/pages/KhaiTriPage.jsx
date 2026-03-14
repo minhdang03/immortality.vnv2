@@ -27,6 +27,17 @@ export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFont
     hashApplied.current = true
   }, [items])
 
+  // Update document title when viewing a detail
+  useEffect(() => {
+    if (selected) {
+      const d = selected[lang === 'vi' ? 'vi' : 'en'] || {}
+      const title = d.question
+      if (title) document.title = `${title} | ${t.siteName}`
+    } else {
+      document.title = `${lang === 'vi' ? 'Khai Trí' : 'Khai Trí'} | ${t.siteName}`
+    }
+  }, [selected, lang])
+
   const selectItem = (item) => {
     setSelected(item)
     window.location.hash = `/khaitri/${khaitriSlug(item)}`
