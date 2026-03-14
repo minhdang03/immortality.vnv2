@@ -1556,6 +1556,660 @@ Linh hồn Người Bất Tử:
 Người Bất Tử miệng đọc tiếng lạ kích hoạt năng lượng từ vũ trụ. Một vòng tròn ánh sáng màu vàng trắng xoay tròn chiếu xuống, chữa lành bệnh cho Ma Đạo Sĩ, 4 Đồng Tử, Ma Hổ. Linh hồn sáng đẹp, bay về vũ trụ biến mất.`,
     en: ``,
   },
+  11: {
+    vi: `Người Bất Tử đang mơ màng ngủ trưa tại nhà thì bỗng giật mình.
+
+Tiếng lạ (Off):
+
+"Con đi Thất Sơn Châu Đốc để làm việc hóa giải Y2K."
+
+Người Bất Tử:
+
+-- Y2K là gì? Tại sao phải hóa giải?
+
+Tiếng lạ (Off):
+
+"Y2K là một con quỷ bão, được hình thành từ bức xạ bão mặt trời. Y2K sẽ tấn công địa cầu và hút khí metan, âm hồn của con người."
+
+Người Bất Tử:
+
+-- Tại sao?
+
+Tiếng lạ (Off):
+
+"Để điều hòa thân nhiệt. Nếu không thì mặt trời sẽ bị nổ banh xác, kéo theo sự hủy diệt của Thái Dương Hệ."
+
+---
+
+Người Bất Tử và anh 9 lên xe khách đi đến núi Châu Đốc, khoảng 5 giờ chiều.
+
+Anh 9:
+
+-- Núi Châu Đốc bao la, biết đến địa điểm nào để làm việc?
+
+Người Bất Tử:
+
+-- Năm non bảy núi, chỗ nào cao nhất?
+
+Anh 9:
+
+-- Đỉnh Bờ Hồng. Trên đỉnh bằng phẳng và có hai cái vố: Vố Ông, Vố Bà nằm hai bên. Nghe nói linh thiêng lắm.
+
+Hai anh em leo lên tới đỉnh Bờ Hồng, trời đã 6 giờ tối. Thuê một cái phòng tắm rửa, ăn uống và nghỉ ngơi.
+
+Tiếng lạ (Off):
+
+"Đúng 12 giờ đêm nay, con đưa Y2K vào đỉnh Bờ Hồng và nhờ linh khí Sơn Thần núi Bờ Hồng trấn giữ."
+
+---
+
+11 giờ 30. Người Bất Tử xuất hồn bay ra ngoài, đạp bàn chân ánh sáng xuống đỉnh Vố Ông. Mặt đất rung động. Chim, dơi vỗ cánh bay náo loạn cả đêm khuya.
+
+Sơn Thần giật mình thức tỉnh, chui ra khỏi ngôi mộ. Thân hình to lớn, mình trần, cặp mắt tóe lửa, trên đầu có một búi tóc dài phía sau ót.
+
+Sơn Thần nhìn thấy một người đang đứng trên đỉnh vố, nổi giận:
+
+-- Thằng quỷ này dám đến đây đạp lên mộ của tao à!
+
+Giơ cao bàn chân phải khổng lồ đạp xuống đầu.
+
+Linh hồn Người Bất Tử đưa bàn tay phải lên phóng ra một thanh kiếm ánh sáng, đâm xuyên qua mu bàn chân phải Sơn Thần.
+
+Sơn Thần miệng gầm thét, cúi người thấp xuống, bàn tay phải đưa lên cao rồi đập xuống đầu. Ầm! Cát đá bay tung tóe.
+
+Sơn Thần:
+
+-- Dám chọc giận thần linh thì mày phải chết!
+
+Rút bàn tay lên. Phía dưới là một cái hố sâu 1 mét. Sơn Thần kinh ngạc vì không thấy thằng quỷ nhỏ nằm ở dưới.
+
+Người Bất Tử:
+
+-- Tao đang ở đây này.
+
+Sơn Thần cặp mắt to nhìn khắp nơi:
+
+-- Mày đang ở đâu?
+
+Linh hồn Người Bất Tử:
+
+-- Tao đang ngồi trong lỗ tai phải của mày nè.
+
+Rồi đâm ngón tay vào lỗ tai Sơn Thần. Bụp! Đau nhói vào tận não.
+
+Sơn Thần cáu giận, lấy bàn tay phải đập vào lỗ tai phải để bắt thằng quỷ nhỏ. Nhưng linh hồn Người Bất Tử đã bay vèo ra ngoài.
+
+Linh hồn Người Bất Tử:
+
+-- Tôi không phải là quỷ. Tôi là người. Tôi đến đây để nhờ Sơn Thần giúp.
+
+Sơn Thần há miệng phun ra một tia lửa đỏ rực bay xuống đầu.
+
+Linh hồn Người Bất Tử tay phải phóng ra một vòi nước lạnh. Chạm vào tia lửa đỏ, tiếng nổ ì xèo, khói trắng bốc lên nghi ngút.
+
+Sơn Thần vô cùng ngạc nhiên:
+
+-- Nếu mày là người thì làm sao có quyền năng ngang hàng thần thánh?
+
+Người Bất Tử mỉm cười:
+
+-- Tôi là con người, là một tiểu vũ trụ. Tôi đang làm việc cho đại vũ trụ để cứu loài người tránh khỏi những tai nạn từ Thái Dương Hệ. Chứ không có quyền năng thần thánh gì cả.
+
+Sơn Thần:
+
+-- Vậy mày đến đây nhờ tao làm việc gì?
+
+Người Bất Tử:
+
+-- Đúng 12 giờ đêm nay, Y2K, Quỷ Bão từ mặt trời sẽ đánh vào địa cầu.
+
+Sơn Thần:
+
+-- Việc này đâu có liên quan gì tới tao.
+
+Linh hồn Người Bất Tử:
+
+-- Nhiệm vụ của tôi là bắt Y2K đem về đây. Còn nhiệm vụ của Sơn Thần là phải canh giữ Quỷ Kiếm Y2K 1.000 năm mới được thả ra.
+
+Sơn Thần:
+
+-- Tại sao phải giam giữ Y2K đến 1.000 năm?
+
+Người Bất Tử:
+
+-- Vì hiện tại sức mạnh của Y2K quá lớn. Nếu đâm thẳng vào địa cầu sẽ tạo ra động đất và sóng thần cao 30 mét, gây thiệt hại lớn về tài sản và con người.
+
+Sơn Thần:
+
+-- Còn giam giữ 1.000 năm sau?
+
+Người Bất Tử:
+
+-- 1.000 năm sau Y2K đã suy yếu năng lượng, sẽ không còn hại được ai nữa.
+
+Sơn Thần:
+
+-- Giúp chúng sanh thoát nạn là nhiệm vụ của thần.
+
+---
+
+Linh hồn Người Bất Tử nhìn lên bầu trời đêm. Một vì sao phát sáng cảnh báo: đã đúng 12 giờ đêm. Y2K đã bay đến địa cầu.
+
+Linh hồn Người Bất Tử liền bay về phía Y2K.
+
+Bão Quỷ Y2K hình dạng giống một thanh quỷ kiếm ánh sáng nhiều màu sắc rực rỡ, bay tới đâm thẳng vào tấm lá chắn phòng không, nguồn năng lượng khí metan của địa cầu. Phát nổ ì ầm, màu sắc cực đẹp tỏa sáng ở tầng điện ly.
+
+Quỷ Kiếm Y2K đã đâm thủng tầng điện ly, bay xuyên xuống tầng khí quyển.
+
+Khí metan, cacbonic hội tụ biến thành một thanh kiếm màu xanh lá cây bay lên đâm vào Quỷ Kiếm Y2K. Phát ra tiếng nổ ầm ầm, bức xạ sóng âm thanh chấn động địa cầu rung lắc nhẹ. Thanh kiếm metan bị nổ tung, tan thành mây khói.
+
+Quỷ Kiếm Y2K rực lửa đâm thẳng xuống tầng bình lưu.
+
+Linh hồn Người Bất Tử bay đến, bàn tay phải phóng ra một tấm khiên ánh sáng đen chắn lại. Mũi quỷ kiếm đâm thẳng vào tấm khiên. Một tiếng nổ lớn ầm vang lên. Mũi Quỷ Kiếm Y2K cong vòng dội lại. Bức xạ sóng âm thanh đánh trúng linh hồn Người Bất Tử, bay lộn 3 vòng mới đứng vững.
+
+Quỷ Kiếm Y2K bắn ra hàng ngàn thanh quỷ kiếm nhỏ bay tới.
+
+Linh hồn Người Bất Tử bàn tay phải phóng ra một quả bom ánh sáng. Hàng ngàn thanh quỷ kiếm nhỏ đâm vào, nhiều tiếng nổ cực lớn ầm ầm ầm vang dội, rung chuyển tầng bình lưu.
+
+Quỷ Kiếm Y2K bị dội ngược lại, xoay tròn nhiều vòng mới đứng yên:
+
+-- Mày là ai? Sao dám cản đường bay của tao?
+
+Người Bất Tử:
+
+-- Tôi là linh hồn Người Bất Tử ở địa cầu.
+
+Quỷ Kiếm Y2K:
+
+-- Con người thì không có khả năng như mày. Tao cần giải thoát túi khí metan để tái tạo sự sống mới.
+
+Linh hồn Người Bất Tử:
+
+-- Nếu ông kích hoạt túi khí metan nằm sâu dưới lòng đất bùng nổ lớn, sẽ xảy ra động đất và sóng thần, phá hủy nhà cửa và hàng trăm ngàn người phải chết oan.
+
+Quỷ Y2K:
+
+-- Tao không cần biết có thiệt hại gì xảy ra cho loài người.
+
+Linh hồn Người Bất Tử:
+
+-- Tôi sẽ tạm giữ ông 1.000 năm. Khi nguồn năng lượng cực nhiệt suy giảm, không còn ảnh hưởng đến sự sống loài người thì tôi sẽ thả ông ra.
+
+Quỷ Kiếm Y2K:
+
+-- Mày không có đủ năng lực đó đâu, con người ạ.
+
+Nói xong, Quỷ Kiếm Y2K hướng mũi thanh kiếm bay xuống vùng biển Indonesia.
+
+Linh hồn Người Bất Tử tay phải phóng ra một sợi dây ánh sáng ngũ sắc bay tới xoáy tròn, cột chặt vào đuôi Quỷ Kiếm Y2K, kéo bay về phía núi Bờ Hồng Việt Nam.
+
+Quỷ Kiếm Y2K toàn thân biến thành ngọn lửa đỏ rực rỡ định đốt cháy dây ngũ sắc. Dây ngũ sắc biến thành băng tuyết bao phủ. Quỷ Kiếm Y2K năng lượng lửa suy yếu dần.
+
+Linh hồn Người Bất Tử hai tay phóng ra một luồng gió mạnh, đẩy Quỷ Kiếm Y2K bay về phía núi Bờ Hồng.
+
+Quỷ Kiếm Y2K vùng quẫy bất lực:
+
+-- Hãy thả tao ra!
+
+Linh hồn Người Bất Tử ấn mũi kiếm lún sâu xuống đỉnh non Bờ Hồng, chỉ còn lú lên cái đuôi kiếm vô hình. Con người bình thường sẽ không bao giờ nhìn thấy.
+
+Quỷ Kiếm Y2K dùng hết sức bình sinh lắc mạnh, làm rung động đỉnh non Bờ Hồng, đất cát nứt nẻ trổi lên.
+
+Sơn Thần bàn chân to lớn đạp xuống giữ mặt đất. Bàn tay phải phóng ra luồng gió hút một viên đá nhỏ gần đó bay lơ lửng trên không trung. Miệng đọc thần chú, viên đá nhỏ xoay vòng tròn biến thành một quả núi to, đè xuống đầu Quỷ Kiếm Y2K. Mặt đất xẹp xuống và im lặng.
+
+Người Bất Tử nói với Sơn Thần:
+
+-- Tôi đã bàn giao Quỷ Kiếm Y2K cho ông. Phải canh giữ 1.000 năm. Ông cẩn thận, đừng để Quỷ Kiếm Y2K chốn thoát nhé.
+
+Sơn Thần:
+
+-- Người Bất Tử hãy yên tâm về đi.
+
+Linh hồn Người Bất Tử bay về nhà.`,
+    en: ``,
+  },
+  12: {
+    vi: `Người Bất Tử sau một ngày bán cơm chay, dọn dẹp đến khuya mới được đi nằm ngủ. Bỗng nghe một tiếng ầm. Cái tủ đựng chén đĩa sập xuống bể vỡ tan tành.
+
+Trí Dũng nằm kế bên, bật mình ngồi lên:
+
+-- Hình như mặt đất đã rung chuyển?
+
+Tiếng lạ (Off) vang lên:
+
+"Quỷ Kiếm Y2K đã chạy thoát rồi."
+
+Người Bất Tử vội vàng nằm xuống, phi thuyền bay, xuất hồn bay đến đỉnh núi Bờ Hồng.
+
+Sơn Thần:
+
+-- Quỷ Kiếm Y2K đã bứt xiềng xích bay đi khỏi đây rồi.
+
+Linh hồn Người Bất Tử:
+
+-- Tại sao? Ông thần lực to lớn mà để cho Quỷ Kiếm Y2K bỏ trốn?
+
+Sơn Thần:
+
+-- Lúc trước đỉnh Bờ Hồng rất trong sáng sạch và nguyên khí mạnh. Cho đến khi có rất nhiều người hành hương đến đỉnh Bờ Hồng, họ đi vệ sinh bừa bãi khắp đỉnh núi, bốc mùi hôi thối, làm tôi suy yếu thần lực. Ngọn núi trấn ếm cũng từ từ teo nhỏ lại. Quỷ Kiếm Y2K hút khí metan cacbonic và mạnh lên, âm quang ngày càng phát sáng xanh lè, rừng động núi Bờ Hồng.
+
+Sơn Thần kể tiếp:
+
+-- Tôi liền bay đến, hai chân đạp lên đầu Quỷ Kiếm Y2K, tay phải đánh xuống một luồng ánh sáng. Quỷ Kiếm Y2K phát ra một luồng ánh sáng đỏ rực. Một tiếng nổ ầm long trời lở đất bắn Sơn Thần tý ngã xuống mặt đất. Quỷ Kiếm Y2K to khổng lồ rút lên khỏi đỉnh Bờ Hồng và chém xuống đầu. Tôi đưa thanh kiếm đá lên chống đỡ, tiếng nổ ầm vang lên, thanh kiếm đá bị gãy nát, sóng âm thanh đánh trúng tôi bị hắt bay lộn xuống núi.
+
+Linh hồn Người Bất Tử:
+
+-- Quỷ Kiếm Y2K bay về hướng nào?
+
+Sơn Thần:
+
+-- Quỷ Kiếm Y2K bay về phía biển Indonesia.
+
+---
+
+Linh hồn Người Bất Tử liền bay theo. Đang bay thì nhìn thấy một luồng khí metan từ dưới lòng biển Indonesia bốc lên, kèm theo tiếng kêu rên rỉ của Quỷ Nữ.
+
+Quỷ Kiếm Y2K liền đâm xuống biển Indonesia. Nước biển sôi sùng sục, bọt khí nổi lên nổ lụp bụp như pháo hoa, cá tôm chạy tán loạn.
+
+Quỷ Kiếm Y2K xoay tròn cực nhanh như mũi khoan xuống lòng cát đá, sâu khoảng 15 km. Nhìn thấy Quỷ Nữ Metan. Bộ đồ màu đen, tóc dài, xinh đẹp vô cùng quyến rũ, bị nhốt trong cái hang động bằng đá kim cương. Bên trong toàn khí metan.
+
+Quỷ Nữ Metan há miệng hú hú hú, sóng âm thanh vang vọng truyền đến tai Quỷ Kiếm Y2K.
+
+Quỷ Kiếm Y2K đâm thủng hang đá kim cương và chui vào bên trong.
+
+Quỷ Nữ Metan dang rộng hai cánh tay đen xì ôm lấy thân hình Quỷ Kiếm Y2K:
+
+-- Em đã chờ đợi anh suốt 1 triệu năm rồi.
+
+Quỷ Kiếm Y2K hai cánh tay ôm choàng lấy thân hình Quỷ Nữ Metan:
+
+-- Anh xin lỗi em. Vì anh cũng bị nhốt trong mặt trời hết 1 triệu năm mới có lệnh ân xá. Anh đã vội vàng bay đến địa cầu tìm em và bị Người Bất Tử giam cầm một năm ở núi Bờ Hồng Việt Nam. Đến nay mới bay đến đây gặp em được. Anh mừng lắm.
+
+Quỷ Nữ Metan:
+
+-- Người Bất Tử mà có quyền năng bắt được anh vậy?
+
+Quỷ Kiếm Y2K:
+
+-- Hình như Người Bất Tử có nguồn gốc từ vũ trụ hậu thuẫn. Thôi kể đi. Bây giờ mình sẽ hợp nhất để đủ năng lượng bay khỏi địa cầu, tự do trong vũ trụ.
+
+Quỷ Nữ Metan xoay tròn. Hai nguồn năng lượng giao hợp với nhau, tạo thành một lò phản ứng nhiệt hạch dưới lòng biển.
+
+---
+
+Linh hồn Người Bất Tử cũng vừa bay đến. Bàn tay phải phóng ra một luồng năng lượng trắng vũ trụ vào lò phản ứng nhiệt hạch để trung hòa, hóa giải.
+
+Tiếng lạ (Off):
+
+"Đã trễ rồi con. Nguồn năng lượng nhiệt hạch đã phân chia. Chỉ chờ phát nổ để giải phóng cho Quỷ Nữ Metan bay thoát khỏi sức hút của địa cầu."
+
+Linh hồn Người Bất Tử:
+
+-- Chúng ta có thể giúp cho Quỷ Nữ Metan thoát khỏi địa cầu mà không phải tạo ra động đất sóng thần gây thương vong không?
+
+Tiếng lạ (Off):
+
+"Chúng ta đã tận lực, tận tâm rồi."
+
+Linh hồn Người Bất Tử bay về.
+
+Quỷ Kiếm Y2K đã thành công. Lò phản ứng hạt nhân dưới lòng đất phát nổ ầm ầm ầm.
+
+Sáng ngày 26 tháng 12 năm 2004. 7 giờ 58 phút giờ địa phương Sumatra. Xảy ra trận động đất 9,1 độ richter, tạo thành cơn sóng thần cao hơn 30 mét. Hơn 225.000 người thiệt mạng.`,
+    en: ``,
+  },
+  13: {
+    vi: `Khoảng 10 giờ, Người Bất Tử đang ngồi xem phim ở trong nhà thì anh 9 bước vào, tay cầm tờ giấy xét nghiệm:
+
+-- Vợ tôi bị chẩn đoán ung thư gan thời kỳ 2. Bác sĩ bảo cần phải mổ gấp.
+
+Người Bất Tử:
+
+-- Tại sao anh không để chờ nằm ở bệnh viện để mổ mà đem về nhà?
+
+Anh 9:
+
+-- Nếu mổ thì không biết sống được mấy năm. Thôi nhờ cậu Lợi giúp dùm.
+
+Người Bất Tử:
+
+-- Thôi được rồi. Để em đến nhà anh xem chỗ như thể nào.
+
+---
+
+Người Bất Tử vừa bước vào nhà thì nhìn thấy chị 9 đang nằm trên giường, gương mặt vàng nhợt nhạt, tay đang ôm bụng rên rỉ vì đau.
+
+Anh 9:
+
+-- Đây là giấy xét nghiệm ở bệnh viện Quận 4. Gan có mấy khối u 4-5 mm.
+
+Người Bất Tử phóng linh hồn bay vào trong khối u lá gan. Một luồng khói đen xì ra. Có 1 ông thầy pháp và 4 đứa hồng nhi xuất hiện.
+
+Ma thầy pháp nhìn thấy Người Bất Tử đang đứng nhìn, tay phải liền ra sau lưng rút thanh kiếm chỉ vào:
+
+-- Mày là ai? 4 Ma Đồng Tử, bắt nó cho tao!
+
+4 Hồng Nhi tay cầm 4 chiếc vòng kim cô màu vàng bay tới đánh vào đầu.
+
+Linh hồn Người Bất Tử bay lên cao, bàn tay đánh xuống 4 tia điện sấm sét. Đùng đùng! 4 Hồng Nhi bị điện giật tê người tý ngã.
+
+Ma thầy pháp bay tới đâm mũi kiếm vào giữa ngực. Linh hồn Người Bất Tử đưa 2 ngón tay phải lên kẹp chặt vào thanh kiếm và bẻ ngang. Mũi thanh kiếm rớt xuống đất nghe tiếng kẻng.
+
+Ma thầy pháp lấy cái chuông vàng ra lắc, leng keng, miệng đọc thần chú. Âm thanh kỳ lạ xoáy vào não, hàng trăm mũi kim đâm vào não.
+
+Linh hồn Người Bất Tử há miệng phóng ra 1 luồng sóng âm thanh va chạm với âm thanh ma chuông. Phát nổ ầm ầm! Ma thầy pháp bàn tay tê rần, buông rơi cái chuông vàng nổ tan nát, quần áo rách tả tơi.
+
+Linh hồn Người Bất Tử:
+
+-- Tại sao ông lại ở trong lá gan của người phụ nữ này?
+
+Ma thầy pháp:
+
+-- Tao là ông nội của nó.
+
+Linh hồn Người Bất Tử:
+
+-- Ông làm nghề thầy pháp, chữa bệnh trừ tà và nuôi con nít.
+
+Ma thầy pháp:
+
+-- Đúng như vậy.
+
+Linh hồn Người Bất Tử:
+
+-- Ông bị bệnh ung thư gan mà chết.
+
+Ma thầy pháp gật đầu gù:
+
+-- Đau đớn lắm. Tao bị ung thư gan di truyền ADN từ cha tao.
+
+Linh hồn Người Bất Tử:
+
+-- Ông có muốn tôi phẫu thuật tâm linh bằng ánh sáng để giúp ông chữa lành lá gan ung thư di truyền và giúp ông giải thoát hay không?
+
+Ma thầy pháp:
+
+-- Nhờ thầy cứu giúp.
+
+---
+
+Linh hồn Người Bất Tử đưa một ngón tay phóng ra một con dao mổ bằng ánh sáng, đâm thẳng vào lá gan ung thư, rạch một đường dài. Một làn khói đen lại xì ra. Một Ma Pháp Sư già hơn bay ra ngoài, tay giật theo 4 đồng tử mặc áo yếm màu đỏ.
+
+Ma Pháp Sư 2 không hành động mà ngồi xuống đất theo kiểu kiệt giá, tay bắt ấn, 4 Hồng Nhi đứng phía sau lưng.
+
+Linh hồn Người Bất Tử:
+
+-- Ông có phải là ông cố nội của người bệnh hay không?
+
+Ma Pháp Sư 2:
+
+-- Đúng vậy. Còn mày là ai?
+
+Linh hồn Người Bất Tử:
+
+-- Tôi là người giúp chữa lành bệnh và hoàn hồn cho ma quỷ.
+
+Ma Pháp Sư 2:
+
+-- Mày nói nghe tài thế. Nếu mày đoán đúng trong người tao có những bảo bối gì thì tao sẽ bái phục. Còn đoán sai thì hãy cút đi.
+
+Linh hồn Người Bất Tử:
+
+-- Phía sau lưng ông có giấu một thanh kiếm diệt ma.
+
+Ma Pháp Sư 2 tay phải đưa ra sau lưng rút ra một thanh kiếm dài 6 tấc, màu xanh, và bất ngờ chém xuống đầu.
+
+Linh hồn Người Bất Tử bàn tay phải phóng ra một thanh kiếm ánh sáng màu vàng bay ra đỡ. Hai thanh kiếm chạm vào nhau phát ra tiếng nổ ầm ầm, sóng âm thanh rung chuyển cả căn nhà.
+
+[Trận đánh tiếp tục qua nhiều hiệp: Ma Pháp Sư 2 dùng hồ tâm kính bát quái, chuông vàng biến thành hàng trăm thanh kiếm nhỏ, bắt linh hồn Người Bất Tử vào trong bát quái. Linh hồn Người Bất Tử từ mắt thứ 3 phóng tia sáng vào mặt trời kích hoạt, mặt trời bắn tia ánh sáng xuyên thời gian không gian phá nổ bát quái.]
+
+---
+
+Sau cùng, 8 Hồng Nhi được giải thoát bằng cách cởi bỏ 8 cái áo yếm quăng vào lửa đốt. Thân hình sáng đẹp, được vòng xoáy hào quang hút lên bay về vũ trụ.
+
+2 Ma thầy pháp thấy vậy liền cởi bỏ áo mão và bửu bối đốt cháy. Linh hồn sáng lên và bay về vũ trụ.
+
+---
+
+7 ngày sau.
+
+Người Bất Tử:
+
+-- Đã 7 ngày rồi. Anh đưa chị đi siêu âm lại xem đã bớt bao nhiêu phần trăm.
+
+Anh 9:
+
+-- Vợ tôi không còn kêu đau nữa. Chắc khỏe rồi. Nhưng phải đi siêu âm lại cho chắc.
+
+Khoảng 11 giờ trưa. Người Bất Tử đang nằm đưa đưa trên chiếc võng thì anh 9 bước vào, mặt tươi cười, đưa tờ giấy xét nghiệm:
+
+-- Vợ tôi khỏi bệnh ung thư rồi! 2 ông bác sĩ cãi lộn quá trời.
+
+Người Bất Tử:
+
+-- Tại sao?
+
+Anh 9 kể:
+
+-- Bác sĩ chẩn đoán nói: 7 ngày trước bệnh nhân này được siêu âm là bị ung thư gan thời kỳ 2. Bác sĩ siêu âm nói: đúng rồi. Bác sĩ chẩn đoán: 7 ngày sau đi chụp hình siêu âm lại thì lá gan lành tính. Máy siêu âm có vấn đề gì sao? Bác sĩ siêu âm: Tôi đã làm nghề này mấy chục năm rồi, làm sao chụp sai được.
+
+Bác sĩ chẩn đoán:
+
+-- Anh chữa bác sĩ nào mà hay quá vậy?
+
+Anh 9:
+
+-- Tôi chữa bác sĩ Lợi.
+
+Bác sĩ chẩn đoán:
+
+-- Bác sĩ Lợi làm ở bệnh viện nào?
+
+Anh 9:
+
+-- Bác sĩ Lợi làm việc tại nhà.
+
+Bác sĩ chẩn đoán:
+
+-- Bác sĩ Lợi chữa bệnh bằng cách nào?
+
+Anh 9:
+
+-- Phẫu thuật tâm linh bằng ánh sáng.
+
+Bác sĩ chẩn đoán:
+
+-- Nghe nói phẫu thuật tâm linh chỉ có ở các nước phương Tây.`,
+    en: ``,
+  },
+  14: {
+    vi: `Người Bất Tử ghé nhà anh Chính chơi, vừa ngồi xuống uống nước trà thì anh 9 giới thiệu:
+
+-- Đây là chị Tám, chị dâu của tôi.
+
+Chị Tám đưa tờ giấy xét nghiệm và tấm phim siêu âm. Người Bất Tử cầm tấm phim lên xem thì thấy giữa gót chân nhú ra một cái gai dài khoảng 20 mm.
+
+-- Chị bị gai gót chân thì phải đi bệnh viện mổ.
+
+Chị Tám:
+
+-- Tôi sợ mổ lắm. Chú Lợi giúp dùm.
+
+---
+
+Người Bất Tử liền xuất hồn bay vào trong cái gai gót chân chị Tám. Nhìn thấy có một người thợ săn và một con chó đang núp phía sau bụi cây. Phía trước là một bãi cỏ xanh, có một con nai vàng lớn miệng đang nhai cỏ, hai cái lỗ tai vểnh lên cao, thỉnh thoảng ngước đầu lên nhìn chung quanh.
+
+Thợ săn giương nỏ lên ngắm bắn. Phụt! Mũi tên xé gió lao thẳng vào đầu con nai vàng. Nghe tiếng động, con nai phóng mình bay lên cao bỏ chạy. Mũi tên ghim vào bàn chân sau. Con nai vàng bỏ chạy, bàn chân chảy máu rơi vãi khắp mặt đất.
+
+Thợ săn thả chó săn ra rượt theo.
+
+Người Bất Tử đi đến con nai vàng đang ngất xỉu. Rút mũi tên ra và băng bó vết thương.
+
+Chó săn bay tới cắn vào cổ. Linh hồn Người Bất Tử bay người lên, chân phải đá mạnh bụp trúng vào cổ họng con chó săn. Tý ngã xuống đất, miệng kêu đng ẳng.
+
+Thợ săn vừa chạy tới liền giương nỏ lên bóp cò. Cóc! Mũi tên bay nhanh xoáy vào đầu. Linh hồn Người Bất Tử lộn người lăn xuống đất, tay chụp một khúc cây khô quăng về phía mũi tên. Phập! Mũi tên xuyên thủng khúc cây rồi rơi xuống.
+
+Thợ săn tay phải rút ra một con dao mã tấu dài 6 tấc sáng loáng, bay tới chém xuống đầu.
+
+Linh hồn Người Bất Tử đưa hai bàn tay ánh sáng lên. Kẻng! Tung ra một cú đá vào ngực. Gã thợ săn thân hình lảo đảo, rồi bay tới đâm dao vào bụng.
+
+Người Bất Tử chân lùi lại một bước, xoay người né. Mũi dao sướt qua lưng. Tung ra một cú đá quét trúng vào đầu. Bụp!
+
+Gã thợ săn tý ngã nằm dài dưới đất, cơ thể co giật.
+
+Linh hồn Người Bất Tử bay tới, bàn tay phải chặt mạnh xuống cổ gã thợ săn.
+
+Gã thợ săn:
+
+-- Xin đừng giết tôi! Tôi còn con nhỏ và mẹ già.
+
+Linh hồn Người Bất Tử:
+
+-- Thôi ông về đi. Còn chăm lo cho mẹ và con.
+
+Thợ săn:
+
+-- Cảm ơn thầy.
+
+Rồi biến mất.
+
+---
+
+7 ngày sau. Người Bất Tử đang ngồi uống trà ở nhà anh 9 thì chị Tám đi siêu âm về ghé vào:
+
+-- Bác sĩ chẩn đoán nói gai gót chân đã biến mất.
+
+Chị Tám:
+
+-- Chị cảm ơn chú Lợi nhé.
+
+Người Bất Tử vui vẻ:
+
+-- Vậy là ổn rồi chị.`,
+    en: ``,
+  },
+  15: {
+    vi: `Lúc đó cô bán phèo đang ngồi bán ở trước cửa nhà anh Chính, nghe thấy chuyện chữa bệnh liền nói:
+
+-- Thầy ơi, ở dưới xóm Bắc có cô gái bị chồng cầm dao rượt chém, không cho vô nhà. Không biết bị bệnh gì. Đã nhờ nhiều thầy bà đến chữa nhưng đều bị chồng cầm dao rượt đuổi không cho vào nhà.
+
+Anh 9:
+
+-- Thôi đi mày ơi. Xuống nhà nó nguy hiểm lắm.
+
+Người Bất Tử:
+
+-- Bỗng dưng cũng nhiều chuyện. Sáng mai 10 giờ, chị ghé nhà anh 9 rồi dẫn tôi xuống nhà người bệnh đó xem sao.
+
+Anh 9:
+
+-- Thôi kệ, giúp người làm phước. Cậu Năm có đi xuống đó thì phải cẩn thận nhé.
+
+---
+
+10 giờ sáng hôm sau. Cô bán xèo ghé nhà anh Chính rồi dẫn Người Bất Tử đi xuống xóm Bắc.
+
+Gần đến nhà người bệnh thì gặp cô vợ chạy tới, khóc lóc:
+
+-- Thầy ơi giúp dùm con! Chồng con gặp con ở đâu là chém ở đó. Nó mới vừa cầm dao đi kiếm thằng bạn, mới vừa về tới nhà đó. Thầy vào nhà cẩn thận nhé.
+
+Người Bất Tử vừa bước vào cổng nhà thì có một thanh niên bước ra, khoanh tay cúi đầu chào:
+
+-- Thưa thầy, vợ con ngoại tình. Và cha mẹ ruột con mở cửa nhà cho thằng bạn con vào.
+
+Người Bất Tử nghe thấy thanh niên chào nói lịch sự thì cũng tạm yên tâm, và cũng đoán được nguyên nhân bệnh rồi.
+
+Người bệnh dẫn vào trong nhà, vào phòng. Gặp hai người già tội nghiệp đang khóc.
+
+Người cha:
+
+-- Thầy ơi, nó để thừa cho hai vợ chồng tôi mở cửa dẫn tình nhân của vợ nó vào nhà. Thiệt là khổ quá. Nói nó không nghe.
+
+Người Bất Tử:
+
+-- Hai bác cứ yên tâm đi. Tôi đã biết tại sao nó hành xử như vậy rồi.
+
+Người bệnh dẫn vào phòng ngủ:
+
+-- Nửa đêm con thức dậy thì thấy thằng bạn thân từ trong phòng đi ra. Con chạy theo nó ra tới ngoài nhà, cửa còn đóng mà tìm hoài không thấy. Chính cha mẹ con mở cửa cho nó chạy thoát.
+
+---
+
+Người Bất Tử:
+
+-- Anh ngồi xuống đất, nhắm hai mắt lại, thả lỏng tư tưởng ra.
+
+Bàn tay phải để lên đỉnh đầu, tay trái để sau lưng người bệnh, truyền năng lượng ánh sáng vào khoảng 30 giây.
+
+-- Anh hãy nhìn ra ngoài, thấy ánh sáng đẹp của một ngôi sao chớp, rồi ngủ 5 phút. Tôi sẽ kêu anh thức dậy.
+
+5 phút sau, Người Bất Tử lắc vai người bệnh:
+
+-- Anh mở mắt ra đi. Anh có nhìn thấy hình ảnh ai hiện ra hay không?
+
+Người bệnh:
+
+-- Tôi nhìn thấy thằng bạn thân từ trong đầu tôi đi ra, xuyên qua cửa nhà và biến mất.
+
+Người Bất Tử:
+
+-- Như vậy anh đã hiểu nhầm vợ và cha mẹ anh rồi. Phải xin lỗi họ đi nhé.
+
+Người bệnh:
+
+-- Vậy là con bị bệnh hả thầy?
+
+Người Bất Tử:
+
+-- Đúng rồi. Con bị bệnh stress và trầm cảm nên bị rối loạn hình ảnh. Do não bị tắc nghẽn.
+
+Người bệnh:
+
+-- Con thương cha mẹ, con thương vợ con và thằng bạn thân nữa. Con đã làm tổn thương họ.
+
+Người Bất Tử:
+
+-- Con hãy xin lỗi họ và họ sẽ tha thứ cho con.
+
+Người bệnh:
+
+-- Thầy chữa bao lâu thì mới hết bệnh?
+
+Người Bất Tử:
+
+-- Thầy sẽ chữa giúp cho con trong ba lần. Nếu con buông lỏng được tư tưởng thì bệnh sẽ hết nhanh thôi.
+
+Người bệnh:
+
+-- Con cảm ơn thầy nhiều.
+
+---
+
+Lần thứ ba tới nhà, chỉ gặp cha mẹ người bệnh ngồi nói chuyện.
+
+Người cha:
+
+-- Nó hết bệnh rồi. Tôi mừng quá.
+
+Người mẹ:
+
+-- Nó dẫn vợ đi về quê chơi rồi thầy ơi.
+
+Người Bất Tử:
+
+-- Nó hết bệnh, gia đình yên vui là tốt rồi. Thôi tôi xin phép ông bà, tôi về nhé.
+
+Người Bất Tử ra về, ghé ngang nhà anh Chính.
+
+Anh Chính:
+
+-- Bệnh nhân sao rồi cậu Năm?
+
+Người Bất Tử:
+
+-- Đã hết bệnh. Dẫn vợ về quê chơi rồi.`,
+    en: ``,
+  },
 }
 
 export const STORY_LESSONS = {
@@ -1815,6 +2469,70 @@ The Storm Demon wasn't killed — pushed out to sea and dissolved on its own. Ma
 
 To be liberated, one must shed everything: robes, treasures, past. The Taoist Master practiced for hundreds of years, full of sacred objects, yet couldn't transcend. The very things that made us strong in the past are the chains holding us back. Liberation is not adding, but letting go.`,
   },
+  11: {
+    vi: `'Tôi là con người, là một tiểu vũ trụ'. Sơn Thần hỏi: 'Làm sao mày có quyền năng ngang hàng thần thánh?' Người Bất Tử trả lời: không phải thần thánh, là con người, là tiểu vũ trụ. Đây là tuyên ngôn cốt lõi của toàn bộ hệ thống: con người không cần trở thành thần. Con người đã là tiểu vũ trụ. Sức mạnh không đến từ danh hiệu hay cấp bậc, sức mạnh đến từ kết nối đúng nguồn.
+
+Giam giữ chứ không tiêu diệt. Y2K quá mạnh để tiêu diệt. Giải pháp: giam 1.000 năm chờ năng lượng suy yếu. Không phải mọi mối nguy đều giải quyết bằng tiêu diệt. Có khi chỉ cần kiềm chế, cách ly, để thời gian xóa đi sức mạnh. Nóng vội muốn giết chết ngay có thể gây hậu quả lớn hơn.
+
+Thuyết phục thần linh bằng lý lẽ. Sơn Thần ban đầu không muốn giúp: 'Việc này đâu liên quan tới tao.' Người Bất Tử không van xin, không đe dọa. Giải thích rõ: nếu Y2K đâm xuống, động đất sóng thần 30 mét, trăm ngàn người chết. Sơn Thần tự nhận ra: 'Giúp chúng sanh thoát nạn là nhiệm vụ của thần.' Không ai ép. Lý lẽ đúng thì thần linh cũng phải nghe.
+
+Ngồi trong lỗ tai Sơn Thần: nhỏ bé nhưng linh hoạt. Sơn Thần to lớn khổng lồ, đập bàn tay xuống tạo hố sâu 1 mét. Người Bất Tử ngồi trong lỗ tai Sơn Thần, chọc đau rồi bay vèo ra ngoài. Sơn Thần đập vào tai mình để bắt mà không được. Bài học: to lớn không có nghĩa là mạnh hơn. Nhỏ bé nhưng linh hoạt, nhanh nhẹn, đi vào những chỗ kẽ to lớn không vói tới. Tiểu vũ trụ nhỏ hơn Sơn Thần nhưng khiến Sơn Thần phải lắng nghe.`,
+    en: `'I am a human, a micro universe'. The Mountain God asks how a human has god-level powers. The answer: not divine, just a micro universe. This is the core declaration: humans don't need to become gods. Humans already are micro universes. Power comes from connection, not titles.
+
+Contain, don't destroy. Y2K is too powerful to destroy. Solution: contain for 1,000 years until energy weakens. Not every threat needs killing. Sometimes containment and time dissolve the danger. Rushing to destroy may cause worse consequences.
+
+Persuading a god through reason. The Mountain God initially refuses. The Immortal doesn't beg or threaten. Just explains: Y2K hitting means 30-meter tsunamis, hundreds of thousands dead. The God realizes on his own: protecting beings is a god's duty. No coercion. Right reasoning convinces even gods.
+
+Sitting in the God's ear: small but nimble. The Mountain God is enormous, creates a 1-meter crater with one slap. The Immortal sits in the God's ear, pokes it, flies out before the God can catch him. Size doesn't equal strength. Small but agile reaches places the giant cannot. The micro universe is smaller than a god but commands respect.`,
+  },
+  12: {
+    vi: `Con người tự phá hàng rào bảo vệ thiên nhiên. Đỉnh Bờ Hồng ban đầu trong sáng sạch, nguyên khí mạnh. Người hành hương đến, vệ sinh bừa bãi, Sơn Thần suy yếu, núi trấn ếm teo nhỏ, Quỷ Kiếm Y2K hút khí metan mạnh lên rồi bứt thoát. Con người tự tay phá hàng rào bảo vệ thiên nhiên. Khi hàng rào sụp, tai họa ập đến. 225.000 người chết.
+
+Không phải trận chiến nào cũng thắng. Tiếng lạ (Off) nói thẳng: đã trễ. Không có phép màu cứu vãn. Người Bất Tử bay về. Lò phản ứng nhiệt hạch phát nổ. Sóng thần ập đến. Đây là câu chuyện duy nhất mà Người Bất Tử thất bại. Bài học đau đớn nhất: tận lực tận tâm rồi mà vẫn không đủ. Có những thảm họa vượt ngoài khả năng ngăn chặn. Chấp nhận giới hạn cũng là một dạng trí tuệ.
+
+Quỷ Kiếm Y2K cũng có câu chuyện riêng. Quỷ Kiếm Y2K bị nhốt trong mặt trời 1 triệu năm. Quỷ Nữ Metan bị nhốt trong hang đá kim cương dưới đáy biển 1 triệu năm. Hai linh hồn tìm nhau, ôm nhau, hợp nhất để tự do. Dưới góc nhìn của Quỷ Kiếm Y2K, đây là câu chuyện tình 1 triệu năm. Bài học: không có ai hoàn toàn là 'kẻ xấu.' Mỗi linh hồn đều có động cơ riêng. Hiểu động cơ không có nghĩa là đồng ý, nhưng hiểu giúp ta nhìn bức tranh đầy đủ hơn.`,
+    en: `Humans destroy nature's own defenses. The peak was pristine, the God strong. Pilgrims came, littered everywhere, the God weakened, the containment mountain shrank, Y2K absorbed methane and broke free. Humans destroyed nature's defense. When the barrier fell, disaster followed. 225,000 dead.
+
+Not every battle is won. The Voice says it plainly: too late. No miracle rescue. The Immortal flies home. The reactor explodes. Tsunami hits. This is the only story where the Immortal fails. The most painful lesson: giving everything and still not enough. Some disasters exceed the ability to prevent. Accepting limits is also wisdom.
+
+Y2K has its own story. Y2K was imprisoned in the sun for a million years. The Methane Demoness trapped in a diamond cave under the ocean for a million years. Two souls finding each other, embracing, merging for freedom. From Y2K's perspective, this is a million-year love story. No one is purely 'the villain.' Every soul has its own motive.`,
+  },
+  13: {
+    vi: `Ung thư di truyền ADN: ba đời chung một lá gan bệnh. Ông cố nội làm thầy pháp, bị ung thư gan chết. Ông nội cũng làm thầy pháp, cũng bị ung thư gan chết. Cháu gái bây giờ bị ung thư gan giai đoạn 2. Ba đời, cùng bệnh, cùng vị trí. Y khoa gọi là di truyền ADN. Theo hệ thống Người Bất Tử: linh hồn ông cố và ông nội vẫn ở trong lá gan, mang theo bệnh, truyền cho đời sau. Muốn chữa dứt phải lôi gốc rễ ra, chữa cho cả người chết lẫn người sống.
+
+Gốc rễ bệnh nằm sâu hơn một lớp. Rạch khối u lần đầu, ra ông nội (Ma thầy pháp 1). Rạch sâu hơn, ra ông cố nội (Ma Pháp Sư 2). Bệnh không chỉ một tầng. Chữa xong tầng 1 tưởng hết, bên dưới còn tầng 2 nặng hơn. Giải pháp: rạch đến đâu chữa đến đó, không dừng khi mới thấy kết quả ban đầu.
+
+Cởi bỏ thì siêu thoát, giữ lại thì mắc kẹt. 8 Hồng Nhi cởi áo yếm đốt đi, sáng lên bay về vũ trụ. 2 Ma thầy pháp cởi áo mão bửu bối đốt cháy, cũng siêu thoát. Giống câu chuyện 10: Ma Đạo Sĩ phải đốt hết y phục và bửu bối mới giải thoát. Nguyên lý xuyên suốt: những thứ gắn bó lâu năm (nghề nghiệp, danh hiệu, công cụ quyền lực) chính là xiềng xích giữ linh hồn lại. Cởi bỏ hết mới sáng lên.`,
+    en: `ADN hereditary cancer: three generations sharing one sick liver. Great-grandfather was a sorcerer, died of liver cancer. Grandfather too. Now the granddaughter has stage 2 liver cancer. Three generations, same disease, same organ. Medicine calls it ADN heredity. In the Immortal's system: the ancestors' souls remain in the liver carrying the disease. To cure completely, extract the root - heal both the dead and the living.
+
+The root lies deeper than one layer. First cut reveals the grandfather. Deeper cut reveals the great-grandfather. Disease isn't just one layer. Fix layer 1, layer 2 waits underneath. Solution: keep cutting until every layer is healed.
+
+Let go and be freed, hold on and stay trapped. 8 child spirits burn their vests and ascend. 2 sorcerer ghosts burn their robes and tools, also freed. Same as story 10: the Daoist must burn everything to be liberated. What we cling to longest becomes our chains. Strip everything away to shine.`,
+  },
+  14: {
+    vi: `Bệnh hiện tại có thể đến từ kiếp trước. Chị Tám bị gai gót chân 20mm. Y khoa nói do canxi lắng đọng, cần mổ. Người Bất Tử bay vào cái gai, thấy cảnh tiền kiếp: chị Tám kiếp trước là con nai vàng bị mũi tên ghim vào bàn chân. Mũi tên tiền kiếp biến thành gai gót chân kiếp này. Bệnh theo linh hồn qua nhiều kiếp sống. Mổ bỏ cái gai xong, nếu không rút mũi tên ở kiếp trước, gai sẽ mọc lại.
+
+Sửa sự kiện gốc, bệnh hiện tại tự hết. Người Bất Tử không chữa cái gai. Người Bất Tử rút mũi tên ra khỏi chân nai vàng và băng bó vết thương. Tức là quay lại đúng khoảnh khắc gây bệnh, sửa lại sự kiện đó. 7 ngày sau gai gót chân biến mất. Không cần mổ, không cần thuốc. Giống câu chuyện 6: quay lại đáy ao năm 9 tuổi, giao tiếp với ma nước 3, bệnh sốt rét hết. Nguyên lý giống nhau: tìm đúng gốc, sửa đúng gốc, bệnh tự xóa.
+
+Tha mạng thợ săn: lòng thương xót xóa nghiệp. Gã thợ săn bắn nai, gây ra vết thương truyền qua nhiều kiếp. Nhưng khi bại trận, thợ săn xin tha: còn con nhỏ và mẹ già. Người Bất Tử tha mạng: 'Thôi ông về đi, còn chăm lo cho mẹ và con.' Không trả thù. Không trừng phạt. Thợ săn cảm ơn rồi biến mất. Bài học: thợ săn kiếp trước gây bệnh cho nai, nhưng thợ săn cũng có gia đình, cũng đáng thương. Giết thợ săn thì thêm một linh hồn oan. Tha thợ săn thì xóa nghiệp cho cả hai bên.`,
+    en: `Present illness may come from a past life. 20mm heel spur. Medicine says calcium deposits, needs surgery. The Immortal flies into the spur and sees a past life: the patient was a golden deer shot by an arrow in the foot. The past life arrow became this life's heel spur. Disease follows the soul across lifetimes. Remove the spur surgically without addressing the past life arrow, and it grows back.
+
+Fix the root event, present illness resolves. The Immortal doesn't treat the spur. He removes the arrow from the deer's foot and bandages the wound. Returns to the exact moment of injury and corrects it. 7 days later, spur vanishes. No surgery, no medicine. Same principle as story 6: find the root, fix the root, the disease erases itself.
+
+Sparing the hunter: compassion erases karma. The hunter shot the deer, causing a wound carried across lifetimes. But when defeated, the hunter begs: small child, elderly mother. The Immortal spares him. No revenge. No punishment. The hunter disappears with gratitude. Killing the hunter creates another wronged soul. Sparing him erases karma for both sides.`,
+  },
+  15: {
+    vi: `Người 'điên' có thể chỉ đang bị não tắc nghẽn. Ai cũng nghĩ anh ta ác: cầm dao rượt vợ, đuổi thầy bà, để thừa cha mẹ. Nhưng anh ta bước ra khoanh tay cúi đầu chào lịch sự. Anh ta không ác. Anh ta bị stress và trầm cảm, não tắc nghẽn, hình ảnh bị rối loạn. Anh ta thật sự 'nhìn thấy' bạn thân trong phòng ngủ nửa đêm. Đối với anh ta, đó là thật. Bài học: trước khi phán xét ai 'điên' hay 'ác,' hãy hỏi: não người đó đang gặp vấn đề gì?
+
+Để bệnh nhân tự chứng kiến gốc bệnh. Người Bất Tử không giải thích dài dòng. Truyền năng lượng 30 giây, cho người bệnh nhắm mắt 5 phút. Người bệnh tự nhìn thấy hình ảnh bạn thân đi ra từ trong đầu mình và biến mất. Tự chứng kiến. Tự hiểu. Không ai phải thuyết phục. Bài học: chữa bệnh hiệu quả nhất không phải giải thích cho bệnh nhân hiểu, mà là tạo điều kiện để bệnh nhân tự nhìn thấy gốc bệnh của mình.
+
+Buông lỏng tư tưởng thì bệnh hết nhanh. Người Bất Tử nói: 'Nếu con buông lỏng được tư tưởng thì bệnh sẽ hết nhanh thôi.' Não tắc nghẽn vì tư tưởng quá tải: nghi ngờ, ghen tuông, tức giận, sợ hãi. Tất cả chất đống trong não, tạo ra hình ảnh ảo. Buông lỏng tư tưởng tức là ngừng nhét thêm rác vào não. Năng lượng ánh sáng vào xóa sạch rác cũ. Não thông thì hình ảnh hết rối loạn. Giống nguyên lý câu chuyện 6: ói bùn ra mới nói được. Não xả rác ra mới nhìn thấy sự thật.`,
+    en: `The 'crazy' person may just have a blocked brain. Everyone thinks he's evil: chasing his wife with a knife, driving away healers, blaming his parents. But he greets politely with folded arms. He's not evil. His brain is blocked, images are distorted. He genuinely 'sees' his friend in the bedroom. To him, it's real. Before judging someone as 'crazy' or 'evil,' ask: what's happening in their brain?
+
+Let the patient witness their own root cause. No long explanations. 30 seconds of energy, 5 minutes eyes closed. The patient sees his friend's image walk out of his own head and vanish. Self-witnessed. Self-understood. No convincing needed. The most effective healing isn't explaining - it's creating conditions for the patient to see their own root cause.
+
+Release your thoughts and the illness clears quickly. The Immortal says: 'If you can release your thoughts, the illness clears quickly.' The brain is blocked by thought overload: suspicion, jealousy, anger, fear. All piled up, creating false images. Releasing thoughts means stop feeding garbage to the brain. Light energy clears old waste. Clear brain, clear vision. Same principle as story 6: vomit the mud to speak. Clear the brain's garbage to see truth.`,
+  },
 }
 
 export const STORY_HIGHLIGHTS = {
@@ -2000,6 +2718,96 @@ export const STORY_HIGHLIGHTS = {
       'Liberation requires burning all sacred objects and forgetting the past — liberation is letting go, not adding',
     ],
   },
+  11: {
+    vi: [
+      'Y2K là quỷ bão từ bức xạ mặt trời, đâm thẳng vào địa cầu sẽ gây động đất sóng thần',
+      '\'Tôi là con người, là một tiểu vũ trụ, làm việc cho đại vũ trụ\' - không phải thần thánh, là người',
+      'Sơn Thần to lớn, quyền năng, nhưng ban đầu không muốn giúp: \'Việc này đâu có liên quan gì tới tao\'',
+      'Thuyết phục bằng lý lẽ, không bằng bạo lực: giải thích hậu quả 225.000 người chết, Sơn Thần đồng ý',
+      'Không tiêu diệt Y2K, giam giữ 1.000 năm chờ suy yếu: không phải mọi mối nguy đều giải quyết bằng tiêu diệt',
+      'Sơn Thần biến viên đá nhỏ thành quả núi: sức mạnh nằm ở cách dùng, không phải kích thước',
+    ],
+    en: [
+      'Y2K is a sun storm demon - hitting Earth would cause earthquakes and tsunamis',
+      '\'I am a human, a micro universe, working for the macro universe\' - not divine, human',
+      'The Mountain God is powerful but initially refuses: \'This has nothing to do with me\'',
+      'Persuasion through reason, not force: explaining 225,000 potential deaths changes the God\'s mind',
+      'Not destroying Y2K but containing it for 1,000 years: not every threat needs destruction',
+      'The Mountain God turns a small stone into a mountain: power is in the method, not the size',
+    ],
+  },
+  12: {
+    vi: [
+      'Quỷ Kiếm Y2K trốn thoát vì con người ô nhiễm đỉnh núi thiêng: vệ sinh bừa bãi làm Sơn Thần suy yếu',
+      'Hậu quả: động đất 9,1 độ richter, sóng thần 30 mét, 225.000 người chết',
+      'Quỷ Kiếm Y2K và Quỷ Nữ Metan: bị giam cầm 1 triệu năm, tìm nhau, hợp nhất để tự do',
+      'Tiếng lạ (Off) nói: \'Đã trễ rồi con. Chúng ta đã tận lực, tận tâm rồi\'',
+      'Không phải trận chiến nào cũng thắng. Không phải tai họa nào cũng ngăn được',
+      'Con người tự tay phá hủy hàng rào bảo vệ thiên nhiên bằng ô nhiễm và thiếu tôn trọng',
+    ],
+    en: [
+      'Y2K escaped because humans polluted the sacred mountain peak: littering weakened the Mountain God',
+      'Result: 9.1 magnitude earthquake, 30-meter tsunami, 225,000 dead',
+      'Y2K and the Methane Demoness: imprisoned for a million years, finding each other, merging for freedom',
+      'The Voice says: \'It\'s too late. We\'ve done everything we could\'',
+      'Not every battle is won. Not every disaster can be prevented',
+      'Humans destroy nature\'s protection through pollution and disrespect',
+    ],
+  },
+  13: {
+    vi: [
+      'Ung thư gan giai đoạn 2: gốc rễ không phải tế bào đột biến, mà là ông nội và ông cố nội (thầy pháp) ở bên trong lá gan',
+      'Ung thư di truyền ADN: ông cố bị ung thư gan, truyền cho ông nội, ông nội truyền cho cháu gái. Ba đời chung một lá gan bệnh',
+      'Phẫu thuật tâm linh: dùng dao mổ bằng ánh sáng, rạch vào khối u, lôi ra gốc rễ',
+      '8 Hồng Nhi cởi áo yếm đốt đi thì sáng lên bay về vũ trụ. 2 Ma thầy pháp cởi bỏ áo mão bửu bối cũng siêu thoát',
+      '7 ngày sau siêu âm lại: lá gan lành tính. 2 bác sĩ cãi nhau vì không giải thích được',
+      '\'Phẫu thuật tâm linh bằng ánh sáng\' - bác sĩ Tây y nghe xong cũng ngạc nhiên',
+    ],
+    en: [
+      'Stage 2 liver cancer: the root isn\'t mutated cells but grandfather and great-grandfather (sorcerers) living inside the liver',
+      'ADN hereditary cancer: great-grandfather had liver cancer, passed to grandfather, passed to granddaughter. Three generations sharing one sick liver',
+      'Spiritual surgery: using a light scalpel, cutting into the tumor, extracting the root cause',
+      '8 child spirits remove their red vests and burn them - they light up and fly to the universe. 2 sorcerer ghosts do the same',
+      '7 days later ultrasound shows: liver is benign. Two doctors argue because they can\'t explain it',
+      '\'Spiritual surgery using light\' - even Western doctors are surprised',
+    ],
+  },
+  14: {
+    vi: [
+      'Gai gót chân 20mm: gốc rễ không phải canxi, mà là mũi tên ghim vào chân nai vàng ở kiếp trước',
+      'Bay vào trong cái gai, nhìn thấy cả một cảnh tiền kiếp: thợ săn, chó, nai vàng, bãi cỏ xanh',
+      'Rút mũi tên ra, băng bó vết thương cho nai vàng: chữa bệnh tiền kiếp bằng cách sửa lại sự kiện gốc',
+      'Thợ săn xin tha: \'Tôi còn con nhỏ và mẹ già.\' Tha mạng, không giết',
+      '7 ngày sau gai gót chân biến mất: sửa nguyên nhân tiền kiếp, bệnh hiện tại tự hết',
+      'Mỗi vết thương trên cơ thể có thể là ký ức của một kiếp sống khác',
+    ],
+    en: [
+      '20mm heel spur: the root isn\'t calcium but an arrow lodged in a deer\'s foot in a past life',
+      'Flying into the spur reveals an entire past life scene: hunter, dog, golden deer, green meadow',
+      'Removing the arrow and bandaging the deer: healing past life disease by correcting the original event',
+      'The hunter begs for mercy: \'I have a small child and elderly mother.\' Spared, not killed',
+      '7 days later the heel spur vanishes: fix the past life cause, present illness resolves',
+      'Every wound on the body may be a memory from another life',
+    ],
+  },
+  15: {
+    vi: [
+      'Chồng cầm dao rượt chém vợ, đuổi thầy bà, để thừa cha mẹ: ai cũng nghĩ anh ta điên hoặc ác',
+      'Thực tế: stress và trầm cảm gây rối loạn hình ảnh. Não tắc nghẽn, tạo ra ảo giác',
+      'Anh ta \'nhìn thấy\' bạn thân trong phòng ngủ nửa đêm, nhưng đó là hình ảnh trong não bị phóng ra ngoài',
+      'Chữa trong 30 giây: tay phải lên đỉnh đầu, tay trái sau lưng, truyền năng lượng ánh sáng',
+      'Người bệnh tự nhìn thấy hình ảnh bạn thân đi ra từ trong đầu mình và biến mất: tự chứng kiến gốc bệnh',
+      '3 lần chữa, hết bệnh, dẫn vợ về quê chơi: gia đình đoàn tụ',
+    ],
+    en: [
+      'Husband chases wife with a knife, drives away healers, blames parents: everyone thinks he\'s crazy or evil',
+      'Reality: stress and depression cause visual hallucinations. Brain blockage creates illusions',
+      'He \'sees\' his best friend in the bedroom at midnight, but it\'s an image projected from his blocked brain',
+      '30-second treatment: right hand on crown, left hand on back, transmitting light energy',
+      'The patient sees the friend\'s image walk out of his own head and vanish: witnessing his own illness',
+      '3 sessions, cured, takes wife home to visit family: reunion',
+    ],
+  },
 }
 export const STORY_THREADS = {
   1: {
@@ -2041,5 +2849,25 @@ export const STORY_THREADS = {
   10: {
     vi: 'Câu chuyện 10 là trận đánh lớn nhất từ đầu hành trình, và lần đầu tiên nhiệm vụ vượt ra khỏi chuyện cá nhân: cứu cả thành phố Sài Gòn khỏi Bão Quỷ cấp 12. Quy mô nhảy vọt, nhưng nguyên lý không đổi: ánh sáng thắng bóng tối, giao tiếp trước tiêu diệt, kẻ thù có thể thành đồng minh, và giải thoát là cởi bỏ chứ không phải thêm vào. Lỗ đen tiểu vũ trụ trong não được kích hoạt lần đầu, mở ra tầng sức mạnh mới. Và bài học cuối từ Ma Đạo Sĩ: tu luyện mấy trăm năm, bửu bối đầy mình, vẫn không siêu thoát. Chỉ khi đốt hết, quên hết, mới sáng lên bay đi. Đạo sĩ mạnh nhất trong hang động lại là người cần bỏ đi nhiều nhất.',
     en: 'Story 10 is the greatest battle of the journey so far, and the first time the mission transcended the personal: saving all of Saigon from a level-12 Storm Demon. The scale leaped, but the principle remained unchanged: light defeats darkness, communicate before eliminating, enemies can become allies, and liberation is letting go not adding. The black hole micro-universe in the brain was activated for the first time, opening a new power layer. And the final lesson from the Taoist Master: hundreds of years of cultivation, full of sacred objects, still unable to transcend. Only when everything is burned away and forgotten does the soul light up and fly free. The most powerful master in the cave was the one who needed to let go of the most.',
+  },
+  11: {
+    vi: 'Không phải mọi mối nguy đều tiêu diệt được. Có khi chỉ cần giam giữ, chờ thời gian xóa đi sức mạnh. Con người không phải thần thánh, nhưng con người là tiểu vũ trụ. Nhỏ bé mà linh hoạt. Lý lẽ đúng thì thần linh cũng phải nghe.',
+    en: 'Not every threat can be destroyed. Sometimes containment and time dissolve the power. Humans aren\'t gods, but humans are micro universes. Small but nimble. Right reasoning commands even a god\'s attention.',
+  },
+  12: {
+    vi: 'Con người tự tay phá hàng rào bảo vệ thiên nhiên bằng ô nhiễm và thiếu tôn trọng. Không phải trận chiến nào cũng thắng. Tận lực tận tâm rồi mà vẫn không đủ. 225.000 người chết. Đây là cái giá khi hàng rào bảo vệ bị phá. Và đây là câu chuyện duy nhất mà Tiếng lạ (Off) nói: \'Đã trễ rồi con.\'',
+    en: 'Humans destroy nature\'s defenses through pollution and disrespect. Not every battle is won. Giving everything and still not enough. 225,000 dead. This is the price when the barrier falls. And this is the only story where the Voice says: \'It\'s too late.\'',
+  },
+  13: {
+    vi: 'Bệnh ung thư di truyền ba đời. Gốc rễ không phải tế bào, mà là linh hồn tổ tiên mang theo bệnh cũ. Chữa cho người chết thì người sống mới hết bệnh. Rạch một lớp ra một tầng. Dừng sớm thì chưa chạm gốc. Và cởi bỏ vẫn là chìa khóa duy nhất để siêu thoát.',
+    en: 'Cancer inherited across three generations. The root isn\'t cells but ancestral souls carrying old disease. Heal the dead and the living heals. Each layer reveals another beneath. Stop early and the root remains untouched. And letting go remains the only key to liberation.',
+  },
+  14: {
+    vi: 'Mỗi vết thương trên cơ thể có thể là ký ức của một kiếp sống khác. Bệnh không chỉ di truyền ADN từ cha mẹ, bệnh còn di truyền qua linh hồn từ kiếp trước. Chữa bệnh thật sự là quay lại đúng khoảnh khắc gây thương, sửa lại, rồi bệnh hiện tại tự xóa. Và tha thứ cho kẻ gây thương xóa nghiệp cho cả hai bên.',
+    en: 'Every wound on the body may be a memory from another life. Disease isn\'t just inherited through ADN from parents but through the soul from past lives. True healing means returning to the exact moment of injury, correcting it, and the present illness erases itself. Forgiving the one who caused the wound erases karma for both sides.',
+  },
+  15: {
+    vi: 'Người cầm dao rượt vợ không phải kẻ ác. Người đó bị não tắc nghẽn, hình ảnh rối loạn, nhìn thấy thứ không có thật rồi hành động theo. Chữa bệnh không cần giải thích, cần tạo điều kiện để bệnh nhân tự nhìn thấy gốc bệnh. Buông lỏng tư tưởng thì não xả rác. Não xả rác thì hình ảnh hết rối. Gia đình đoàn tụ.',
+    en: 'The man chasing his wife with a knife isn\'t evil. His brain is blocked, images distorted, seeing what isn\'t there and acting on it. Healing doesn\'t need explanation, just conditions for the patient to see their own root cause. Release thoughts, the brain clears its garbage. Clear garbage, clear vision. Family reunites.',
   },
 }
