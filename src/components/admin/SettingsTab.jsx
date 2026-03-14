@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DEFAULT_NAV_ITEMS } from '../../hooks/useFirestore'
 
 const NAV_ICONS = {
-  home: '🏠', stories: '📖', revelations: '💡', about: 'ℹ️',
+  home: '🏠', stories: '📖', khaitri: '💡', about: 'ℹ️',
   practice: '☀️', contact: '✉️', search: '🔍',
 }
 

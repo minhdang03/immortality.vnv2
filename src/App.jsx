@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { useTheme } from './hooks/useTheme'
-import { useArticles, useTranslations, useTopics, useStories, useRevelations, useTeachings, usePractices, useSiteSettings } from './hooks/useFirestore'
+import { useArticles, useTranslations, useTopics, useStories, useKhaiTri, useTeachings, usePractices, useSiteSettings } from './hooks/useFirestore'
 import { useFontSize } from './hooks/useFontSize'
 import { articleSlug } from './utils/slug'
 import './styles/app.css'
@@ -22,7 +22,7 @@ import ContactPage from './pages/ContactPage'
 import AboutPage from './pages/AboutPage'
 import StoriesPage from './pages/StoriesPage'
 import PracticePage from './pages/PracticePage'
-import RevelationsPage from './pages/RevelationsPage'
+import KhaiTriPage from './pages/KhaiTriPage'
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
@@ -38,7 +38,7 @@ export default function App() {
   const { getT, firestoreVi, firestoreEn, updateTranslations } = useTranslations()
   const { topics: TOPICS, addTopic, updateTopic, deleteTopic } = useTopics()
   const { stories: firestoreStories, addStory, updateStory, deleteStory } = useStories()
-  const { revelations, addRevelation, updateRevelation, deleteRevelation } = useRevelations()
+  const { khaitri, addKhaiTri, updateKhaiTri, deleteKhaiTri } = useKhaiTri()
   const { teachings, addTeaching, updateTeaching, deleteTeaching } = useTeachings()
   const { practices, addPractice, updatePractice, deletePractice } = usePractices()
   const { settings: siteSettings, updateSettings } = useSiteSettings()
@@ -67,16 +67,18 @@ export default function App() {
     if (hash === '/about') { setPage('about'); return }
     if (hash === '/stories' || hash.startsWith('/story/')) { setPage('stories'); return }
     if (hash === '/practice') { setPage('practice'); return }
-    if (hash === '/revelations') { setPage('revelations'); return }
+    if (hash === '/khaitri' || hash.startsWith('/khaitri/') || hash === '/revelations') { setPage('khaitri'); if (hash === '/revelations') window.location.hash = '/khaitri'; return }
     if (hash === '/admin') { setPage('admin'); return }
   }
 
   const hashAppliedRef = useRef(false)
   useEffect(() => {
-    if (!hashAppliedRef.current && allArticles.length > 0) {
-      applyHash()
-      hashAppliedRef.current = true
-    }
+    if (hashAppliedRef.current) return
+    const hash = window.location.hash.slice(1)
+    // Article routes need articles data — wait until loaded
+    if (hash?.startsWith('/article/') && allArticles.length === 0) return
+    applyHash()
+    hashAppliedRef.current = true
   }, [allArticles.length])
 
   useEffect(() => {
@@ -132,7 +134,7 @@ export default function App() {
 
         <main className="container">
           {page === 'home' && (
-            <HomePage t={t} lang={lang} topics={TOPICS} articles={allArticles} loading={loading} navigate={navigate} siteSettings={siteSettings} />
+            <HomePage t={t} lang={lang} topics={TOPICS} articles={allArticles} stories={firestoreStories} loading={loading} navigate={navigate} siteSettings={siteSettings} />
           )}
           {page === 'topic' && (
             <TopicPage t={t} lang={lang} topics={TOPICS} articles={allArticles} selectedTopic={selectedTopic} navigate={navigate} />
@@ -153,13 +155,17 @@ export default function App() {
           {page === 'stories' && (
             <StoriesPage t={t} lang={lang} firestoreStories={firestoreStories} navigate={navigate}
               fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
+              user={user} onUpdateStory={updateStory}
             />
           )}
           {page === 'practice' && (
             <PracticePage t={t} lang={lang} practices={practices} />
           )}
-          {page === 'revelations' && (
-            <RevelationsPage t={t} lang={lang} revelations={revelations} />
+          {page === 'khaitri' && (
+            <KhaiTriPage t={t} lang={lang} items={khaitri} navigate={navigate}
+              fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
+              user={user} onUpdateKhaiTri={updateKhaiTri}
+            />
           )}
           {page === 'contact' && (
             <ContactPage t={t} />
@@ -169,12 +175,12 @@ export default function App() {
             <AdminPanel
               t={t} lang={lang} user={user}
               articles={allArticles} topics={TOPICS} stories={firestoreStories}
-              revelations={revelations} teachings={teachings} practices={practices}
+              khaitri={khaitri} teachings={teachings} practices={practices}
               firestoreVi={firestoreVi} firestoreEn={firestoreEn}
               onAddArticle={addArticle} onUpdateArticle={updateArticle} onDeleteArticle={deleteArticle}
               onAddTopic={addTopic} onUpdateTopic={updateTopic} onDeleteTopic={deleteTopic}
               onAddStory={addStory} onUpdateStory={updateStory} onDeleteStory={deleteStory}
-              onAddRevelation={addRevelation} onUpdateRevelation={updateRevelation} onDeleteRevelation={deleteRevelation}
+              onAddKhaiTri={addKhaiTri} onUpdateKhaiTri={updateKhaiTri} onDeleteKhaiTri={deleteKhaiTri}
               onAddTeaching={addTeaching} onUpdateTeaching={updateTeaching} onDeleteTeaching={deleteTeaching}
               onAddPractice={addPractice} onUpdatePractice={updatePractice} onDeletePractice={deletePractice}
               onUpdateTranslations={updateTranslations}

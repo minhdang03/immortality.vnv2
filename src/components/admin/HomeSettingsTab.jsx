@@ -15,7 +15,7 @@ const ICON_OPTIONS = [
 const PAGE_OPTIONS = [
   { id: 'home', vi: 'Trang Chủ', en: 'Home' },
   { id: 'stories', vi: '37 Chuyện', en: 'Stories' },
-  { id: 'revelations', vi: 'Khai Thị', en: 'Revelations' },
+  { id: 'khaitri', vi: 'Khai Trí', en: 'Khai Trí' },
   { id: 'about', vi: 'Giới Thiệu', en: 'About' },
   { id: 'practice', vi: 'Thái Dương Quyền', en: 'Solar Fist' },
   { id: 'contact', vi: 'Liên Hệ', en: 'Contact' },
@@ -89,8 +89,30 @@ export default function HomeSettingsTab({ lang, settings, onUpdate }) {
         <h3 style={{ color: 'var(--gold)', margin: '0 0 12px', fontSize: '1rem' }}>
           {vi ? '🏠 Cấu hình Hero' : '🏠 Hero Config'}
         </h3>
+
+        {/* Visibility toggles */}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+          {[
+            { key: 'showSun', vi: 'Icon Mặt Trời', en: 'Sun Icon' },
+            { key: 'showTitle', vi: 'Tiêu đề', en: 'Title' },
+            { key: 'showSubtitle', vi: 'Phụ đề', en: 'Subtitle' },
+            { key: 'showCtaPrimary', vi: 'Nút chính', en: 'Primary CTA' },
+            { key: 'showCtaSecondary', vi: 'Nút phụ', en: 'Secondary CTA' },
+          ].map(item => (
+            <button
+              key={item.key}
+              className={`btn-sm ${hero[item.key] !== false ? '' : 'btn-danger'}`}
+              onClick={() => updateHero(item.key, hero[item.key] === false)}
+              style={{ fontSize: '0.75rem' }}
+            >
+              {hero[item.key] !== false ? '👁' : '🚫'} {vi ? item.vi : item.en}
+            </button>
+          ))}
+        </div>
+
         <div className="admin-form" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {/* Primary CTA */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', opacity: hero.showCtaPrimary !== false ? 1 : 0.4 }}>
             <label style={{ flex: 1, minWidth: 150 }}>
               <small style={{ color: 'var(--text-dim)' }}>{vi ? 'Nút chính VI' : 'Primary CTA VI'}</small>
               <input style={inputStyle} value={hero.ctaPrimaryVi} onChange={e => updateHero('ctaPrimaryVi', e.target.value)} />
@@ -100,13 +122,14 @@ export default function HomeSettingsTab({ lang, settings, onUpdate }) {
               <input style={inputStyle} value={hero.ctaPrimaryEn} onChange={e => updateHero('ctaPrimaryEn', e.target.value)} />
             </label>
             <label style={{ minWidth: 100 }}>
-              <small style={{ color: 'var(--text-dim)' }}>{vi ? 'Link' : 'Link'}</small>
+              <small style={{ color: 'var(--text-dim)' }}>Link</small>
               <select style={inputStyle} value={hero.ctaPrimaryLink} onChange={e => updateHero('ctaPrimaryLink', e.target.value)}>
                 {PAGE_OPTIONS.map(p => <option key={p.id} value={p.id}>{vi ? p.vi : p.en}</option>)}
               </select>
             </label>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {/* Secondary CTA */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', opacity: hero.showCtaSecondary !== false ? 1 : 0.4 }}>
             <label style={{ flex: 1, minWidth: 150 }}>
               <small style={{ color: 'var(--text-dim)' }}>{vi ? 'Nút phụ VI' : 'Secondary CTA VI'}</small>
               <input style={inputStyle} value={hero.ctaSecondaryVi} onChange={e => updateHero('ctaSecondaryVi', e.target.value)} placeholder={vi ? '(dùng mặc định)' : '(use default)'} />
@@ -116,7 +139,7 @@ export default function HomeSettingsTab({ lang, settings, onUpdate }) {
               <input style={inputStyle} value={hero.ctaSecondaryEn} onChange={e => updateHero('ctaSecondaryEn', e.target.value)} placeholder={vi ? '(dùng mặc định)' : '(use default)'} />
             </label>
             <label style={{ minWidth: 100 }}>
-              <small style={{ color: 'var(--text-dim)' }}>{vi ? 'Link' : 'Link'}</small>
+              <small style={{ color: 'var(--text-dim)' }}>Link</small>
               <select style={inputStyle} value={hero.ctaSecondaryLink} onChange={e => updateHero('ctaSecondaryLink', e.target.value)}>
                 {PAGE_OPTIONS.map(p => <option key={p.id} value={p.id}>{vi ? p.vi : p.en}</option>)}
               </select>

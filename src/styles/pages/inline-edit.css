@@ -1,0 +1,116 @@
+/* Trigger button */
+.inline-edit-trigger {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(201,168,108,0.1); border: 1px solid rgba(201,168,108,0.2);
+  cursor: pointer; font-size: 0.7rem; opacity: 0.4;
+  transition: all 0.2s; flex-shrink: 0;
+}
+.inline-edit-trigger:hover { opacity: 1; background: rgba(201,168,108,0.2); }
+.section-editable { display: flex; align-items: center; gap: 8px; }
+
+/* Overlay container */
+.ie-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+
+/* Backdrop — sits behind modal, covers entire screen */
+.ie-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.5);
+  animation: ieFadeIn 0.2s ease-out;
+  cursor: pointer;
+}
+.ie-closing .ie-backdrop { animation: ieFadeOut 0.2s ease-out forwards; }
+
+@keyframes ieFadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes ieFadeOut { from { opacity: 1 } to { opacity: 0 } }
+
+/* Modal */
+.ie-modal {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 640px;
+  max-height: 70vh; display: flex; flex-direction: column;
+  background: var(--bg, #1a1a2e);
+  border-radius: 14px 14px 0 0;
+  border: 1px solid rgba(201,168,108,0.12); border-bottom: none;
+  animation: ieSlideUp 0.25s cubic-bezier(0.32,0.72,0,1);
+}
+.ie-closing .ie-modal { animation: ieSlideDown 0.2s ease-in forwards; }
+
+@keyframes ieSlideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+@keyframes ieSlideDown { from { transform: translateY(0) } to { transform: translateY(100%) } }
+
+/* Desktop */
+@media (min-width: 640px) {
+  .ie-overlay { align-items: center; }
+  .ie-modal {
+    border-radius: 14px; border: 1px solid rgba(201,168,108,0.12);
+    max-height: 65vh; margin: 20px;
+    animation: ieScaleIn 0.2s cubic-bezier(0.32,0.72,0,1);
+  }
+  .ie-closing .ie-modal { animation: ieScaleOut 0.15s ease-in forwards; }
+  .ie-drag { display: none; }
+  @keyframes ieScaleIn { from { transform: scale(0.95); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+  @keyframes ieScaleOut { from { transform: scale(1); opacity: 1 } to { transform: scale(0.95); opacity: 0 } }
+}
+
+/* Drag handle (mobile) */
+.ie-drag {
+  display: flex; justify-content: center; padding: 10px 0 2px;
+  cursor: pointer; flex-shrink: 0;
+}
+.ie-drag-bar {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: rgba(201,168,108,0.25);
+}
+
+/* Header */
+.ie-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 18px; flex-shrink: 0;
+}
+.ie-label { font-size: 0.9rem; font-weight: 600; color: var(--gold); }
+.ie-close {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(201,168,108,0.08); border: none;
+  color: var(--text-dim); font-size: 1.4rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.ie-close:hover { background: rgba(201,168,108,0.15); color: var(--text); }
+
+/* Hint */
+.ie-hint {
+  padding: 4px 18px 8px; font-size: 0.72rem; color: var(--text-dim); opacity: 0.5;
+  flex-shrink: 0;
+}
+
+/* Textarea */
+.ie-textarea {
+  flex: 1; padding: 10px 18px; font-size: 0.88rem;
+  line-height: 1.9; color: var(--text); resize: none;
+  background: transparent; border: none; outline: none;
+  border-top: 1px solid rgba(201,168,108,0.08);
+  border-bottom: 1px solid rgba(201,168,108,0.08);
+  font-family: inherit; min-height: 120px;
+  overflow-y: auto; white-space: pre-wrap;
+}
+
+/* Actions */
+.ie-actions {
+  display: flex; gap: 8px; padding: 12px 18px;
+  justify-content: flex-end; flex-shrink: 0;
+}
+.ie-btn-save {
+  padding: 10px 24px; font-size: 0.85rem; border-radius: 8px;
+  background: var(--gold); color: #1a1a2e; border: none;
+  cursor: pointer; font-weight: 600;
+}
+.ie-btn-save:disabled { opacity: 0.4; }
+.ie-btn-cancel {
+  padding: 10px 18px; font-size: 0.85rem; border-radius: 8px;
+  background: transparent; color: var(--text-dim);
+  border: 1px solid rgba(201,168,108,0.12); cursor: pointer;
+}
+.ie-btn-cancel:hover { border-color: var(--gold); }

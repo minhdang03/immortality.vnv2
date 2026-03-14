@@ -167,7 +167,7 @@ export function useTopics() {
   return { topics, loading, addTopic, updateTopic, deleteTopic }
 }
 
-/* ─── GENERIC CRUD (for revelations, teachings, practices) ─── */
+/* ─── GENERIC CRUD (for khaitri, teachings, practices) ─── */
 function useCRUD(collectionName, orderField = 'order') {
   const [items, setItems] = useState(() => {
     try { return JSON.parse(localStorage.getItem(`cached_${collectionName}`)) || [] } catch { return [] }
@@ -194,10 +194,10 @@ function useCRUD(collectionName, orderField = 'order') {
   return { items, loading, add, update, remove }
 }
 
-/* ─── REVELATIONS (Khai Thị) ─── */
-export function useRevelations() {
-  const { items, loading, add, update, remove } = useCRUD('revelations')
-  return { revelations: items, loading, addRevelation: add, updateRevelation: update, deleteRevelation: remove }
+/* ─── KHAI TRÍ (Q&A) ─── */
+export function useKhaiTri() {
+  const { items, loading, add, update, remove } = useCRUD('khaitri')
+  return { khaitri: items, loading, addKhaiTri: add, updateKhaiTri: update, deleteKhaiTri: remove }
 }
 
 /* ─── TEACHINGS (Giới Thiệu / Đô Tỷ Pháp) ─── */
@@ -215,14 +215,17 @@ export function usePractices() {
 /* ─── SITE SETTINGS (navigation, home page, etc.) ─── */
 export const DEFAULT_HOME_CARDS = [
   { id: 'stories', icon: 'book', labelVi: '37 Câu Chuyện', labelEn: '37 Stories', descVi: 'Hành trình tu luyện siêu trí tuệ qua những câu chuyện có thật', descEn: 'The journey of super-intelligence cultivation through true stories', visible: true },
-  { id: 'revelations', icon: 'layers', labelVi: 'Khai Thị', labelEn: 'Revelations', descVi: 'Hỏi đáp với Người Bất Tử về chân lý cuộc sống', descEn: 'Q&A with the Immortal about life truths', visible: true },
+  { id: 'khaitri', icon: 'layers', labelVi: 'Khai Trí', labelEn: 'Enlightenment Q&A', descVi: 'Hỏi đáp với Người Bất Tử về chân lý cuộc sống', descEn: 'Q&A with the Immortal about life truths', visible: true },
   { id: 'about', icon: 'info', labelVi: 'Đô Tỷ Pháp', labelEn: 'Đô Tỷ Pháp Theory', descVi: 'Lý thuyết nền tảng về siêu trí tuệ và con đường bất tử', descEn: 'Foundational theory of super-intelligence and the path to immortality', visible: true },
   { id: 'practice', icon: 'sun', labelVi: 'Thái Dương Quyền', labelEn: 'Solar Fist', descVi: '10 chiêu thức luyện năng lượng mặt trời', descEn: '10 movements of solar energy cultivation', visible: true },
 ]
 
 export const DEFAULT_HERO = {
-  titleVi: '', titleEn: '',
-  subtitleVi: '', subtitleEn: '',
+  showSun: true,
+  showTitle: true,
+  showSubtitle: true,
+  showCtaPrimary: true,
+  showCtaSecondary: true,
   ctaPrimaryVi: 'Khám Phá Câu Chuyện', ctaPrimaryEn: 'Explore Stories',
   ctaPrimaryLink: 'stories',
   ctaSecondaryVi: '', ctaSecondaryEn: '',
@@ -232,17 +235,34 @@ export const DEFAULT_HERO = {
 export const DEFAULT_NAV_ITEMS = [
   { id: 'home', labelVi: 'Trang Chủ', labelEn: 'Home', visible: true, showInBottom: true },
   { id: 'stories', labelVi: '37 Chuyện', labelEn: 'Stories', visible: true, showInBottom: true },
-  { id: 'revelations', labelVi: 'Khai Thị', labelEn: 'Revelations', visible: true, showInBottom: true },
+  { id: 'khaitri', labelVi: 'Khai Trí', labelEn: 'Khai Trí', visible: true, showInBottom: true },
   { id: 'about', labelVi: 'Giới Thiệu', labelEn: 'About', visible: true, showInBottom: false },
   { id: 'practice', labelVi: 'Thái Dương Quyền', labelEn: 'Solar Fist', visible: true, showInBottom: true },
   { id: 'contact', labelVi: 'Liên Hệ', labelEn: 'Contact', visible: true, showInBottom: true },
 ]
 
+// Migrate old 'revelations' references to 'khaitri' in settings
+function migrateSettings(data) {
+  if (!data) return data
+  const migrated = { ...data }
+  if (migrated.navItems) {
+    migrated.navItems = migrated.navItems.map(item =>
+      item.id === 'revelations' ? { ...item, id: 'khaitri', labelVi: item.labelVi === 'Khai Thị' ? 'Khai Trí' : item.labelVi, labelEn: item.labelEn === 'Revelations' ? 'Khai Trí' : item.labelEn } : item
+    )
+  }
+  if (migrated.homeCards) {
+    migrated.homeCards = migrated.homeCards.map(card =>
+      card.id === 'revelations' ? { ...card, id: 'khaitri', labelVi: card.labelVi === 'Khai Thị' ? 'Khai Trí' : card.labelVi, labelEn: card.labelEn === 'Revelations' ? 'Enlightenment Q&A' : card.labelEn } : card
+    )
+  }
+  return migrated
+}
+
 export function useSiteSettings() {
   const [settings, setSettings] = useState(() => {
     try {
       const cached = JSON.parse(localStorage.getItem('cached_site_settings'))
-      return cached || { navItems: DEFAULT_NAV_ITEMS, homeCards: DEFAULT_HOME_CARDS, hero: DEFAULT_HERO }
+      return cached ? migrateSettings(cached) : { navItems: DEFAULT_NAV_ITEMS, homeCards: DEFAULT_HOME_CARDS, hero: DEFAULT_HERO }
     } catch { return { navItems: DEFAULT_NAV_ITEMS, homeCards: DEFAULT_HOME_CARDS, hero: DEFAULT_HERO } }
   })
   const [loading, setLoading] = useState(true)
@@ -251,7 +271,7 @@ export function useSiteSettings() {
     try {
       const unsub = onSnapshot(doc(db, 'settings', 'site'), (snap) => {
         if (snap.exists()) {
-          const data = snap.data()
+          const data = migrateSettings(snap.data())
           setSettings(data)
           try { localStorage.setItem('cached_site_settings', JSON.stringify(data)) } catch {}
         }

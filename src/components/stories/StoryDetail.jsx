@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { STORY_TAGS, STORY_HIGHLIGHTS, STORY_THREADS } from '../../data/stories'
+import { STORY_TAGS } from '../../data/stories'
 import SunIcon from '../SunIcon'
 import ShareButtons from '../ShareButtons'
+import InlineEdit from '../InlineEdit'
 import StoryLessons from './StoryLessons'
 import StoryThread from './StoryThread'
 
@@ -47,21 +48,26 @@ function FontSizeControls({ fontSize, onIncrease, onDecrease, onReset }) {
   )
 }
 
-export default function StoryDetail({ story, lang, t, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, onBack, allStories }) {
+export default function StoryDetail({ story, lang, t, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, onBack, allStories, user, onUpdateStory }) {
   const tag = STORY_TAGS[story.tag]
   const content = lang === 'vi' ? story.contentVi : story.contentEn
   const lesson = lang === 'vi' ? story.lessonVi : story.lessonEn
   const title = lang === 'vi' ? story.titleVi : story.titleEn
-  // Highlights: from Firestore (newline-separated string) or fallback to hardcoded
-  const firestoreHL = lang === 'vi' ? story.highlightsVi : story.highlightsEn
-  const highlightList = firestoreHL
-    ? firestoreHL.split('\n').filter(l => l.trim())
-    : (STORY_HIGHLIGHTS[story.order] ? (lang === 'vi' ? STORY_HIGHLIGHTS[story.order].vi : STORY_HIGHLIGHTS[story.order].en) : null)
+  const hlRaw = lang === 'vi' ? story.highlightsVi : story.highlightsEn
+  const highlightList = hlRaw ? hlRaw.split('\n').filter(l => l.trim()) : null
+  const thread = lang === 'vi' ? story.threadVi : story.threadEn
 
-  // Thread: from Firestore or fallback to hardcoded
-  const firestoreThread = lang === 'vi' ? story.threadVi : story.threadEn
-  const thread = firestoreThread
-    || (STORY_THREADS[story.order] ? (lang === 'vi' ? STORY_THREADS[story.order].vi : STORY_THREADS[story.order].en) : null)
+  const isAdmin = !!user
+  const saveField = (field) => async (value) => {
+    if (onUpdateStory && story.id) {
+      await onUpdateStory(story.id, { [field]: value })
+    }
+  }
+
+  const contentField = lang === 'vi' ? 'contentVi' : 'contentEn'
+  const highlightsField = lang === 'vi' ? 'highlightsVi' : 'highlightsEn'
+  const lessonField = lang === 'vi' ? 'lessonVi' : 'lessonEn'
+  const threadField = lang === 'vi' ? 'threadVi' : 'threadEn'
 
   // Next/prev stories
   const currentIndex = allStories.findIndex(s => s.id === story.id)
@@ -106,6 +112,10 @@ export default function StoryDetail({ story, lang, t, navigate, fontSize, onFont
         </div>
 
         {/* Body */}
+        <div className="section-editable">
+          <h3 style={{ margin: 0, flex: 1 }} />
+          {isAdmin && <InlineEdit value={content} onSave={saveField(contentField)} lang={lang} label={lang === 'vi' ? 'Nội dung' : 'Content'} />}
+        </div>
         <div className="story-detail-body detail-body">
           {content
             ? renderText(content)
@@ -114,27 +124,40 @@ export default function StoryDetail({ story, lang, t, navigate, fontSize, onFont
         </div>
 
         {/* Part 1: Key Highlights */}
-        {highlightList && highlightList.length > 0 && (
+        {(highlightList?.length > 0 || isAdmin) && (
           <div className="story-highlights-v2">
-            <h3 className="highlights-v2-header">
-              <SunIcon size={16} />
-              {lang === 'vi' ? 'Điểm Nhấn' : 'Key Highlights'}
-            </h3>
-            <div className="highlights-v2-list">
-              {highlightList.map((h, i) => (
-                <div key={i} className="highlight-v2-item">
-                  <span className="highlight-v2-bullet">&#9672;</span>
-                  <span>{h}</span>
-                </div>
-              ))}
+            <div className="section-editable">
+              <h3 className="highlights-v2-header" style={{ margin: 0 }}>
+                <SunIcon size={16} />
+                {lang === 'vi' ? 'Điểm Nhấn' : 'Key Highlights'}
+              </h3>
+              {isAdmin && <InlineEdit value={hlRaw} onSave={saveField(highlightsField)} lang={lang} label={lang === 'vi' ? 'Điểm Nhấn' : 'Highlights'} />}
             </div>
+            {highlightList && highlightList.length > 0 && (
+              <div className="highlights-v2-list">
+                {highlightList.map((h, i) => (
+                  <div key={i} className="highlight-v2-item">
+                    <span className="highlight-v2-bullet">&#9672;</span>
+                    <span>{h}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {/* Part 2: Deep Wisdom / Lessons */}
+        <div className="section-editable">
+          <span style={{ flex: 1 }} />
+          {isAdmin && <InlineEdit value={lesson} onSave={saveField(lessonField)} lang={lang} label={lang === 'vi' ? 'Bài Học' : 'Lessons'} />}
+        </div>
         <StoryLessons lesson={lesson} lang={lang} />
 
         {/* Part 3: The Thread */}
+        <div className="section-editable">
+          <span style={{ flex: 1 }} />
+          {isAdmin && <InlineEdit value={thread} onSave={saveField(threadField)} lang={lang} label={lang === 'vi' ? 'Xuyên Suốt' : 'Thread'} />}
+        </div>
         <StoryThread thread={thread} lang={lang} />
 
         {/* Share bottom */}

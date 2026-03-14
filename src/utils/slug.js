@@ -43,3 +43,13 @@ export function storySlug(story) {
   const slug = toSlug(title)
   return slug ? `${num}-${slug}` : num
 }
+
+/**
+ * Get slug for a Khai Trí Q&A item — uses order + VI title
+ */
+export function khaitriSlug(item) {
+  const num = String(item.order || 1).padStart(2, '0')
+  const title = item.vi?.title || item.en?.title || ''
+  const slug = toSlug(title)
+  return slug ? `${num}-${slug}` : num
+}

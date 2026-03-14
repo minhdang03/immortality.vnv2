@@ -1,37 +1,25 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { STORIES, STORY_CONTENT, STORY_LESSONS } from '../data/stories'
 import { storySlug } from '../utils/slug'
 import StoryDetail from '../components/stories/StoryDetail'
 import StoryList from '../components/stories/StoryList'
 
-// Merge Firestore stories with hardcoded fallback per-story
-function mergeStories(firestoreStories) {
-  const fsMap = {}
-  if (firestoreStories) firestoreStories.forEach(s => { fsMap[s.order ?? s.id] = s })
-
-  return STORIES.map(s => {
-    const fs = fsMap[s.id] || {}
-    return {
-      ...fs,
-      id: fs.id || s.id,
-      order: fs.order ?? s.id,
-      tag: fs.tag || s.tag,
-      titleVi: fs.titleVi || s.vi,
-      titleEn: fs.titleEn || s.en,
-      contentVi: fs.contentVi || STORY_CONTENT[s.id]?.vi || '',
-      contentEn: fs.contentEn || STORY_CONTENT[s.id]?.en || '',
-      lessonVi: fs.lessonVi || STORY_LESSONS[s.id]?.vi || '',
-      lessonEn: fs.lessonEn || STORY_LESSONS[s.id]?.en || '',
-    }
-  })
-}
-
-export default function StoriesPage({ t, lang, firestoreStories, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset }) {
+export default function StoriesPage({ t, lang, firestoreStories, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateStory }) {
   const [selected, setSelected] = useState(null)
   const [filter, setFilter] = useState('all')
   const hashApplied = useRef(false)
 
-  const allStories = useMemo(() => mergeStories(firestoreStories), [firestoreStories])
+  const allStories = useMemo(() =>
+    (firestoreStories || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    [firestoreStories]
+  )
+
+  // Sync selected with latest Firestore data
+  useEffect(() => {
+    if (selected && allStories.length > 0) {
+      const updated = allStories.find(s => s.id === selected.id)
+      if (updated && updated !== selected) setSelected(updated)
+    }
+  }, [allStories])
 
   // Apply hash on mount: /story/01-thoat-chet-duoi...
   useEffect(() => {
@@ -61,6 +49,7 @@ export default function StoriesPage({ t, lang, firestoreStories, navigate, fontS
       <StoryDetail
         story={selected} lang={lang} t={t} navigate={navigate}
         fontSize={fontSize} onFontIncrease={onFontIncrease} onFontDecrease={onFontDecrease} onFontReset={onFontReset}
+        user={user} onUpdateStory={onUpdateStory}
         onBack={(nextStory) => {
           if (nextStory && nextStory.id) {
             selectStory(nextStory)

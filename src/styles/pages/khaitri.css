@@ -1,0 +1,122 @@
+/* Khai Trí - List Page */
+.khaitri-page { max-width: 720px; margin: 0 auto; }
+.khaitri-header { text-align: center; padding: 40px 0 20px; }
+.khaitri-sun { margin-bottom: 16px; }
+.khaitri-title {
+  font-family: var(--font-display); font-size: 2.2rem; font-weight: 700;
+  color: var(--gold-bright); margin-bottom: 8px;
+}
+.khaitri-subtitle {
+  font-size: 0.95rem; color: var(--text-dim); font-style: italic;
+}
+
+/* Search */
+.khaitri-search { margin-bottom: 12px; }
+.khaitri-search-input {
+  width: 100%; padding: 12px 16px; font-size: 0.92rem;
+  background: rgba(201,168,108,0.04); border: 1px solid rgba(201,168,108,0.15);
+  border-radius: 12px; color: var(--text); outline: none;
+  transition: border-color 0.3s;
+}
+.khaitri-search-input:focus {
+  border-color: var(--gold);
+}
+.khaitri-search-input::placeholder { color: var(--text-dim); opacity: 0.6; }
+
+/* Tag filters */
+.khaitri-filters {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.khaitri-filter {
+  padding: 6px 14px; font-size: 0.78rem; border-radius: 20px;
+  background: rgba(201,168,108,0.06); border: 1px solid rgba(201,168,108,0.12);
+  color: var(--text-dim); cursor: pointer; transition: all 0.2s;
+}
+.khaitri-filter:hover { border-color: var(--gold); color: var(--gold); }
+.khaitri-filter.active {
+  background: var(--gold); color: #1a1a2e; border-color: var(--gold); font-weight: 600;
+}
+
+/* Count */
+.khaitri-count {
+  font-size: 0.8rem; color: var(--text-dim); margin-bottom: 16px; opacity: 0.7;
+}
+
+/* List items */
+.khaitri-list { display: flex; flex-direction: column; gap: 6px; }
+.khaitri-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; cursor: pointer;
+  background: rgba(201,168,108,0.03); border: 1px solid rgba(201,168,108,0.08);
+  border-radius: 12px; transition: all 0.25s;
+}
+.khaitri-item:hover {
+  background: rgba(201,168,108,0.08); border-color: rgba(201,168,108,0.2);
+  transform: translateX(4px);
+}
+.khaitri-num {
+  font-size: 0.78rem; font-weight: 700; color: var(--gold); opacity: 0.4;
+  min-width: 24px; text-align: center;
+}
+.khaitri-item-content { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.khaitri-tag {
+  font-size: 0.68rem; color: var(--gold); opacity: 0.7;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.khaitri-item-title {
+  font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.4;
+}
+.khaitri-snippet {
+  font-size: 0.78rem; color: var(--text-dim); line-height: 1.4; opacity: 0.7;
+}
+.khaitri-arrow {
+  font-size: 1.2rem; color: var(--gold); opacity: 0.4;
+  transition: opacity 0.2s;
+}
+.khaitri-item:hover .khaitri-arrow { opacity: 0.8; }
+
+/* Load more */
+.khaitri-loadmore { text-align: center; margin-top: 20px; }
+
+/* Empty state */
+.khaitri-empty {
+  text-align: center; padding: 40px; color: var(--text-dim);
+}
+
+/* Detail Page */
+.khaitri-detail { max-width: 720px; margin: 0 auto; padding-top: 24px; }
+.khaitri-detail-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+}
+.khaitri-detail-num {
+  font-size: 1.6rem; font-weight: 800; color: var(--gold); opacity: 0.3;
+}
+.khaitri-detail-tag {
+  font-size: 0.72rem; padding: 3px 10px; border-radius: 12px;
+  background: rgba(201,168,108,0.12); color: var(--gold);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.khaitri-detail-title {
+  font-family: var(--font-display); font-size: 1.8rem; font-weight: 700;
+  color: var(--gold-bright); line-height: 1.3; margin-bottom: 16px;
+}
+.khaitri-detail-question {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 14px 18px; margin-bottom: 16px;
+  background: rgba(201,168,108,0.06); border-left: 3px solid var(--gold);
+  border-radius: 0 10px 10px 0;
+  font-size: 0.92rem; font-style: italic; color: var(--text);
+  line-height: 1.7;
+}
+.khaitri-detail-question svg { flex-shrink: 0; margin-top: 4px; }
+.khaitri-detail-summary {
+  font-size: 0.92rem; color: var(--gold); line-height: 1.7;
+  margin-bottom: 20px; font-weight: 500;
+  padding: 12px 16px;
+  background: rgba(201,168,108,0.04); border-radius: 10px;
+}
+.khaitri-detail-body p {
+  font-size: 0.92rem; line-height: 1.9; color: var(--text-dim);
+  margin-bottom: 14px;
+}
+.khaitri-detail-body p:last-child { margin-bottom: 0; }

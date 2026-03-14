@@ -5,7 +5,7 @@ import ArticlesTab from './admin/ArticlesTab'
 import TopicsTab from './admin/TopicsTab'
 import TranslationsTab from './admin/TranslationsTab'
 import StoriesTab from './admin/StoriesTab'
-import RevelationsTab from './admin/RevelationsTab'
+import KhaiTriTab from './admin/KhaiTriTab'
 import TeachingsTab from './admin/TeachingsTab'
 import PracticesTab from './admin/PracticesTab'
 import SettingsTab from './admin/SettingsTab'
@@ -13,11 +13,11 @@ import HomeSettingsTab from './admin/HomeSettingsTab'
 
 export default function AdminPanel({
   t, lang, user, articles, topics, stories, firestoreVi, firestoreEn,
-  revelations, teachings, practices,
+  khaitri, teachings, practices,
   onAddArticle, onUpdateArticle, onDeleteArticle,
   onAddTopic, onUpdateTopic, onDeleteTopic,
   onAddStory, onUpdateStory, onDeleteStory,
-  onAddRevelation, onUpdateRevelation, onDeleteRevelation,
+  onAddKhaiTri, onUpdateKhaiTri, onDeleteKhaiTri,
   onAddTeaching, onUpdateTeaching, onDeleteTeaching,
   onAddPractice, onUpdatePractice, onDeletePractice,
   onUpdateTranslations,
@@ -55,7 +55,7 @@ export default function AdminPanel({
   const TABS = [
     { id: 'articles', vi: 'Bài viết', en: 'Articles' },
     { id: 'stories', vi: 'Câu chuyện', en: 'Stories' },
-    { id: 'revelations', vi: 'Khai Thị', en: 'Revelations' },
+    { id: 'khaitri', vi: 'Khai Trí', en: 'Khai Trí' },
     { id: 'teachings', vi: 'Giới Thiệu', en: 'Teachings' },
     { id: 'practices', vi: 'Thái Dương Quyền', en: 'Solar Fist' },
     { id: 'topics', vi: 'Chủ đề', en: 'Topics' },
@@ -84,7 +84,7 @@ export default function AdminPanel({
 
       {tab === 'articles' && <ArticlesTab t={t} lang={lang} articles={articles} topics={topics} onAdd={onAddArticle} onUpdate={onUpdateArticle} onDelete={onDeleteArticle} />}
       {tab === 'stories' && <StoriesTab t={t} lang={lang} stories={stories} onAdd={onAddStory} onUpdate={onUpdateStory} onDelete={onDeleteStory} />}
-      {tab === 'revelations' && <RevelationsTab t={t} lang={lang} items={revelations} onAdd={onAddRevelation} onUpdate={onUpdateRevelation} onDelete={onDeleteRevelation} />}
+      {tab === 'khaitri' && <KhaiTriTab t={t} lang={lang} items={khaitri} onAdd={onAddKhaiTri} onUpdate={onUpdateKhaiTri} onDelete={onDeleteKhaiTri} />}
       {tab === 'teachings' && <TeachingsTab t={t} lang={lang} items={teachings} onAdd={onAddTeaching} onUpdate={onUpdateTeaching} onDelete={onDeleteTeaching} />}
       {tab === 'practices' && <PracticesTab t={t} lang={lang} items={practices} onAdd={onAddPractice} onUpdate={onUpdatePractice} onDelete={onDeletePractice} />}
       {tab === 'topics' && <TopicsTab t={t} lang={lang} topics={topics} onAdd={onAddTopic} onUpdate={onUpdateTopic} onDelete={onDeleteTopic} />}
