@@ -14,15 +14,15 @@ import BottomNav from './components/BottomNav'
 import RSSButton from './components/RSSButton'
 
 // Pages
-import HomePage from './pages/HomePage'
-import TopicPage from './pages/TopicPage'
-import ArticleDetail from './pages/ArticleDetail'
-import SearchPage from './pages/SearchPage'
-import ContactPage from './pages/ContactPage'
-import AboutPage from './pages/AboutPage'
-import StoriesPage from './pages/StoriesPage'
-import PracticePage from './pages/PracticePage'
-import KhaiTriPage from './pages/KhaiTriPage'
+const HomePage = lazy(() => import('./pages/HomePage'))
+const TopicPage = lazy(() => import('./pages/TopicPage'))
+const ArticleDetail = lazy(() => import('./pages/ArticleDetail'))
+const SearchPage = lazy(() => import('./pages/SearchPage'))
+const ContactPage = lazy(() => import('./pages/ContactPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const StoriesPage = lazy(() => import('./pages/StoriesPage'))
+const PracticePage = lazy(() => import('./pages/PracticePage'))
+const KhaiTriPage = lazy(() => import('./pages/KhaiTriPage'))
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
@@ -168,6 +168,7 @@ export default function App() {
         />
 
         <main className="container">
+          <Suspense fallback={<div style={{ textAlign: 'center', padding: 40, color: 'var(--text-dim)' }}>Đang tải...</div>}>
           {page === 'home' && (
             <HomePage t={t} lang={lang} topics={TOPICS} articles={allArticles} stories={firestoreStories} loading={loading} navigate={navigate} siteSettings={siteSettings} />
           )}
@@ -207,7 +208,6 @@ export default function App() {
             <ContactPage t={t} />
           )}
           {page === 'admin' && (
-            <Suspense fallback={<div style={{ textAlign: 'center', padding: 40, color: 'var(--text-dim)' }}>Loading...</div>}>
             <AdminPanel
               t={t} lang={lang} user={user}
               articles={allArticles} topics={TOPICS} stories={firestoreStories}
@@ -222,8 +222,8 @@ export default function App() {
               onUpdateTranslations={updateTranslations}
               siteSettings={siteSettings} onUpdateSettings={updateSettings}
             />
-            </Suspense>
           )}
+          </Suspense>
         </main>
 
         <footer className="footer">
