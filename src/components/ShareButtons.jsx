@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
-export default function ShareButtons({ title, articleId, t }) {
+export default function ShareButtons({ title, articleId, shareUrl, t }) {
   const [copied, setCopied] = useState(false)
-  const url = `${window.location.origin}/#article-${articleId}`
+  const url = shareUrl || `${window.location.origin}/#article-${articleId}`
 
   const shareFacebook = () => {
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`, '_blank', 'width=600,height=400')

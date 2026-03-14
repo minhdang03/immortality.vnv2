@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { STORY_TAGS } from '../../data/stories'
+import { storySlug } from '../../utils/slug'
 import SunIcon from '../SunIcon'
 import ShareButtons from '../ShareButtons'
 import InlineEdit from '../InlineEdit'
@@ -108,7 +109,7 @@ export default function StoryDetail({ story, lang, t, navigate, fontSize, onFont
             onDecrease={onFontDecrease}
             onReset={onFontReset}
           />
-          <ShareButtons title={title || ''} articleId={`story-${story.order}`} t={t} />
+          <ShareButtons title={title || ''} shareUrl={`${window.location.origin}/story/${storySlug(story)}`} t={t} />
         </div>
 
         {/* Body */}
@@ -162,7 +163,7 @@ export default function StoryDetail({ story, lang, t, navigate, fontSize, onFont
 
         {/* Share bottom */}
         <div className="detail-share">
-          <ShareButtons title={title || ''} articleId={`story-${story.order}`} t={t} />
+          <ShareButtons title={title || ''} shareUrl={`${window.location.origin}/story/${storySlug(story)}`} t={t} />
         </div>
 
         {/* Prev/Next navigation */}
