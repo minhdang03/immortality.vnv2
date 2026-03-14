@@ -4,6 +4,7 @@ import HomeCardsGrid from './HomeCardsGrid'
 
 const PAGE_OPTIONS = [
   { id: 'home', vi: 'Trang Chủ', en: 'Home' },
+  { id: 'articles', vi: 'Bài Viết', en: 'Articles' },
   { id: 'stories', vi: '37 Chuyện', en: 'Stories' },
   { id: 'khaitri', vi: 'Khai Trí', en: 'Khai Trí' },
   { id: 'about', vi: 'Giới Thiệu', en: 'About' },

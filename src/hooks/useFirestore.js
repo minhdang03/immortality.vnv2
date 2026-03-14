@@ -264,6 +264,7 @@ export const DEFAULT_HERO = {
 
 export const ALL_NAV_PAGES = [
   { id: 'home', labelVi: 'Trang Chủ', labelEn: 'Home' },
+  { id: 'articles', labelVi: 'Bài Viết', labelEn: 'Articles' },
   { id: 'stories', labelVi: '37 Chuyện', labelEn: 'Stories' },
   { id: 'khaitri', labelVi: 'Khai Trí', labelEn: 'Khai Trí' },
   { id: 'about', labelVi: 'Giới Thiệu', labelEn: 'About' },

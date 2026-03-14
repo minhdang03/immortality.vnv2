@@ -20,6 +20,7 @@ const ArticleDetail = lazy(() => import('./pages/ArticleDetail'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
+const ArticlesPage = lazy(() => import('./pages/ArticlesPage'))
 const StoriesPage = lazy(() => import('./pages/StoriesPage'))
 const PracticePage = lazy(() => import('./pages/PracticePage'))
 const KhaiTriPage = lazy(() => import('./pages/KhaiTriPage'))
@@ -51,46 +52,47 @@ export default function App() {
     catch { /* not configured */ }
   }, [])
 
-  // Hash routing
-  const applyHash = () => {
-    const hash = window.location.hash.slice(1)
-    if (!hash || hash === '/') { setPage('home'); return }
-    if (hash.startsWith('/topic/')) { setSelectedTopic(hash.slice(7)); setPage('topic'); return }
-    if (hash.startsWith('/article/')) {
-      const slug = hash.slice(9)
+  // History API routing
+  const applyPath = () => {
+    const path = window.location.pathname
+    if (!path || path === '/') { setPage('home'); return }
+    if (path.startsWith('/topic/')) { setSelectedTopic(path.slice(7)); setPage('topic'); return }
+    if (path.startsWith('/article/')) {
+      const slug = path.slice(9)
       const found = allArticles.find(a => articleSlug(a) === slug || String(a.id) === slug)
       if (found) { setSelectedArticle(found); setPage('article') }
       return
     }
-    if (hash === '/search') { setPage('search'); return }
-    if (hash === '/contact') { setPage('contact'); return }
-    if (hash === '/about') { setPage('about'); return }
-    if (hash === '/stories' || hash.startsWith('/story/')) { setPage('stories'); return }
-    if (hash === '/practice') { setPage('practice'); return }
-    if (hash === '/khaitri' || hash.startsWith('/khaitri/') || hash === '/revelations') { setPage('khaitri'); if (hash === '/revelations') window.location.hash = '/khaitri'; return }
-    if (hash === '/admin') { setPage('admin'); return }
+    if (path === '/articles') { setPage('articles'); return }
+    if (path === '/search') { setPage('search'); return }
+    if (path === '/contact') { setPage('contact'); return }
+    if (path === '/about') { setPage('about'); return }
+    if (path === '/stories' || path.startsWith('/story/')) { setPage('stories'); return }
+    if (path === '/practice') { setPage('practice'); return }
+    if (path === '/khaitri' || path.startsWith('/khaitri/') || path === '/revelations') { setPage('khaitri'); if (path === '/revelations') history.replaceState({}, '', '/khaitri'); return }
+    if (path === '/admin') { setPage('admin'); return }
   }
 
-  const hashAppliedRef = useRef(false)
+  const pathAppliedRef = useRef(false)
   useEffect(() => {
-    if (hashAppliedRef.current) return
-    const hash = window.location.hash.slice(1)
-    // Article routes need articles data — wait until loaded
-    if (hash?.startsWith('/article/') && allArticles.length === 0) return
-    applyHash()
-    hashAppliedRef.current = true
+    if (pathAppliedRef.current) return
+    const path = window.location.pathname
+    if (path?.startsWith('/article/') && allArticles.length === 0) return
+    applyPath()
+    pathAppliedRef.current = true
   }, [allArticles.length])
 
   useEffect(() => {
-    const onHashChange = () => applyHash()
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
+    const onPopState = () => applyPath()
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
   })
 
   useEffect(() => { window.scrollTo(0, 0) }, [page, selectedArticle])
 
   // SEO - page titles
   const PAGE_TITLES = {
+    articles: { vi: 'Bài Viết', en: 'Articles' },
     stories: { vi: '37 Câu Chuyện', en: '37 Stories' },
     khaitri: { vi: 'Khai Trí', en: 'Khai Trí' },
     about: { vi: 'Giới Thiệu', en: 'About' },
@@ -109,6 +111,7 @@ export default function App() {
   }
 
   const PAGE_DESCRIPTIONS = {
+    articles: { vi: 'Tất cả bài viết về tâm linh, sức khỏe và bất tử.', en: 'All articles on spirituality, health and immortality.' },
     stories: { vi: 'Những câu chuyện thật về hành trình chữa lành và giác ngộ tâm linh.', en: 'True stories of healing and spiritual awakening.' },
     khaitri: { vi: 'Hỏi đáp trí tuệ — giải đáp những câu hỏi về tâm linh, sức khỏe và bất tử.', en: 'Q&A wisdom — answers on spirituality, health, and immortality.' },
     about: { vi: 'Tìm hiểu về Bất Tử Đạo và phương pháp năng lượng Mặt Trời.', en: 'Learn about the Path of Immortality and the Solar Energy method.' },
@@ -146,13 +149,13 @@ export default function App() {
     setMenuOpen(false)
     if (p === 'topic') {
       setSelectedTopic(extra); setPage('topic')
-      window.location.hash = `/topic/${extra}`
+      history.pushState({}, '', `/topic/${extra}`)
     } else if (p === 'article') {
       setSelectedArticle(extra); setPage('article')
-      window.location.hash = `/article/${articleSlug(extra)}`
+      history.pushState({}, '', `/article/${articleSlug(extra)}`)
     } else {
       setPage(p)
-      window.location.hash = p === 'home' ? '/' : `/${p}`
+      history.pushState({}, '', p === 'home' ? '/' : `/${p}`)
     }
   }
 
@@ -188,6 +191,9 @@ export default function App() {
           )}
           {page === 'about' && (
             <AboutPage t={t} lang={lang} teachings={teachings} />
+          )}
+          {page === 'articles' && (
+            <ArticlesPage t={t} lang={lang} articles={allArticles} topics={TOPICS} navigate={navigate} />
           )}
           {page === 'stories' && (
             <StoriesPage t={t} lang={lang} firestoreStories={firestoreStories} navigate={navigate}
