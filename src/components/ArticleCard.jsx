@@ -1,4 +1,5 @@
 import ShareButtons from './ShareButtons'
+import { articleSlug } from '../utils/slug'
 
 export default function ArticleCard({ article, lang, t, index, navigate }) {
   const d = article[lang]
@@ -16,7 +17,7 @@ export default function ArticleCard({ article, lang, t, index, navigate }) {
       <div className="article-actions">
         <button className="btn-read" onClick={goToArticle}>{t.readMore}</button>
         <button className="btn-video">{t.watchVideo}</button>
-        <ShareButtons title={d.title} articleId={article.id} t={t} />
+        <ShareButtons title={d.title} shareUrl={`${window.location.origin}/article/${articleSlug(article)}`} t={t} />
       </div>
     </div>
   )

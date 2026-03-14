@@ -85,6 +85,19 @@ async function findStory(slug) {
   return null
 }
 
+async function findArticle(slug) {
+  const snap = await getDocs(collection(db, 'articles'))
+  for (const d of snap.docs) {
+    const data = d.data()
+    const title = data.vi?.title || data.en?.title || ''
+    const s = toSlug(title) || d.id
+    if (s === slug || d.id === slug) {
+      return { id: d.id, ...data }
+    }
+  }
+  return null
+}
+
 async function findKhaiTri(slug) {
   const q = query(collection(db, 'khaitri'), orderBy('order', 'asc'))
   const snap = await getDocs(q)
@@ -118,6 +131,23 @@ export default async function handler(req, res) {
           title: `${title} | ${SITE_NAME}`,
           description: desc,
           url: `${SITE_URL}/story/${storyMatch[1]}`,
+        }))
+      }
+    }
+
+    // /article/{slug}
+    const articleMatch = p.match(/^\/article\/(.+)$/)
+    if (articleMatch) {
+      const article = await findArticle(articleMatch[1])
+      if (article) {
+        const title = article.vi?.title || article.en?.title || ''
+        const summary = article.vi?.summary || article.en?.summary || ''
+        const desc = summary || (article.vi?.body || '').slice(0, 160).replace(/\n/g, ' ')
+        res.setHeader('Content-Type', 'text/html; charset=utf-8')
+        return res.send(renderOgPage({
+          title: `${title} | ${SITE_NAME}`,
+          description: desc,
+          url: `${SITE_URL}/article/${articleMatch[1]}`,
         }))
       }
     }

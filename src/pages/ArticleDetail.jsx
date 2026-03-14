@@ -4,6 +4,7 @@ import Comments from '../components/Comments'
 import ArticleCard from '../components/ArticleCard'
 import InlineEdit from '../components/InlineEdit'
 import { ReadingProgress, ReadingTime, FontSizeControls } from '../components/ReadingHelpers'
+import { articleSlug } from '../utils/slug'
 
 function TableOfContents({ body, lang }) {
   const paragraphs = useMemo(() => {
@@ -106,7 +107,7 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
             onDecrease={onFontDecrease}
             onReset={onFontReset}
           />
-          <ShareButtons title={d?.title || ''} articleId={article.id} t={t} />
+          <ShareButtons title={d?.title || ''} shareUrl={`${window.location.origin}/article/${articleSlug(article)}`} t={t} />
         </div>
 
         {/* TOC for long articles */}
@@ -126,7 +127,7 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
         </div>
 
         <div className="detail-share">
-          <ShareButtons title={d?.title || ''} articleId={article.id} t={t} />
+          <ShareButtons title={d?.title || ''} shareUrl={`${window.location.origin}/article/${articleSlug(article)}`} t={t} />
         </div>
 
         {/* Related articles */}
