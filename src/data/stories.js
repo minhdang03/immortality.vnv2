@@ -1387,6 +1387,175 @@ The Immortal shook Brother Son's hand:
 Brother Son:
 -- Lion's Roar is very formidable.`,
   },
+  8: {
+    vi: `Người Bất Tử đang tập luyện võ công đến 11 giờ đêm thì bỗng nghe Tiếng lạ (Off) vang lên:
+"Con muốn nhìn thấy người yêu trong tương lai của mình hay không?"
+Người Bất Tử cảm thấy tò mò:
+-- Làm sao để thấy người yêu trong tương lai được?
+Tiếng lạ (Off):
+"Con đi tìm một cây đèn dầu và một cái gương soi mặt. 12 giờ đêm nay, ta sẽ dạy."
+Đúng 12 giờ đêm.
+Tiếng lạ (Off):
+"Con đốt đèn lên, để cạnh chiếc gương soi và nhìn vào mặt gương. Từ một phút đến 30 phút thì hình ảnh người yêu tương lai của con sẽ hiện ra."
+Người Bất Tử đốt sáng đèn, ngồi nhìn vào gương. 60 phút trôi qua. Vẫn không thấy bóng hình ai.
+Tiếng lạ (Off):
+"Hôm nay nhìn không thấy thì ngày mai con nhé."
+
+Người Bất Tử tắt đèn, nằm ngửa trên chiếu, nhắm mắt ngủ. Bỗng nhìn thấy ánh sáng phát ra từ giữa trán. Linh hồn Người Bất Tử chui ra khỏi trán, bay lên cao đụng nóc nhà, bay xuyên tấm tôn fibro.
+Bay ngang cây dừa, đụng trúng con quỷ cái đang ngồi trên cây.
+Quỷ cây dừa, 60 tuổi, bận bộ đồ màu trắng, tóc dài, khuôn mặt xương, hốc mắt đen, lỗ mũi thở xì khói xanh, miệng há to, hai chiếc răng nanh dài một tấc.
+Người Bất Tử hoảng hốt bay ra khỏi cây dừa.
+Quỷ cây dừa hai bàn tay mười móng nhọn chụp vào cổ. Linh hồn Người Bất Tử tung ra một cú đá trúng vào đầu. Bùm! Cái đầu quỷ cây dừa xoay tròn 3 vòng. Bay ra, hai răng nanh cắn vào cổ.
+Linh hồn Người Bất Tử bàn tay chặt xuống đỉnh đầu quỷ cây dừa. Cái đầu tét ra làm hai, dòi bọ bò lúc nhúc. Hai cái đầu liền phun ra những con dòi bay tới vèo vèo, bu cắn.
+Linh hồn Người Bất Tử quằn quại, chuyển thành màu xanh đen hôi thối và rơi xuống.
+Tiếng lạ (Off) vang lên:
+"Con hãy nghĩ đến ánh sáng mặt trời."
+Người Bất Tử liền nghĩ đến mặt trời. Một tia sáng màu hồng vàng từ vũ trụ chiếu xuống. Làn khói đen hôi thối tan biến mất. Linh hồn Người Bất Tử bay lên cao.
+
+Quỷ cây dừa phóng bàn tay phải dài ngoằng nắm cổ chân kéo xuống.
+Linh hồn Người Bất Tử bàn tay ánh sáng chém xuống, đứt cánh tay phải. Quỷ cây dừa máu đen phun ra như suối. Rồi bắn luồng máu đen axit bao phủ. Linh hồn Người Bất Tử bị đốt cháy lốm đốm nhiều nơi.
+Quỷ cây dừa há to miệng bắn ra những quả dừa xanh bay tới.
+Tiếng lạ (Off):
+"Khi con đánh thì nghĩ đến ánh sáng."
+Linh hồn Người Bất Tử hai bàn tay đánh ra hai luồng ánh sáng đỏ. Đụng vào những quả dừa ma thì phát nổ ầm ầm. Tan xác trong không trung.
+Quỷ cây dừa từ cặp mắt bắn ra hai luồng ánh sáng màu đen bốc mùi hôi thối. Linh hồn Người Bất Tử bị bắn trúng ngực, thủng hai lỗ, xì máu đỏ.
+Quỷ cây dừa bay ra, há to miệng phun ra luồng khí độc đen ngòm.
+Linh hồn Người Bất Tử từ mắt thứ 3 phóng ra những tia lửa điện xanh đỏ, đụng vào luồng khí đen thì phát nổ ì ầm trong không gian.
+Quỷ cây dừa bị sóng âm thanh đánh trúng, miệng ói máu đen, bay về cây dừa lẩn trốn.
+Một tia điện sấm sét từ vũ trụ đánh xuống trúng vào cây dừa. Nổ ầm ầm! Quỷ cây dừa bốc cháy, tan biến mất.
+
+Linh hồn Người Bất Tử cũng bị nổ tung, thành hàng trăm ngàn mảnh vụn.
+Tiếng lạ (Off):
+"Con đừng sợ chết. Linh hồn bất tử. Cứ để linh hồn tự do, tan biến và hợp lại."
+Linh hồn Người Bất Tử hội tụ lại. Bay theo tia lửa điện bắn xuyên xuống lòng đất. Tia lửa điện bắn vào túi khí metan dưới lòng đất. Phát nổ ầm ầm, rung chuyển lòng đất, tạo thành cơn địa chấn.
+Sóng địa chấn đẩy linh hồn Người Bất Tử bay xuyên qua trung tâm địa cầu. Một quả cầu lửa cháy đỏ xoay nhanh. Quả cầu lửa bắn ra những tia lửa. Linh hồn Người Bất Tử hai bàn tay đánh ra những luồng ánh sáng vàng trắng. Đụng vào tia lửa, nổ ầm ì trong lòng đất.
+Linh hồn Người Bất Tử bị sóng âm thanh đẩy bay lên, nhập vào xác. Giật mình thức dậy, cơ thể ê ẩm, như vừa mới bị ai đánh.`,
+    en: ``,
+  },
+  9: {
+    vi: `Người Bất Tử đang ngồi trong nhà uống nước trà thì người bạn thân tên Trí Dũng và một thanh niên bước vào.
+Người Bất Tử tay cầm bình trà rót vào ly:
+-- Lâu quá không gặp bạn. Ngồi uống trà đi.
+Trí Dũng ngồi xuống ghế, tay nâng ly trà hớp một ngụm rồi nói:
+-- Thằng em này bị bệnh, đã đi nhiều thầy chữa rồi nhưng không khỏi. Hôm nay đến nhờ bạn xem và cứu giúp.
+Người bệnh, ốm cao, khuôn mặt xương, cặp mắt vô thần, miệng chảy nước dãi, đứng ngoài sân không chịu vào.
+Người Bất Tử:
+-- Đến đây rồi sao không vào nhà ngồi?
+Người bệnh:
+-- Ở đây nguy hiểm quá. Thôi tao đi về.
+Rồi nhìn Người Bất Tử:
+-- Ông biết tôi là ai không?
+Người bệnh nhìn thẳng:
+-- Ông có con hổ già.
+Người Bất Tử:
+-- Còn ông là con hổ hoang, đúng không?
+
+Hổ Hoang miệng gầm gừ, nhào tới, hai bàn tay hổ cào vào mặt.
+Người Bất Tử hai tay Thần Hổ xoay chuyển. Bụp bụp!
+Hổ Hoang người thấp xuống, hai tay hổ cào cấu vào bụng.
+Người Bất Tử tung ra một cú đá quét cao trúng vào đầu. Hổ Hoang té xuống đất, lăn một vòng đứng lên, bỏ chạy ra ngoài sân.
+Người Bất Tử tung ra một cú đá cách xa 4 mét. Hổ Hoang té xuống đất, run sợ:
+-- Xin thầy tha mạng.
+Người Bất Tử đi đến gần:
+-- Tại sao mày nhập vào người này?
+Hổ Hoang:
+-- Tao đang ngồi canh giữ trước cổng chùa thì thằng này đến cầu xin sức khỏe và tiền bạc. Sau đó nó sờ lên đầu tao và chà lên đầu của nó. Nó hút vong hồn tao vào cơ thể nó, chứ tao đâu có tự nhập vào nó đâu.
+Người Bất Tử:
+-- Bây giờ mày có muốn trở về tượng hổ ở chùa hay không?
+Hổ Hoang:
+-- Không. Tao chỉ muốn thoát khỏi cái tượng cốt xi măng đó mà không được, vì bị pháp sư bắt nhốt vào trong đó. Hôm nay nhờ thầy giúp tôi giải thoát.
+
+Người Bất Tử tay phải phóng ra một luồng ánh sáng màu vàng trắng bao phủ thân thể Hổ Hoang.
+Hổ Hoang há miệng ói ra những âm hồn thú vật đã ăn. Cơ thể Hổ Hoang dần sáng lên và bay vào vũ trụ biến mất.
+Người bệnh cơ thể co giật vài cái rồi tỉnh lại:
+-- Con hổ đó đã bay đi mất rồi.
+Trí Dũng:
+-- Đây là thầy Lợi mới vừa giúp mày tỉnh lại.
+Người bệnh:
+-- Cảm ơn thầy đã giúp.`,
+    en: ``,
+  },
+  10: {
+    vi: `Theo cơ quan khí tượng thông báo, có áp thấp gần bờ biển Cần Giờ đang hình thành cơn bão cấp 12. Chính quyền đã di chuyển người dân khỏi vùng nguy hiểm. Mây đen che phủ cả bầu trời Thành phố Hồ Chí Minh, những hạt mưa rơi lất phất. Cơn bão có thể di chuyển vào tới thành phố.
+Tiếng lạ (Off):
+"Con mau đi đến núi Bà Đen, Tây Ninh, để làm phương án hóa giải."
+Bão Quỷ há miệng rộng, chiếc lưỡi đen ngòm thè dài ra tới lòng đất, xoay tròn, hút mây đen, âm khí lạnh, khí metan cacbonic và những vong hồn động thực vật ở dưới địa cầu bay lên.
+Người Bất Tử lên xe khách đi đến núi Bà Đen. Mây đen che phủ đỉnh núi, mưa rơi tầm tã, gió giông mạnh làm gãy đổ cành cây. Rất nguy hiểm khi ngồi trên cáp treo.
+Người Bất Tử tìm đến một nơi vắng vẻ: hang động Ông Hổ. Bên trong có vài tảng đá lớn, một dòng nước trong từ vách núi chảy ra, những hạt cát vàng óng ánh. Ngồi xuống một tảng đá lớn bằng phẳng. Phi thuyền. Linh hồn bay ra ngoài để làm việc.
+
+Bỗng nhiên 4 Ma Đồng Tử xuất hiện. 10 tuổi, đầu ba chỏm, quần dài, áo yếm đỏ, đi hài đỏ, bao vây.
+4 Đồng Tử đánh ra 8 tia lửa điện màu xanh xẹt đến.
+Linh hồn Người Bất Tử xoay tròn, phóng ra ánh sáng màu vàng bao phủ cơ thể. 8 tia lửa điện đụng trúng ánh sáng vàng, phát nổ ầm ầm rung chuyển cả hang động. 4 Ma Đồng Tử bị bắn trúng, bay đụng vách hang. Ầm!
+Ma Đạo Sĩ bước vào. 70 tuổi, quần áo trắng, râu tóc bạc, tay cầm cây phất trần, tay bắt ấn để giữa ngực.
+4 Ma Đồng Tử vòng tay:
+-- Kính thưa sư phụ, có yêu tinh vào đây chiếm hang động, còn đánh tụi con bị trọng thương.
+Ma Đạo Sĩ không cần hỏi chuyện đúng sai, đã ra tay. Cầm cây phất trần đánh tới, một luồng cuồng phong âm khí lạnh bay tới.
+Linh hồn Người Bất Tử đưa bàn tay phải phóng ra một luồng lửa đỏ. Hai luồng khí nóng lạnh hút nhau, xoay tròn thành một quả bóng to rồi phát nổ. Bùm bùm! Chấn động sóng âm thanh.
+Ma Đạo Sĩ bị đẩy bay đụng vách núi. Rầm! Miệng rỉ máu.
+Người Bất Tử thân hình lảo đảo tựa vào vách đá.
+Ma Đạo Sĩ tay bắt ấn, miệng đọc thần chú, phun ra một đạo bùa trừ quỷ bay tới.
+Linh hồn Người Bất Tử tay phải đánh ra một tia điện sấm sét đụng vào lá bùa, phát nổ ì ầm, bụi cát trên vách hang rơi xuống.
+Ma Đạo Sĩ bị tia sét bắn trúng, tay ôm ngực, miệng trào máu xanh.
+4 Ma Đồng Tử bay tới đỡ:
+-- Sư phụ có sao không?
+Ma Đạo Sĩ đọc thần chú, mở xiềng xích, thả Ma Hổ ra. To lớn như con bò mộng, há miệng gầm gừ, hàm răng nanh lòi ra, 10 móng vuốt nhọn chụp vào cổ họng.
+Linh hồn Người Bất Tử đánh ra một bàn tay ánh sáng vàng, chân đá trúng vào ngực. Ma Hổ bay đụng vách đá. Ầm!
+Ma Hổ nhảy lên trên hang động, từ trên cao bay xuống há miệng cắn vào đầu.
+Linh hồn Người Bất Tử ngã người tung cú đá vào bụng. Ma Hổ bay đụng vách tường, té xuống đất nằm yên bất tỉnh.
+Linh hồn Người Bất Tử tay phải phóng ra một cây đại đao, chặt ngang đầu Ma Hổ.
+Ma Đạo Sĩ:
+-- Xin thầy dừng tay! Tha cho nó!
+Linh hồn Người Bất Tử thu cây đao ánh sáng về:
+-- Tôi chỉ tạm mượn hang động này để hóa giải Bão Quỷ, giúp chúng sanh.
+Ma Đạo Sĩ:
+-- Chúng tôi tưởng thầy là quỷ quái đến đây chiếm hang động.
+4 Ma Đồng Tử vòng tay cung kính:
+-- Xin lỗi thầy, bọn con đã mạo phạm.
+Linh hồn Người Bất Tử:
+-- Chỉ là hiểu nhầm. Tôi chưa kịp giải thích.
+Ma Đạo Sĩ:
+-- Thầy trò tôi và Ma Hổ sẽ bảo vệ bên ngoài để thầy an tâm làm việc với Bão Quỷ.
+Linh hồn Người Bất Tử:
+-- Xin cảm ơn đạo sĩ và các đệ tử đã giúp đỡ.
+
+Linh hồn Người Bất Tử bay tới trước mặt Bão Quỷ. Bão Quỷ phóng hai bàn tay lông lá đen xì, bắn ra 10 tia điện sấm sét. Nổ ì ầm!
+Linh hồn Người Bất Tử hai bàn tay ánh sáng bắn ra 10 tia điện mặt trời. Hai luồng điện chạm vào nhau, phát nổ ầm ầm. Hàng ngàn tia sóng xung kích bắn đứt hai cánh tay Bão Quỷ. Đau đớn tức giận gầm rú.
+Linh hồn Người Bất Tử bị đẩy bay lộn vòng tròn xa hơn 10 mét. Linh hồn bị thủng nhiều lỗ to bằng nắm tay.
+Bão Quỷ điều khiển vòi rồng xoay nhanh, tăng tốc, hút khí metan cacbonic dưới lòng đất. Cái bụng phình to như sắp nổ.
+Linh hồn Người Bất Tử bàn tay phải phóng ra một thanh kiếm ánh sáng khổng lồ, chém đứt vòi rồng. Bão Quỷ thân hình co giật mạnh.
+Linh hồn Người Bất Tử bắn ra một mũi tên ánh sáng khổng lồ bay thẳng vào mắt Bão Quỷ. Bão Quỷ há miệng hút mũi tên ánh sáng vào bụng. Phát ra tiếng nổ ì ầm. Rồi há miệng phun ra những âm hồn người và ma động thực vật.
+Ma thực vật phóng ra những chiếc rễ dài màu xanh cuộn chặt. Linh hồn Người Bất Tử biến thành một lưỡi cưa xoay nhanh như chong chóng. Ma thực vật bị cắt đứt từng đoạn.
+Ma trâu bò bay tới, sừng nhọn hoắt đâm tan nát. Linh hồn Người Bất Tử tan ra thành nhiều mảnh vụn rồi hợp nhất trở lại. Xoay tròn bắn ra tia lửa đỏ. Nổ ì ầm. Bầy ma trâu bò kêu rống rồi tan biến.
+Ma bọ cạp khổng lồ bay tới, mở to cặp càng đen xì, kẹp đứt ngang mình linh hồn Người Bất Tử làm hai.
+Bão Quỷ há miệng cười đắc chí:
+-- Con người làm sao thắng được thế lực ma quỷ!
+Cái đầu linh hồn Người Bất Tử từ giữa trán, mắt thứ 3, phóng ra một tia sáng biến thành một con chồn hôi khổng lồ. Bay tới, hàm răng nhọn cắn vào đầu Ma Bọ Cạp. Cặp càng kẹp vào cổ, đuôi đâm vào đầu. Hai con lăn lộn nhiều vòng. Chồn hôi co giật vì trúng độc. Ma Bọ Cạp đầu bị đứt đôi, tan biến.
+Ma Rết khổng lồ, hàng trăm chân sắc như dao nhọn bay tới, siết chặt quanh mình chồn hôi. Hai răng nanh cắn vào cổ. Chồn hôi bị đâm thủng nát, nhưng há miệng cắn nát đầu Ma Rết. Uốn éo giãy chết, tan biến.
+Ma Rắn Hổ khổng lồ bay tới, phùng mang mổ vào đầu chồn hôi đang giãy chết. Há to miệng nuốt chửng. Chồn hôi ở trong bụng há cắn đứt ruột Ma Rắn Hổ. Quằn quại rồi tan biến.
+Cái đầu linh hồn Người Bất Tử bay tới gắn lại với thân mình.
+Bão Quỷ điều khiển hàng trăm ma người tay cầm gậy, dao, búa, cuốc, xẻng bay tới đâm chém.
+Linh hồn Người Bất Tử hai bàn tay đánh ra hàng trăm tia điện. Nổ ì ầm. Hàng trăm ma người tan thành mây khói.
+Bão Quỷ bắn ra tia điện sấm sét đánh trúng. Linh hồn Người Bất Tử co giật mạnh, như sắp tan biến.
+Bão Quỷ há miệng gầm thét, sấm sét nổ ì ầm, sóng âm thanh vang dội, tạo nên cuồng phong giật cấp 20.
+
+Tiếng lạ (Off) vang lên:
+"Trong não con có một lỗ đen tiểu vũ trụ. Hãy kích hoạt và phóng ra."
+Linh hồn Người Bất Tử từ mắt thứ 3 bắn ngược một tia điện vào trung tâm não giữa để kích hoạt. Tiểu Vũ Trụ phóng ra một lỗ đen xoay tròn, hút những tia sấm sét ma bay vào. Tiếng nổ ì ầm rồi tan biến.
+Bão Quỷ bắn ra một vòi rồng đen xoay nhanh tốc độ cấp 30, hút năng lượng lỗ đen.
+Linh hồn Người Bất Tử há miệng phóng ra một vòi rồng ánh sáng vàng xoay nhanh cấp 30. Hai vòi hút chặt vào nhau, tạo sức hút năng lượng đối phương.
+Vòi rồng ma tăng tốc lên cấp 50, hút vòi rồng ánh sáng về phía mình.
+Vòi rồng ánh sáng xoay nhanh hơn, tăng tốc lên cấp 100.
+Vòi rồng ma bị xé toạc. Bão Quỷ suy yếu, bỏ chạy ra ngoài biển khơi, tan thành áp thấp, dần tan biến mất.
+
+Linh hồn Người Bất Tử bay về.
+Ma Đạo Sĩ:
+-- Xin ngài giúp chúng tôi thoát khỏi nơi đây với.
+Linh hồn Người Bất Tử:
+-- Đạo Sĩ, nếu muốn thoát khỏi nơi đây, trước tiên phải cởi bỏ, đốt cháy y phục và bửu bối tu luyện. Quên hết quá khứ và hiện tại.
+Đạo Sĩ và những đệ tử làm y theo.
+Người Bất Tử miệng đọc tiếng lạ kích hoạt năng lượng từ vũ trụ. Một vòng tròn ánh sáng màu vàng trắng xoay tròn chiếu xuống, chữa lành bệnh cho Ma Đạo Sĩ, 4 Đồng Tử, Ma Hổ. Linh hồn sáng đẹp, bay về vũ trụ biến mất.`,
+    en: ``,
+  },
 }
 
 export const STORY_LESSONS = {
@@ -1574,6 +1743,78 @@ Respecting the opponent after battle. "Shaking Brother Son's hand: 'Your martial
 
 Story 7 poses the central question for the entire journey: where does strength come from? Borrowed from outside (ghosts, sorcery, incantations) — quick power but the body pays the price. Activated from within (solar energy, cosmic energy) — takes time but causes no self-harm. Cu Teo's bleeding knees are the clearest image: shortcuts always leave wounds on the person walking them.`,
   },
+  8: {
+    vi: `Vũ trụ dạy bằng cách dụ, không ép: "Con muốn nhìn thấy người yêu tương lai không?" Dùng tò mò tự nhiên để đưa vào bài học thật. Chiếc gương chỉ là cái cớ tạo trạng thái tĩnh lặng, chuẩn bị cho xuất hồn.
+
+Linh hồn lần đầu rời khỏi xác qua mắt thứ 3, bay ra từ giữa trán. Phi thuyền không phải máy bay, phi thuyền là linh hồn bay.
+
+Khi bị dòi bu cắn quằn quại, Tiếng lạ (Off) chỉ nói một câu: "Con hãy nghĩ đến ánh sáng mặt trời." Một tia sáng từ vũ trụ chiếu xuống, mọi thứ tan biến. Cùng nguyên lý từ câu 4, 5, 6 — ánh sáng là vũ khí duy nhất ở mọi cấp độ.
+
+"Con đừng sợ chết. Linh hồn bất tử. Cứ để linh hồn tự do, tan biến và hợp lại." Đây là câu nói quan trọng nhất trong toàn bộ 37 câu chuyện. Buông nỗi sợ chết thì linh hồn tự do. Tự do thì bất tử.
+
+Hành trình trong một đêm: từ nhà lên trời đánh quỷ, bay xuống lòng đất, xuyên qua trung tâm địa cầu, rồi quay về xác. Vũ trụ không chỉ ở trên cao, dưới chân ta cũng là vũ trụ.
+
+Thức dậy cơ thể ê ẩm: trận đánh ở thế giới linh hồn để lại dấu vết trên thân xác. Hai thế giới không tách rời.`,
+    en: `The universe teaches through temptation, not force: "Do you want to see your future love?" Using natural curiosity to lead into the real lesson. The mirror was merely a pretext to create stillness, preparing for soul departure.
+
+The soul left the body for the first time through the third eye, emerging from the center of the forehead. The spacecraft isn't an airplane — the spacecraft is the flying soul.
+
+When tormented by maggots biting, the Strange Voice (Off) said only one sentence: "Think of sunlight." A ray of light from the universe descended, and everything dissolved. The same principle from Stories 4, 5, 6 — light is the only weapon at every level.
+
+"Don't fear death. The soul is immortal. Let the soul be free, dissolve, and reunite." This is the most important statement across all 37 stories. Release the fear of death and the soul becomes free. Free means immortal.
+
+Journey in one night: from home up to battle the coconut ghost, down into the earth, through the earth's core, then back to the body. The universe isn't only above — beneath our feet is also universe.
+
+Waking with a sore body: the battle in the spirit world leaves marks on the physical body. Two worlds are not separate.`,
+  },
+  9: {
+    vi: `Hổ Hoang không tự nhập. Người bệnh đi chùa, sờ đầu tượng hổ, chà lên đầu mình, tự hút vong hồn vào. Tai họa do chính mình gây ra vì thiếu hiểu biết.
+
+Hổ Hoang cũng là nạn nhân: bị pháp sư bắt nhốt vào tượng xi măng, muốn thoát mà không được. Không phải mọi "ma quỷ" đều ác, có những linh hồn bị giam cầm, chờ người giải thoát.
+
+Phần âm nhìn thấy nhau trước khi con người kịp nói. Hổ Hoang nhận ra Người Bất Tử "có con hổ già." Chẩn đoán thật sự xảy ra ở tầng năng lượng.
+
+Cú đá cách 4 mét vẫn trúng: năng lượng không bị giới hạn bởi khoảng cách vật lý. Thái Dương Quyền phóng ra theo ý chí.
+
+Hổ Hoang ói ra những âm hồn thú vật đã ăn: muốn giải thoát phải trả lại hết những gì đã nuốt vào. Thanh lọc trước, giải thoát sau. Không có bước tắt.
+
+Không đánh chết, không trừ diệt. Giao tiếp, hiểu hoàn cảnh, chiếu ánh sáng, để linh hồn tự bay đi. Quy trình bốn bước: nhận diện → giao tiếp → chiếu sáng → để tự giải thoát.`,
+    en: `The Wild Tiger didn't enter on its own. The sick man went to the temple, touched the tiger statue's head, rubbed it on his own head, drawing the soul into himself. The disaster was self-caused through ignorance.
+
+The Wild Tiger was also a victim: imprisoned in the cement statue by a sorcerer, unable to escape. Not all "demons" are evil — some souls are imprisoned, waiting for liberation.
+
+The spirit realm recognizes each other before humans can speak. The Wild Tiger recognized The Immortal "has an old tiger." True diagnosis happens at the energy level.
+
+A kick from 4 meters away still landed: energy is not limited by physical distance. Solar Fist projects through will.
+
+The Wild Tiger vomited out the animal souls it had eaten: to be freed, one must return everything swallowed. Purification first, liberation after. No shortcuts.
+
+No killing, no elimination. Communicate, understand the circumstances, shine light, let the soul fly away on its own. The four-step process: identify → communicate → illuminate → allow self-liberation.`,
+  },
+  10: {
+    vi: `Bị hiểu lầm là kẻ xấu khi đang làm việc tốt. Ma Đạo Sĩ "không cần hỏi chuyện đúng sai, đã ra tay." Hành động theo giả định, không xác minh. Sau khi hiểu, từ kẻ thù thành đồng minh bảo vệ.
+
+"Trong não con có một lỗ đen tiểu vũ trụ." Lần đầu tiết lộ bên trong não người có tiểu vũ trụ. Câu 1: tia sét khai mở não giữa. Câu 8: mắt thứ 3 xuất hồn. Câu 10: lỗ đen được kích hoạt. Mỗi câu mở thêm một tầng sức mạnh mới.
+
+Linh hồn bị kẹp đứt đôi, tan nát, vẫn chiến đấu. Bão Quỷ cười đắc chí nhưng không hiểu: linh hồn bất tử không bị giết bằng cách chia cắt.
+
+Vòi rồng ma cấp 50 thua vòi rồng ánh sáng cấp 100. Bóng tối mạnh đến đâu cũng có trần. Ánh sáng không có trần khi kết nối với nguồn vô hạn.
+
+Bão Quỷ không bị giết, bị đẩy ra biển và tự tan. Nhiều vấn đề không cần tiêu diệt, chỉ cần cắt nguồn nuôi dưỡng rồi để tự tan theo thời gian.
+
+Muốn giải thoát phải cởi bỏ hết: y phục, bửu bối, quá khứ. Ma Đạo Sĩ tu luyện mấy trăm năm, bửu bối đầy mình, vẫn không siêu thoát. Chính những thứ giúp ta mạnh trong quá khứ là xiềng xích giữ ta lại. Giải thoát không phải thêm vào, mà là bỏ đi.`,
+    en: `Misunderstood as evil while doing good. The Taoist Master "acted without asking who was right or wrong." Acting on assumption, without verification. After understanding, enemy becomes protective ally.
+
+"Inside your brain there is a black hole micro-universe." The first revelation that inside the human brain is a micro-universe. Story 1: lightning opened the midbrain. Story 8: third eye for soul departure. Story 10: black hole activated. Each story opens another layer of new power.
+
+Soul cut in half, shattered, still fought on. The Storm Demon laughed triumphantly but didn't understand: an immortal soul cannot be killed by separation.
+
+The demon tornado at level 50 lost to the light tornado at level 100. Darkness has a ceiling no matter how strong. Light has no ceiling when connected to an infinite source.
+
+The Storm Demon wasn't killed — pushed out to sea and dissolved on its own. Many problems don't need elimination, only cutting off their source of nourishment and letting them dissolve over time.
+
+To be liberated, one must shed everything: robes, treasures, past. The Taoist Master practiced for hundreds of years, full of sacred objects, yet couldn't transcend. The very things that made us strong in the past are the chains holding us back. Liberation is not adding, but letting go.`,
+  },
 }
 
 export const STORY_HIGHLIGHTS = {
@@ -1705,6 +1946,60 @@ export const STORY_HIGHLIGHTS = {
       'Respecting opponents after battle — judge the method, not the person',
     ],
   },
+  8: {
+    vi: [
+      'Tiếng lạ dụ bằng tò mò, không ép: gương soi chỉ là cái cớ để tạo trạng thái tĩnh lặng',
+      'Lần đầu linh hồn rời khỏi xác, bay ra từ giữa trán — mắt thứ 3',
+      '"Con hãy nghĩ đến ánh sáng mặt trời" — một câu thay đổi cục diện trận đánh',
+      '"Linh hồn bất tử. Tan biến rồi hợp lại" — lời giải cho tên gọi Người Bất Tử',
+      'Hành trình một đêm: lên trời, xuống lòng đất, xuyên trung tâm địa cầu, về xác',
+      'Thức dậy cơ thể ê ẩm: thế giới linh hồn và thân xác không tách rời',
+    ],
+    en: [
+      'The Strange Voice tempts through curiosity, not force: the mirror was just a pretext for stillness',
+      'First time the soul left the body — emerging from the third eye at the center of the forehead',
+      '"Think of sunlight" — one sentence that changed the battle',
+      '"The soul is immortal. Dissolve and reunite" — the answer to the name The Immortal',
+      'One night\'s journey: up to sky, down into earth, through earth\'s core, back to body',
+      'Waking with a sore body: the spirit world and physical body are not separate',
+    ],
+  },
+  9: {
+    vi: [
+      'Hổ Hoang không tự nhập — người bệnh tự hút vong hồn vào vì thiếu hiểu biết',
+      'Hổ Hoang cũng là nạn nhân bị pháp sư nhốt trong tượng xi măng',
+      'Phần âm nhận ra nhau trước khi con người kịp nói — chẩn đoán ở tầng năng lượng',
+      'Cú đá cách 4 mét vẫn trúng: năng lượng không bị giới hạn khoảng cách',
+      'Ói ra những âm hồn đã nuốt: thanh lọc trước, giải thoát sau',
+      'Không đánh chết, không trừ diệt — chiếu sáng để linh hồn tự bay đi',
+    ],
+    en: [
+      'The Wild Tiger didn\'t enter on its own — the sick man drew the soul in through ignorance',
+      'The Wild Tiger was also a victim imprisoned in the cement statue by a sorcerer',
+      'The spirit realm recognizes each other before humans speak — diagnosis at the energy level',
+      'A kick from 4 meters still landed: energy is not limited by physical distance',
+      'Vomiting out swallowed souls: purification before liberation, no shortcuts',
+      'No killing, no elimination — shine light and let the soul fly away on its own',
+    ],
+  },
+  10: {
+    vi: [
+      'Nhiệm vụ lần đầu vượt ra khỏi cá nhân: cứu cả thành phố Sài Gòn khỏi Bão Quỷ cấp 12',
+      'Ma Đạo Sĩ không hỏi đúng sai, ra tay liền — kẻ thù hôm nay thành đồng minh ngày mai',
+      '"Trong não con có lỗ đen tiểu vũ trụ" — tầng sức mạnh mới được kích hoạt',
+      'Linh hồn bị kẹp đứt đôi, tan nát, vẫn hợp lại chiến đấu — bất tử không phụ thuộc hình dạng',
+      'Vòi rồng ánh sáng cấp 100 thắng vòi rồng ma cấp 50 — ánh sáng không có trần',
+      'Muốn giải thoát phải đốt hết bửu bối, quên hết quá khứ — giải thoát là bỏ đi, không phải thêm vào',
+    ],
+    en: [
+      'First mission beyond personal: saving all of Saigon from a level-12 Storm Demon',
+      'The Taoist Master acted without asking right or wrong — today\'s enemy becomes tomorrow\'s ally',
+      '"Inside your brain there is a black hole micro-universe" — new power layer activated',
+      'Soul cut in half, shattered, still reunited and fought on — immortality doesn\'t depend on form',
+      'Light tornado level 100 beats demon tornado level 50 — light has no ceiling',
+      'Liberation requires burning all sacred objects and forgetting the past — liberation is letting go, not adding',
+    ],
+  },
 }
 export const STORY_THREADS = {
   1: {
@@ -1734,5 +2029,17 @@ export const STORY_THREADS = {
   7: {
     vi: 'Câu chuyện 7 đặt ra câu hỏi trung tâm cho toàn bộ hành trình: sức mạnh đến từ đâu? Mượn từ bên ngoài (ma, bùa, thần chú) thì mạnh nhanh nhưng trả giá trên thân xác. Kích hoạt từ bên trong (năng lượng mặt trời, vũ trụ) thì cần thời gian nhưng không tự hại. Cu Tèo đầu gối chảy máu là hình ảnh rõ nhất: con đường tắt luôn để lại vết thương trên chính người đi.',
     en: 'Story 7 poses the central question for the entire journey: where does strength come from? Borrowed from outside (ghosts, sorcery, incantations) — quick power but the body pays the price. Activated from within (solar energy, cosmic energy) — takes time but causes no self-harm. Cu Teo\'s bleeding knees are the clearest image: shortcuts always leave wounds on the person walking them.',
+  },
+  8: {
+    vi: 'Câu chuyện 8 là bước nhảy vọt lớn nhất từ đầu hành trình. Từ câu 1 đến câu 7, mọi thứ diễn ra ở thế giới vật chất. Câu 8, linh hồn lần đầu rời khỏi xác, bước vào thế giới khác — nơi luật chơi hoàn toàn khác: bị chặt đầu thì mọc lại, bị nổ tung thì hội tụ, nghĩ đến ánh sáng thì ánh sáng đến. Tên gọi "phi thuyền" xuất hiện lần đầu: phi thuyền là linh hồn bay ra khỏi thân xác. Và câu nói "linh hồn bất tử, tan biến rồi hợp lại" chính là lời giải cho tên gọi Người Bất Tử xuyên suốt 37 câu chuyện: bất tử không phải thân xác không chết, mà là linh hồn không bao giờ mất. Hiểu được điều này thì không còn sợ chết. Không sợ chết thì tự do. Tự do thì bất tử.',
+    en: 'Story 8 is the greatest leap of the entire journey. From Stories 1 to 7, everything happened in the physical world. In Story 8, the soul leaves the body for the first time, entering another world — where the rules are completely different: a severed head grows back, an exploded soul reunites, think of light and light arrives. The name "spacecraft" appears for the first time: the spacecraft is the soul flying out of the body. And the statement "the soul is immortal, dissolve and reunite" is the answer to the name The Immortal across all 37 stories: immortal doesn\'t mean the body doesn\'t die, but that the soul is never lost. Understanding this, one no longer fears death. Without fear of death, one is free. Free means immortal.',
+  },
+  9: {
+    vi: 'Câu chuyện 9 hoàn thiện phương pháp chữa bệnh tâm linh mà câu 6 bắt đầu. Câu 6: chữa cho chính mình. Câu 9: chữa cho người khác. Quy trình bốn bước đã hình thành rõ: nhận diện → giao tiếp → chiếu ánh sáng → để linh hồn tự giải thoát. Và nguyên lý xuyên suốt từ câu 1 đến câu 9: không bao giờ tiêu diệt. Ma nước 3 không bị giết, được chữa lành rồi bay đi. Hổ Hoang không bị giết, được chiếu sáng rồi tự bay. Trong hệ thống Người Bất Tử, không có linh hồn nào bị bỏ lại. Không có kẻ thù vĩnh viễn. Chỉ có những linh hồn chưa được chữa lành.',
+    en: 'Story 9 perfects the spiritual healing method that Story 6 began. Story 6: healing oneself. Story 9: healing others. The four-step process is now clearly formed: identify → communicate → illuminate → allow the soul to self-liberate. And the principle threading from Story 1 to Story 9: never eliminate. Water Ghost 3 was not killed, healed and flew away. The Wild Tiger was not killed, illuminated and flew away on its own. In The Immortal\'s system, no soul is left behind. No permanent enemy. Only souls not yet healed.',
+  },
+  10: {
+    vi: 'Câu chuyện 10 là trận đánh lớn nhất từ đầu hành trình, và lần đầu tiên nhiệm vụ vượt ra khỏi chuyện cá nhân: cứu cả thành phố Sài Gòn khỏi Bão Quỷ cấp 12. Quy mô nhảy vọt, nhưng nguyên lý không đổi: ánh sáng thắng bóng tối, giao tiếp trước tiêu diệt, kẻ thù có thể thành đồng minh, và giải thoát là cởi bỏ chứ không phải thêm vào. Lỗ đen tiểu vũ trụ trong não được kích hoạt lần đầu, mở ra tầng sức mạnh mới. Và bài học cuối từ Ma Đạo Sĩ: tu luyện mấy trăm năm, bửu bối đầy mình, vẫn không siêu thoát. Chỉ khi đốt hết, quên hết, mới sáng lên bay đi. Đạo sĩ mạnh nhất trong hang động lại là người cần bỏ đi nhiều nhất.',
+    en: 'Story 10 is the greatest battle of the journey so far, and the first time the mission transcended the personal: saving all of Saigon from a level-12 Storm Demon. The scale leaped, but the principle remained unchanged: light defeats darkness, communicate before eliminating, enemies can become allies, and liberation is letting go not adding. The black hole micro-universe in the brain was activated for the first time, opening a new power layer. And the final lesson from the Taoist Master: hundreds of years of cultivation, full of sacred objects, still unable to transcend. Only when everything is burned away and forgotten does the soul light up and fly free. The most powerful master in the cave was the one who needed to let go of the most.',
   },
 }
