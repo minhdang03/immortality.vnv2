@@ -74,7 +74,27 @@ export function useArticles() {
 }
 
 /* ─── COMMENTS ─── */
-export function useComments(articleId) {
+const RATE_LIMIT_KEY = 'comment_timestamps'
+const RATE_LIMIT_MAX = 2
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000 // 1 hour
+
+function isRateLimited() {
+  const raw = localStorage.getItem(RATE_LIMIT_KEY)
+  const timestamps = raw ? JSON.parse(raw) : []
+  const now = Date.now()
+  const recent = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW)
+  return recent.length >= RATE_LIMIT_MAX
+}
+
+function recordSubmission() {
+  const raw = localStorage.getItem(RATE_LIMIT_KEY)
+  const timestamps = raw ? JSON.parse(raw) : []
+  const now = Date.now()
+  const recent = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW)
+  localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify([...recent, now]))
+}
+
+export function useComments(articleId, isAdmin = false) {
   const [comments, setComments] = useState([])
 
   useEffect(() => {
@@ -85,7 +105,8 @@ export function useComments(articleId) {
         orderBy('createdAt', 'asc')
       )
       const unsub = onSnapshot(q, (snap) => {
-        setComments(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+        const all = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        setComments(isAdmin ? all : all.filter(c => c.status === 'approved'))
       }, () => {
         const saved = localStorage.getItem(`comments_${articleId}`)
         if (saved) setComments(JSON.parse(saved))
@@ -95,22 +116,31 @@ export function useComments(articleId) {
       const saved = localStorage.getItem(`comments_${articleId}`)
       if (saved) setComments(JSON.parse(saved))
     }
-  }, [articleId])
+  }, [articleId, isAdmin])
 
   const addComment = async (name, text) => {
-    const comment = { name, text, createdAt: new Date().toISOString() }
+    if (isRateLimited()) return { error: 'rate_limited' }
+    const comment = { name, text, status: 'pending', createdAt: new Date().toISOString() }
     try {
       await addDoc(collection(db, 'articles', articleId, 'comments'), {
         ...comment, createdAt: serverTimestamp(),
       })
+      recordSubmission()
     } catch {
-      const updated = [...comments, { ...comment, id: Date.now().toString() }]
-      setComments(updated)
-      localStorage.setItem(`comments_${articleId}`, JSON.stringify(updated))
+      recordSubmission()
     }
+    return {}
   }
 
-  return { comments, addComment }
+  const approveComment = async (id) => {
+    await updateDoc(doc(db, 'articles', articleId, 'comments', id), { status: 'approved' })
+  }
+
+  const deleteComment = async (id) => {
+    await deleteDoc(doc(db, 'articles', articleId, 'comments', id))
+  }
+
+  return { comments, addComment, approveComment, deleteComment }
 }
 
 /* ─── STORIES CRUD (with localStorage cache) ─── */

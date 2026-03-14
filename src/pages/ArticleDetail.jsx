@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import ShareButtons from '../components/ShareButtons'
 import Comments from '../components/Comments'
 import ArticleCard from '../components/ArticleCard'
+import InlineEdit from '../components/InlineEdit'
 
 function ReadingTime({ body, lang }) {
   if (!body) return null
@@ -77,9 +78,20 @@ function ArticleBody({ body }) {
   )
 }
 
-export default function ArticleDetail({ t, lang, article, articles, topics, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset }) {
+export default function ArticleDetail({ t, lang, article, articles, topics, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateArticle }) {
   const d = article[lang]
   const topicObj = topics?.find(tp => tp.id === article.topic)
+  const isAdmin = !!user
+
+  const saveField = (nestedPath) => async (value) => {
+    if (onUpdateArticle && article.id) {
+      const parts = nestedPath.split('.')
+      if (parts.length === 2) {
+        const current = article[parts[0]] || {}
+        await onUpdateArticle(article.id, { [parts[0]]: { ...current, [parts[1]]: value } })
+      }
+    }
+  }
 
   const related = useMemo(() => {
     if (!articles) return []
@@ -134,7 +146,17 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
         <TableOfContents body={d?.body} lang={lang} />
 
         {/* Body with reader-optimized typography */}
-        <ArticleBody body={d?.body} />
+        <div style={{ position: 'relative' }}>
+          {isAdmin && (
+            <InlineEdit
+              label="Nội dung"
+              value={d?.body || ''}
+              onSave={saveField(`${lang}.body`)}
+              multiline
+            />
+          )}
+          <ArticleBody body={d?.body} />
+        </div>
 
         <div className="detail-share">
           <ShareButtons title={d?.title || ''} articleId={article.id} t={t} />
@@ -152,7 +174,7 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
           </div>
         )}
 
-        <Comments articleId={article.id} t={t} />
+        <Comments articleId={article.id} t={t} user={user} />
       </section>
     </>
   )

@@ -99,30 +99,46 @@ export default function App() {
     search: { vi: 'Tìm Kiếm', en: 'Search' },
     admin: { vi: 'Quản Trị', en: 'Admin' },
   }
+  const setMeta = (title, description) => {
+    document.title = title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', description)
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title)
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', description)
+    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title)
+    document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', description)
+  }
+
+  const PAGE_DESCRIPTIONS = {
+    stories: { vi: 'Những câu chuyện thật về hành trình chữa lành và giác ngộ tâm linh.', en: 'True stories of healing and spiritual awakening.' },
+    khaitri: { vi: 'Hỏi đáp trí tuệ — giải đáp những câu hỏi về tâm linh, sức khỏe và bất tử.', en: 'Q&A wisdom — answers on spirituality, health, and immortality.' },
+    about: { vi: 'Tìm hiểu về Bất Tử Đạo và phương pháp năng lượng Mặt Trời.', en: 'Learn about the Path of Immortality and the Solar Energy method.' },
+    practice: { vi: 'Học Thái Dương Quyền — bài tập năng lượng mặt trời cho sức khỏe và trí tuệ.', en: 'Learn Solar Fist — sun energy exercises for health and wisdom.' },
+    contact: { vi: 'Liên hệ với chúng tôi để được hỗ trợ và tư vấn.', en: 'Contact us for support and guidance.' },
+    search: { vi: 'Tìm kiếm bài viết, câu chuyện và nội dung trên Bất Tử Đạo.', en: 'Search articles, stories and content on Immortality.' },
+    admin: { vi: 'Trang quản trị nội dung Bất Tử Đạo.', en: 'Immortality content management panel.' },
+  }
+
   useEffect(() => {
+    const siteDesc = lang === 'vi'
+      ? 'Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời.'
+      : 'Discover the light within — a healing journey from ancient Vietnamese wisdom.'
+
     if (page === 'article' && selectedArticle) {
       const d = selectedArticle[lang]
-      if (d) {
-        document.title = `${d.title} | ${t.siteName}`
-        document.querySelector('meta[property="og:title"]')?.setAttribute('content', d.title)
-        document.querySelector('meta[property="og:description"]')?.setAttribute('content', d.summary)
-        document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', d.title)
-        document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', d.summary)
-      }
+      if (d) setMeta(`${d.title} | ${t.siteName}`, d.summary || siteDesc)
     } else if (page === 'topic' && selectedTopic) {
-      const tp = TOPICS.find(t => t.id === selectedTopic)
+      const tp = TOPICS.find(tp => tp.id === selectedTopic)
       const topicName = tp ? (lang === 'vi' ? tp.vi : tp.en) : selectedTopic
-      document.title = `${topicName} | ${t.siteName}`
+      setMeta(`${topicName} | ${t.siteName}`, siteDesc)
     } else if (PAGE_TITLES[page]) {
       const pt = PAGE_TITLES[page]
-      document.title = `${lang === 'vi' ? pt.vi : pt.en} | ${t.siteName}`
+      const pd = PAGE_DESCRIPTIONS[page]
+      setMeta(
+        `${lang === 'vi' ? pt.vi : pt.en} | ${t.siteName}`,
+        pd ? (lang === 'vi' ? pd.vi : pd.en) : siteDesc
+      )
     } else {
-      document.title = `${t.siteName} - ${t.siteTagline}`
-    }
-    // Reset OG tags for non-article pages
-    if (page !== 'article') {
-      document.querySelector('meta[property="og:title"]')?.setAttribute('content', `${t.siteName} - ${t.heroTitle}`)
-      document.querySelector('meta[property="og:description"]')?.setAttribute('content', t.heroSub)
+      setMeta(`${t.siteName} - ${t.siteTagline}`, siteDesc)
     }
   }, [page, selectedArticle, selectedTopic, lang])
 
@@ -163,6 +179,7 @@ export default function App() {
               t={t} lang={lang} article={selectedArticle} navigate={navigate}
               articles={allArticles} topics={TOPICS}
               fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
+              user={user} onUpdateArticle={updateArticle}
             />
           )}
           {page === 'search' && (

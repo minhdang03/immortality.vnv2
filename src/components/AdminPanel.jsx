@@ -38,7 +38,9 @@ export default function AdminPanel({
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [tab, setTab] = useState('articles')
+  const [tab, setTab] = useState(() => localStorage.getItem('adminTab') || 'articles')
+
+  const switchTab = (id) => { setTab(id); localStorage.setItem('adminTab', id) }
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleLogin = async (e) => {
@@ -104,7 +106,7 @@ export default function AdminPanel({
               <button
                 key={tb.id}
                 className={`admin-nav-item ${tab === tb.id ? 'active' : ''}`}
-                onClick={() => { setTab(tb.id); setSidebarOpen(false) }}
+                onClick={() => { switchTab(tb.id); setSidebarOpen(false) }}
               >
                 <span className="admin-nav-icon">{tb.icon}</span>
                 <span className="admin-nav-label">{lang === 'vi' ? tb.vi : tb.en}</span>
