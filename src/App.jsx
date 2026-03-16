@@ -6,6 +6,8 @@ import { useArticles, useTranslations, useTopics, useStories, useKhaiTri, useTea
 import { useFontSize } from './hooks/useFontSize'
 import { articleSlug } from './utils/slug'
 import { PAGE_TITLES, PAGE_DESCRIPTIONS, matchRoute } from './config/pages'
+import { usePageView, trackThemeToggle, trackLanguageChange, trackNavigation } from './hooks/useAnalytics'
+import { useSEO } from './hooks/useSEO'
 import './styles/app.css'
 
 // Layout
@@ -46,6 +48,10 @@ export default function App() {
   const { fontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useFontSize(siteSettings?.defaultFontSize)
   const t = getT(lang)
   const allArticles = firestoreArticles
+
+  // Analytics & SEO
+  usePageView(page, selectedArticle, lang)
+  useSEO(page, selectedArticle, selectedTopic, lang, TOPICS)
 
   // Firebase auth
   useEffect(() => {
@@ -127,6 +133,7 @@ export default function App() {
   }, [page, selectedArticle, selectedTopic, lang])
 
   const navigate = (p, extra) => {
+    trackNavigation(page, p)
     setMenuOpen(false)
     if (p === 'topic') {
       setSelectedTopic(extra); setPage('topic')
@@ -146,8 +153,10 @@ export default function App() {
       <div className="app-wrap">
         <Header
           t={t} lang={lang} dark={dark} page={page} menuOpen={menuOpen}
-          navigate={navigate} toggleTheme={toggleTheme}
-          setLang={setLang} setMenuOpen={setMenuOpen}
+          navigate={navigate}
+          toggleTheme={() => { toggleTheme(); trackThemeToggle(dark ? 'light' : 'dark') }}
+          setLang={(l) => { setLang(l); trackLanguageChange(l) }}
+          setMenuOpen={setMenuOpen}
           user={user} navItems={siteSettings.navItems}
         />
 

@@ -1,15 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import SunIcon from '../components/SunIcon'
 import ArticleCard from '../components/ArticleCard'
+import { trackSearch } from '../hooks/useAnalytics'
 
 export default function SearchPage({ t, lang, articles, navigate }) {
   const [search, setSearch] = useState('')
+  const debounceRef = useRef(null)
 
   const results = articles.filter(a => {
     const q = search.toLowerCase()
     const d = a[lang]
     return d && (d.title.toLowerCase().includes(q) || d.question.toLowerCase().includes(q) || d.summary.toLowerCase().includes(q))
   })
+
+  // Track search with debounce
+  useEffect(() => {
+    if (!search || search.length < 2) return
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      trackSearch(search, results.length)
+    }, 1000)
+    return () => clearTimeout(debounceRef.current)
+  }, [search, results.length])
 
   return (
     <section className="section">

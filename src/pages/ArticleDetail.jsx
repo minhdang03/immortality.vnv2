@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useArticleAnalytics } from '../hooks/useAnalytics'
 import ShareButtons from '../components/ShareButtons'
 import Comments from '../components/Comments'
 import ArticleCard from '../components/ArticleCard'
@@ -47,6 +48,7 @@ function ArticleBody({ body }) {
 }
 
 export default function ArticleDetail({ t, lang, article, articles, topics, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateArticle }) {
+  useArticleAnalytics(article, lang)
   const d = article[lang]
   const topicObj = topics?.find(tp => tp.id === article.topic)
   const isAdmin = !!user

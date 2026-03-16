@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
+import { getAnalytics, logEvent as firebaseLogEvent } from 'firebase/analytics'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -15,3 +16,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 export const db = getFirestore(app)
 export const auth = getAuth(app)
+
+// Analytics - only in browser environment
+let analytics = null
+if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+  try {
+    analytics = getAnalytics(app)
+  } catch (e) {
+    // Analytics not available (e.g. blocked by ad blocker)
+  }
+}
+export { analytics }
+
+export function logEvent(eventName, params) {
+  if (analytics) {
+    try { firebaseLogEvent(analytics, eventName, params) } catch {}
+  }
+}
