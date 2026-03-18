@@ -1,19 +1,8 @@
 /**
- * Seed 2 articles into Firestore using Firebase Admin SDK
- *
- * Setup:
- * 1. Go to Firebase Console → Project Settings → Service accounts
- * 2. Click "Generate new private key" → save as scripts/serviceAccountKey.json
- * 3. Run: node scripts/seed-articles.js
+ * Seed 2 articles into Firestore
+ * Run: node scripts/seed-articles.cjs
  */
-const admin = require('firebase-admin')
-const serviceAccount = require('../src/immortalityvn-firebase-adminsdk-fbsvc-a75c1f4b0e.json')
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-})
-
-const db = admin.firestore()
+const { seedCollection } = require('./firebase-client.cjs')
 
 const articles = [
   {
@@ -52,16 +41,4 @@ const articles = [
   },
 ]
 
-async function seed() {
-  for (const article of articles) {
-    const docRef = await db.collection('articles').add({
-      ...article,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    })
-    console.log(`Added: "${article.vi.title}" → ${docRef.id}`)
-  }
-  console.log('\nDone! 2 articles seeded.')
-  process.exit(0)
-}
-
-seed().catch(err => { console.error(err); process.exit(1) })
+seedCollection('articles', articles).catch(err => { console.error('❌', err.message); process.exit(1) })

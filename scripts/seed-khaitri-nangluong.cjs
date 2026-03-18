@@ -1,28 +1,18 @@
 /**
  * Seed Khai Trí: NĂNG LƯỢNG, ÁNH SÁNG VÀ BẤT TỬ ĐẠO
- *
  * Run: node scripts/seed-khaitri-nangluong.cjs
  */
-const admin = require('firebase-admin')
-const serviceAccount = require('../src/immortalityvn-firebase-adminsdk-fbsvc-a75c1f4b0e.json')
+const { seedCollection } = require('./firebase-client.cjs')
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  })
-}
-
-const db = admin.firestore()
-
-const khaitriItem = {
-  order: 0, // Will be set dynamically
-  date: '2026-03-18',
-  tag: { vi: 'Năng Lượng', en: 'Energy' },
-  vi: {
-    title: 'Khai Trí: Năng Lượng, Ánh Sáng và Bất Tử Đạo',
-    question: 'Bất Tử Đạo chủ yếu chỉ cho con người sử dụng năng lượng vật chất, chuyển đổi năng lượng cho bản thân mình và các vong linh, rồi năng lượng này chuyển về hố đen để tái chế hoặc vào vũ trụ Big Bang?',
-    summary: 'Giải đáp về bản chất năng lượng Big Bang, linh hồn của ánh sáng, sự khác biệt giữa Bất Tử Đạo và Phật giáo, bằng chứng sự sống bất tử, và cốt lõi của thực hành.',
-    body: `Hỏi: Dạ thưa Thầy, con mới được tiếp xúc nghe Thầy giảng về năng lượng và ADN. Vậy Bất Tử Đạo chủ yếu chỉ cho con người sử dụng năng lượng vật chất, chuyển đổi năng lượng cho bản thân mình và các vong linh, rồi năng lượng này chuyển về hố đen để tái chế hoặc vào vũ trụ Big Bang?\nVấn đề ở đây: cái năng lượng đó bao gồm những yếu tố gì? Nó có trạng thái tâm thức hay không? Trạng thái ánh sáng năng lượng Big Bang nó như thế nào? Nó có từ bi, trí huệ, có linh hồn, hay nó chỉ là ánh sáng vô hồn? Nhờ Thầy khai thị chỗ này để chúng con rõ đường đi hơn ạ.
+const items = [
+  {
+    date: '2026-03-18',
+    tag: { vi: 'Năng Lượng', en: 'Energy' },
+    vi: {
+      title: 'Khai Trí: Năng Lượng, Ánh Sáng và Bất Tử Đạo',
+      question: 'Bất Tử Đạo chủ yếu chỉ cho con người sử dụng năng lượng vật chất, chuyển đổi năng lượng cho bản thân mình và các vong linh?',
+      summary: 'Giải đáp về bản chất năng lượng Big Bang, linh hồn của ánh sáng, sự khác biệt giữa Bất Tử Đạo và Phật giáo, bằng chứng sự sống bất tử, và cốt lõi của thực hành.',
+      body: `Hỏi: Dạ thưa Thầy, con mới được tiếp xúc nghe Thầy giảng về năng lượng và ADN. Vậy Bất Tử Đạo chủ yếu chỉ cho con người sử dụng năng lượng vật chất, chuyển đổi năng lượng cho bản thân mình và các vong linh, rồi năng lượng này chuyển về hố đen để tái chế hoặc vào vũ trụ Big Bang?\nVấn đề ở đây: cái năng lượng đó bao gồm những yếu tố gì? Nó có trạng thái tâm thức hay không? Trạng thái ánh sáng năng lượng Big Bang nó như thế nào? Nó có từ bi, trí huệ, có linh hồn, hay nó chỉ là ánh sáng vô hồn? Nhờ Thầy khai thị chỗ này để chúng con rõ đường đi hơn ạ.
 
 Đáp: Big Bang gồm hai nguồn năng lượng: điện âm và điện dương hút nhau. Giống như đàn ông đàn bà hút lấy nhau rồi sinh ra em bé. Vũ trụ thì tạo ra một vụ nổ lớn sinh ra vạn vật.\nMuốn tìm hiểu thêm nguyên lý năng lượng chứa gì thì phải học hỏi theo khoa học, kết hợp lại với thấy nghe biết hiểu, sẽ rõ ràng hơn.\nChúng ta được sinh ra từ sự va chạm, thúc đẩy, bùng nổ, tan vỡ từ mảnh nhỏ hạt bụi. Mệt mỏi, đau bệnh, ung thư, tai nạn đều đến từ sự va chạm thúc đẩy của Big Bang ADN. Không muốn đau bệnh chết thì chỉ có sự thấy, biết, hiểu và không va chạm. Chỉ trao đổi, chỉ yêu thương mà sống thì không gây ra chia ly.\nSự sống tự mỗi người đã đầy đủ. Không tranh giành, không phân biệt, không chiến tranh màu da sắc tộc, không phân biệt tôn giáo. Tất cả chúng ta là một. Lúc đó mới đạt được tình yêu thương đại đồng, hợp nhất một giống loài người, thương yêu nhau, giúp đỡ nhau, chia sẻ bình đẳng. Tương lai đó mới gọi là thiên đường tại thế: tự do, bình đẳng, trí tuệ, hạnh phúc viên mãn.
 
@@ -45,36 +35,14 @@ Hỏi: Bất Tử Đạo là tổ tiên ông bà cha mẹ, cởi mở, là thiê
 Hỏi: Vậy cốt lõi được đưa lên hàng đầu có phải là niềm tin vào sự thật không? Trong khi nhiều người thấy, biết được điều này, thực hành, nhưng nhiều người lại bảo viễn vông, tinh thần bất ổn, rồi chấp nhận cái chết?
 
 Đáp: Cốt lõi không phải là lý thuyết và niềm tin, mà là thực hành để chứng thực. Khi mình cảm nhận được nó rất tốt cho bản thân, tinh thần và trí tuệ của mình, thì lúc đó mới gọi là tạm tin chính mình. Rồi thực hành tiếp, đến khi không còn dính chấp, không còn nghi ngờ, tiếp tục tự tin đi trên con đường mà mình chọn.\nCòn những người không làm được, bất ổn, chấp nhận cái chết, là vì họ tin theo một tôn giáo, một Phật giáo, thì họ phải chịu.\nĐây là một phương pháp khoa học vũ trụ năng lượng ánh sáng trí tuệ. Nói theo Phật học thì gọi là chánh tinh tấn. Nói theo Thiên Chúa học thì là đức tin Tin Lành.`,
+    },
+    en: {
+      title: 'Khai Trí: Energy, Light and the Immortality Path',
+      question: '',
+      summary: '',
+      body: '',
+    },
   },
-  en: {
-    title: 'Khai Trí: Energy, Light and the Immortality Path',
-    question: '',
-    summary: '',
-    body: '',
-  },
-}
+]
 
-async function seed() {
-  try {
-    // Get current max order
-    const snapshot = await db.collection('khaitri').orderBy('order', 'desc').limit(1).get()
-    const maxOrder = snapshot.empty ? 0 : (snapshot.docs[0].data().order || 0)
-    khaitriItem.order = maxOrder + 1
-
-    const docRef = await db.collection('khaitri').add({
-      ...khaitriItem,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    })
-
-    console.log(`✅ Seeded Khai Trí: "${khaitriItem.vi.title}"`)
-    console.log(`   ID: ${docRef.id}`)
-    console.log(`   Order: ${khaitriItem.order}`)
-    console.log(`   Tag: ${khaitriItem.tag.vi}`)
-    console.log(`   6 cặp Hỏi/Đáp trong body`)
-  } catch (error) {
-    console.error('❌ Error seeding:', error.message)
-  }
-  process.exit(0)
-}
-
-seed()
+seedCollection('khaitri', items).catch(err => { console.error('❌', err.message); process.exit(1) })
