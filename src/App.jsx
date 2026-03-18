@@ -30,7 +30,12 @@ const KhaiTriPage = lazy(() => import('./pages/KhaiTriPage'))
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
-  const [lang, setLang] = useState('vi')
+  const [lang, setLang] = useState(() => {
+    const saved = localStorage.getItem('lang')
+    if (saved) return saved
+    const host = window.location.hostname
+    return host.includes('immortality') ? 'en' : 'vi'
+  })
   const [page, setPage] = useState('home')
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [selectedArticle, setSelectedArticle] = useState(null)
@@ -155,7 +160,7 @@ export default function App() {
           t={t} lang={lang} dark={dark} page={page} menuOpen={menuOpen}
           navigate={navigate}
           toggleTheme={() => { toggleTheme(); trackThemeToggle(dark ? 'light' : 'dark') }}
-          setLang={(l) => { setLang(l); trackLanguageChange(l) }}
+          setLang={(l) => { setLang(l); localStorage.setItem('lang', l); trackLanguageChange(l) }}
           setMenuOpen={setMenuOpen}
           user={user} navItems={siteSettings.navItems}
         />
