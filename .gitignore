@@ -3,6 +3,7 @@ dist
 .DS_Store
 *.local
 .env
+__pycache__
 
 # Firebase Admin SDK key
 *firebase-adminsdk*
