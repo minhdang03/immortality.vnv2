@@ -15,7 +15,7 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
 const db = getFirestore(app)
 
 const SITE_NAME = 'Bất Tử Đạo - Immortality'
-const CANONICAL_URL = 'https://immortality.vn'
+const CANONICAL_URL = 'https://battudao.com'
 const DEFAULT_IMAGE = `${CANONICAL_URL}/og-image.png`
 const DEFAULT_DESC = 'Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời.'
 
@@ -129,7 +129,7 @@ async function findKhaiTri(slug) {
 
 export default async function handler(req, res) {
   const p = req.query.p || '/'
-  const host = req.headers.host || 'immortality.vn'
+  const host = req.headers.host || 'battudao.com'
   const SITE_URL = `https://${host}`
 
   // Non-crawlers: serve the SPA directly so URL stays clean

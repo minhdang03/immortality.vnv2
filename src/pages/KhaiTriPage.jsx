@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { khaitriSlug } from '../utils/slug'
+import { updateCanonical } from '../hooks/useSEO'
 import KhaiTriList from '../components/khaitri/KhaiTriList'
 import KhaiTriDetail from '../components/khaitri/KhaiTriDetail'
 
@@ -27,7 +28,7 @@ export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFont
     hashApplied.current = true
   }, [items])
 
-  // Update document title when viewing a detail
+  // Update document title and og:url when viewing a detail
   useEffect(() => {
     if (selected) {
       const d = selected[lang === 'vi' ? 'vi' : 'en'] || {}
@@ -36,6 +37,7 @@ export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFont
     } else {
       document.title = `${lang === 'vi' ? 'Khai Trí' : 'Khai Trí'} | ${t.siteName}`
     }
+    updateCanonical()
   }, [selected, lang])
 
   const selectItem = (item) => {

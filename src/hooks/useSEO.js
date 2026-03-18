@@ -1,22 +1,24 @@
 import { useEffect } from 'react'
 
-const SITE_URL = 'https://immortality.vn'
+function getSiteUrl() {
+  return typeof window !== 'undefined' ? window.location.origin : 'https://battudao.com'
+}
+
+/**
+ * Update canonical and og:url to match current browser URL
+ */
+export function updateCanonical() {
+  const url = window.location.href
+  document.querySelector('link[rel="canonical"]')?.setAttribute('href', url)
+  document.querySelector('meta[property="og:url"]')?.setAttribute('content', url)
+}
 
 /**
  * Manage canonical URL and structured data for each page
  */
 export function useSEO(page, selectedArticle, selectedTopic, lang, topics) {
   useEffect(() => {
-    // Update canonical URL
-    let canonical = SITE_URL
-    if (page === 'article' && selectedArticle) {
-      const slug = selectedArticle.slug || selectedArticle.id
-      canonical = `${SITE_URL}/article/${slug}`
-    } else if (page === 'topic' && selectedTopic) {
-      canonical = `${SITE_URL}/topic/${selectedTopic}`
-    } else if (page !== 'home') {
-      canonical = `${SITE_URL}/${page}`
-    }
+    const canonical = window.location.href
 
     let link = document.querySelector('link[rel="canonical"]')
     if (link) {
@@ -75,8 +77,8 @@ function updateStructuredData(page, article, lang, url) {
       inLanguage: lang === 'vi' ? 'vi-VN' : 'en-US',
       publisher: {
         '@type': 'Organization',
-        name: 'Immortality.vn',
-        url: 'https://immortality.vn'
+        name: 'Bất Tử Đạo',
+        url: getSiteUrl()
       },
       mainEntityOfPage: { '@type': 'WebPage', '@id': url }
     }
@@ -92,12 +94,12 @@ function updateStructuredData(page, article, lang, url) {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'Bất Tử Đạo - Immortality',
-      url: 'https://immortality.vn',
+      url: getSiteUrl(),
       description: 'Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời.',
       inLanguage: ['vi-VN', 'en-US'],
       potentialAction: {
         '@type': 'SearchAction',
-        target: 'https://immortality.vn/search?q={search_term_string}',
+        target: `${getSiteUrl()}/search?q={search_term_string}`,
         'query-input': 'required name=search_term_string'
       }
     }

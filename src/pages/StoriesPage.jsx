@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { storySlug } from '../utils/slug'
+import { updateCanonical } from '../hooks/useSEO'
 import StoryDetail from '../components/stories/StoryDetail'
 import StoryList from '../components/stories/StoryList'
 
@@ -33,7 +34,7 @@ export default function StoriesPage({ t, lang, firestoreStories, navigate, fontS
     hashApplied.current = true
   }, [allStories])
 
-  // Update document title when viewing a story
+  // Update document title and og:url when viewing a story
   useEffect(() => {
     if (selected) {
       const title = lang === 'vi' ? selected.titleVi : selected.titleEn
@@ -41,6 +42,7 @@ export default function StoriesPage({ t, lang, firestoreStories, navigate, fontS
     } else {
       document.title = `${lang === 'vi' ? '37 Câu Chuyện' : '37 Stories'} | ${t.siteName}`
     }
+    updateCanonical()
   }, [selected, lang])
 
   const selectStory = (story) => {
