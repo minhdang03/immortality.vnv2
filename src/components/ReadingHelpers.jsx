@@ -36,9 +36,41 @@ export function FontSizeControls({ fontSize, onIncrease, onDecrease, onReset }) 
 
 export function renderText(text) {
   if (!text) return null
-  return text.split('\n\n').map((block, i) => (
-    <p key={i} data-para={i}>{block.split('\n').map((line, j, arr) => (
-      j < arr.length - 1 ? <span key={j}>{line}<br /></span> : line
-    ))}</p>
-  ))
+  return text.split('\n\n').map((block, i) => {
+    const trimmed = block.trim()
+
+    // Detect Q&A patterns
+    const isQuestion = /^(Hỏi|Question|Q)\s*[:：]/i.test(trimmed)
+    const isAnswer = /^(Đáp|Trả lời|Answer|A)\s*[:：]/i.test(trimmed)
+
+    if (isQuestion) {
+      const content = trimmed.replace(/^(Hỏi|Question|Q)\s*[:：]\s*/i, '')
+      return (
+        <div key={i} data-para={i} className="qa-question">
+          <span className="qa-label qa-label-q">Hỏi</span>
+          <p>{content.split('\n').map((line, j, arr) => (
+            j < arr.length - 1 ? <span key={j}>{line}<br /></span> : line
+          ))}</p>
+        </div>
+      )
+    }
+
+    if (isAnswer) {
+      const content = trimmed.replace(/^(Đáp|Trả lời|Answer|A)\s*[:：]\s*/i, '')
+      return (
+        <div key={i} data-para={i} className="qa-answer">
+          <span className="qa-label qa-label-a">Đáp</span>
+          <p>{content.split('\n').map((line, j, arr) => (
+            j < arr.length - 1 ? <span key={j}>{line}<br /></span> : line
+          ))}</p>
+        </div>
+      )
+    }
+
+    return (
+      <p key={i} data-para={i}>{block.split('\n').map((line, j, arr) => (
+        j < arr.length - 1 ? <span key={j}>{line}<br /></span> : line
+      ))}</p>
+    )
+  })
 }

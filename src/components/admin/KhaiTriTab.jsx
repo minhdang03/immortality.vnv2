@@ -39,6 +39,80 @@ export default function KhaiTriTab({ t, lang, items, onAdd, onUpdate, onDelete }
   }
 
   const handleDelete = async (id) => { if (window.confirm(t.adminConfirmDelete)) await onDelete(id) }
+
+  // Split long Q&A body into separate items
+  const splitQA = () => {
+    const body = form.bodyVi || form.bodyEn || ''
+    const blocks = body.split('\n\n').map(b => b.trim()).filter(Boolean)
+
+    // Group blocks into Q&A pairs
+    const pairs = []
+    let currentQ = ''
+    let currentA = ''
+
+    for (const block of blocks) {
+      const isQ = /^(Hỏi|Question|Q)\s*[:：]/i.test(block)
+      const isA = /^(Đáp|Trả lời|Answer|A)\s*[:：]/i.test(block)
+
+      if (isQ) {
+        if (currentQ && currentA) {
+          pairs.push({ q: currentQ, a: currentA })
+          currentA = ''
+        }
+        currentQ = block.replace(/^(Hỏi|Question|Q)\s*[:：]\s*/i, '').trim()
+      } else if (isA) {
+        currentA = block.replace(/^(Đáp|Trả lời|Answer|A)\s*[:：]\s*/i, '').trim()
+      } else {
+        // Continuation of previous block
+        if (currentA) currentA += '\n\n' + block
+        else if (currentQ) currentQ += '\n\n' + block
+      }
+    }
+    if (currentQ && currentA) pairs.push({ q: currentQ, a: currentA })
+
+    if (pairs.length < 2) {
+      alert(lang === 'vi'
+        ? 'Không tìm thấy nhiều cặp Hỏi/Đáp để tách. Cần ít nhất 2 cặp "Hỏi:" và "Đáp:" trong nội dung.'
+        : 'Not enough Q&A pairs found. Need at least 2 "Hỏi:/Đáp:" pairs in the body.')
+      return
+    }
+
+    const baseTitle = form.titleVi || form.titleEn || ''
+    const msg = lang === 'vi'
+      ? `Tìm thấy ${pairs.length} cặp Hỏi/Đáp. Tách thành ${pairs.length} items riêng?\n\nItem gốc sẽ giữ cặp đầu tiên, còn lại tạo mới.`
+      : `Found ${pairs.length} Q&A pairs. Split into ${pairs.length} separate items?\n\nOriginal keeps first pair, rest are created new.`
+
+    if (!window.confirm(msg)) return
+
+    // Update current item with first pair
+    setField('questionVi', pairs[0].q)
+    setField('bodyVi', `Hỏi: ${pairs[0].q}\n\nĐáp: ${pairs[0].a}`)
+    if (form.summaryVi) setField('summaryVi', pairs[0].a.slice(0, 150) + (pairs[0].a.length > 150 ? '...' : ''))
+
+    // Create new items for remaining pairs
+    const baseOrder = Number(form.order) || 1
+    pairs.slice(1).forEach(async (pair, i) => {
+      const newOrder = baseOrder + i + 1
+      const shortTitle = pair.q.length > 80 ? pair.q.slice(0, 80) + '...' : pair.q
+      await onAdd({
+        order: newOrder,
+        date: form.date,
+        tag: { vi: form.tagVi, en: form.tagEn },
+        vi: {
+          title: `${baseTitle} (${i + 2})`,
+          question: pair.q,
+          summary: pair.a.slice(0, 150) + (pair.a.length > 150 ? '...' : ''),
+          body: `Hỏi: ${pair.q}\n\nĐáp: ${pair.a}`
+        },
+        en: { title: '', question: '', summary: '', body: '' }
+      })
+    })
+
+    alert(lang === 'vi'
+      ? `Đã tách thành ${pairs.length} items. Nhấn Lưu để cập nhật item gốc.`
+      : `Split into ${pairs.length} items. Click Save to update the original.`)
+  }
+
   const L = formLang === 'vi' ? 'Vi' : 'En'
 
   return (
@@ -119,6 +193,11 @@ export default function KhaiTriTab({ t, lang, items, onAdd, onUpdate, onDelete }
           <div className="admin-editor-actions">
             <button className="btn-read" onClick={handleSave}>{t.adminSave}</button>
             <button className="btn-video" onClick={() => setEditing(null)}>{t.adminCancel}</button>
+            {(form.bodyVi || form.bodyEn || '').includes('Hỏi:') && (
+              <button className="btn-sm" onClick={splitQA} title={lang === 'vi' ? 'Tách các cặp Hỏi/Đáp thành items riêng' : 'Split Q&A pairs into separate items'}>
+                {lang === 'vi' ? 'Tách Hỏi/Đáp' : 'Split Q&A'}
+              </button>
+            )}
           </div>
         </div>
       )}
