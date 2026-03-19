@@ -2,7 +2,7 @@ import ShareButtons from './ShareButtons'
 import { articleSlug } from '../utils/slug'
 
 export default function ArticleCard({ article, lang, t, index, navigate }) {
-  const d = article[lang]
+  const d = article[lang] || article[lang === 'vi' ? 'en' : 'vi']
   if (!d) return null
   const goToArticle = () => navigate('article', article)
   return (
