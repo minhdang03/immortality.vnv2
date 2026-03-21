@@ -57,7 +57,9 @@ export function useArticles() {
       const q = query(collection(db, 'articles'), orderBy('date', 'desc'))
       const unsub = onSnapshot(q, (snap) => {
         const articles = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        const merged = articles.length > 0 ? articles : DEFAULT_ARTICLES
+        const existingIds = new Set(articles.map(a => a.id))
+        const seeds = DEFAULT_ARTICLES.filter(a => !existingIds.has(a.id))
+        const merged = [...articles, ...seeds]
         setFirestoreArticles(merged)
         setLoading(false)
         try { localStorage.setItem('cached_articles', JSON.stringify(merged)) } catch {}
