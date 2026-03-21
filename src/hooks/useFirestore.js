@@ -5,6 +5,7 @@ import {
   onSnapshot, orderBy, query, serverTimestamp
 } from 'firebase/firestore'
 import { DEFAULT_T } from '../data/translations'
+import { DEFAULT_ARTICLES } from '../data/articles'
 
 
 /* ─── TRANSLATIONS ─── */
@@ -56,9 +57,10 @@ export function useArticles() {
       const q = query(collection(db, 'articles'), orderBy('date', 'desc'))
       const unsub = onSnapshot(q, (snap) => {
         const articles = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        setFirestoreArticles(articles)
+        const merged = articles.length > 0 ? articles : DEFAULT_ARTICLES
+        setFirestoreArticles(merged)
         setLoading(false)
-        try { localStorage.setItem('cached_articles', JSON.stringify(articles)) } catch {}
+        try { localStorage.setItem('cached_articles', JSON.stringify(merged)) } catch {}
       }, () => { setLoading(false) })
       return unsub
     } catch { setLoading(false) }
