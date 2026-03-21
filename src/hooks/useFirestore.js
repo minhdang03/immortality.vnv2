@@ -6,6 +6,7 @@ import {
 } from 'firebase/firestore'
 import { DEFAULT_T } from '../data/translations'
 import { DEFAULT_ARTICLES } from '../data/articles'
+import { cacheGet, cacheSet } from '../utils/cache'
 
 
 /* ─── TRANSLATIONS ─── */
@@ -45,12 +46,12 @@ export function useTranslations() {
   return { getT, firestoreVi, firestoreEn, loading, updateTranslations }
 }
 
-/* ─── ARTICLES CRUD (with localStorage cache) ─── */
+/* ─── ARTICLES CRUD (with TTL cache — 30 min) ─── */
 export function useArticles() {
   const [firestoreArticles, setFirestoreArticles] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('cached_articles')) || [] } catch { return [] }
+    return cacheGet('cached_articles') || []
   })
-  const [loading, setLoading] = useState(() => !localStorage.getItem('cached_articles'))
+  const [loading, setLoading] = useState(() => !cacheGet('cached_articles'))
 
   useEffect(() => {
     try {
@@ -62,7 +63,7 @@ export function useArticles() {
         const merged = [...articles, ...seeds]
         setFirestoreArticles(merged)
         setLoading(false)
-        try { localStorage.setItem('cached_articles', JSON.stringify(merged)) } catch {}
+        cacheSet('cached_articles', merged)
       }, () => { setLoading(false) })
       return unsub
     } catch { setLoading(false) }
@@ -83,19 +84,17 @@ const RATE_LIMIT_MAX = 2
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000 // 1 hour
 
 function isRateLimited() {
-  const raw = localStorage.getItem(RATE_LIMIT_KEY)
-  const timestamps = raw ? JSON.parse(raw) : []
+  const timestamps = cacheGet(RATE_LIMIT_KEY, 'rate') || []
   const now = Date.now()
   const recent = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW)
   return recent.length >= RATE_LIMIT_MAX
 }
 
 function recordSubmission() {
-  const raw = localStorage.getItem(RATE_LIMIT_KEY)
-  const timestamps = raw ? JSON.parse(raw) : []
+  const timestamps = cacheGet(RATE_LIMIT_KEY, 'rate') || []
   const now = Date.now()
   const recent = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW)
-  localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify([...recent, now]))
+  cacheSet(RATE_LIMIT_KEY, [...recent, now])
 }
 
 export function useComments(articleId, isAdmin = false) {
@@ -112,13 +111,13 @@ export function useComments(articleId, isAdmin = false) {
         const all = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         setComments(isAdmin ? all : all.filter(c => c.status === 'approved'))
       }, () => {
-        const saved = localStorage.getItem(`comments_${articleId}`)
-        if (saved) setComments(JSON.parse(saved))
+        const saved = cacheGet(`comments_${articleId}`)
+        if (saved) setComments(saved)
       })
       return unsub
     } catch {
-      const saved = localStorage.getItem(`comments_${articleId}`)
-      if (saved) setComments(JSON.parse(saved))
+      const saved = cacheGet(`comments_${articleId}`)
+      if (saved) setComments(saved)
     }
   }, [articleId, isAdmin])
 
@@ -147,12 +146,12 @@ export function useComments(articleId, isAdmin = false) {
   return { comments, addComment, approveComment, deleteComment }
 }
 
-/* ─── STORIES CRUD (with localStorage cache) ─── */
+/* ─── STORIES CRUD (with TTL cache — 30 min) ─── */
 export function useStories() {
   const [stories, setStories] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('cached_stories')) || [] } catch { return [] }
+    return cacheGet('cached_stories') || []
   })
-  const [loading, setLoading] = useState(() => !localStorage.getItem('cached_stories'))
+  const [loading, setLoading] = useState(() => !cacheGet('cached_stories'))
 
   useEffect(() => {
     try {
@@ -161,7 +160,7 @@ export function useStories() {
         const s = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         setStories(s)
         setLoading(false)
-        try { localStorage.setItem('cached_stories', JSON.stringify(s)) } catch {}
+        cacheSet('cached_stories', s)
       }, () => { setLoading(false) })
       return unsub
     } catch { setLoading(false) }
@@ -174,12 +173,12 @@ export function useStories() {
   return { stories, loading, addStory, updateStory, deleteStory }
 }
 
-/* ─── TOPICS CRUD (with localStorage cache) ─── */
+/* ─── TOPICS CRUD (with TTL cache — 30 min) ─── */
 export function useTopics() {
   const [topics, setTopics] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('cached_topics')) || [] } catch { return [] }
+    return cacheGet('cached_topics') || []
   })
-  const [loading, setLoading] = useState(() => !localStorage.getItem('cached_topics'))
+  const [loading, setLoading] = useState(() => !cacheGet('cached_topics'))
 
   useEffect(() => {
     try {
@@ -188,7 +187,7 @@ export function useTopics() {
         const t = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         setTopics(t)
         setLoading(false)
-        try { localStorage.setItem('cached_topics', JSON.stringify(t)) } catch {}
+        cacheSet('cached_topics', t)
       }, () => { setLoading(false) })
       return unsub
     } catch { setLoading(false) }
@@ -201,12 +200,12 @@ export function useTopics() {
   return { topics, loading, addTopic, updateTopic, deleteTopic }
 }
 
-/* ─── GENERIC CRUD (for khaitri, teachings, practices) ─── */
+/* ─── GENERIC CRUD (for khaitri, teachings, practices — TTL cache 30 min) ─── */
 function useCRUD(collectionName, orderField = 'order') {
   const [items, setItems] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(`cached_${collectionName}`)) || [] } catch { return [] }
+    return cacheGet(`cached_${collectionName}`) || []
   })
-  const [loading, setLoading] = useState(() => !localStorage.getItem(`cached_${collectionName}`))
+  const [loading, setLoading] = useState(() => !cacheGet(`cached_${collectionName}`))
 
   useEffect(() => {
     try {
@@ -215,7 +214,7 @@ function useCRUD(collectionName, orderField = 'order') {
         const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         setItems(data)
         setLoading(false)
-        try { localStorage.setItem(`cached_${collectionName}`, JSON.stringify(data)) } catch {}
+        cacheSet(`cached_${collectionName}`, data)
       }, () => { setLoading(false) })
       return unsub
     } catch { setLoading(false) }
@@ -246,7 +245,7 @@ export function usePractices() {
   return { practices: items, loading, addPractice: add, updatePractice: update, deletePractice: remove }
 }
 
-/* ─── SITE SETTINGS (navigation, home page, etc.) ─── */
+/* ─── SITE SETTINGS (navigation, home page, etc. — TTL cache 30 min) ─── */
 // Page config imported from centralized config
 import { DEFAULT_HOME_CARDS, DEFAULT_NAV_ITEMS } from '../config/pages'
 export { DEFAULT_HOME_CARDS, DEFAULT_NAV_ITEMS }
@@ -283,10 +282,8 @@ function migrateSettings(data) {
 
 export function useSiteSettings() {
   const [settings, setSettings] = useState(() => {
-    try {
-      const cached = JSON.parse(localStorage.getItem('cached_site_settings'))
-      return cached ? migrateSettings(cached) : { navItems: DEFAULT_NAV_ITEMS, homeCards: DEFAULT_HOME_CARDS, hero: DEFAULT_HERO }
-    } catch { return { navItems: DEFAULT_NAV_ITEMS, homeCards: DEFAULT_HOME_CARDS, hero: DEFAULT_HERO } }
+    const cached = cacheGet('cached_site_settings')
+    return cached ? migrateSettings(cached) : { navItems: DEFAULT_NAV_ITEMS, homeCards: DEFAULT_HOME_CARDS, hero: DEFAULT_HERO }
   })
   const [loading, setLoading] = useState(true)
 
@@ -296,7 +293,7 @@ export function useSiteSettings() {
         if (snap.exists()) {
           const data = migrateSettings(snap.data())
           setSettings(data)
-          try { localStorage.setItem('cached_site_settings', JSON.stringify(data)) } catch {}
+          cacheSet('cached_site_settings', data)
         }
         setLoading(false)
       }, () => { setLoading(false) })
