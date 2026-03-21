@@ -34,7 +34,7 @@ export default function App() {
     const saved = localStorage.getItem('lang')
     if (saved) return saved
     const host = window.location.hostname
-    return host.includes('immortality.com') ? 'en' : 'vi'
+    return host.includes('immortality') ? 'en' : 'vi'
   })
   const [page, setPage] = useState('home')
   const [selectedTopic, setSelectedTopic] = useState(null)
