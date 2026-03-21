@@ -5,7 +5,7 @@ function getSiteUrl() {
 }
 
 function isImmortality() {
-  return typeof window !== 'undefined' && window.location.hostname.includes('immortality')
+  return typeof window !== 'undefined' && window.location.hostname.includes('immortality.vn')
 }
 
 const OG_DEFAULTS = {
