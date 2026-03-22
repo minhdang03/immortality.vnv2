@@ -3,13 +3,19 @@ import { useState, useEffect } from 'react'
 const TTL = 5 * 60 * 1000 // 5 minutes
 
 // Read from localStorage with TTL awareness
+// Handles both old format { data, ts } (from cacheSet) and new format (raw data + separate _ts key)
 function readCache(key) {
   try {
     const raw = localStorage.getItem(key)
     if (!raw) return null
-    const data = JSON.parse(raw)
+    const parsed = JSON.parse(raw)
+    // Old format: { data: [...], ts: 123 }
+    if (parsed && typeof parsed === 'object' && 'data' in parsed && 'ts' in parsed) {
+      return { data: parsed.data, fresh: Date.now() - parsed.ts < TTL }
+    }
+    // New format: raw data + separate timestamp key
     const ts = parseInt(localStorage.getItem(`${key}_ts`)) || 0
-    return { data, fresh: Date.now() - ts < TTL }
+    return { data: parsed, fresh: Date.now() - ts < TTL }
   } catch { return null }
 }
 
