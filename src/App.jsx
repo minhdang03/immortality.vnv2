@@ -115,37 +115,44 @@ export default function App() {
 
   useEffect(() => { window.scrollTo(0, 0) }, [page, selectedArticle])
 
-  // SEO - page titles
-  const setMeta = (title, description) => {
+  // SEO - dynamic meta tags (for in-app navigation + JS-capable crawlers)
+  const setMeta = (title, description, { url, type = 'website' } = {}) => {
+    const fullUrl = url || window.location.href
     document.title = title
     document.querySelector('meta[name="description"]')?.setAttribute('content', description)
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', title)
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', description)
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', fullUrl)
+    document.querySelector('meta[property="og:type"]')?.setAttribute('content', type)
     document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title)
     document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', description)
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', fullUrl)
   }
 
   useEffect(() => {
+    const origin = window.location.origin
     const siteDesc = lang === 'vi'
       ? 'Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời.'
       : 'Discover the light within — a healing journey from ancient Vietnamese wisdom.'
 
     if (page === 'article' && selectedArticle) {
       const d = selectedArticle[lang]
-      if (d) setMeta(`${d.title} | ${t.siteName}`, d.summary || siteDesc)
+      const url = `${origin}/article/${articleSlug(selectedArticle)}`
+      if (d) setMeta(`${d.title} | ${t.siteName}`, d.summary || d.question || siteDesc, { url, type: 'article' })
     } else if (page === 'topic' && selectedTopic) {
       const tp = TOPICS.find(tp => tp.id === selectedTopic)
       const topicName = tp ? (lang === 'vi' ? tp.vi : tp.en) : selectedTopic
-      setMeta(`${topicName} | ${t.siteName}`, siteDesc)
+      setMeta(`${topicName} | ${t.siteName}`, siteDesc, { url: `${origin}/topic/${selectedTopic}` })
     } else if (PAGE_TITLES[page]) {
       const pt = PAGE_TITLES[page]
       const pd = PAGE_DESCRIPTIONS[page]
       setMeta(
         `${lang === 'vi' ? pt.vi : pt.en} | ${t.siteName}`,
-        pd ? (lang === 'vi' ? pd.vi : pd.en) : siteDesc
+        pd ? (lang === 'vi' ? pd.vi : pd.en) : siteDesc,
+        { url: `${origin}/${page}` }
       )
     } else {
-      setMeta(`${t.siteName} - ${t.siteTagline}`, siteDesc)
+      setMeta(`${t.siteName} - ${t.siteTagline}`, siteDesc, { url: origin })
     }
   }, [page, selectedArticle, selectedTopic, lang])
 
