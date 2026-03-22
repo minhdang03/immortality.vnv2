@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
-import SunIcon from '../components/SunIcon'
-import ArticleCard from '../components/ArticleCard'
+import SunIcon from '../../components/shared/SunIcon'
+import ArticleCard from '../../components/shared/ArticleCard'
 
 export default function ArticlesPage({ t, lang, articles, topics, navigate }) {
   const [filter, setFilter] = useState('all')

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { DEFAULT_HOME_CARDS, PAGE_OPTIONS } from '../../config/pages'
-import { DEFAULT_HERO } from '../../hooks/useFirestore'
+import { DEFAULT_HERO } from '../../hooks/useSiteSettings'
 import HomeCardsGrid from './HomeCardsGrid'
 
 const inputStyle = {

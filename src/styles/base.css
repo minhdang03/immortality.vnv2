@@ -85,6 +85,17 @@ body { background: var(--bg); color: var(--text); }
 @keyframes raySwing { 0%, 100% { transform: rotate(-15deg); opacity: 0.3; } 50% { transform: rotate(15deg); opacity: 0.7; } }
 [data-theme="light"] .light-rays { opacity: 0.3; }
 
+/* ─── VIEW TRANSITIONS ─── */
+@view-transition { navigation: auto; }
+::view-transition-old(root) {
+  animation: 150ms ease-out both fade-out;
+}
+::view-transition-new(root) {
+  animation: 200ms ease-in 50ms both fade-in;
+}
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } }
+
 /* ─── LAYOUT ─── */
 .app-wrap { position: relative; z-index: 1; }
 .container { max-width: var(--max-w); margin: 0 auto; padding: 0 20px; }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import SunIcon from '../components/SunIcon'
-import ArticleCard from '../components/ArticleCard'
-import { trackSearch } from '../hooks/useAnalytics'
+import SunIcon from '../../components/shared/SunIcon'
+import ArticleCard from '../../components/shared/ArticleCard'
+import { trackSearch } from '../../hooks/useAnalytics'
 
 export default function SearchPage({ t, lang, articles, navigate }) {
   const [search, setSearch] = useState('')

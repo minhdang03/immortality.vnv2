@@ -1,8 +1,32 @@
-@import './base.css';
-@import './nav.css';
-@import './home.css';
-@import './components.css';
-@import './pages.css';
-@import './footer.css';
-@import './animations.css';
-@import './responsive.css';
+/* ─── CASCADE LAYERS — declaration order controls specificity ─── */
+@layer base, layout, components, pages, utilities;
+
+/* Base */
+@import './base.css' layer(base);
+@import './animations.css' layer(base);
+
+/* Layout */
+@import './layout/header.css' layer(layout);
+@import './layout/overlay.css' layer(layout);
+@import './layout/bottom-nav.css' layer(layout);
+@import './footer.css' layer(layout);
+
+/* Components */
+@import './home.css' layer(components);
+@import './components/article-card.css' layer(components);
+@import './components/article-detail.css' layer(components);
+@import './components/share.css' layer(components);
+
+/* Pages */
+@import './pages/comments.css' layer(pages);
+@import './pages/search-contact.css' layer(pages);
+@import './pages/admin.css' layer(pages);
+@import './pages/about.css' layer(pages);
+@import './pages/stories.css' layer(pages);
+@import './pages/khaitri.css' layer(pages);
+@import './pages/practice.css' layer(pages);
+@import './pages/rss.css' layer(pages);
+@import './pages/inline-edit.css' layer(pages);
+
+/* Utilities (highest specificity) */
+@import './responsive.css' layer(utilities);

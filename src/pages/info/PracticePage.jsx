@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import SunIcon from '../components/SunIcon'
+import SunIcon from '../../components/shared/SunIcon'
 
 const DEFAULT_MOVES = [
   { order: 1, titleVi: 'Khởi Động Năng Lượng Mặt Trời', titleEn: 'Solar Energy Activation', descVi: '', descEn: '' },

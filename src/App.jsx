@@ -2,7 +2,14 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { useTheme } from './hooks/useTheme'
-import { useArticles, useTranslations, useTopics, useStories, useKhaiTri, useTeachings, usePractices, useSiteSettings } from './hooks/useFirestore'
+import { useArticles } from './hooks/useArticles'
+import { useTranslations } from './hooks/useTranslations'
+import { useTopics } from './hooks/useTopics'
+import { useStories } from './hooks/useStories'
+import { useKhaiTri } from './hooks/useKhaiTri'
+import { useTeachings } from './hooks/useTeachings'
+import { usePractices } from './hooks/usePractices'
+import { useSiteSettings } from './hooks/useSiteSettings'
 import { useFontSize } from './hooks/useFontSize'
 import { articleSlug } from './utils/slug'
 import { PAGE_TITLES, PAGE_DESCRIPTIONS, matchRoute } from './config/pages'
@@ -11,22 +18,26 @@ import { useSEO } from './hooks/useSEO'
 import './styles/app.css'
 
 // Layout
-import BackgroundEffects from './components/BackgroundEffects'
-import Header from './components/Header'
-import BottomNav from './components/BottomNav'
-import RSSButton from './components/RSSButton'
+import BackgroundEffects from './components/layout/BackgroundEffects'
+import Header from './components/layout/Header'
+import BottomNav from './components/layout/BottomNav'
+import RSSButton from './components/shared/RSSButton'
+import { HomeSkeleton, ListSkeleton, DetailSkeleton, PageSkeleton } from './components/shared/Skeleton'
 
-// Pages
-const HomePage = lazy(() => import('./pages/HomePage'))
-const TopicPage = lazy(() => import('./pages/TopicPage'))
-const ArticleDetail = lazy(() => import('./pages/ArticleDetail'))
-const SearchPage = lazy(() => import('./pages/SearchPage'))
-const ContactPage = lazy(() => import('./pages/ContactPage'))
-const AboutPage = lazy(() => import('./pages/AboutPage'))
-const ArticlesPage = lazy(() => import('./pages/ArticlesPage'))
-const StoriesPage = lazy(() => import('./pages/StoriesPage'))
-const PracticePage = lazy(() => import('./pages/PracticePage'))
-const KhaiTriPage = lazy(() => import('./pages/KhaiTriPage'))
+// Pages — core
+const HomePage = lazy(() => import('./pages/core/HomePage'))
+const SearchPage = lazy(() => import('./pages/core/SearchPage'))
+// Pages — content
+const ArticlesPage = lazy(() => import('./pages/content/ArticlesPage'))
+const ArticleDetail = lazy(() => import('./pages/content/ArticleDetail'))
+const TopicPage = lazy(() => import('./pages/content/TopicPage'))
+const StoriesPage = lazy(() => import('./pages/content/StoriesPage'))
+const KhaiTriPage = lazy(() => import('./pages/content/KhaiTriPage'))
+// Pages — info
+const AboutPage = lazy(() => import('./pages/info/AboutPage'))
+const ContactPage = lazy(() => import('./pages/info/ContactPage'))
+const PracticePage = lazy(() => import('./pages/info/PracticePage'))
+// Admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
@@ -42,14 +53,15 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState(null)
   const { dark, toggle: toggleTheme } = useTheme()
-  const { firestoreArticles, loading, addArticle, updateArticle, deleteArticle } = useArticles()
+  const { firestoreArticles, loading: articlesLoading, addArticle, updateArticle, deleteArticle } = useArticles()
   const { getT, firestoreVi, firestoreEn, updateTranslations } = useTranslations()
-  const { topics: TOPICS, addTopic, updateTopic, deleteTopic } = useTopics()
-  const { stories: firestoreStories, addStory, updateStory, deleteStory } = useStories()
+  const { topics: TOPICS, loading: topicsLoading, addTopic, updateTopic, deleteTopic } = useTopics()
+  const { stories: firestoreStories, loading: storiesLoading, addStory, updateStory, deleteStory } = useStories()
   const { khaitri, addKhaiTri, updateKhaiTri, deleteKhaiTri } = useKhaiTri()
   const { teachings, addTeaching, updateTeaching, deleteTeaching } = useTeachings()
   const { practices, addPractice, updatePractice, deletePractice } = usePractices()
-  const { settings: siteSettings, updateSettings } = useSiteSettings()
+  const { settings: siteSettings, loading: settingsLoading, updateSettings } = useSiteSettings()
+  const homeLoading = articlesLoading || topicsLoading || storiesLoading || settingsLoading
   const { fontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useFontSize(siteSettings?.defaultFontSize)
   const t = getT(lang)
   const allArticles = firestoreArticles
@@ -140,15 +152,23 @@ export default function App() {
   const navigate = (p, extra) => {
     trackNavigation(page, p)
     setMenuOpen(false)
-    if (p === 'topic') {
-      setSelectedTopic(extra); setPage('topic')
-      history.pushState({}, '', `/topic/${extra}`)
-    } else if (p === 'article') {
-      setSelectedArticle(extra); setPage('article')
-      history.pushState({}, '', `/article/${articleSlug(extra)}`)
+    const update = () => {
+      if (p === 'topic') {
+        setSelectedTopic(extra); setPage('topic')
+        history.pushState({}, '', `/topic/${extra}`)
+      } else if (p === 'article') {
+        setSelectedArticle(extra); setPage('article')
+        history.pushState({}, '', `/article/${articleSlug(extra)}`)
+      } else {
+        setPage(p)
+        history.pushState({}, '', p === 'home' ? '/' : `/${p}`)
+      }
+    }
+    // View Transitions API — smooth crossfade between pages
+    if (document.startViewTransition) {
+      document.startViewTransition(update)
     } else {
-      setPage(p)
-      history.pushState({}, '', p === 'home' ? '/' : `/${p}`)
+      update()
     }
   }
 
@@ -166,9 +186,14 @@ export default function App() {
         />
 
         <main className="container">
-          <Suspense fallback={<div style={{ textAlign: 'center', padding: 40, color: 'var(--text-dim)' }}>Đang tải...</div>}>
+          <Suspense fallback={
+            page === 'home' ? <HomeSkeleton /> :
+            page === 'article' ? <DetailSkeleton /> :
+            ['articles', 'stories', 'khaitri', 'topic'].includes(page) ? <ListSkeleton /> :
+            <PageSkeleton />
+          }>
           {page === 'home' && (
-            <HomePage t={t} lang={lang} topics={TOPICS} articles={allArticles} stories={firestoreStories} loading={loading} navigate={navigate} siteSettings={siteSettings} />
+            <HomePage t={t} lang={lang} topics={TOPICS} articles={allArticles} stories={firestoreStories} loading={homeLoading} navigate={navigate} siteSettings={siteSettings} />
           )}
           {page === 'topic' && (
             <TopicPage t={t} lang={lang} topics={TOPICS} articles={allArticles} selectedTopic={selectedTopic} navigate={navigate} />

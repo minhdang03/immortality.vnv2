@@ -9,51 +9,45 @@
 .inline-edit-trigger:hover { opacity: 1; background: rgba(201,168,108,0.2); }
 .section-editable { display: flex; align-items: center; gap: 8px; }
 
-/* Overlay container */
-.ie-overlay {
-  position: fixed; inset: 0; z-index: 9999;
-  display: flex; align-items: flex-end; justify-content: center;
-}
-
-/* Backdrop — sits behind modal, covers entire screen */
-.ie-backdrop {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.5);
-  animation: ieFadeIn 0.2s ease-out;
-  cursor: pointer;
-}
-.ie-closing .ie-backdrop { animation: ieFadeOut 0.2s ease-out forwards; }
-
-@keyframes ieFadeIn { from { opacity: 0 } to { opacity: 1 } }
-@keyframes ieFadeOut { from { opacity: 1 } to { opacity: 0 } }
-
-/* Modal */
-.ie-modal {
-  position: relative; z-index: 1;
+/* ─── NATIVE DIALOG ─── */
+/* Backdrop, escape, focus trap, scroll lock — all handled by browser */
+.ie-dialog {
   width: 100%; max-width: 640px;
   max-height: 70vh; display: flex; flex-direction: column;
   background: var(--bg, #1a1a2e);
   border-radius: 14px 14px 0 0;
   border: 1px solid rgba(201,168,108,0.12); border-bottom: none;
+  padding: 0; margin: auto auto 0; /* bottom-sheet on mobile */
+  color: inherit;
+}
+
+/* Native ::backdrop — replaces custom .ie-backdrop + .ie-overlay */
+.ie-dialog::backdrop {
+  background: rgba(0,0,0,0.5);
+}
+
+/* Open/close animations via @starting-style */
+.ie-dialog[open] {
   animation: ieSlideUp 0.25s cubic-bezier(0.32,0.72,0,1);
 }
-.ie-closing .ie-modal { animation: ieSlideDown 0.2s ease-in forwards; }
+.ie-dialog[open]::backdrop {
+  animation: ieFadeIn 0.2s ease-out;
+}
 
-@keyframes ieSlideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
-@keyframes ieSlideDown { from { transform: translateY(0) } to { transform: translateY(100%) } }
+@keyframes ieSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes ieFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* Desktop */
+/* Desktop — centered modal with scale animation */
 @media (min-width: 640px) {
-  .ie-overlay { align-items: center; }
-  .ie-modal {
+  .ie-dialog {
     border-radius: 14px; border: 1px solid rgba(201,168,108,0.12);
-    max-height: 65vh; margin: 20px;
+    max-height: 65vh; margin: auto;
+  }
+  .ie-dialog[open] {
     animation: ieScaleIn 0.2s cubic-bezier(0.32,0.72,0,1);
   }
-  .ie-closing .ie-modal { animation: ieScaleOut 0.15s ease-in forwards; }
   .ie-drag { display: none; }
-  @keyframes ieScaleIn { from { transform: scale(0.95); opacity: 0 } to { transform: scale(1); opacity: 1 } }
-  @keyframes ieScaleOut { from { transform: scale(1); opacity: 1 } to { transform: scale(0.95); opacity: 0 } }
+  @keyframes ieScaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 }
 
 /* Drag handle (mobile) */

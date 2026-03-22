@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
 
+const supportsScrollTimeline = CSS.supports?.('animation-timeline', 'scroll()')
+
 export function ReadingProgress() {
+  // Native CSS scroll-driven animation — zero JS, GPU-accelerated
+  if (supportsScrollTimeline) return <div className="reading-progress-css" />
+
+  // JS fallback for Firefox/Safari
   const [progress, setProgress] = useState(0)
   useEffect(() => {
     const onScroll = () => {

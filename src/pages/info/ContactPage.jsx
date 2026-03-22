@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import SunIcon from '../components/SunIcon'
+import SunIcon from '../../components/shared/SunIcon'
 
 export default function ContactPage({ t }) {
   const [sent, setSent] = useState(false)

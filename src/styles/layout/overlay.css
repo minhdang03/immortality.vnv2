@@ -1,0 +1,69 @@
+/* ─── MOBILE OVERLAY NAV ─── */
+.overlay-nav {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.overlay-nav.open { opacity: 1; pointer-events: auto; }
+
+.overlay-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--gold-bright);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 8px;
+  transition: transform 0.3s, color 0.3s;
+}
+.overlay-close:hover { color: var(--white); transform: rotate(90deg); }
+
+.overlay-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.overlay-links button {
+  background: none;
+  border: none;
+  color: var(--gold-bright);
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.3s, transform 0.3s;
+  position: relative;
+}
+.overlay-links button:hover { color: var(--white); transform: scale(1.05); }
+.overlay-links button.active { color: var(--white); }
+.overlay-links button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+
+.overlay-divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(201,168,108,0.3);
+  margin: 4px 0;
+}
+.overlay-login { font-size: 1.2rem !important; opacity: 0.7; }
+.overlay-login:hover { opacity: 1; }
+.overlay-login.active { opacity: 1; }

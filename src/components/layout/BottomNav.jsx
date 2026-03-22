@@ -1,5 +1,5 @@
-import { DEFAULT_NAV_ITEMS } from '../config/pages'
-import { NAV_SVG_ICONS } from '../config/navIcons'
+import { DEFAULT_NAV_ITEMS } from '../../config/pages'
+import { NAV_SVG_ICONS } from '../../config/navIcons'
 
 export default function BottomNav({ t, lang, page, navigate, navItems }) {
   const items = (navItems || DEFAULT_NAV_ITEMS)

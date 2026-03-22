@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import SunIcon from '../SunIcon'
+import SunIcon from '../shared/SunIcon'
 
 function renderLessonContent(text) {
   // Split text and render with quote detection

@@ -1,0 +1,44 @@
+/* ─── BOTTOM NAV (mobile fixed) ─── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--bottom-bg);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(201,168,108,0.10);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) { .bottom-nav { display: none; } }
+
+.bottom-nav button {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.62rem;
+  font-family: var(--font-body);
+  transition: color 0.3s;
+  padding: 4px 8px;
+  position: relative;
+}
+.bottom-nav button.active { color: var(--gold-bright); }
+.bottom-nav button.active::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+.bottom-nav button svg { width: 20px; height: 20px; }

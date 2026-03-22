@@ -1,8 +1,8 @@
 import { khaitriSlug } from '../../utils/slug'
-import SunIcon from '../SunIcon'
-import ShareButtons from '../ShareButtons'
-import InlineEdit from '../InlineEdit'
-import { ReadingProgress, ReadingTime, FontSizeControls, renderText } from '../ReadingHelpers'
+import SunIcon from '../shared/SunIcon'
+import ShareButtons from '../shared/ShareButtons'
+import InlineEdit from '../shared/InlineEdit'
+import { ReadingProgress, ReadingTime, FontSizeControls, renderText } from '../shared/ReadingHelpers'
 
 export default function KhaiTriDetail({ item, lang, t, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, onBack, allItems, user, onUpdate }) {
   const langKey = lang === 'vi' ? 'vi' : 'en'

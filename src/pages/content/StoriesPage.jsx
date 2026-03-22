@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { storySlug } from '../utils/slug'
-import { updateCanonical } from '../hooks/useSEO'
-import StoryDetail from '../components/stories/StoryDetail'
-import StoryList from '../components/stories/StoryList'
+import { storySlug } from '../../utils/slug'
+import { updateCanonical } from '../../hooks/useSEO'
+import StoryDetail from '../../components/stories/StoryDetail'
+import StoryList from '../../components/stories/StoryList'
 
 export default function StoriesPage({ t, lang, firestoreStories, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateStory }) {
   const [selected, setSelected] = useState(null)

@@ -1,5 +1,5 @@
-import SunIcon from '../components/SunIcon'
-import ArticleCard from '../components/ArticleCard'
+import SunIcon from '../../components/shared/SunIcon'
+import ArticleCard from '../../components/shared/ArticleCard'
 
 export default function TopicPage({ t, lang, topics, articles, selectedTopic, navigate }) {
   const tp = topics.find(x => x.id === selectedTopic)

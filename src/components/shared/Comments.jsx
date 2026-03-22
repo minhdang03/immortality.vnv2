@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useComments } from '../hooks/useFirestore'
+import { useComments } from '../../hooks/useComments'
 
 export default function Comments({ articleId, t, user }) {
   const isAdmin = !!user

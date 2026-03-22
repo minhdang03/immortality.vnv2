@@ -1,11 +1,11 @@
 import { STORY_TAGS } from '../../data/stories'
 import { storySlug } from '../../utils/slug'
-import SunIcon from '../SunIcon'
-import ShareButtons from '../ShareButtons'
-import InlineEdit from '../InlineEdit'
+import SunIcon from '../shared/SunIcon'
+import ShareButtons from '../shared/ShareButtons'
+import InlineEdit from '../shared/InlineEdit'
 import StoryLessons from './StoryLessons'
 import StoryThread from './StoryThread'
-import { ReadingProgress, ReadingTime, FontSizeControls, renderText } from '../ReadingHelpers'
+import { ReadingProgress, ReadingTime, FontSizeControls, renderText } from '../shared/ReadingHelpers'
 
 export default function StoryDetail({ story, lang, t, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, onBack, allStories, user, onUpdateStory }) {
   const tag = STORY_TAGS[story.tag]

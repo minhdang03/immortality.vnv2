@@ -1,35 +1,32 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 
 export default function InlineEdit({ value, onSave, lang, label }) {
-  const [open, setOpen] = useState(false)
-  const [closing, setClosing] = useState(false)
   const [text, setText] = useState(value || '')
   const [saving, setSaving] = useState(false)
-  const ref = useRef(null)
+  const dialogRef = useRef(null)
+  const textareaRef = useRef(null)
+
+  const open = () => {
+    setText(value || '')
+    dialogRef.current?.showModal()
+    setTimeout(() => {
+      textareaRef.current?.focus()
+      textareaRef.current?.setSelectionRange(0, 0)
+    }, 50)
+  }
 
   const close = useCallback(() => {
-    setClosing(true)
-    setTimeout(() => { setOpen(false); setClosing(false) }, 200)
+    dialogRef.current?.close()
   }, [])
 
+  // Backdrop click to close (native dialog puts ::backdrop behind, click on dialog = backdrop)
   useEffect(() => {
-    if (open && ref.current) {
-      ref.current.focus()
-      ref.current.setSelectionRange(0, 0)
-    }
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    document.body.style.overflow = 'hidden'
-    const onKey = (e) => { if (e.key === 'Escape') close() }
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [open, close])
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const onClick = (e) => { if (e.target === dialog) close() }
+    dialog.addEventListener('click', onClick)
+    return () => dialog.removeEventListener('click', onClick)
+  }, [close])
 
   const handleSave = async () => {
     setSaving(true)
@@ -42,12 +39,18 @@ export default function InlineEdit({ value, onSave, lang, label }) {
     setSaving(false)
   }
 
-  const modal = open ? createPortal(
-    <div className={`ie-overlay ${closing ? 'ie-closing' : ''}`}>
-      {/* Backdrop — separate clickable element */}
-      <div className="ie-backdrop" onClick={close} />
+  return (
+    <>
+      <button
+        className="inline-edit-trigger"
+        onClick={open}
+        title={lang === 'vi' ? 'Chỉnh sửa' : 'Edit'}
+      >
+        ✏️
+      </button>
 
-      <div className="ie-modal">
+      {/* Native <dialog> — automatic backdrop, escape, focus trap, z-index, scroll lock */}
+      <dialog ref={dialogRef} className="ie-dialog">
         <div className="ie-drag" onClick={close}><span className="ie-drag-bar" /></div>
         <div className="ie-header">
           <span className="ie-label">{label || (lang === 'vi' ? 'Chỉnh sửa' : 'Edit')}</span>
@@ -57,7 +60,7 @@ export default function InlineEdit({ value, onSave, lang, label }) {
           {lang === 'vi' ? 'Xuống 2 dòng để tách đoạn' : 'Double line break = new paragraph'}
         </div>
         <textarea
-          ref={ref}
+          ref={textareaRef}
           className="ie-textarea"
           value={text}
           onChange={e => setText(e.target.value)}
@@ -71,21 +74,7 @@ export default function InlineEdit({ value, onSave, lang, label }) {
             {saving ? '...' : (lang === 'vi' ? 'Lưu thay đổi' : 'Save')}
           </button>
         </div>
-      </div>
-    </div>,
-    document.body
-  ) : null
-
-  return (
-    <>
-      <button
-        className="inline-edit-trigger"
-        onClick={() => { setText(value || ''); setOpen(true) }}
-        title={lang === 'vi' ? 'Chỉnh sửa' : 'Edit'}
-      >
-        ✏️
-      </button>
-      {modal}
+      </dialog>
     </>
   )
 }

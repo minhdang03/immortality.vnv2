@@ -28,13 +28,54 @@
 
     <link rel="icon" href="/fav.ico" />
     <link rel="canonical" href="https://battudao.com" />
-    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+
+    <!-- Preconnect — resolve DNS + TLS early for fonts & Firebase -->
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+    <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+
+    <!-- Fonts — swap ensures text renders immediately with fallback -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+    <!-- Inline critical styles for instant skeleton render before CSS loads -->
+    <style>
+      body{margin:0;background:#0a0a0f;font-family:'Be Vietnam Pro',system-ui,sans-serif;overflow-x:hidden}
+      [data-theme="light"] body,.light-body{background:#faf8f5}
+      #root-skeleton{max-width:480px;margin:0 auto;padding:0 16px;opacity:1;transition:opacity .2s}
+      #root-skeleton.hide{opacity:0;pointer-events:none}
+      .sk-shimmer{background:linear-gradient(90deg,rgba(201,168,108,.06) 25%,rgba(201,168,108,.12) 50%,rgba(201,168,108,.06) 75%);background-size:200% 100%;animation:sk-sh 1.5s ease-in-out infinite}
+      @keyframes sk-sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+      .sk-hero{text-align:center;padding:70px 20px 50px}
+      .sk-sun{width:80px;height:80px;border-radius:50%;margin:0 auto 28px}
+      .sk-line{height:14px;border-radius:8px;margin:0 auto 12px}
+      .sk-btn{height:36px;border-radius:30px;display:inline-block}
+      .sk-card{background:rgba(18,18,26,1);border-radius:16px;padding:22px 16px 18px;border:1px solid rgba(201,168,108,.08);text-align:center}
+      .sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+      .sk-circle{width:28px;height:28px;border-radius:50%;margin:0 auto 12px}
+      @media(min-width:768px){#root-skeleton{max-width:720px}.sk-grid{grid-template-columns:repeat(4,1fr)}}
+    </style>
   </head>
   <body>
+    <!-- Inline skeleton — visible instantly, hidden when React mounts -->
+    <div id="root-skeleton">
+      <div class="sk-hero">
+        <div class="sk-sun sk-shimmer"></div>
+        <div class="sk-line sk-shimmer" style="width:50%;height:28px;margin-bottom:16px"></div>
+        <div class="sk-line sk-shimmer" style="width:70%;margin-bottom:32px"></div>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <div class="sk-btn sk-shimmer" style="width:160px"></div>
+          <div class="sk-btn sk-shimmer" style="width:140px"></div>
+        </div>
+      </div>
+      <div class="sk-grid">
+        <div class="sk-card"><div class="sk-circle sk-shimmer"></div><div class="sk-line sk-shimmer" style="width:60%;height:16px"></div><div class="sk-line sk-shimmer" style="width:85%;height:10px"></div></div>
+        <div class="sk-card"><div class="sk-circle sk-shimmer"></div><div class="sk-line sk-shimmer" style="width:60%;height:16px"></div><div class="sk-line sk-shimmer" style="width:85%;height:10px"></div></div>
+        <div class="sk-card"><div class="sk-circle sk-shimmer"></div><div class="sk-line sk-shimmer" style="width:60%;height:16px"></div><div class="sk-line sk-shimmer" style="width:85%;height:10px"></div></div>
+        <div class="sk-card"><div class="sk-circle sk-shimmer"></div><div class="sk-line sk-shimmer" style="width:60%;height:16px"></div><div class="sk-line sk-shimmer" style="width:85%;height:10px"></div></div>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

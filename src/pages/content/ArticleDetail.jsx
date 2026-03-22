@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
-import { useArticleAnalytics } from '../hooks/useAnalytics'
-import ShareButtons from '../components/ShareButtons'
-import Comments from '../components/Comments'
-import ArticleCard from '../components/ArticleCard'
-import InlineEdit from '../components/InlineEdit'
-import { ReadingProgress, ReadingTime, FontSizeControls } from '../components/ReadingHelpers'
-import { articleSlug } from '../utils/slug'
+import { useArticleAnalytics } from '../../hooks/useAnalytics'
+import ShareButtons from '../../components/shared/ShareButtons'
+import Comments from '../../components/shared/Comments'
+import ArticleCard from '../../components/shared/ArticleCard'
+import InlineEdit from '../../components/shared/InlineEdit'
+import { ReadingProgress, ReadingTime, FontSizeControls } from '../../components/shared/ReadingHelpers'
+import { articleSlug } from '../../utils/slug'
 
 function TableOfContents({ body, lang }) {
   const paragraphs = useMemo(() => {

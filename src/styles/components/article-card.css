@@ -1,0 +1,57 @@
+/* ─── ARTICLE CARD ─── */
+.article-card {
+  background: var(--card); border-radius: 16px; padding: 22px 20px; margin-bottom: 16px;
+  border: 1px solid rgba(201,168,108,0.08);
+  transition: box-shadow 0.3s, border-color 0.3s;
+  container-type: inline-size;
+}
+.article-card:hover {
+  box-shadow: 0 6px 25px rgba(201,168,108,0.12);
+  border-color: rgba(201,168,108,0.25);
+}
+.article-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.article-tag {
+  font-size: 0.7rem; font-weight: 500; color: var(--gold);
+  background: rgba(201,168,108,0.1); padding: 3px 10px; border-radius: 10px;
+}
+.article-date { font-size: 0.72rem; color: var(--text-dim); }
+.article-title {
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 600;
+  color: var(--white); margin-bottom: 10px; line-height: 1.4;
+}
+.article-title-link { cursor: pointer; transition: color 0.3s; }
+.article-title-link:hover { color: var(--gold-bright); }
+.article-question {
+  font-style: italic; font-size: 0.85rem; color: var(--text);
+  border-left: 3px solid var(--gold); padding-left: 14px;
+  margin-bottom: 12px; line-height: 1.6;
+}
+.article-summary { font-size: 0.85rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 16px; }
+.article-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn-read, .btn-video {
+  font-size: 0.8rem; font-weight: 500; padding: 8px 18px;
+  border-radius: 20px; border: none; cursor: pointer;
+  font-family: var(--font-body); transition: all 0.3s;
+}
+.btn-read {
+  background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+  color: #0a0a0f;
+}
+[data-theme="light"] .btn-read { color: #fff; }
+.btn-read:hover { box-shadow: 0 4px 15px rgba(201,168,108,0.4); }
+.btn-video {
+  background: transparent; border: 1px solid rgba(201,168,108,0.3);
+  color: var(--gold-bright);
+}
+.btn-video:hover { border-color: var(--gold-bright); background: rgba(201,168,108,0.08); }
+
+/* Container queries — card adapts to its parent width, not viewport */
+@container (max-width: 320px) {
+  .article-title { font-size: 1rem; }
+  .article-actions { flex-direction: column; gap: 8px; }
+}
+@container (min-width: 500px) {
+  .article-card { padding: 28px 26px; }
+  .article-title { font-size: 1.25rem; }
+  .article-summary { font-size: 0.9rem; }
+}

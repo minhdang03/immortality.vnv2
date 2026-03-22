@@ -1,6 +1,7 @@
-import SunIcon from '../components/SunIcon'
-import ArticleCard from '../components/ArticleCard'
-import WisdomQuotes from '../components/WisdomQuotes'
+import SunIcon from '../../components/shared/SunIcon'
+import ArticleCard from '../../components/shared/ArticleCard'
+import WisdomQuotes from '../../components/shared/WisdomQuotes'
+import { HomeSkeleton } from '../../components/shared/Skeleton'
 
 const CARD_ICONS = {
   book: (
@@ -62,6 +63,8 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
 
   const ctaPrimaryLabel = (lang === 'vi' ? hero.ctaPrimaryVi : hero.ctaPrimaryEn) || (lang === 'vi' ? 'Khám Phá Câu Chuyện' : 'Explore Stories')
   const ctaSecondaryLabel = (lang === 'vi' ? hero.ctaSecondaryVi : hero.ctaSecondaryEn) || t.heroCta
+
+  if (loading) return <HomeSkeleton />
 
   return (
     <>
@@ -125,18 +128,10 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
       {/* Latest Articles */}
       <section className="section">
         <h2 className="section-title fade-up"><SunIcon size={20} /> {t.articlesTitle}</h2>
-        {loading && [1,2,3].map(i => (
-          <div key={i} className="skeleton-card fade-up">
-            <div className="skeleton-line w40" />
-            <div className="skeleton-line w80 thick" />
-            <div className="skeleton-line w100" />
-            <div className="skeleton-line w60" />
-          </div>
-        ))}
-        {!loading && articles.slice(0, 5).map((a, i) => (
+        {articles.slice(0, 5).map((a, i) => (
           <ArticleCard key={a.id} article={a} lang={lang} t={t} index={i} navigate={navigate} />
         ))}
-        {!loading && articles.length > 5 && (
+        {articles.length > 5 && (
           <div className="home-see-all fade-up">
             <button className="cta-btn-outline" onClick={() => navigate('search')}>
               {lang === 'vi' ? `Xem tất cả ${articles.length} bài viết` : `View all ${articles.length} articles`}

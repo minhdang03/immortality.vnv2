@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import SunIcon from '../SunIcon'
+import SunIcon from '../shared/SunIcon'
 
 const PAGE_SIZE = 20
 

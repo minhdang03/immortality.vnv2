@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import SunIcon from '../components/SunIcon'
+import SunIcon from '../../components/shared/SunIcon'
 
 const DEFAULT_SECTIONS = [
   {

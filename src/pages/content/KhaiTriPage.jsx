@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { khaitriSlug } from '../utils/slug'
-import { updateCanonical } from '../hooks/useSEO'
-import KhaiTriList from '../components/khaitri/KhaiTriList'
-import KhaiTriDetail from '../components/khaitri/KhaiTriDetail'
+import { khaitriSlug } from '../../utils/slug'
+import { updateCanonical } from '../../hooks/useSEO'
+import KhaiTriList from '../../components/khaitri/KhaiTriList'
+import KhaiTriDetail from '../../components/khaitri/KhaiTriDetail'
 
 export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateKhaiTri }) {
   const [selected, setSelected] = useState(null)
