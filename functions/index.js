@@ -19,6 +19,7 @@ VI_MAP.split(',').forEach(group => {
   for (const c of chars) SLUG_MAP[c] = to
 })
 
+// Keep in sync with src/utils/slug.js
 function toSlug(str) {
   if (!str) return ''
   return str.toLowerCase().split('').map(c => SLUG_MAP[c] || c).join('')
@@ -99,28 +100,29 @@ exports.ogRenderer = onRequest({ region: 'asia-southeast1' }, async (req, res) =
     if (spa) {
       res.status(200).set('Content-Type', 'text/html').send(spa)
     } else {
-      // Fallback: serve a minimal page that loads the SPA
-      res.status(200).set('Content-Type', 'text/html').send(
-        `<!DOCTYPE html><html><head><meta charset="UTF-8"><script>window.location.href=window.location.href</script></head><body></body></html>`
-      )
+      // Fallback: redirect to root SPA when spa.html unavailable
+      res.redirect(302, SITE)
     }
     return
   }
 
   try {
     // Article detail: /article/:slug
+    // Uses pre-stamped viSlug/enSlug fields for O(1) lookup (run backfill-article-slugs.js first)
     if (reqPath.startsWith('/article/')) {
       const slug = reqPath.slice(9).replace(/\/$/, '')
-      const snap = await db.collection('articles').get()
       let article = null
-      snap.forEach(doc => {
-        const data = doc.data()
-        const viSlug = toSlug(data.vi?.title)
-        const enSlug = toSlug(data.en?.title)
-        if (viSlug === slug || enSlug === slug || doc.id === slug) {
-          article = { id: doc.id, ...data }
-        }
-      })
+
+      // Try viSlug index → enSlug index → doc-id fallback (covers legacy / unmigrated docs)
+      let snap = await db.collection('articles').where('viSlug', '==', slug).limit(1).get()
+      if (snap.empty) snap = await db.collection('articles').where('enSlug', '==', slug).limit(1).get()
+      if (!snap.empty) {
+        const d = snap.docs[0]
+        article = { id: d.id, ...d.data() }
+      } else {
+        const byId = await db.collection('articles').doc(slug).get()
+        if (byId.exists) article = { id: byId.id, ...byId.data() }
+      }
 
       if (article) {
         const d = article.vi || article.en || {}

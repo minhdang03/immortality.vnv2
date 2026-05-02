@@ -1,6 +1,7 @@
 import { useFirestoreSWR } from './useFirestoreSWR'
 import { db } from '../firebase'
 import { DEFAULT_ARTICLES } from '../data/articles'
+import { articleSlugFields } from '../utils/slug'
 import {
   collection, addDoc, updateDoc, deleteDoc, doc,
   onSnapshot, orderBy, query, serverTimestamp
@@ -23,9 +24,11 @@ export function useArticles() {
   )
 
   const addArticle = async (article) => {
-    await addDoc(collection(db, 'articles'), { ...article, createdAt: serverTimestamp() })
+    await addDoc(collection(db, 'articles'), { ...article, ...articleSlugFields(article), createdAt: serverTimestamp() })
   }
-  const updateArticle = async (id, data) => { await updateDoc(doc(db, 'articles', id), data) }
+  const updateArticle = async (id, data) => {
+    await updateDoc(doc(db, 'articles', id), { ...data, ...articleSlugFields(data) })
+  }
   const deleteArticle = async (id) => { await deleteDoc(doc(db, 'articles', id)) }
 
   return { firestoreArticles, loading, addArticle, updateArticle, deleteArticle }

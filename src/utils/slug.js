@@ -34,6 +34,16 @@ export function articleSlug(article) {
 }
 
 /**
+ * Return { viSlug, enSlug } fields for Firestore — enables O(1) crawler lookup
+ */
+export function articleSlugFields(article) {
+  return {
+    viSlug: toSlug(article?.vi?.title),
+    enSlug: toSlug(article?.en?.title),
+  }
+}
+
+/**
  * Get slug for a story — uses order + VI title
  * e.g. "01-thoat-chet-duoi-duoi-ao-nuoc"
  */
