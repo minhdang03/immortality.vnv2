@@ -37,6 +37,7 @@ const KhaiTriPage = lazy(() => import('./pages/content/KhaiTriPage'))
 const AboutPage = lazy(() => import('./pages/info/AboutPage'))
 const ContactPage = lazy(() => import('./pages/info/ContactPage'))
 const PracticePage = lazy(() => import('./pages/info/PracticePage'))
+const UngHoPage = lazy(() => import('./pages/info/UngHoPage'))
 // Admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
@@ -198,6 +199,9 @@ export default function App() {
           )}
           {page === 'contact' && (
             <ContactPage t={t} />
+          )}
+          {page === 'ungho' && (
+            <UngHoPage t={t} lang={lang} channels={siteSettings.donationChannels} />
           )}
           {page === 'admin' && (
             <AdminPanel
