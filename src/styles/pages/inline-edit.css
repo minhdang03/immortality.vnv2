@@ -91,6 +91,11 @@
   overflow-y: auto; white-space: pre-wrap;
 }
 
+/* Error message */
+.inline-edit-error {
+  padding: 6px 18px; font-size: 0.8rem; color: #e74c3c;
+}
+
 /* Actions */
 .ie-actions {
   display: flex; gap: 8px; padding: 12px 18px;

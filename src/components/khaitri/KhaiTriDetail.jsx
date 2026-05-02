@@ -11,16 +11,10 @@ export default function KhaiTriDetail({ item, lang, t, navigate, fontSize, onFon
   const body = d.body || ''
 
   const isAdmin = !!user
+  // Use dot-notation so Firestore merges atomically — avoids stale snapshot clobber on concurrent saves
   const saveField = (nestedPath) => async (value) => {
     if (onUpdate && item.id) {
-      // nestedPath like 'vi.body' or 'vi.question'
-      const parts = nestedPath.split('.')
-      if (parts.length === 2) {
-        const current = item[parts[0]] || {}
-        await onUpdate(item.id, { [parts[0]]: { ...current, [parts[1]]: value } })
-      } else {
-        await onUpdate(item.id, { [nestedPath]: value })
-      }
+      await onUpdate(item.id, { [nestedPath]: value })
     }
   }
 

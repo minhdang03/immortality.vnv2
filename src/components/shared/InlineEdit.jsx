@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 export default function InlineEdit({ value, onSave, lang, label }) {
   const [text, setText] = useState(value || '')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const dialogRef = useRef(null)
   const textareaRef = useRef(null)
 
@@ -30,11 +31,12 @@ export default function InlineEdit({ value, onSave, lang, label }) {
 
   const handleSave = async () => {
     setSaving(true)
+    setError('')
     try {
       await onSave(text)
       close()
     } catch (e) {
-      console.error(e)
+      setError(e?.message || (lang === 'vi' ? 'Lưu thất bại' : 'Save failed'))
     }
     setSaving(false)
   }
@@ -66,6 +68,7 @@ export default function InlineEdit({ value, onSave, lang, label }) {
           onChange={e => setText(e.target.value)}
           rows={10}
         />
+        {error && <div className="inline-edit-error">{error}</div>}
         <div className="ie-actions">
           <button className="ie-btn-cancel" onClick={close}>
             {lang === 'vi' ? 'Hủy' : 'Cancel'}
