@@ -9,6 +9,7 @@ const DEFAULT_DONATION_CHANNELS = {
 export default function SettingsTab({ lang, settings, onUpdate }) {
   const [navItems, setNavItems] = useState(() => settings.navItems || DEFAULT_NAV_ITEMS)
   const [defaultFontSize, setDefaultFontSize] = useState(() => settings.defaultFontSize ?? 100)
+  const [defaultTheme, setDefaultTheme] = useState(() => settings.defaultTheme || 'dark')
   const [donationChannels, setDonationChannels] = useState(() => ({
     ...DEFAULT_DONATION_CHANNELS,
     ...settings.donationChannels,
@@ -57,7 +58,7 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await onUpdate({ navItems, defaultFontSize, donationChannels })
+      await onUpdate({ navItems, defaultFontSize, defaultTheme, donationChannels })
     } catch (err) {
       console.error(err)
     }
@@ -67,12 +68,50 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
   const handleReset = () => {
     setNavItems([...DEFAULT_NAV_ITEMS])
     setDefaultFontSize(100)
+    setDefaultTheme('dark')
   }
 
   const bottomCount = navItems.filter(i => i.visible && i.showInBottom).length
 
   return (
     <>
+      {/* Default Theme */}
+      <div className="admin-settings-section">
+        <h3 className="admin-settings-title">
+          {vi ? '🎨 Giao diện mặc định' : '🎨 Default Theme'}
+        </h3>
+        <div className="admin-form" style={{ padding: '16px 18px' }}>
+          <div className="admin-settings-row" style={{ borderBottom: 'none' }}>
+            <div style={{ flex: 1 }}>
+              <div className="admin-settings-label">
+                {vi ? 'Chế độ sáng/tối' : 'Light or Dark mode'}
+              </div>
+              <div className="admin-settings-hint">
+                {vi
+                  ? 'Áp dụng cho người dùng mới. Người dùng cũ giữ lựa chọn của họ.'
+                  : 'Applied to new visitors. Returning users keep their own choice.'}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                className={`btn-sm ${defaultTheme === 'dark' ? '' : 'btn-danger'}`}
+                onClick={() => setDefaultTheme('dark')}
+                style={{ minWidth: 60 }}
+              >
+                🌙 {vi ? 'Tối' : 'Dark'}
+              </button>
+              <button
+                className={`btn-sm ${defaultTheme === 'light' ? '' : 'btn-danger'}`}
+                onClick={() => setDefaultTheme('light')}
+                style={{ minWidth: 60 }}
+              >
+                ☀ {vi ? 'Sáng' : 'Light'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Default Font Size */}
       <div className="admin-settings-section">
         <h3 className="admin-settings-title">

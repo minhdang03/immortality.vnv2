@@ -53,7 +53,6 @@ export default function App() {
   const [selectedArticle, setSelectedArticle] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState(null)
-  const { dark, toggle: toggleTheme } = useTheme()
   const { firestoreArticles, loading: articlesLoading, addArticle, updateArticle, deleteArticle } = useArticles()
   const { getT, firestoreVi, firestoreEn, updateTranslations } = useTranslations()
   const { topics: TOPICS, loading: topicsLoading, addTopic, updateTopic, deleteTopic } = useTopics()
@@ -62,6 +61,7 @@ export default function App() {
   const { teachings, addTeaching, updateTeaching, deleteTeaching } = useTeachings()
   const { practices, addPractice, updatePractice, deletePractice } = usePractices()
   const { settings: siteSettings, loading: settingsLoading, updateSettings } = useSiteSettings()
+  const { dark, toggle: toggleTheme } = useTheme(siteSettings?.defaultTheme)
   const homeLoading = articlesLoading || topicsLoading || storiesLoading || settingsLoading
   const { fontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useFontSize(siteSettings?.defaultFontSize)
   const t = getT(lang)
