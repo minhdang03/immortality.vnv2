@@ -1,13 +1,28 @@
 import { useState } from 'react'
 import { DEFAULT_NAV_ITEMS, ALL_NAV_PAGES, NAV_ICONS } from '../../config/pages'
 
+const DEFAULT_DONATION_CHANNELS = {
+  vietqr: { enabled: false, bankName: '', accountNumber: '', accountHolder: '', qrImageUrl: '', note: '' },
+  paypal: { enabled: false, link: '', email: '', note: '' },
+}
+
 export default function SettingsTab({ lang, settings, onUpdate }) {
   const [navItems, setNavItems] = useState(() => settings.navItems || DEFAULT_NAV_ITEMS)
   const [defaultFontSize, setDefaultFontSize] = useState(() => settings.defaultFontSize ?? 100)
+  const [donationChannels, setDonationChannels] = useState(() => ({
+    ...DEFAULT_DONATION_CHANNELS,
+    ...settings.donationChannels,
+    vietqr: { ...DEFAULT_DONATION_CHANNELS.vietqr, ...settings.donationChannels?.vietqr },
+    paypal: { ...DEFAULT_DONATION_CHANNELS.paypal, ...settings.donationChannels?.paypal },
+  }))
   const [saving, setSaving] = useState(false)
   const [dragIdx, setDragIdx] = useState(null)
 
   const vi = lang === 'vi'
+
+  const setChannel = (channel, field, value) => {
+    setDonationChannels(prev => ({ ...prev, [channel]: { ...prev[channel], [field]: value } }))
+  }
 
   const moveItem = (from, to) => {
     if (to < 0 || to >= navItems.length) return
@@ -42,7 +57,7 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await onUpdate({ navItems, defaultFontSize })
+      await onUpdate({ navItems, defaultFontSize, donationChannels })
     } catch (err) {
       console.error(err)
     }
@@ -168,6 +183,64 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Donation Channels */}
+      <div className="admin-settings-section">
+        <h3 className="admin-settings-title">
+          {vi ? '🤝 Kênh ủng hộ (trang /ungho)' : '🤝 Donation channels (/ungho page)'}
+        </h3>
+        <div className="admin-form" style={{ padding: '16px 18px', display: 'grid', gap: 18 }}>
+          {/* VietQR */}
+          <div style={{ display: 'grid', gap: 8 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.92rem', fontWeight: 600, color: 'var(--white)' }}>
+              <input type="checkbox" checked={donationChannels.vietqr.enabled}
+                onChange={e => setChannel('vietqr', 'enabled', e.target.checked)} />
+              {vi ? 'VietQR / Ngân hàng VN' : 'VietQR / Vietnamese Bank'}
+            </label>
+            {donationChannels.vietqr.enabled && (
+              <div style={{ display: 'grid', gap: 8, paddingLeft: 22 }}>
+                <input placeholder={vi ? 'Tên ngân hàng' : 'Bank name'} value={donationChannels.vietqr.bankName}
+                  onChange={e => setChannel('vietqr', 'bankName', e.target.value)}
+                  style={{ padding: 8, background: 'var(--bg)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text)' }} />
+                <input placeholder={vi ? 'Số tài khoản' : 'Account number'} value={donationChannels.vietqr.accountNumber}
+                  onChange={e => setChannel('vietqr', 'accountNumber', e.target.value)}
+                  style={{ padding: 8, background: 'var(--bg)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text)' }} />
+                <input placeholder={vi ? 'Chủ tài khoản' : 'Account holder'} value={donationChannels.vietqr.accountHolder}
+                  onChange={e => setChannel('vietqr', 'accountHolder', e.target.value)}
+                  style={{ padding: 8, background: 'var(--bg)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text)' }} />
+                <input placeholder={vi ? 'URL ảnh QR (vd: /qr.png)' : 'QR image URL'} value={donationChannels.vietqr.qrImageUrl}
+                  onChange={e => setChannel('vietqr', 'qrImageUrl', e.target.value)}
+                  style={{ padding: 8, background: 'var(--bg)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text)' }} />
+                <input placeholder={vi ? 'Ghi chú (tuỳ chọn)' : 'Note (optional)'} value={donationChannels.vietqr.note}
+                  onChange={e => setChannel('vietqr', 'note', e.target.value)}
+                  style={{ padding: 8, background: 'var(--bg)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text)' }} />
+              </div>
+            )}
+          </div>
+
+          {/* PayPal */}
+          <div style={{ display: 'grid', gap: 8 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.92rem', fontWeight: 600, color: 'var(--white)' }}>
+              <input type="checkbox" checked={donationChannels.paypal.enabled}
+                onChange={e => setChannel('paypal', 'enabled', e.target.checked)} />
+              {vi ? 'PayPal / Quốc tế' : 'PayPal / International'}
+            </label>
+            {donationChannels.paypal.enabled && (
+              <div style={{ display: 'grid', gap: 8, paddingLeft: 22 }}>
+                <input placeholder="https://paypal.me/..." value={donationChannels.paypal.link}
+                  onChange={e => setChannel('paypal', 'link', e.target.value)}
+                  style={{ padding: 8, background: 'var(--bg)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text)' }} />
+                <input placeholder="Email PayPal" value={donationChannels.paypal.email}
+                  onChange={e => setChannel('paypal', 'email', e.target.value)}
+                  style={{ padding: 8, background: 'var(--bg)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text)' }} />
+                <input placeholder={vi ? 'Ghi chú (tuỳ chọn)' : 'Note (optional)'} value={donationChannels.paypal.note}
+                  onChange={e => setChannel('paypal', 'note', e.target.value)}
+                  style={{ padding: 8, background: 'var(--bg)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text)' }} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,0 +1,93 @@
+// Firestore Security Rules — Bất Tử Đạo
+//
+// NOTE: This project's firebase.json does NOT have a `firestore` section, so these
+// rules are NOT auto-deployed by `firebase deploy`. Copy the contents below into:
+//   Firebase Console → Firestore → Rules tab → paste & publish
+// (Or add a `"firestore": { "rules": "firestore.rules" }` section to firebase.json
+// to enable CLI deployment.)
+//
+// These rules cover the new /ungho (Support / Donations) feature plus baseline
+// access for existing collections. Adjust other collections as needed.
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────────────────
+    // Helper
+    // ─────────────────────────────────────────────────────────────
+    function isAdmin() {
+      return request.auth != null;
+      // Tighten later by checking custom claims, e.g.
+      //   return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Donations (public-safe)
+    //   Public can READ only approved entries.
+    //   Public can CREATE pending submissions with validated fields.
+    //   Only admin can UPDATE / DELETE.
+    // ─────────────────────────────────────────────────────────────
+    match /donations/{id} {
+      allow read: if resource.data.status == 'approved' || isAdmin();
+
+      allow create: if request.resource.data.status == 'pending'
+                    && request.resource.data.amount is number
+                    && request.resource.data.amount > 0
+                    && request.resource.data.amount < 1000000000  // < 1B VND sanity cap
+                    && request.resource.data.isAnonymous is bool
+                    && (
+                      request.resource.data.displayName == ''
+                      || (
+                        request.resource.data.displayName is string
+                        && request.resource.data.displayName.size() <= 100
+                      )
+                    )
+                    && (
+                      request.resource.data.message == null
+                      || (
+                        request.resource.data.message is string
+                        && request.resource.data.message.size() <= 500
+                      )
+                    );
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Donation contacts (PRIVATE — admin-only read)
+    //   Public can CREATE (paired with /donations/{id}).
+    //   Only admin can READ / UPDATE / DELETE.
+    //   Email & phone NEVER exposed to public clients.
+    // ─────────────────────────────────────────────────────────────
+    match /donation_contacts/{id} {
+      allow read, update, delete: if isAdmin();
+
+      allow create: if (
+        request.resource.data.realName is string
+        && request.resource.data.realName.size() <= 100
+      ) && (
+        request.resource.data.email == null
+        || (request.resource.data.email is string && request.resource.data.email.size() <= 120)
+      ) && (
+        request.resource.data.phone == null
+        || (request.resource.data.phone is string && request.resource.data.phone.size() <= 30)
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Existing public collections — adjust to match current rules
+    // ─────────────────────────────────────────────────────────────
+    match /articles/{id}        { allow read: if true; allow write: if isAdmin(); }
+    match /stories/{id}         { allow read: if true; allow write: if isAdmin(); }
+    match /khaitri/{id}         { allow read: if true; allow write: if isAdmin(); }
+    match /topics/{id}          { allow read: if true; allow write: if isAdmin(); }
+    match /teachings/{id}       { allow read: if true; allow write: if isAdmin(); }
+    match /practices/{id}       { allow read: if true; allow write: if isAdmin(); }
+    match /translations/{lang}  { allow read: if true; allow write: if isAdmin(); }
+    match /settings/{id}        { allow read: if true; allow write: if isAdmin(); }
+    match /comments/{id}        { allow read: if true; allow create: if true; allow update, delete: if isAdmin(); }
+    match /contacts/{id}        { allow read, update, delete: if isAdmin(); allow create: if true; }
+  }
+}

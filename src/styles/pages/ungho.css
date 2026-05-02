@@ -1,0 +1,195 @@
+/* ─── UNG HO (Support) Page ─── */
+.ungho-page {
+  max-width: var(--max-w); margin: 0 auto; padding-top: 40px; padding-bottom: 64px;
+}
+
+.ungho-header { padding: 0 0 32px; }
+.ungho-title {
+  font-family: var(--font-display); font-size: 2.2rem; font-weight: 600;
+  color: var(--white); margin-bottom: 8px;
+}
+.ungho-subtitle {
+  font-size: 0.95rem; color: var(--text-dim); line-height: 1.7;
+}
+
+.ungho-section { padding: 28px 0; border-top: 1px solid var(--border-subtle); }
+.ungho-section:first-of-type { border-top: none; padding-top: 0; }
+.ungho-section-title {
+  font-family: var(--font-display); font-size: 1.3rem; font-weight: 600;
+  color: var(--gold); margin-bottom: 16px;
+}
+.ungho-paragraph {
+  color: var(--text); font-size: 0.95rem; line-height: 1.75; margin-bottom: 12px;
+}
+
+/* Usage grid */
+.ungho-usage-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 28px; margin-top: 4px;
+}
+.ungho-usage-heading {
+  font-size: 0.95rem; font-weight: 600; color: var(--white);
+  margin-bottom: 10px; letter-spacing: 0.02em;
+}
+.ungho-list {
+  list-style: none; padding: 0; margin: 0;
+}
+.ungho-list li {
+  padding: 6px 0 6px 18px; position: relative;
+  color: var(--text); font-size: 0.92rem; line-height: 1.6;
+}
+.ungho-list li::before {
+  content: '·'; position: absolute; left: 4px; top: 4px;
+  color: var(--gold); font-weight: 700; font-size: 1.1rem;
+}
+
+/* Channels */
+.ungho-channels {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.ungho-channel-card {
+  background: var(--card-bg, rgba(255,255,255,0.03));
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 20px;
+}
+.ungho-channel-title {
+  font-size: 1rem; font-weight: 600; color: var(--white);
+  margin: 0 0 14px; letter-spacing: 0.02em;
+}
+.ungho-qr {
+  display: block; width: 180px; max-width: 100%; height: auto;
+  margin: 0 auto 16px; border-radius: 8px; background: #fff; padding: 6px;
+}
+.ungho-channel-details {
+  margin: 0; display: grid; grid-template-columns: auto 1fr;
+  gap: 6px 12px; font-size: 0.88rem;
+}
+.ungho-channel-details dt {
+  color: var(--text-dim); font-weight: 500; padding-top: 2px;
+}
+.ungho-channel-details dd {
+  margin: 0; color: var(--text); display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+}
+.ungho-mono {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.02em;
+}
+.ungho-copy-btn {
+  background: none; border: 1px solid var(--border-subtle);
+  color: var(--text-dim); padding: 2px 8px; border-radius: 6px;
+  font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
+}
+.ungho-copy-btn:hover { color: var(--gold); border-color: var(--gold); }
+.ungho-paypal-link {
+  display: inline-block; margin-bottom: 12px; color: var(--gold);
+  font-size: 0.9rem; font-weight: 500; text-decoration: none;
+}
+.ungho-paypal-link:hover { text-decoration: underline; }
+.ungho-channel-note {
+  font-size: 0.82rem; color: var(--text-dim); margin: 12px 0 0;
+  line-height: 1.6; font-style: italic;
+}
+.ungho-empty {
+  color: var(--text-dim); font-size: 0.9rem; font-style: italic; padding: 16px 0;
+}
+
+/* Form */
+.ungho-form {
+  display: flex; flex-direction: column; gap: 14px; max-width: 560px;
+}
+.ungho-form-hint {
+  color: var(--text-dim); font-size: 0.88rem; line-height: 1.6; margin: 0 0 4px;
+}
+.ungho-field { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.ungho-field span {
+  font-size: 0.85rem; color: var(--text-dim);
+}
+.ungho-field span em {
+  color: var(--gold); font-style: normal; margin-left: 2px;
+}
+.ungho-field input,
+.ungho-field textarea {
+  background: var(--bg, transparent);
+  border: 1px solid var(--border-subtle); border-radius: 8px;
+  padding: 10px 12px; color: var(--text); font-size: 0.92rem;
+  font-family: var(--font-body); resize: vertical;
+}
+.ungho-field input:focus,
+.ungho-field textarea:focus {
+  outline: none; border-color: var(--gold);
+}
+.ungho-field-checkbox {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.88rem; color: var(--text); cursor: pointer;
+}
+.ungho-field-checkbox input { width: 16px; height: 16px; cursor: pointer; }
+.ungho-field-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.ungho-form-error {
+  color: #d97070; font-size: 0.85rem; margin: 0;
+}
+.ungho-form-thanks {
+  padding: 24px; border: 1px solid var(--gold); border-radius: 12px;
+  background: rgba(201,168,108,0.06);
+}
+.ungho-form-thanks p {
+  color: var(--text); font-size: 0.95rem; line-height: 1.7;
+  margin: 0 0 16px;
+}
+
+/* Donor wall */
+.ungho-wall {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.ungho-wall-item {
+  padding: 14px 16px; background: var(--card-bg, rgba(255,255,255,0.02));
+  border: 1px solid var(--border-subtle); border-radius: 10px;
+}
+.ungho-wall-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px; flex-wrap: wrap;
+}
+.ungho-wall-name {
+  color: var(--white); font-weight: 600; font-size: 0.95rem;
+}
+.ungho-wall-amount {
+  color: var(--gold); font-size: 0.88rem; font-weight: 500;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+.ungho-wall-message {
+  color: var(--text); font-size: 0.88rem; line-height: 1.6;
+  margin: 8px 0 0; font-style: italic; opacity: 0.85;
+}
+.ungho-wall-date {
+  display: block; color: var(--text-dim); font-size: 0.78rem;
+  margin-top: 6px;
+}
+
+/* Quote message */
+.ungho-message {
+  margin: 40px 0 0; padding: 24px 28px;
+  border-left: 3px solid var(--gold);
+  background: rgba(201,168,108,0.04);
+  border-radius: 0 10px 10px 0;
+}
+.ungho-message-title {
+  font-family: var(--font-display); font-size: 0.92rem; font-weight: 600;
+  color: var(--gold); margin: 0 0 10px; letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ungho-message-body {
+  color: var(--text); font-size: 1rem; line-height: 1.85;
+  font-style: italic; margin: 0;
+}
+
+@media (max-width: 600px) {
+  .ungho-title { font-size: 1.7rem; }
+  .ungho-section-title { font-size: 1.15rem; }
+  .ungho-channel-card { padding: 16px; }
+  .ungho-message { padding: 18px 20px; }
+}

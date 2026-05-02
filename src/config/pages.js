@@ -24,7 +24,7 @@ const PAGES = [
   {
     id: 'stories',
     path: 'stories',
-    aliases: ['story/'],
+    aliases: ['story/', '37-cau-chuyen'],
     labelVi: '37 Chuyện', labelEn: 'Stories',
     titleVi: '37 Câu Chuyện', titleEn: '37 Stories',
     descVi: 'Những câu chuyện thật về hành trình chữa lành và giác ngộ tâm linh.', descEn: 'True stories of healing and spiritual awakening.',
@@ -75,6 +75,18 @@ const PAGES = [
     descVi: 'Liên hệ với chúng tôi để được hỗ trợ và tư vấn.', descEn: 'Contact us for support and guidance.',
     icon: '✉️',
     navDefault: { visible: true, showInBottom: true },
+  },
+  {
+    id: 'ungho',
+    path: 'ungho',
+    labelVi: 'Ủng Hộ', labelEn: 'Support',
+    titleVi: 'Ủng Hộ Người Bất Tử', titleEn: 'Support The Immortal',
+    descVi: 'Đồng hành cùng Huỳnh Phú Sang trên hành trình khai mở Bất Tử Đạo.',
+    descEn: 'Accompany Huỳnh Phú Sang on the path of awakening Immortality.',
+    icon: '🤝',
+    // No navDefault → hidden from header menu, bottom nav. No homeCard → hidden from home.
+    // Only direct link access at /ungho.
+    adminTab: { vi: 'Ủng Hộ', en: 'Donations' },
   },
   {
     id: 'search',
