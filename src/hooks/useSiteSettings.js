@@ -55,5 +55,5 @@ export function useSiteSettings() {
     await setDoc(doc(db, 'settings', 'site'), data, { merge: true })
   }
 
-  return { settings: migrateSettings(settings), loading, updateSettings }
+  return { settings, loading, updateSettings }
 }

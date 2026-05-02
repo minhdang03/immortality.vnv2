@@ -52,7 +52,7 @@ export function useFirestoreSWR(cacheKey, subscribe, fallback) {
       )
       return unsub
     } catch { setLoading(false) }
-  }, [])
+  }, [cacheKey])
 
   return { data, loading }
 }

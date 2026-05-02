@@ -57,10 +57,10 @@ export function useComments(articleId, isAdmin = false) {
         ...comment, createdAt: serverTimestamp(),
       })
       recordSubmission()
+      return {}
     } catch {
-      recordSubmission()
+      return { error: 'write_failed' }
     }
-    return {}
   }
 
   const approveComment = async (id) => {
