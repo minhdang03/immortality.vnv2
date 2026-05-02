@@ -138,14 +138,17 @@
   margin-bottom: 5px; margin-top: 12px; font-weight: 500;
   letter-spacing: 0.02em;
 }
-.admin-form input, .admin-form textarea, .admin-form select {
+.admin-form input:not([type="checkbox"]):not([type="radio"]), .admin-form textarea, .admin-form select {
   width: 100%; padding: 9px 12px; border-radius: 8px;
   background: var(--bg); border: 1px solid rgba(201,168,108,0.1);
   color: var(--white); font-size: 0.84rem; font-family: var(--font-body);
   outline: none; transition: border-color 0.2s;
 }
-.admin-form input:focus, .admin-form textarea:focus, .admin-form select:focus {
+.admin-form input:not([type="checkbox"]):not([type="radio"]):focus, .admin-form textarea:focus, .admin-form select:focus {
   border-color: rgba(201,168,108,0.4);
+}
+.admin-form input[type="checkbox"], .admin-form input[type="radio"] {
+  width: auto; flex-shrink: 0;
 }
 .admin-form textarea { resize: vertical; }
 .admin-form-row { margin-bottom: 4px; }
