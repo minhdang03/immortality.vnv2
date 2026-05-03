@@ -6,9 +6,17 @@ import { ReadingProgress, ReadingTime, FontSizeControls, renderText } from '../s
 
 export default function KhaiTriDetail({ item, lang, t, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, onBack, allItems, user, onUpdate }) {
   const langKey = lang === 'vi' ? 'vi' : 'en'
-  const d = item[langKey] || {}
-  const tag = lang === 'vi' ? item.tag?.vi : item.tag?.en
-  const body = d.body || ''
+  const primary = item[langKey] || {}
+  const fallback = item[langKey === 'vi' ? 'en' : 'vi'] || {}
+  const pick = (field) => primary[field] || fallback[field] || ''
+  const d = {
+    title: pick('title'),
+    question: pick('question'),
+    summary: pick('summary'),
+    body: pick('body'),
+  }
+  const tag = (lang === 'vi' ? item.tag?.vi : item.tag?.en) || item.tag?.vi || item.tag?.en
+  const body = d.body
 
   const isAdmin = !!user
   // Use dot-notation so Firestore merges atomically — avoids stale snapshot clobber on concurrent saves

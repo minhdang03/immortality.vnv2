@@ -2,8 +2,9 @@ import { useState } from 'react'
 import AutoTextarea from './AutoTextarea'
 
 export default function KhaiTriTab({ t, lang, items, onAdd, onUpdate, onDelete }) {
+  const nextOrder = () => (items.reduce((max, i) => Math.max(max, Number(i.order) || 0), 0)) + 1
   const EMPTY = {
-    order: items.length + 1, date: new Date().toISOString().split('T')[0],
+    order: nextOrder(), date: new Date().toISOString().split('T')[0],
     tagVi: '', tagEn: '', titleVi: '', titleEn: '',
     questionVi: '', questionEn: '', summaryVi: '', summaryEn: '', bodyVi: '', bodyEn: '',
   }
@@ -13,7 +14,7 @@ export default function KhaiTriTab({ t, lang, items, onAdd, onUpdate, onDelete }
   const [preview, setPreview] = useState(false)
   const setField = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
-  const startNew = () => { setForm({ ...EMPTY, order: items.length + 1 }); setEditing('new'); setFormLang('vi'); setPreview(false) }
+  const startNew = () => { setForm({ ...EMPTY, order: nextOrder() }); setEditing('new'); setFormLang('vi'); setPreview(false) }
   const startEdit = (a) => {
     setForm({
       order: a.order ?? 0, date: a.date || '',
@@ -89,10 +90,10 @@ export default function KhaiTriTab({ t, lang, items, onAdd, onUpdate, onDelete }
     setField('bodyVi', `Hỏi: ${pairs[0].q}\n\nĐáp: ${pairs[0].a}`)
     if (form.summaryVi) setField('summaryVi', pairs[0].a.slice(0, 150) + (pairs[0].a.length > 150 ? '...' : ''))
 
-    // Create new items for remaining pairs
-    const baseOrder = Number(form.order) || 1
+    // Create new items for remaining pairs — start from max+1 to avoid colliding with existing orders
+    const baseOrder = nextOrder()
     pairs.slice(1).forEach(async (pair, i) => {
-      const newOrder = baseOrder + i + 1
+      const newOrder = baseOrder + i
       const shortTitle = pair.q.length > 80 ? pair.q.slice(0, 80) + '...' : pair.q
       await onAdd({
         order: newOrder,

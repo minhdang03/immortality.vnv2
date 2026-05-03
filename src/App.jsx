@@ -192,7 +192,7 @@ export default function App() {
             <PracticePage t={t} lang={lang} practices={practices} />
           )}
           {page === 'khaitri' && (
-            <KhaiTriPage t={t} lang={lang} items={khaitri} navigate={navigate}
+            <KhaiTriPage t={t} lang={lang} items={user ? khaitri : khaitri.filter(k => k.status !== 'draft')} navigate={navigate}
               fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
               user={user} onUpdateKhaiTri={updateKhaiTri}
             />
