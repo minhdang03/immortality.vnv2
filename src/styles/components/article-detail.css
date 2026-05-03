@@ -117,15 +117,17 @@
   border-left: 3px solid var(--gold);
 }
 .detail-body .qa-question p {
-  font-style: italic; color: var(--text); margin: 0; line-height: 1.8;
+  font-style: italic; color: var(--text); margin: 0 0 0.8em; line-height: 1.8;
 }
+.detail-body .qa-question p:last-child { margin-bottom: 0; }
 .detail-body .qa-answer {
   background: rgba(201,168,108,0.02);
   border-left: 3px solid rgba(201,168,108,0.3);
 }
 .detail-body .qa-answer p {
-  color: var(--text-dim); margin: 0; line-height: 1.9;
+  color: var(--text-dim); margin: 0 0 0.8em; line-height: 1.9;
 }
+.detail-body .qa-answer p:last-child { margin-bottom: 0; }
 .qa-label {
   display: inline-block; font-size: 0.68rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.8px;

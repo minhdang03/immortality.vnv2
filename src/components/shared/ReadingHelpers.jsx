@@ -40,43 +40,73 @@ export function FontSizeControls({ fontSize, onIncrease, onDecrease, onReset }) 
   )
 }
 
+// Q/A marker on its own line (or with inline content): "Hỏi:", "Đáp: ...", "Question:", etc.
+// Card stays open until next marker — blank lines inside become paragraph breaks, NOT card boundaries.
+const QA_MARKER_RE = /^\s*(Hỏi|Đáp|Trả lời|Question|Answer|Q|A)\s*[:：]\s*(.*)$/i
+const Q_TYPES_RE = /^(Hỏi|Question|Q)$/i
+
+function parseBlocks(text) {
+  const lines = text.replace(/\r\n?/g, '\n').split('\n')
+  const blocks = []
+  let current = null
+
+  const flush = () => {
+    if (current && current.content.trim()) {
+      blocks.push({ type: current.type, content: current.content.trim() })
+    }
+    current = null
+  }
+
+  for (const line of lines) {
+    const m = line.match(QA_MARKER_RE)
+    if (m) {
+      flush()
+      current = { type: Q_TYPES_RE.test(m[1]) ? 'q' : 'a', content: m[2] || '' }
+    } else if (current) {
+      current.content += '\n' + line
+    } else {
+      current = { type: 'p', content: line }
+    }
+  }
+  flush()
+  return blocks
+}
+
+function renderInline(line, key) {
+  return <span key={key}>{line}</span>
+}
+
+function renderParagraphs(content) {
+  return content.split(/\n{2,}/).map(p => p.trim()).filter(Boolean).map((p, i) => (
+    <p key={i}>
+      {p.split('\n').map((line, j, arr) =>
+        j < arr.length - 1 ? <span key={j}>{line}<br /></span> : renderInline(line, j)
+      )}
+    </p>
+  ))
+}
+
 export function renderText(text) {
   if (!text) return null
-  return text.split('\n\n').map((block, i) => {
-    const trimmed = block.trim()
-
-    // Detect Q&A patterns
-    const isQuestion = /^(Hỏi|Question|Q)\s*[:：]/i.test(trimmed)
-    const isAnswer = /^(Đáp|Trả lời|Answer|A)\s*[:：]/i.test(trimmed)
-
-    if (isQuestion) {
-      const content = trimmed.replace(/^(Hỏi|Question|Q)\s*[:：]\s*/i, '')
+  const blocks = parseBlocks(text)
+  return blocks.map((b, i) => {
+    if (b.type === 'q') {
       return (
-        <div key={i} data-para={i} className="qa-question">
+        <div key={i} className="qa-question">
           <span className="qa-label qa-label-q">Hỏi</span>
-          <p>{content.split('\n').map((line, j, arr) => (
-            j < arr.length - 1 ? <span key={j}>{line}<br /></span> : line
-          ))}</p>
+          {renderParagraphs(b.content)}
         </div>
       )
     }
-
-    if (isAnswer) {
-      const content = trimmed.replace(/^(Đáp|Trả lời|Answer|A)\s*[:：]\s*/i, '')
+    if (b.type === 'a') {
       return (
-        <div key={i} data-para={i} className="qa-answer">
+        <div key={i} className="qa-answer">
           <span className="qa-label qa-label-a">Đáp</span>
-          <p>{content.split('\n').map((line, j, arr) => (
-            j < arr.length - 1 ? <span key={j}>{line}<br /></span> : line
-          ))}</p>
+          {renderParagraphs(b.content)}
         </div>
       )
     }
-
-    return (
-      <p key={i} data-para={i}>{block.split('\n').map((line, j, arr) => (
-        j < arr.length - 1 ? <span key={j}>{line}<br /></span> : line
-      ))}</p>
-    )
+    // Plain text block (text outside any Q/A card) — render its paragraphs directly
+    return <div key={i} data-para={i}>{renderParagraphs(b.content)}</div>
   })
 }
