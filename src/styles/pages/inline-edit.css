@@ -11,9 +11,10 @@
 
 /* ─── NATIVE DIALOG ─── */
 /* Backdrop, escape, focus trap, scroll lock — all handled by browser */
+/* Closed dialog must stay display:none (browser default) — only render when [open]. */
 .ie-dialog {
   width: 100%; max-width: 640px;
-  max-height: 70vh; display: flex; flex-direction: column;
+  max-height: 70vh; flex-direction: column;
   background: var(--bg, #1a1a2e);
   border-radius: 14px 14px 0 0;
   border: 1px solid rgba(201,168,108,0.12); border-bottom: none;
@@ -28,6 +29,7 @@
 
 /* Open/close animations via @starting-style */
 .ie-dialog[open] {
+  display: flex;
   animation: ieSlideUp 0.25s cubic-bezier(0.32,0.72,0,1);
 }
 .ie-dialog[open]::backdrop {
