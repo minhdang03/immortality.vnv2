@@ -3,6 +3,6 @@
     { "source": "/story/:slug*", "destination": "/api/og?p=/story/:slug*" },
     { "source": "/khaitri/:slug*", "destination": "/api/og?p=/khaitri/:slug*" },
     { "source": "/article/:slug*", "destination": "/api/og?p=/article/:slug*" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
