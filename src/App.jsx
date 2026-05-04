@@ -22,6 +22,7 @@ import BackgroundEffects from './components/layout/BackgroundEffects'
 import Header from './components/layout/Header'
 import BottomNav from './components/layout/BottomNav'
 import RSSButton from './components/shared/RSSButton'
+import ErrorBoundary from './components/shared/ErrorBoundary'
 import { HomeSkeleton, ListSkeleton, DetailSkeleton, PageSkeleton } from './components/shared/Skeleton'
 
 // Pages — core
@@ -153,6 +154,7 @@ export default function App() {
         />
 
         <main className="container">
+          <ErrorBoundary key={page}>
           <Suspense fallback={
             page === 'home' ? <HomeSkeleton /> :
             page === 'article' ? <DetailSkeleton /> :
@@ -220,6 +222,7 @@ export default function App() {
             />
           )}
           </Suspense>
+          </ErrorBoundary>
         </main>
 
         <footer className="footer">

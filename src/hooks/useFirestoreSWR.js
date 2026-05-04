@@ -2,11 +2,34 @@ import { useState, useEffect } from 'react'
 
 const TTL = 5 * 60 * 1000 // 5 minutes
 
-// Read from localStorage with TTL awareness
-// Handles both old format { data, ts } (from cacheSet) and new format (raw data + separate _ts key)
+// Bump CACHE_VERSION whenever the data shape on Firestore changes incompatibly
+// (e.g. new required field, schema migration). All cached data with older
+// versions is silently ignored, forcing a fresh Firestore read.
+const CACHE_VERSION = 'v2'
+const versioned = (key) => `${key}::${CACHE_VERSION}`
+
+// One-shot purge: drop any leftover keys from the unversioned era so they
+// don't accumulate forever in users' localStorage.
+let purgedLegacy = false
+function purgeLegacyOnce() {
+  if (purgedLegacy) return
+  purgedLegacy = true
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith('cached_') && !k.includes('::')) {
+        localStorage.removeItem(k)
+      }
+    }
+  } catch {}
+}
+
+// Read from versioned localStorage with TTL awareness
 function readCache(key) {
   try {
-    const raw = localStorage.getItem(key)
+    purgeLegacyOnce()
+    const vKey = versioned(key)
+    const raw = localStorage.getItem(vKey)
     if (!raw) return null
     const parsed = JSON.parse(raw)
     // Old format: { data: [...], ts: 123 }
@@ -14,16 +37,17 @@ function readCache(key) {
       return { data: parsed.data, fresh: Date.now() - parsed.ts < TTL }
     }
     // New format: raw data + separate timestamp key
-    const ts = parseInt(localStorage.getItem(`${key}_ts`)) || 0
+    const ts = parseInt(localStorage.getItem(`${vKey}_ts`)) || 0
     return { data: parsed, fresh: Date.now() - ts < TTL }
   } catch { return null }
 }
 
-// Write to localStorage with timestamp
+// Write to versioned localStorage with timestamp
 function writeCache(key, data) {
   try {
-    localStorage.setItem(key, JSON.stringify(data))
-    localStorage.setItem(`${key}_ts`, String(Date.now()))
+    const vKey = versioned(key)
+    localStorage.setItem(vKey, JSON.stringify(data))
+    localStorage.setItem(`${vKey}_ts`, String(Date.now()))
   } catch {}
 }
 
