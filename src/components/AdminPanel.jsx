@@ -12,6 +12,8 @@ import PracticesTab from './admin/PracticesTab'
 import SettingsTab from './admin/SettingsTab'
 import HomeSettingsTab from './admin/HomeSettingsTab'
 import DonationsTab from './admin/DonationsTab'
+import AdminUsersTab from './admin/AdminUsersTab'
+import AgentLogTab from './admin/AgentLogTab'
 
 export default function AdminPanel({
   t, lang, user, articles, topics, stories, firestoreVi, firestoreEn,
@@ -124,6 +126,8 @@ export default function AdminPanel({
           {tab === 'homepage' && <HomeSettingsTab lang={lang} settings={siteSettings} onUpdate={onUpdateSettings} />}
           {tab === 'ungho' && <DonationsTab t={t} lang={lang} />}
           {tab === 'settings' && <SettingsTab lang={lang} settings={siteSettings} onUpdate={onUpdateSettings} />}
+          {tab === 'admins' && <AdminUsersTab lang={lang} currentUser={user} />}
+          {tab === 'agentlog' && <AgentLogTab lang={lang} />}
         </div>
       </div>
     </div>

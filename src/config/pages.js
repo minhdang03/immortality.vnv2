@@ -156,6 +156,8 @@ export const ADMIN_TABS = [
   { id: 'translations', icon: '🌐', vi: 'Ngôn ngữ', en: 'Translations' },
   { id: 'homepage', icon: '🏠', vi: 'Trang chủ', en: 'Home Page' },
   { id: 'settings', icon: '⚙️', vi: 'Cài đặt', en: 'Settings' },
+  { id: 'admins', icon: '👤', vi: 'Quản trị viên', en: 'Admins' },
+  { id: 'agentlog', icon: '📋', vi: 'Nhật ký Agent', en: 'Agent Log' },
 ]
 
 // Routing: match pathname to page id

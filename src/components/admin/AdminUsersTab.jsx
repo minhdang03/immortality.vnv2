@@ -1,0 +1,126 @@
+import { useState } from 'react'
+import { useAdmins } from '../../hooks/useAdmins'
+
+export default function AdminUsersTab({ lang, currentUser }) {
+  const { admins, loading, grantAdmin, revokeAdmin } = useAdmins()
+  const [uid, setUid] = useState('')
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  const vi = lang === 'vi'
+
+  const handleGrant = async (e) => {
+    e.preventDefault()
+    setMsg('')
+    if (!uid.trim()) { setMsg(vi ? 'UID không được trống' : 'UID required'); return }
+    setBusy(true)
+    try {
+      await grantAdmin(uid, email, currentUser?.uid)
+      setUid(''); setEmail('')
+      setMsg(vi ? '✓ Đã cấp quyền admin' : '✓ Admin granted')
+    } catch (err) {
+      setMsg(`✗ ${err?.message || 'Failed'}`)
+    }
+    setBusy(false)
+  }
+
+  const handleRevoke = async (a) => {
+    if (a.id === currentUser?.uid) {
+      setMsg(vi ? 'Không thể tự xoá quyền của chính mình' : 'Cannot revoke own admin')
+      return
+    }
+    if (!confirm(vi ? `Xoá quyền admin của ${a.email || a.id}?` : `Revoke admin for ${a.email || a.id}?`)) return
+    setBusy(true)
+    try {
+      await revokeAdmin(a.id)
+      setMsg(vi ? '✓ Đã xoá' : '✓ Revoked')
+    } catch (err) {
+      setMsg(`✗ ${err?.message || 'Failed'}`)
+    }
+    setBusy(false)
+  }
+
+  return (
+    <>
+      <div className="admin-settings-section">
+        <h3 className="admin-settings-title">
+          {vi ? '👤 Cấp quyền Admin' : '👤 Grant Admin'}
+        </h3>
+        <div className="admin-form" style={{ padding: '16px 18px' }}>
+          <p className="admin-settings-hint" style={{ marginBottom: 12 }}>
+            {vi
+              ? 'Lấy UID từ Firebase Console → Authentication → Users → cột User UID. Email là tuỳ chọn (chỉ để dễ nhận diện).'
+              : 'Get UID from Firebase Console → Authentication → Users → User UID column. Email is optional (display only).'}
+          </p>
+          <form onSubmit={handleGrant} style={{ display: 'grid', gap: 8 }}>
+            <input
+              type="text"
+              placeholder="UID (required)"
+              value={uid}
+              onChange={e => setUid(e.target.value)}
+              disabled={busy}
+            />
+            <input
+              type="email"
+              placeholder={vi ? 'Email (tuỳ chọn)' : 'Email (optional)'}
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              disabled={busy}
+            />
+            <button type="submit" className="btn-read" disabled={busy || !uid.trim()}>
+              {busy ? '...' : (vi ? 'Cấp quyền' : 'Grant')}
+            </button>
+            {msg && <div style={{ fontSize: '0.85rem', color: msg.startsWith('✓') ? 'var(--gold)' : '#e74c3c' }}>{msg}</div>}
+          </form>
+        </div>
+      </div>
+
+      <div className="admin-settings-section">
+        <h3 className="admin-settings-title">
+          {vi ? `🛡 Admin hiện tại (${admins?.length || 0})` : `🛡 Current admins (${admins?.length || 0})`}
+        </h3>
+        <div className="admin-articles">
+          {loading && <div style={{ padding: 16, color: 'var(--text-dim)' }}>{vi ? 'Đang tải...' : 'Loading...'}</div>}
+          {!loading && admins?.length === 0 && (
+            <div style={{ padding: 16, color: 'var(--text-dim)' }}>
+              {vi ? 'Chưa có admin nào — không ai có thể write data.' : 'No admins — nobody can write data.'}
+            </div>
+          )}
+          {admins?.map(a => {
+            const isSelf = a.id === currentUser?.uid
+            return (
+              <div key={a.id} className="admin-article-item">
+                <div className="admin-article-info" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>
+                    {a.email || a.id}
+                    {isSelf && <span style={{ color: 'var(--gold)', fontSize: '0.72rem', marginLeft: 8 }}>(you)</span>}
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', fontFamily: 'monospace' }}>
+                    {a.id}
+                  </span>
+                  {a.grantedAt && (
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                      {vi ? 'Cấp:' : 'Granted:'} {a.grantedAt.toDate ? a.grantedAt.toDate().toLocaleString() : '(pending)'}
+                      {a.grantedBy && ` ${vi ? 'bởi' : 'by'} ${a.grantedBy.slice(0, 8)}...`}
+                    </span>
+                  )}
+                </div>
+                <div className="admin-article-actions">
+                  <button
+                    className="btn-sm btn-danger"
+                    onClick={() => handleRevoke(a)}
+                    disabled={busy || isSelf}
+                    title={isSelf ? (vi ? 'Không thể tự xoá' : 'Cannot revoke self') : (vi ? 'Xoá quyền' : 'Revoke')}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </>
+  )
+}
