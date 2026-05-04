@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { khaitriSlug } from '../../utils/slug'
 import { updateCanonical } from '../../hooks/useSEO'
 import KhaiTriList from '../../components/khaitri/KhaiTriList'
@@ -6,26 +6,24 @@ import KhaiTriDetail from '../../components/khaitri/KhaiTriDetail'
 
 export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateKhaiTri }) {
   const [selected, setSelected] = useState(null)
-  const hashApplied = useRef(false)
 
-  // Sync selected with latest Firestore data
+  // Sync selected from URL pathname — re-runs when items grow (cache → Firestore) and on browser back/forward.
+  // Replaces the old hashApplied 1-shot ref which got stuck when stale localStorage cache had no matching item.
   useEffect(() => {
-    if (selected && items.length > 0) {
-      const updated = items.find(it => it.id === selected.id)
-      if (updated && updated !== selected) setSelected(updated)
+    const sync = () => {
+      const path = window.location.pathname
+      if (path.startsWith('/khaitri/')) {
+        const slug = path.slice(9)
+        const found = items.find(it => khaitriSlug(it) === slug || String(it.order) === slug || it.id === slug)
+        if (found) setSelected(found)
+        // Not found yet → effect will re-run when items grow; do NOT clear selected (avoid flash)
+      } else {
+        setSelected(null) // path is /khaitri (list) or unrelated
+      }
     }
-  }, [items])
-
-  // Apply path on mount: /khaitri/{slug}
-  useEffect(() => {
-    if (hashApplied.current || items.length === 0) return
-    const path = window.location.pathname
-    if (path.startsWith('/khaitri/')) {
-      const slug = path.slice(9)
-      const found = items.find(it => khaitriSlug(it) === slug || String(it.order) === slug || it.id === slug)
-      if (found) setSelected(found)
-    }
-    hashApplied.current = true
+    sync()
+    window.addEventListener('popstate', sync)
+    return () => window.removeEventListener('popstate', sync)
   }, [items])
 
   // Update document title and og:url when viewing a detail

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { storySlug } from '../../utils/slug'
 import { updateCanonical } from '../../hooks/useSEO'
 import StoryDetail from '../../components/stories/StoryDetail'
@@ -7,31 +7,28 @@ import StoryList from '../../components/stories/StoryList'
 export default function StoriesPage({ t, lang, firestoreStories, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateStory }) {
   const [selected, setSelected] = useState(null)
   const [filter, setFilter] = useState('all')
-  const hashApplied = useRef(false)
 
   const allStories = useMemo(() =>
     (firestoreStories || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [firestoreStories]
   )
 
-  // Sync selected with latest Firestore data
+  // Sync selected from URL pathname — re-runs when stories grow + on browser back/forward.
+  // Replaces hashApplied 1-shot ref which got stuck when stale cache had no matching story.
   useEffect(() => {
-    if (selected && allStories.length > 0) {
-      const updated = allStories.find(s => s.id === selected.id)
-      if (updated && updated !== selected) setSelected(updated)
+    const sync = () => {
+      const path = window.location.pathname
+      if (path.startsWith('/story/')) {
+        const slug = path.slice(7)
+        const found = allStories.find(s => storySlug(s) === slug || String(s.order) === slug)
+        if (found) setSelected(found)
+      } else {
+        setSelected(null)
+      }
     }
-  }, [allStories])
-
-  // Apply path on mount: /story/01-thoat-chet-duoi...
-  useEffect(() => {
-    if (hashApplied.current || allStories.length === 0) return
-    const path = window.location.pathname
-    if (path.startsWith('/story/')) {
-      const slug = path.slice(7)
-      const found = allStories.find(s => storySlug(s) === slug || String(s.order) === slug)
-      if (found) setSelected(found)
-    }
-    hashApplied.current = true
+    sync()
+    window.addEventListener('popstate', sync)
+    return () => window.removeEventListener('popstate', sync)
   }, [allStories])
 
   // Update document title and og:url when viewing a story
