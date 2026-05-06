@@ -104,37 +104,41 @@
   letter-spacing: 0.01em;
 }
 
-/* Q&A formatted blocks (used by renderText) */
+/* Q/A blocks — Q = filled card (loud), A = open card (quiet) for visual hierarchy */
 .detail-body .qa-question, .detail-body .qa-answer {
   position: relative;
-  margin-bottom: 16px;
-  padding: 16px 18px;
-  border-radius: 0 12px 12px 0;
+  margin-bottom: 20px;
   line-height: 1.8;
 }
 .detail-body .qa-question {
-  background: rgba(201,168,108,0.06);
-  border-left: 3px solid var(--gold);
+  padding: 18px 20px;
+  background: rgba(201,168,108,0.10);
+  border-left: 4px solid var(--gold);
+  border-radius: 0 12px 12px 0;
 }
 .detail-body .qa-question p {
-  font-style: italic; color: var(--text); margin: 0 0 0.8em; line-height: 1.8;
+  font-style: italic; font-weight: 500;
+  color: var(--text); margin: 0 0 0.8em; line-height: 1.7;
 }
 .detail-body .qa-question p:last-child { margin-bottom: 0; }
 .detail-body .qa-answer {
-  background: rgba(201,168,108,0.02);
-  border-left: 3px solid rgba(201,168,108,0.3);
+  padding: 8px 0 8px 18px;
+  background: transparent;
+  border-left: 2px solid rgba(201,168,108,0.22);
 }
 .detail-body .qa-answer p {
-  color: var(--text-dim); margin: 0 0 0.8em; line-height: 1.9;
+  color: var(--text-dim); margin: 0 0 1em; line-height: 1.9;
 }
 .detail-body .qa-answer p:last-child { margin-bottom: 0; }
+
+/* Labels — Q filled pill (loud) vs A outline pill (quiet) */
 .qa-label {
-  display: inline-block; font-size: 0.68rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.8px;
-  padding: 2px 10px; border-radius: 10px; margin-bottom: 8px;
+  display: inline-block; font-size: 0.74rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 1.2px;
+  padding: 3px 12px; border-radius: 12px; margin-bottom: 10px;
 }
-.qa-label-q { background: rgba(201,168,108,0.15); color: var(--gold-bright); }
-.qa-label-a { background: rgba(201,168,108,0.08); color: var(--gold); }
+.qa-label-q { background: var(--gold); color: #1a1a2e; }
+.qa-label-a { background: transparent; color: var(--gold); border: 1px solid rgba(201,168,108,0.35); }
 
 .detail-share { margin-bottom: 32px; }
 

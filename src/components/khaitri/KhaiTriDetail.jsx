@@ -89,6 +89,11 @@ export default function KhaiTriDetail({ item, lang, t, navigate, fontSize, onFon
           <span style={{ flex: 1 }} />
           {isAdmin && <InlineEdit value={body} onSave={saveField(`${langKey}.body`)} lang={lang} label={lang === 'vi' ? 'Nội dung trả lời' : 'Answer'} />}
         </div>
+        {body && (
+          <h2 className="qa-section-heading">
+            {lang === 'vi' ? 'Hỏi đáp' : 'Q & A'}
+          </h2>
+        )}
         <div className="khaitri-detail-body detail-body">
           {body
             ? renderText(body)
