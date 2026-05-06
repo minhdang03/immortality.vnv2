@@ -27,20 +27,21 @@ export const ARTICLE_SCHEMA = {
     }},
     vi: { type: 'object', required: true, fields: {
       title: { type: 'string', required: true, maxLen: 200 },
-      question: { type: 'string', maxLen: 500 },
-      summary: { type: 'string', maxLen: 500 },
+      question: { type: 'string', maxLen: 500, recommended: true, hint: 'Hook quote rendered as italic above summary in cards (e.g. "Linh thai là gì?", "Vì sao cần thanh lọc?"). Skipping = blank space on card. Always fill: derive a punchy question from the title or content angle.' },
+      summary: { type: 'string', maxLen: 500, recommended: true, hint: 'Short body preview shown on card (1-2 sentences).' },
       body: { type: 'string', required: true, maxLen: 50000 },
     }},
     en: { type: 'object', required: true, fields: {
       title: { type: 'string', required: true, maxLen: 200 },
-      question: { type: 'string', maxLen: 500 },
-      summary: { type: 'string', maxLen: 500 },
+      question: { type: 'string', maxLen: 500, recommended: true, hint: 'Translate vi.question faithfully.' },
+      summary: { type: 'string', maxLen: 500, recommended: true },
       body: { type: 'string', required: true, maxLen: 50000 },
     }},
   },
 }
 
 export const RULES = [
+  'ALWAYS fill vi.question + en.question — these render as the italic hook quote on article cards. Empty = visually broken card. Derive from title or content angle (e.g. "Linh thai là gì?", "Vì sao cần thanh lọc?").',
   'Site is bilingual Vi+En. Both vi.* AND en.* required. Translate Vi→En faithfully if source only has Vi.',
   'date MUST be a string YYYY-MM-DD. Quote in YAML to keep as string.',
   'sourceRef is the idempotency key. Same sourceRef = update existing doc, NOT a new doc.',
