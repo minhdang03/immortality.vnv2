@@ -115,10 +115,14 @@ service cloud.firestore {
     match /settings/{id}        { allow read: if true; allow write: if isAdmin(); }
     match /contacts/{id}        { allow read, update, delete: if isAdmin(); allow create: if true; }
 
-    // Admin allowlist — readable + writable by existing admins (so AdminUsersTab works).
-    // Self-protection: an admin cannot delete their own doc (would lock themselves out).
+    // /admins — read rules:
+    //   • Self-read: any signed-in user reads their OWN doc (so useUserRole resolves
+    //     even for non-admins / not-yet-granted users without permission errors).
+    //   • Full list read: admin only.
+    // Write rules: admin only. Self-protection on delete.
     match /admins/{uid} {
-      allow read: if isAdmin();
+      allow get: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
       allow create, update: if isAdmin();
       allow delete: if isAdmin() && request.auth.uid != uid;
     }

@@ -46,7 +46,7 @@ export default function AdminUsersTab({ lang, currentUser }) {
     <>
       <div className="admin-settings-section">
         <h3 className="admin-settings-title">
-          {vi ? '👤 Cấp quyền Admin' : '👤 Grant Admin'}
+          {vi ? '🔑 Cấp quyền truy cập' : '🔑 Grant Access'}
         </h3>
         <div className="admin-form" style={{ padding: '16px 18px' }}>
           <p className="admin-settings-hint" style={{ marginBottom: 12 }}>
@@ -90,8 +90,19 @@ export default function AdminUsersTab({ lang, currentUser }) {
         <div className="admin-articles">
           {loading && <div style={{ padding: 16, color: 'var(--text-dim)' }}>{vi ? 'Đang tải...' : 'Loading...'}</div>}
           {!loading && admins?.length === 0 && (
-            <div style={{ padding: 16, color: 'var(--text-dim)' }}>
-              {vi ? 'Chưa có admin nào — không ai có thể write data.' : 'No admins — nobody can write data.'}
+            <div style={{ padding: 16, color: 'var(--text-dim)', lineHeight: 1.6 }}>
+              <strong style={{ color: '#e74c3c' }}>
+                {vi ? '⚠ Chưa có admin/grant nào' : '⚠ No grants yet'}
+              </strong>
+              <div style={{ marginTop: 8, fontSize: '0.85rem' }}>
+                {vi
+                  ? 'Form trên có thể không hoạt động vì rules yêu cầu bạn là admin để cấp quyền cho người khác. Bootstrap admin đầu tiên qua một trong các cách sau:'
+                  : 'The form above won\'t work because rules require you to already be admin. Bootstrap the first admin via one of:'}
+              </div>
+              <ul style={{ marginTop: 6, fontSize: '0.85rem', paddingLeft: 20 }}>
+                <li>{vi ? 'Firebase Console → Firestore → tạo doc' : 'Firebase Console → Firestore → create doc'} <code>/admins/{'<your-uid>'}</code> {vi ? 'với field' : 'with field'} <code>{'{ role: "admin" }'}</code></li>
+                <li>{vi ? 'CLI script:' : 'CLI script:'} <code>node functions/scripts/bootstrap-agent.js --email you@x.com --password ... --role admin</code></li>
+              </ul>
             </div>
           )}
           {admins?.map(a => {
