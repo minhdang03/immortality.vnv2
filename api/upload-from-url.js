@@ -1,36 +1,45 @@
 // /api/upload-from-url — Agent posts a source URL (Telegram, picsum, etc.),
-// the function fetches bytes and uploads them to Firebase Storage at the
-// requested path, then returns the permanent public URL.
+// the function fetches bytes and uploads them to Cloudflare R2 (S3-compatible),
+// then returns the permanent public URL.
 //
-// Why route through this API instead of letting agent upload directly to
-// Firebase Storage:
-//   - Centralized validation (size cap, content-type allowlist, path policy)
-//   - Audit log entry per upload (in /agent_log)
-//   - Decouples agent from storage backend (Firebase today, R2 tomorrow)
-//   - Same auth surface as the rest of the CMS API (Bearer ID token)
+// Why R2 (not Firebase Storage):
+//   - 10 GB free storage (vs Firebase 5 GB)
+//   - Unlimited egress (Firebase: 1 GB/day cap on free)
+//   - No credit card required to enable (Firebase Storage now requires Blaze)
+//
+// Env vars required on Vercel:
+//   R2_ACCOUNT_ID            — Cloudflare account id (from R2 dashboard)
+//   R2_ACCESS_KEY_ID         — R2 API token access key
+//   R2_SECRET_ACCESS_KEY     — R2 API token secret
+//   R2_BUCKET_NAME           — bucket name (shared across projects, e.g. "phithuyen-audio")
+//   R2_PUBLIC_URL            — public URL prefix (e.g. "https://pub-xxx.r2.dev")
+//
+// Object keys are prefixed with "immortality-vn/<intent>/<file>" so this app's
+// content stays separated from other projects sharing the same bucket.
 
-import { initializeApp, cert, getApps } from 'firebase-admin/app'
-import { getStorage } from 'firebase-admin/storage'
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { requireAgent, jsonError } from './_lib/auth.js'
 import { db, FieldValue } from './_lib/db.js'
 
-const MAX_BYTES = 8 * 1024 * 1024  // 8 MB per upload
+const MAX_BYTES = 8 * 1024 * 1024
 const ALLOWED_CT = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
-const ALLOWED_PREFIXES = ['articles/', 'khaitri/']
-const DEFAULT_BUCKET = process.env.FIREBASE_STORAGE_BUCKET || 'immortalityvn.firebasestorage.app'
+const ALLOWED_INTENTS = new Set(['article', 'khaitri'])
 
-let initialized = false
-function ensureAdminApp() {
-  if (initialized) return
-  if (getApps().length) { initialized = true; return }
-  const saB64 = process.env.FIREBASE_ADMIN_SA_B64
-  if (saB64) {
-    const sa = JSON.parse(Buffer.from(saB64, 'base64').toString('utf8'))
-    initializeApp({ credential: cert(sa), storageBucket: DEFAULT_BUCKET })
-  } else {
-    initializeApp({ storageBucket: DEFAULT_BUCKET })
+let s3 = null
+function getS3() {
+  if (s3) return s3
+  const accountId = process.env.R2_ACCOUNT_ID
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
+  if (!accountId || !accessKeyId || !secretAccessKey) {
+    throw new Error('R2 env vars not configured (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY)')
   }
-  initialized = true
+  s3 = new S3Client({
+    region: 'auto',
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId, secretAccessKey },
+  })
+  return s3
 }
 
 function safeFilename(slug, ext) {
@@ -59,11 +68,11 @@ export default async function handler(req, res) {
   const { url, intent, slug } = body || {}
 
   if (!url) return jsonError(res, 400, 'missing_url')
-  if (!intent || !['article', 'khaitri'].includes(intent)) {
+  if (!ALLOWED_INTENTS.has(intent)) {
     return jsonError(res, 400, 'invalid_intent', 'intent must be "article" or "khaitri"')
   }
 
-  // Download source
+  // Download source bytes
   let bytes, contentType
   try {
     const r = await fetch(url, { redirect: 'follow' })
@@ -81,45 +90,43 @@ export default async function handler(req, res) {
     return jsonError(res, 502, 'source_fetch_error', e.message)
   }
 
-  // Resolve destination path
+  // Upload to R2 — prefix keys with project name (bucket is shared across projects)
   const ext = extFromContentType(contentType)
   const folder = intent === 'article' ? 'articles' : 'khaitri'
   const filename = safeFilename(slug, ext)
-  const path = `${folder}/${filename}`
-  if (!ALLOWED_PREFIXES.some(p => path.startsWith(p))) {
-    return jsonError(res, 400, 'path_not_allowed', path)
+  const prefix = process.env.R2_KEY_PREFIX || 'immortality-vn'
+  const key = `${prefix}/${folder}/${filename}`
+
+  const bucket = process.env.R2_BUCKET_NAME
+  const publicBase = (process.env.R2_PUBLIC_URL || '').replace(/\/+$/, '')
+  if (!bucket || !publicBase) {
+    return jsonError(res, 500, 'r2_not_configured', 'R2_BUCKET_NAME / R2_PUBLIC_URL missing')
   }
 
-  // Upload via admin SDK (bypasses storage rules — auth already verified)
-  ensureAdminApp()
-  const downloadToken = crypto.randomUUID()
   try {
-    const bucket = getStorage().bucket(DEFAULT_BUCKET)
-    const file = bucket.file(path)
-    await file.save(bytes, {
-      contentType,
-      resumable: false,
-      metadata: {
-        metadata: { firebaseStorageDownloadTokens: downloadToken },
-      },
-    })
+    await getS3().send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: bytes,
+      ContentType: contentType,
+      CacheControl: 'public, max-age=31536000, immutable',
+    }))
   } catch (e) {
     return jsonError(res, 500, 'upload_failed', e.message)
   }
 
-  const downloadUrl = `https://firebasestorage.googleapis.com/v0/b/${DEFAULT_BUCKET}/o/${encodeURIComponent(path)}?alt=media&token=${downloadToken}`
+  const downloadUrl = `${publicBase}/${key}`
 
   // Audit
   try {
     await db().collection('agent_log').add({
       action: 'upload.image',
-      params: { intent, path, contentType, size: bytes.length, sourceUrl: url.slice(0, 200) },
+      params: { intent, key, contentType, size: bytes.length, sourceUrl: url.slice(0, 200), backend: 'r2' },
       status: 'success',
       actor: auth.email,
       timestamp: FieldValue.serverTimestamp(),
     })
   } catch (e) {
-    // Non-fatal — upload already succeeded
     console.warn('agent_log write failed', e.message)
   }
 
@@ -127,7 +134,7 @@ export default async function handler(req, res) {
   return res.status(200).send(JSON.stringify({
     ok: true,
     url: downloadUrl,
-    path,
+    key,
     bytes: bytes.length,
     contentType,
   }))

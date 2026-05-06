@@ -155,21 +155,25 @@ Already documented in `docs/goclaw-articles-api.md` (or use existing
 Timestamp avoids overwrites on re-runs. Slug is sanitized server-side
 (strip diacritics, lowercase, max 80 chars).
 
-## Storage rules in effect
+## Storage backend: Cloudflare R2
 
-`storage.rules` (deployed when `firebase deploy --only storage` runs after
-Storage is enabled in Console):
-
+Object key layout (bucket shared across projects, prefixed by app):
 ```
-match /articles/{file=**}  → write: admin | agent | mod-articles
-match /khaitri/{file=**}   → write: admin | agent | mod-khaitri
-all paths                  → read: public
+<bucket>/immortality-vn/articles/<slug>-<timestamp>.<ext>
+<bucket>/immortality-vn/khaitri/<slug>-<timestamp>.<ext>
 ```
 
-But /api/upload-from-url uses the admin SDK which bypasses these rules —
-auth is already verified at the API layer. The Storage rules are a
-defense-in-depth backstop for any client that talks directly to Storage
-(currently nothing does).
+Public URL format: `<R2_PUBLIC_URL>/<key>` — e.g.
+`https://pub-xxx.r2.dev/immortality-vn/articles/foo-1730000000000.jpg`
+
+R2 free tier:
+- 10 GB storage
+- Unlimited egress (vs Firebase 1 GB/day)
+- 10 M Class B (read) operations/month
+- 1 M Class A (write) operations/month — plenty for content site
+
+Why R2 over Firebase Storage: Firebase Storage now requires Blaze (paid)
+plan with credit card to enable. R2 free tier needs no card.
 
 ## Test the flow
 
@@ -210,13 +214,15 @@ node functions/scripts/test-upload-image.js https://api.telegram.org/file/bot...
 
 R2: unlimited egress (free), $0.015/GB/month storage.
 
-## Required Vercel env vars
-
-To deploy `/api/upload-from-url` you need (already configured for other
-endpoints):
+## Required Vercel env vars (already configured)
 
 | Env var | Purpose |
 |---|---|
-| `FIREBASE_ADMIN_SA_B64` | Service account JSON, base64-encoded — used by admin SDK |
-| `FIREBASE_STORAGE_BUCKET` | `immortalityvn.firebasestorage.app` (default in code) |
-| `AGENT_ALLOWLIST_EMAILS` | Comma-separated emails permitted to call CMS API (default: `agent@battudao.com`) |
+| `FIREBASE_ADMIN_SA_B64` | Service account JSON (base64) — for Firestore writes + Auth verify |
+| `AGENT_ALLOWLIST_EMAILS` | Emails permitted to call CMS API (default: `agent@battudao.com`) |
+| `R2_ACCOUNT_ID` | Cloudflare account id |
+| `R2_ACCESS_KEY_ID` | R2 API token |
+| `R2_SECRET_ACCESS_KEY` | R2 API token secret |
+| `R2_BUCKET_NAME` | Shared bucket name |
+| `R2_PUBLIC_URL` | Public URL prefix (r2.dev or custom domain) |
+| `R2_KEY_PREFIX` | Project namespace (default: `immortality-vn`) |
