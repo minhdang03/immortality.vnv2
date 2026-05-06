@@ -15,10 +15,12 @@ export function useAdmins() {
     []
   )
 
-  // grantedBy = current user uid for audit; UI passes it
-  const grantAdmin = async (uid, email, grantedBy) => {
+  // role: 'admin' | 'moderator'. grantedBy = current user uid for audit.
+  const grantAdmin = async (uid, email, grantedBy, role = 'admin') => {
     if (!uid) throw new Error('UID required')
+    if (role !== 'admin' && role !== 'moderator') throw new Error('Invalid role')
     await setDoc(doc(db, 'admins', uid.trim()), {
+      role,
       email: email?.trim() || null,
       grantedAt: serverTimestamp(),
       grantedBy: grantedBy || null,

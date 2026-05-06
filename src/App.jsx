@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { useTheme } from './hooks/useTheme'
+import { useUserRole } from './hooks/useUserRole'
 import { useArticles } from './hooks/useArticles'
 import { useTranslations } from './hooks/useTranslations'
 import { useTopics } from './hooks/useTopics'
@@ -63,6 +64,7 @@ export default function App() {
   const { practices, addPractice, updatePractice, deletePractice } = usePractices()
   const { settings: siteSettings, loading: settingsLoading, updateSettings } = useSiteSettings()
   const { dark, toggle: toggleTheme } = useTheme(siteSettings?.defaultTheme)
+  const { role: userRole } = useUserRole(user)
   const homeLoading = articlesLoading || topicsLoading || storiesLoading || settingsLoading
   const { fontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useFontSize(siteSettings?.defaultFontSize)
   const t = getT(lang)
@@ -207,7 +209,7 @@ export default function App() {
           )}
           {page === 'admin' && (
             <AdminPanel
-              t={t} lang={lang} user={user}
+              t={t} lang={lang} user={user} userRole={userRole}
               articles={allArticles} topics={TOPICS} stories={firestoreStories}
               khaitri={khaitri} teachings={teachings} practices={practices}
               firestoreVi={firestoreVi} firestoreEn={firestoreEn}

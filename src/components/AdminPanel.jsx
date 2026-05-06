@@ -15,8 +15,11 @@ import DonationsTab from './admin/DonationsTab'
 import AdminUsersTab from './admin/AdminUsersTab'
 import AgentLogTab from './admin/AgentLogTab'
 
+// Tabs that moderators may access (subset). All other tabs hidden for moderators.
+const MODERATOR_TABS = new Set(['articles'])
+
 export default function AdminPanel({
-  t, lang, user, articles, topics, stories, firestoreVi, firestoreEn,
+  t, lang, user, userRole, articles, topics, stories, firestoreVi, firestoreEn,
   khaitri, teachings, practices,
   onAddArticle, onUpdateArticle, onDeleteArticle,
   onAddTopic, onUpdateTopic, onDeleteTopic,
@@ -73,7 +76,14 @@ export default function AdminPanel({
     topics: topics.length,
   }
 
-  const activeTab = ADMIN_TABS.find(tb => tb.id === tab)
+  // Moderator sees only allowed tabs; admin sees everything
+  const visibleTabs = userRole === 'moderator'
+    ? ADMIN_TABS.filter(tb => MODERATOR_TABS.has(tb.id))
+    : ADMIN_TABS
+
+  // If current tab is hidden for this role, fall back to first visible
+  const activeTab = visibleTabs.find(tb => tb.id === tab) || visibleTabs[0]
+  const effectiveTab = activeTab?.id
 
   return (
     <div className="fade-up">
@@ -93,11 +103,16 @@ export default function AdminPanel({
               {t.adminSignOut}
             </button>
           </div>
+          {userRole && (
+            <div style={{ padding: '8px 16px', fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {userRole === 'moderator' ? '👤 Moderator' : '🛡 Admin'}
+            </div>
+          )}
           <nav className="admin-nav">
-            {ADMIN_TABS.map(tb => (
+            {visibleTabs.map(tb => (
               <button
                 key={tb.id}
-                className={`admin-nav-item ${tab === tb.id ? 'active' : ''}`}
+                className={`admin-nav-item ${effectiveTab === tb.id ? 'active' : ''}`}
                 onClick={() => { switchTab(tb.id); setSidebarOpen(false) }}
               >
                 <span className="admin-nav-icon">{tb.icon}</span>
@@ -116,18 +131,18 @@ export default function AdminPanel({
             </h2>
           </div>
 
-          {tab === 'articles' && <ArticlesTab t={t} lang={lang} articles={articles} topics={topics} onAdd={onAddArticle} onUpdate={onUpdateArticle} onDelete={onDeleteArticle} />}
-          {tab === 'stories' && <StoriesTab t={t} lang={lang} stories={stories} onAdd={onAddStory} onUpdate={onUpdateStory} onDelete={onDeleteStory} />}
-          {tab === 'khaitri' && <KhaiTriTab t={t} lang={lang} items={khaitri} onAdd={onAddKhaiTri} onUpdate={onUpdateKhaiTri} onDelete={onDeleteKhaiTri} />}
-          {tab === 'teachings' && <TeachingsTab t={t} lang={lang} items={teachings} onAdd={onAddTeaching} onUpdate={onUpdateTeaching} onDelete={onDeleteTeaching} />}
-          {tab === 'practices' && <PracticesTab t={t} lang={lang} items={practices} onAdd={onAddPractice} onUpdate={onUpdatePractice} onDelete={onDeletePractice} />}
-          {tab === 'topics' && <TopicsTab t={t} lang={lang} topics={topics} onAdd={onAddTopic} onUpdate={onUpdateTopic} onDelete={onDeleteTopic} />}
-          {tab === 'translations' && <TranslationsTab lang={lang} firestoreVi={firestoreVi} firestoreEn={firestoreEn} onUpdate={onUpdateTranslations} />}
-          {tab === 'homepage' && <HomeSettingsTab lang={lang} settings={siteSettings} onUpdate={onUpdateSettings} />}
-          {tab === 'ungho' && <DonationsTab t={t} lang={lang} />}
-          {tab === 'settings' && <SettingsTab lang={lang} settings={siteSettings} onUpdate={onUpdateSettings} />}
-          {tab === 'admins' && <AdminUsersTab lang={lang} currentUser={user} />}
-          {tab === 'agentlog' && <AgentLogTab lang={lang} />}
+          {effectiveTab === 'articles' && <ArticlesTab t={t} lang={lang} articles={articles} topics={topics} onAdd={onAddArticle} onUpdate={onUpdateArticle} onDelete={onDeleteArticle} />}
+          {effectiveTab === 'stories' && <StoriesTab t={t} lang={lang} stories={stories} onAdd={onAddStory} onUpdate={onUpdateStory} onDelete={onDeleteStory} />}
+          {effectiveTab === 'khaitri' && <KhaiTriTab t={t} lang={lang} items={khaitri} onAdd={onAddKhaiTri} onUpdate={onUpdateKhaiTri} onDelete={onDeleteKhaiTri} />}
+          {effectiveTab === 'teachings' && <TeachingsTab t={t} lang={lang} items={teachings} onAdd={onAddTeaching} onUpdate={onUpdateTeaching} onDelete={onDeleteTeaching} />}
+          {effectiveTab === 'practices' && <PracticesTab t={t} lang={lang} items={practices} onAdd={onAddPractice} onUpdate={onUpdatePractice} onDelete={onDeletePractice} />}
+          {effectiveTab === 'topics' && <TopicsTab t={t} lang={lang} topics={topics} onAdd={onAddTopic} onUpdate={onUpdateTopic} onDelete={onDeleteTopic} />}
+          {effectiveTab === 'translations' && <TranslationsTab lang={lang} firestoreVi={firestoreVi} firestoreEn={firestoreEn} onUpdate={onUpdateTranslations} />}
+          {effectiveTab === 'homepage' && <HomeSettingsTab lang={lang} settings={siteSettings} onUpdate={onUpdateSettings} />}
+          {effectiveTab === 'ungho' && <DonationsTab t={t} lang={lang} />}
+          {effectiveTab === 'settings' && <SettingsTab lang={lang} settings={siteSettings} onUpdate={onUpdateSettings} />}
+          {effectiveTab === 'admins' && <AdminUsersTab lang={lang} currentUser={user} />}
+          {effectiveTab === 'agentlog' && <AgentLogTab lang={lang} />}
         </div>
       </div>
     </div>

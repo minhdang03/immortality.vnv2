@@ -15,14 +15,28 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ─────────────────────────────────────────────────────────────
-    // Helper
+    // Helpers — role-based access via /admins/{uid}.role
     // ─────────────────────────────────────────────────────────────
-    // Admin = signed-in user whose UID has a doc at /admins/{uid}.
-    // To grant admin: create doc /admins/<uid> in Firebase Console (any content; existence is enough).
-    // To revoke: delete the doc. No code change required.
-    function isAdmin() {
+    // Doc shape: { role: 'admin' | 'moderator', email?, grantedAt, grantedBy }
+    // Backward-compat: doc with no `role` field is treated as admin (legacy grants).
+    // To grant: create /admins/<uid> with desired role.
+    // To revoke: delete the doc.
+    function adminDoc() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+    function isSignedInAdminDoc() {
       return request.auth != null
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function isAdmin() {
+      return isSignedInAdminDoc()
+        && (!('role' in adminDoc()) || adminDoc().role == 'admin');
+    }
+    function isModerator() {
+      return isSignedInAdminDoc() && adminDoc().role == 'moderator';
+    }
+    function isAdminOrMod() {
+      return isAdmin() || isModerator();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -81,7 +95,11 @@ service cloud.firestore {
     // ─────────────────────────────────────────────────────────────
     // Existing public collections — adjust to match current rules
     // ─────────────────────────────────────────────────────────────
-    match /articles/{id}        { allow read: if true; allow write: if isAdmin(); }
+    // Articles + comments: writable by admin OR moderator (mod's main job: post articles, moderate comments)
+    match /articles/{id}        { allow read: if true; allow write: if isAdminOrMod(); }
+    match /comments/{id}        { allow read: if true; allow create: if true; allow update, delete: if isAdminOrMod(); }
+
+    // All other content: admin only
     match /stories/{id}         { allow read: if true; allow write: if isAdmin(); }
     match /khaitri/{id}         { allow read: if true; allow write: if isAdmin(); }
     match /topics/{id}          { allow read: if true; allow write: if isAdmin(); }
@@ -89,7 +107,6 @@ service cloud.firestore {
     match /practices/{id}       { allow read: if true; allow write: if isAdmin(); }
     match /translations/{lang}  { allow read: if true; allow write: if isAdmin(); }
     match /settings/{id}        { allow read: if true; allow write: if isAdmin(); }
-    match /comments/{id}        { allow read: if true; allow create: if true; allow update, delete: if isAdmin(); }
     match /contacts/{id}        { allow read, update, delete: if isAdmin(); allow create: if true; }
 
     // Admin allowlist — readable + writable by existing admins (so AdminUsersTab works).

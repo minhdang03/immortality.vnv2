@@ -5,6 +5,7 @@ export default function AdminUsersTab({ lang, currentUser }) {
   const { admins, loading, grantAdmin, revokeAdmin } = useAdmins()
   const [uid, setUid] = useState('')
   const [email, setEmail] = useState('')
+  const [role, setRole] = useState('moderator')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
 
@@ -16,9 +17,9 @@ export default function AdminUsersTab({ lang, currentUser }) {
     if (!uid.trim()) { setMsg(vi ? 'UID không được trống' : 'UID required'); return }
     setBusy(true)
     try {
-      await grantAdmin(uid, email, currentUser?.uid)
-      setUid(''); setEmail('')
-      setMsg(vi ? '✓ Đã cấp quyền admin' : '✓ Admin granted')
+      await grantAdmin(uid, email, currentUser?.uid, role)
+      setUid(''); setEmail(''); setRole('moderator')
+      setMsg(vi ? `✓ Đã cấp quyền ${role}` : `✓ ${role} granted`)
     } catch (err) {
       setMsg(`✗ ${err?.message || 'Failed'}`)
     }
@@ -68,6 +69,10 @@ export default function AdminUsersTab({ lang, currentUser }) {
               onChange={e => setEmail(e.target.value)}
               disabled={busy}
             />
+            <select value={role} onChange={e => setRole(e.target.value)} disabled={busy}>
+              <option value="admin">{vi ? 'Admin (toàn quyền)' : 'Admin (full access)'}</option>
+              <option value="moderator">{vi ? 'Moderator (chỉ articles + comments)' : 'Moderator (articles + comments only)'}</option>
+            </select>
             <button type="submit" className="btn-read" disabled={busy || !uid.trim()}>
               {busy ? '...' : (vi ? 'Cấp quyền' : 'Grant')}
             </button>
@@ -89,12 +94,21 @@ export default function AdminUsersTab({ lang, currentUser }) {
           )}
           {admins?.map(a => {
             const isSelf = a.id === currentUser?.uid
+            const effectiveRole = a.role || 'admin'  // legacy doc with no role = admin
+            const roleColor = effectiveRole === 'admin' ? 'var(--gold)' : '#6ab8ff'
             return (
               <div key={a.id} className="admin-article-item">
                 <div className="admin-article-info" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                  <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{
+                      fontSize: '0.65rem', padding: '1px 6px', borderRadius: 4,
+                      background: `${roleColor}25`, color: roleColor,
+                      textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700
+                    }}>
+                      {effectiveRole}
+                    </span>
                     {a.email || a.id}
-                    {isSelf && <span style={{ color: 'var(--gold)', fontSize: '0.72rem', marginLeft: 8 }}>(you)</span>}
+                    {isSelf && <span style={{ color: 'var(--gold)', fontSize: '0.72rem' }}>(you)</span>}
                   </span>
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', fontFamily: 'monospace' }}>
                     {a.id}
