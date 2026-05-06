@@ -113,6 +113,24 @@ export default function handler(req, res) {
     endpoints: ENDPOINTS,
     examples: EXAMPLES,
 
+    classification: {
+      purpose: 'Decide collection (articles vs khaitri) WITHOUT asking the user. Pick automatically from content shape.',
+      decide_article_when: [
+        'Long-form essay / explanatory writing (multiple paragraphs of prose).',
+        'Content title is a noun phrase / topic ("Linh thai — vệ tinh tâm linh", "Phương pháp chữa mất ngủ").',
+        'No explicit Hỏi/Đáp (or Question/Answer) markers in the body.',
+        'Body discusses a method, concept, or teaching in narrative form.',
+        'Default fallback when uncertain.',
+      ],
+      decide_khaitri_when: [
+        'Body contains explicit "Hỏi:" / "Đáp:" markers (or English "Question:" / "Answer:").',
+        'Title is phrased as a question ("Vì sao ngồi thiền...?", "Cốt sống thư lỏng là gì?").',
+        'Single Q paired with one or more A paragraphs (transcript-style).',
+      ],
+      tie_breaker: 'If both signals present: count Q/A markers. Two or more pairs ⇒ khaitri. Otherwise ⇒ article.',
+      do_not_ask_user: 'Auto-classify and proceed. Only confirm with user if classification confidence is genuinely <70%.',
+    },
+
     storage: {
       backend: 'cloudflare-r2',
       bucket: 'shared (project-prefixed)',
@@ -132,12 +150,13 @@ export default function handler(req, res) {
 
     suggested_pipeline: [
       '1. signInWithPassword → idToken (cache 55 min)',
-      '2. GET /api/agent-spec → discover schemas, examples, validation rules',
-      '3. Generate content (LLM)',
-      '4. Generate image via your tool → temporary URL',
-      '5. POST /api/upload-from-url { url, intent, slug } → permanent R2 URL',
-      '6. POST /api/articles or /api/khaitri { ..., image: <permanent>, sourceRef }',
-      '7. (Optional) Verify with GET /api/<collection>/:id',
+      '2. GET /api/agent-spec → discover schemas, examples, validation rules, CLASSIFICATION rules',
+      '3. Receive content from user → CLASSIFY (article vs khaitri) using classification rules — DO NOT ASK USER',
+      '4. Generate / translate content as needed (Vi+En both required)',
+      '5. (Optional) Generate image → temporary URL',
+      '6. POST /api/upload-from-url { url, intent, slug } → permanent R2 URL',
+      '7. POST /api/articles OR /api/khaitri (per classification) { ..., image, sourceRef }',
+      '8. Reply to user with: classification chosen, sourceRef, doc id, public URL',
     ],
   }, null, 2))
 }
