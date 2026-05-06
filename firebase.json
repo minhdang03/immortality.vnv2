@@ -8,11 +8,19 @@
         "function": "ogRenderer"
       },
       {
+        "source": "/articles/**",
+        "function": "ogRenderer"
+      },
+      {
         "source": "/topic/**",
         "function": "ogRenderer"
       },
       {
         "source": "/stories",
+        "function": "ogRenderer"
+      },
+      {
+        "source": "/khaitri/**",
         "function": "ogRenderer"
       },
       {

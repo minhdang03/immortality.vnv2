@@ -154,8 +154,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // /article/{slug}
-    const articleMatch = p.match(/^\/article\/(.+)$/)
+    // /article/{slug} or /articles/{slug} (plural alias)
+    const articleMatch = p.match(/^\/articles?\/(.+)$/)
     if (articleMatch) {
       const article = await findArticle(articleMatch[1])
       if (article) {
@@ -166,6 +166,7 @@ export default async function handler(req, res) {
         return res.send(renderOgPage({
           title: `${title} | ${SITE_NAME}`,
           description: desc,
+          image: article.image || undefined,
           url: `${SITE_URL}/article/${articleMatch[1]}`,
           siteUrl: SITE_URL,
         }))
@@ -184,6 +185,7 @@ export default async function handler(req, res) {
         return res.send(renderOgPage({
           title: `${title} | Khai Trí`,
           description: desc,
+          image: item.image || undefined,
           url: `${SITE_URL}/khaitri/${khaitriMatch[1]}`,
           siteUrl: SITE_URL,
         }))
