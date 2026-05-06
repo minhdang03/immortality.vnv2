@@ -19,7 +19,7 @@
 
 const admin = require('firebase-admin')
 
-const VALID_ROLES = ['admin', 'mod-articles', 'mod-khaitri']
+const VALID_ROLES = ['admin', 'agent', 'mod-articles', 'mod-khaitri']
 
 function parseArgs(argv) {
   const out = {}

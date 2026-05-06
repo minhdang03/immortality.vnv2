@@ -15,8 +15,8 @@ export function useAdmins() {
     []
   )
 
-  // role: 'admin' | 'mod-articles' | 'mod-khaitri' (legacy 'moderator' = 'mod-articles')
-  const VALID_ROLES = new Set(['admin', 'mod-articles', 'mod-khaitri', 'moderator'])
+  // Roles: admin | agent (articles+khaitri) | mod-articles | mod-khaitri | moderator (legacy = mod-articles)
+  const VALID_ROLES = new Set(['admin', 'agent', 'mod-articles', 'mod-khaitri', 'moderator'])
   const grantAdmin = async (uid, email, grantedBy, role = 'admin') => {
     if (!uid) throw new Error('UID required')
     if (!VALID_ROLES.has(role)) throw new Error('Invalid role')

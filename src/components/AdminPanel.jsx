@@ -21,6 +21,7 @@ const ROLE_TABS = {
   'mod-articles': new Set(['articles']),
   'moderator':    new Set(['articles']),  // legacy alias
   'mod-khaitri':  new Set(['khaitri']),
+  'agent':        new Set(['articles', 'khaitri']),  // shared goclaw agent identity
 }
 
 export default function AdminPanel({
@@ -112,6 +113,7 @@ export default function AdminPanel({
           {userRole && (
             <div style={{ padding: '8px 16px', fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               {userRole === 'admin' ? '🛡 Admin' :
+               userRole === 'agent' ? '🤖 Agent' :
                (userRole === 'mod-articles' || userRole === 'moderator') ? '✍️ Mod Articles' :
                userRole === 'mod-khaitri' ? '💡 Mod Khai Trí' :
                `👤 ${userRole}`}

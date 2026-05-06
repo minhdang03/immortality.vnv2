@@ -71,8 +71,9 @@ export default function AdminUsersTab({ lang, currentUser }) {
             />
             <select value={role} onChange={e => setRole(e.target.value)} disabled={busy}>
               <option value="admin">{vi ? 'Admin (toàn quyền)' : 'Admin (full access)'}</option>
-              <option value="mod-articles">{vi ? 'Mod Articles (đăng bài viết + comments)' : 'Mod Articles (post articles + moderate comments)'}</option>
-              <option value="mod-khaitri">{vi ? 'Mod Khai Trí (đăng hỏi đáp)' : 'Mod Khai Trí (post Q&A)'}</option>
+              <option value="agent">{vi ? 'Agent (đăng cả articles + khai trí)' : 'Agent (post articles + khaitri)'}</option>
+              <option value="mod-articles">{vi ? 'Mod Articles (chỉ articles + comments)' : 'Mod Articles only'}</option>
+              <option value="mod-khaitri">{vi ? 'Mod Khai Trí (chỉ hỏi đáp)' : 'Mod Khai Trí only'}</option>
             </select>
             <button type="submit" className="btn-read" disabled={busy || !uid.trim()}>
               {busy ? '...' : (vi ? 'Cấp quyền' : 'Grant')}

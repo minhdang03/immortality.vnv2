@@ -35,12 +35,13 @@ service cloud.firestore {
     function hasRole(r) {
       return isSignedInAdminDoc() && adminDoc().role == r;
     }
-    // 'moderator' is the legacy name for 'mod-articles' — accept both for backward compat
+    // 'moderator' is the legacy name for 'mod-articles' — accept both for backward compat.
+    // 'agent' is a shared goclaw identity that writes both articles + khaitri.
     function canWriteArticles() {
-      return isAdmin() || hasRole('mod-articles') || hasRole('moderator');
+      return isAdmin() || hasRole('mod-articles') || hasRole('moderator') || hasRole('agent');
     }
     function canWriteKhaitri() {
-      return isAdmin() || hasRole('mod-khaitri');
+      return isAdmin() || hasRole('mod-khaitri') || hasRole('agent');
     }
 
     // ─────────────────────────────────────────────────────────────
