@@ -7,6 +7,11 @@ export default function ArticleCard({ article, lang, t, index, navigate }) {
   const goToArticle = () => navigate('article', article)
   return (
     <div className={`article-card fade-up fade-up-d${Math.min(index + 1, 6)}`}>
+      {article.image && (
+        <div className="article-card-image" onClick={goToArticle}>
+          <img src={article.image} alt={d.title} loading="lazy" onError={e => { e.target.parentElement.style.display = 'none' }} />
+        </div>
+      )}
       <div className="article-meta">
         <span className="article-tag">{article.tag?.[lang]}</span>
         <span className="article-date">{article.date}</span>

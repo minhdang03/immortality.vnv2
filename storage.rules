@@ -1,0 +1,48 @@
+rules_version = '2';
+
+// Firebase Storage rules.
+// Bucket layout:
+//   articles/{filename}   — hero/inline images for articles. Writable by admin or agent role.
+//   khaitri/{filename}    — images for Khai Trí Q&A. Writable by admin or mod-khaitri or agent.
+//   public/{path}         — anything publicly readable, admin-only write.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function role() {
+      return firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data.role;
+    }
+    function adminOrAgent() {
+      return request.auth != null && (
+        !('role' in firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data) ||
+        role() == 'admin' ||
+        role() == 'agent'
+      );
+    }
+    function modArticles() {
+      return request.auth != null && (
+        role() == 'mod-articles' || role() == 'moderator'
+      );
+    }
+    function modKhaitri() {
+      return request.auth != null && role() == 'mod-khaitri';
+    }
+
+    // Articles images: admin / agent / mod-articles
+    match /articles/{file=**} {
+      allow read: if true;
+      allow write: if adminOrAgent() || modArticles();
+    }
+
+    // Khai Trí images: admin / agent / mod-khaitri
+    match /khaitri/{file=**} {
+      allow read: if true;
+      allow write: if adminOrAgent() || modKhaitri();
+    }
+
+    // Anything else: admin only
+    match /{path=**} {
+      allow read: if true;
+      allow write: if adminOrAgent();
+    }
+  }
+}

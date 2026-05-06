@@ -4,6 +4,7 @@ import AutoTextarea from './AutoTextarea'
 export default function ArticlesTab({ t, lang, articles, topics, onAdd, onUpdate, onDelete }) {
   const EMPTY = {
     topic: topics[0]?.id || '', date: new Date().toISOString().split('T')[0],
+    image: '',
     tagVi: '', tagEn: '', titleVi: '', titleEn: '',
     questionVi: '', questionEn: '', summaryVi: '', summaryEn: '', bodyVi: '', bodyEn: '',
   }
@@ -17,6 +18,7 @@ export default function ArticlesTab({ t, lang, articles, topics, onAdd, onUpdate
   const startEdit = (a) => {
     setForm({
       topic: a.topic, date: a.date,
+      image: a.image || '',
       tagVi: a.tag?.vi || '', tagEn: a.tag?.en || '',
       titleVi: a.vi?.title || '', titleEn: a.en?.title || '',
       questionVi: a.vi?.question || '', questionEn: a.en?.question || '',
@@ -29,6 +31,7 @@ export default function ArticlesTab({ t, lang, articles, topics, onAdd, onUpdate
   const handleSave = async () => {
     const data = {
       topic: form.topic, date: form.date,
+      image: form.image || '',
       tag: { vi: form.tagVi, en: form.tagEn },
       vi: { title: form.titleVi, question: form.questionVi, summary: form.summaryVi, body: form.bodyVi },
       en: { title: form.titleEn, question: form.questionEn, summary: form.summaryEn, body: form.bodyEn },
@@ -71,6 +74,32 @@ export default function ArticlesTab({ t, lang, articles, topics, onAdd, onUpdate
                 <label>Tag (EN)</label>
                 <input value={form.tagEn} onChange={e => setField('tagEn', e.target.value)} placeholder="e.g. Insomnia" />
               </div>
+            </div>
+            <div className="admin-editor-meta-row" style={{ alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <label>{lang === 'vi' ? 'Ảnh minh hoạ (URL)' : 'Hero image (URL)'}</label>
+                <input
+                  value={form.image}
+                  onChange={e => setField('image', e.target.value)}
+                  placeholder="https://firebasestorage.googleapis.com/.../article-hero.png"
+                />
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: 4 }}>
+                  {lang === 'vi'
+                    ? 'AI agent có thể tự generate + upload Firebase Storage rồi điền URL. Hoặc dán URL bất kỳ.'
+                    : 'AI agent can generate + upload to Firebase Storage and stamp URL. Or paste any URL.'}
+                </div>
+              </div>
+              {form.image && (
+                <div style={{ width: 140, flexShrink: 0 }}>
+                  <label>{lang === 'vi' ? 'Preview' : 'Preview'}</label>
+                  <img
+                    src={form.image}
+                    alt="hero preview"
+                    onError={e => { e.target.style.display = 'none' }}
+                    style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(201,168,108,0.2)' }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

@@ -89,7 +89,13 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
           <span className="breadcrumb-current">{d?.title?.slice(0, 30)}{d?.title?.length > 30 ? '...' : ''}</span>
         </div>
 
-        <div className="video-placeholder">{t.videoPlaceholder}</div>
+        {article.image ? (
+          <div className="article-hero">
+            <img src={article.image} alt={d?.title || ''} loading="eager" onError={e => { e.target.parentElement.style.display = 'none' }} />
+          </div>
+        ) : (
+          <div className="video-placeholder">{t.videoPlaceholder}</div>
+        )}
 
         {/* Article meta */}
         <div className="detail-meta">
