@@ -15,10 +15,11 @@ export function useAdmins() {
     []
   )
 
-  // role: 'admin' | 'moderator'. grantedBy = current user uid for audit.
+  // role: 'admin' | 'mod-articles' | 'mod-khaitri' (legacy 'moderator' = 'mod-articles')
+  const VALID_ROLES = new Set(['admin', 'mod-articles', 'mod-khaitri', 'moderator'])
   const grantAdmin = async (uid, email, grantedBy, role = 'admin') => {
     if (!uid) throw new Error('UID required')
-    if (role !== 'admin' && role !== 'moderator') throw new Error('Invalid role')
+    if (!VALID_ROLES.has(role)) throw new Error('Invalid role')
     await setDoc(doc(db, 'admins', uid.trim()), {
       role,
       email: email?.trim() || null,

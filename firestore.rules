@@ -32,11 +32,15 @@ service cloud.firestore {
       return isSignedInAdminDoc()
         && (!('role' in adminDoc()) || adminDoc().role == 'admin');
     }
-    function isModerator() {
-      return isSignedInAdminDoc() && adminDoc().role == 'moderator';
+    function hasRole(r) {
+      return isSignedInAdminDoc() && adminDoc().role == r;
     }
-    function isAdminOrMod() {
-      return isAdmin() || isModerator();
+    // 'moderator' is the legacy name for 'mod-articles' — accept both for backward compat
+    function canWriteArticles() {
+      return isAdmin() || hasRole('mod-articles') || hasRole('moderator');
+    }
+    function canWriteKhaitri() {
+      return isAdmin() || hasRole('mod-khaitri');
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -95,13 +99,14 @@ service cloud.firestore {
     // ─────────────────────────────────────────────────────────────
     // Existing public collections — adjust to match current rules
     // ─────────────────────────────────────────────────────────────
-    // Articles + comments: writable by admin OR moderator (mod's main job: post articles, moderate comments)
-    match /articles/{id}        { allow read: if true; allow write: if isAdminOrMod(); }
-    match /comments/{id}        { allow read: if true; allow create: if true; allow update, delete: if isAdminOrMod(); }
+    // Per-collection writes scoped to specific roles. Each goclaw agent gets ONLY the role
+    // matching the content it produces — minimal blast radius if an agent's creds leak.
+    match /articles/{id}        { allow read: if true; allow write: if canWriteArticles(); }
+    match /comments/{id}        { allow read: if true; allow create: if true; allow update, delete: if canWriteArticles(); }
+    match /khaitri/{id}         { allow read: if true; allow write: if canWriteKhaitri(); }
 
     // All other content: admin only
     match /stories/{id}         { allow read: if true; allow write: if isAdmin(); }
-    match /khaitri/{id}         { allow read: if true; allow write: if isAdmin(); }
     match /topics/{id}          { allow read: if true; allow write: if isAdmin(); }
     match /teachings/{id}       { allow read: if true; allow write: if isAdmin(); }
     match /practices/{id}       { allow read: if true; allow write: if isAdmin(); }

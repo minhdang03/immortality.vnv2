@@ -15,8 +15,13 @@ import DonationsTab from './admin/DonationsTab'
 import AdminUsersTab from './admin/AdminUsersTab'
 import AgentLogTab from './admin/AgentLogTab'
 
-// Tabs that moderators may access (subset). All other tabs hidden for moderators.
-const MODERATOR_TABS = new Set(['articles'])
+// Tabs each non-admin role may access. Admin sees everything (no entry needed).
+// Legacy 'moderator' = 'mod-articles' for backward compat.
+const ROLE_TABS = {
+  'mod-articles': new Set(['articles']),
+  'moderator':    new Set(['articles']),  // legacy alias
+  'mod-khaitri':  new Set(['khaitri']),
+}
 
 export default function AdminPanel({
   t, lang, user, userRole, articles, topics, stories, firestoreVi, firestoreEn,
@@ -76,9 +81,10 @@ export default function AdminPanel({
     topics: topics.length,
   }
 
-  // Moderator sees only allowed tabs; admin sees everything
-  const visibleTabs = userRole === 'moderator'
-    ? ADMIN_TABS.filter(tb => MODERATOR_TABS.has(tb.id))
+  // Per-role tab visibility. Admin (or unknown role string) sees everything.
+  const allowed = ROLE_TABS[userRole]
+  const visibleTabs = allowed
+    ? ADMIN_TABS.filter(tb => allowed.has(tb.id))
     : ADMIN_TABS
 
   // If current tab is hidden for this role, fall back to first visible
@@ -105,7 +111,10 @@ export default function AdminPanel({
           </div>
           {userRole && (
             <div style={{ padding: '8px 16px', fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {userRole === 'moderator' ? '👤 Moderator' : '🛡 Admin'}
+              {userRole === 'admin' ? '🛡 Admin' :
+               (userRole === 'mod-articles' || userRole === 'moderator') ? '✍️ Mod Articles' :
+               userRole === 'mod-khaitri' ? '💡 Mod Khai Trí' :
+               `👤 ${userRole}`}
             </div>
           )}
           <nav className="admin-nav">

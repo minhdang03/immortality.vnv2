@@ -5,7 +5,7 @@ export default function AdminUsersTab({ lang, currentUser }) {
   const { admins, loading, grantAdmin, revokeAdmin } = useAdmins()
   const [uid, setUid] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState('moderator')
+  const [role, setRole] = useState('mod-articles')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
 
@@ -18,7 +18,7 @@ export default function AdminUsersTab({ lang, currentUser }) {
     setBusy(true)
     try {
       await grantAdmin(uid, email, currentUser?.uid, role)
-      setUid(''); setEmail(''); setRole('moderator')
+      setUid(''); setEmail(''); setRole('mod-articles')
       setMsg(vi ? `✓ Đã cấp quyền ${role}` : `✓ ${role} granted`)
     } catch (err) {
       setMsg(`✗ ${err?.message || 'Failed'}`)
@@ -71,7 +71,8 @@ export default function AdminUsersTab({ lang, currentUser }) {
             />
             <select value={role} onChange={e => setRole(e.target.value)} disabled={busy}>
               <option value="admin">{vi ? 'Admin (toàn quyền)' : 'Admin (full access)'}</option>
-              <option value="moderator">{vi ? 'Moderator (chỉ articles + comments)' : 'Moderator (articles + comments only)'}</option>
+              <option value="mod-articles">{vi ? 'Mod Articles (đăng bài viết + comments)' : 'Mod Articles (post articles + moderate comments)'}</option>
+              <option value="mod-khaitri">{vi ? 'Mod Khai Trí (đăng hỏi đáp)' : 'Mod Khai Trí (post Q&A)'}</option>
             </select>
             <button type="submit" className="btn-read" disabled={busy || !uid.trim()}>
               {busy ? '...' : (vi ? 'Cấp quyền' : 'Grant')}
