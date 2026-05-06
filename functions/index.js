@@ -130,6 +130,49 @@ exports.ogRenderer = onRequest({ region: 'asia-southeast1' }, async (req, res) =
           title: `${d.title} | ${SITE_NAME}`,
           description: d.summary || d.question || DEFAULT_DESC,
           url: `${SITE}/article/${slug}`,
+          image: article.image || undefined,
+          type: 'article',
+        }))
+        return
+      }
+    }
+
+    // Khai Trí detail: /khaitri/:slug — slug = "<order2digit>-<vi-title-slug>" or "<order>" or doc-id
+    if (reqPath.startsWith('/khaitri/')) {
+      const slug = reqPath.slice(9).replace(/\/$/, '')
+      let item = null
+
+      // Parse leading order from slug ("06-vi-sao-..." → 6)
+      const orderMatch = slug.match(/^(\d+)/)
+      if (orderMatch) {
+        const order = parseInt(orderMatch[1], 10)
+        const snap = await db.collection('khaitri').where('order', '==', order).limit(5).get()
+        if (!snap.empty) {
+          // If multiple, prefer the one whose computed slug matches
+          for (const d of snap.docs) {
+            const data = d.data()
+            const num = String(data.order || 1).padStart(2, '0')
+            const title = data.vi?.title || data.en?.title || ''
+            const titleSlug = toSlug(title)
+            const computed = titleSlug ? `${num}-${titleSlug}` : num
+            if (computed === slug) { item = { id: d.id, ...data }; break }
+          }
+          if (!item) item = { id: snap.docs[0].id, ...snap.docs[0].data() }
+        }
+      }
+      // Fallback: doc-id lookup
+      if (!item) {
+        const byId = await db.collection('khaitri').doc(slug).get()
+        if (byId.exists) item = { id: byId.id, ...byId.data() }
+      }
+
+      if (item) {
+        const d = item.vi || item.en || {}
+        res.status(200).send(renderOgHtml({
+          title: `${d.title} | ${SITE_NAME}`,
+          description: d.summary || d.question || DEFAULT_DESC,
+          url: `${SITE}/khaitri/${slug}`,
+          image: item.image || undefined,
           type: 'article',
         }))
         return
