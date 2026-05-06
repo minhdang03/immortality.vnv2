@@ -4,6 +4,7 @@
 import { validateArticle } from '../../schemas/articles.js'
 import { requireAgent, jsonError } from '../_lib/auth.js'
 import { db, FieldValue } from '../_lib/db.js'
+import { articleSlugFields } from '../_lib/slug.js'
 
 export default async function handler(req, res) {
   const auth = await requireAgent(req)
@@ -54,12 +55,18 @@ async function create(req, res, auth) {
     return res.status(422).json({ ok: false, error: 'validation_failed', errors: v.errors })
   }
 
+  const slugFields = articleSlugFields(v.normalized)
   const ref = await db().collection('articles').add({
     ...v.normalized,
+    ...slugFields,
     createdAt: FieldValue.serverTimestamp(),
     createdBy: auth.email,
   })
   const created = await ref.get()
+  // Convenience: tell the agent the canonical public URL so it stops guessing
+  const publicUrl = slugFields.viSlug
+    ? `https://battudao.com/article/${slugFields.viSlug}`
+    : `https://battudao.com/article/${ref.id}`
   res.setHeader('Content-Type', 'application/json')
-  res.status(201).send(JSON.stringify({ ok: true, id: ref.id, doc: { id: ref.id, ...created.data() } }))
+  res.status(201).send(JSON.stringify({ ok: true, id: ref.id, publicUrl, doc: { id: ref.id, ...created.data() } }))
 }

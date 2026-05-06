@@ -4,6 +4,7 @@
 import { validateArticle } from '../../schemas/articles.js'
 import { requireAgent, jsonError } from '../_lib/auth.js'
 import { db, FieldValue } from '../_lib/db.js'
+import { articleSlugFields } from '../_lib/slug.js'
 
 export default async function handler(req, res) {
   const auth = await requireAgent(req)
@@ -50,6 +51,16 @@ export default async function handler(req, res) {
     }
 
     const update = isPartial ? flatten(data) : flatten(v.normalized)
+    // Re-stamp slug fields if title changed (or always for full replace)
+    const titleChanged = data.vi?.title !== undefined || data.en?.title !== undefined || !isPartial
+    if (titleChanged) {
+      const slugSrc = isPartial
+        ? { vi: { title: merged.vi?.title }, en: { title: merged.en?.title } }
+        : v.normalized
+      const slugs = articleSlugFields(slugSrc)
+      update.viSlug = slugs.viSlug
+      update.enSlug = slugs.enSlug
+    }
     update.updatedAt = FieldValue.serverTimestamp()
     update.updatedBy = auth.email
     await ref.update(update)
