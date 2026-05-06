@@ -107,15 +107,17 @@ exports.ogRenderer = onRequest({ region: 'asia-southeast1' }, async (req, res) =
   }
 
   try {
-    // Article detail: /article/:slug
+    // Article detail: /article/:slug (canonical) or /articles/:slug (alias)
     // Uses pre-stamped viSlug/enSlug fields for O(1) lookup (run backfill-article-slugs.js first)
-    if (reqPath.startsWith('/article/')) {
-      const slug = reqPath.slice(9).replace(/\/$/, '')
+    const articleMatch = reqPath.match(/^\/articles?\/(.+?)\/?$/)
+    if (articleMatch) {
+      const slug = articleMatch[1]
       let article = null
 
-      // Try viSlug index → enSlug index → doc-id fallback (covers legacy / unmigrated docs)
+      // Try viSlug → enSlug → sourceRef → doc-id fallback (covers legacy + agent-posted docs)
       let snap = await db.collection('articles').where('viSlug', '==', slug).limit(1).get()
       if (snap.empty) snap = await db.collection('articles').where('enSlug', '==', slug).limit(1).get()
+      if (snap.empty) snap = await db.collection('articles').where('sourceRef', '==', slug).limit(1).get()
       if (!snap.empty) {
         const d = snap.docs[0]
         article = { id: d.id, ...d.data() }

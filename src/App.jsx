@@ -87,9 +87,20 @@ export default function App() {
 
     // Special parameterized routes
     if (path.startsWith('/topic/')) { setSelectedTopic(path.slice(7)); setPage('topic'); return }
+    // Accept both /article/:slug (canonical) and /articles/:slug (common typo) — redirect plural to singular.
+    if (path.startsWith('/articles/')) {
+      const slug = path.slice(10)
+      if (slug) { history.replaceState({}, '', `/article/${slug}`) }
+    }
     if (path.startsWith('/article/')) {
       const slug = path.slice(9)
-      const found = allArticles.find(a => articleSlug(a) === slug || String(a.id) === slug)
+      const found = allArticles.find(a =>
+        articleSlug(a) === slug ||
+        String(a.id) === slug ||
+        a.sourceRef === slug ||
+        a.viSlug === slug ||
+        a.enSlug === slug
+      )
       if (found) { setSelectedArticle(found); setPage('article') }
       return
     }
