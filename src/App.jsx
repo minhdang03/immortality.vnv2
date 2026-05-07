@@ -45,10 +45,17 @@ const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
   const [lang, setLang] = useState(() => {
-    const saved = localStorage.getItem('lang')
-    if (saved) return saved
+    // Domain dictates default language. Per-domain override lives at lang:<host>
+    // so toggling EN on immortality.vn doesn't leak EN into battudao.com.
     const host = window.location.hostname
-    return host.includes('immortality.vn') ? 'en' : 'vi'
+    const domainDefault = host.includes('immortality.vn') ? 'en' : 'vi'
+    // One-shot migrate legacy unscoped key to per-domain (only on the host where it was last set).
+    const legacy = localStorage.getItem('lang')
+    if (legacy && !localStorage.getItem(`lang:${host}`)) {
+      localStorage.setItem(`lang:${host}`, legacy)
+      localStorage.removeItem('lang')
+    }
+    return localStorage.getItem(`lang:${host}`) || domainDefault
   })
   const [page, setPage] = useState('home')
   const [selectedTopic, setSelectedTopic] = useState(null)
@@ -161,7 +168,7 @@ export default function App() {
           t={t} lang={lang} dark={dark} page={page} menuOpen={menuOpen}
           navigate={navigate}
           toggleTheme={() => { toggleTheme(); trackThemeToggle(dark ? 'light' : 'dark') }}
-          setLang={(l) => { setLang(l); localStorage.setItem('lang', l); trackLanguageChange(l) }}
+          setLang={(l) => { setLang(l); localStorage.setItem(`lang:${window.location.hostname}`, l); trackLanguageChange(l) }}
           setMenuOpen={setMenuOpen}
           user={user} navItems={siteSettings.navItems}
         />
