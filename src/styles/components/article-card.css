@@ -2,14 +2,20 @@
 .article-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 18px;
+  gap: 16px;
   margin-top: 8px;
 }
-@media (min-width: 720px) {
-  .article-grid { grid-template-columns: 1fr 1fr; gap: 22px; }
+/* Tablet portrait + foldable open */
+@media (min-width: 640px) {
+  .article-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
 }
-@media (min-width: 1100px) {
-  .article-grid { grid-template-columns: 1fr 1fr 1fr; }
+/* Desktop */
+@media (min-width: 1024px) {
+  .article-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+}
+/* Large desktop */
+@media (min-width: 1536px) {
+  .article-grid { grid-template-columns: repeat(4, 1fr); gap: 28px; }
 }
 .article-grid .article-card {
   margin-bottom: 0;
