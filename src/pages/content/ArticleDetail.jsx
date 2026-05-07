@@ -74,20 +74,22 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
     <>
       <ReadingProgress />
       <section className="section fade-up">
-        {/* Breadcrumb */}
-        <div className="detail-breadcrumb">
+        {/* Breadcrumb: Home / Articles / [Topic] / Title */}
+        <nav className="detail-breadcrumb" aria-label={lang === 'vi' ? 'Đường dẫn' : 'Breadcrumb'}>
           <button onClick={() => navigate('home')}>{t.navHome}</button>
-          <span className="breadcrumb-sep">/</span>
+          <span className="breadcrumb-sep" aria-hidden="true">/</span>
+          <button onClick={() => navigate('articles')}>{lang === 'vi' ? 'Bài viết' : 'Articles'}</button>
           {topicObj && (
             <>
+              <span className="breadcrumb-sep" aria-hidden="true">/</span>
               <button onClick={() => navigate('topic', article.topic)}>
                 {lang === 'vi' ? topicObj.vi : topicObj.en}
               </button>
-              <span className="breadcrumb-sep">/</span>
             </>
           )}
-          <span className="breadcrumb-current" title={d?.title}>{d?.title}</span>
-        </div>
+          <span className="breadcrumb-sep" aria-hidden="true">/</span>
+          <span className="breadcrumb-current" title={d?.title} aria-current="page">{d?.title}</span>
+        </nav>
 
         {article.image ? (
           <div className="article-hero">

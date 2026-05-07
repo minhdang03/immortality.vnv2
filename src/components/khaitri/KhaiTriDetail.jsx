@@ -35,13 +35,13 @@ export default function KhaiTriDetail({ item, lang, t, navigate, fontSize, onFon
       <ReadingProgress />
       <div className="khaitri-detail fade-up">
         {/* Breadcrumb */}
-        <div className="detail-breadcrumb">
+        <nav className="detail-breadcrumb" aria-label={lang === 'vi' ? 'Đường dẫn' : 'Breadcrumb'}>
           <button onClick={() => navigate('home')}>{t.navHome}</button>
-          <span className="breadcrumb-sep">/</span>
-          <button onClick={() => onBack()}>{lang === 'vi' ? 'Khai Trí' : 'Khai Trí'}</button>
-          <span className="breadcrumb-sep">/</span>
-          <span className="breadcrumb-current" title={d.title || ''}>{d.title || ''}</span>
-        </div>
+          <span className="breadcrumb-sep" aria-hidden="true">/</span>
+          <button onClick={() => onBack()}>Khai Trí</button>
+          <span className="breadcrumb-sep" aria-hidden="true">/</span>
+          <span className="breadcrumb-current" title={d.title || ''} aria-current="page">{d.title || ''}</span>
+        </nav>
 
         {/* Header */}
         <div className="khaitri-detail-header">

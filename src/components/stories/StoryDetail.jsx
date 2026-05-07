@@ -38,13 +38,13 @@ export default function StoryDetail({ story, lang, t, navigate, fontSize, onFont
       <ReadingProgress />
       <div className="story-detail fade-up">
         {/* Breadcrumb */}
-        <div className="detail-breadcrumb">
+        <nav className="detail-breadcrumb" aria-label={lang === 'vi' ? 'Đường dẫn' : 'Breadcrumb'}>
           <button onClick={() => navigate('home')}>{t.navHome}</button>
-          <span className="breadcrumb-sep">/</span>
+          <span className="breadcrumb-sep" aria-hidden="true">/</span>
           <button onClick={onBack}>{lang === 'vi' ? 'Câu Chuyện' : 'Stories'}</button>
-          <span className="breadcrumb-sep">/</span>
-          <span className="breadcrumb-current" title={title || ''}>{title || ''}</span>
-        </div>
+          <span className="breadcrumb-sep" aria-hidden="true">/</span>
+          <span className="breadcrumb-current" title={title || ''} aria-current="page">{title || ''}</span>
+        </nav>
 
         <div className="story-detail-header">
           <span className="story-num-lg">{String(story.order).padStart(2, '0')}</span>
