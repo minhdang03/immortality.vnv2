@@ -1,17 +1,83 @@
+/* ─── ARTICLE GRID (used on /articles list page) ─── */
+.article-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin-top: 8px;
+}
+@media (min-width: 720px) {
+  .article-grid { grid-template-columns: 1fr 1fr; gap: 22px; }
+}
+@media (min-width: 1100px) {
+  .article-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+.article-grid .article-card {
+  margin-bottom: 0;
+  display: flex; flex-direction: column;
+}
+.article-grid .article-card-body { display: flex; flex-direction: column; flex: 1; }
+.article-grid .article-card-image { aspect-ratio: 16 / 10; }
+.article-grid .article-summary {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.article-grid .article-question {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.article-grid .article-title {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  margin: 0 0 10px;
+}
+.article-grid .article-actions { margin-top: auto; padding-top: 8px; }
+.load-more-row { display: flex; justify-content: center; margin-top: 28px; }
+
+/* Topic filter pill bar (shared with stories/articles) */
+.story-filters {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 14px 0 24px;
+}
+.filter-btn {
+  font-family: var(--font-body); font-size: 0.78rem; font-weight: 500;
+  padding: 7px 14px; border-radius: 999px;
+  background: transparent; color: var(--text-dim);
+  border: 1px solid rgba(201,168,108,0.22);
+  cursor: pointer; transition: all 0.2s;
+}
+.filter-btn:hover { color: var(--gold-bright); border-color: rgba(201,168,108,0.5); }
+.filter-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.filter-btn.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+  border-color: transparent;
+  color: #0a0a0f; font-weight: 600;
+}
+[data-theme="light"] .filter-btn.active { color: #fff; }
+.no-results-rich {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 40px 20px; color: var(--text-dim); text-align: center;
+}
+.no-results-rich p { margin: 0; font-size: 0.95rem; }
+
 /* ─── ARTICLE CARD ─── */
 .article-card {
-  background: var(--card); border-radius: 16px; padding: 22px 20px; margin-bottom: 16px;
+  background: var(--card); border-radius: 16px; margin-bottom: 16px;
   border: 1px solid rgba(201,168,108,0.08);
   transition: box-shadow 0.3s, border-color 0.3s;
   container-type: inline-size;
   overflow: hidden;
 }
+.article-card-body { padding: 22px 20px; }
 .article-card-image {
-  margin: -22px -20px 16px;
   cursor: pointer;
-  background: rgba(0,0,0,0.2);
+  background: linear-gradient(110deg, rgba(201,168,108,0.06) 8%, rgba(201,168,108,0.12) 18%, rgba(201,168,108,0.06) 33%);
+  background-size: 200% 100%;
+  animation: card-img-skeleton 1.4s linear infinite;
   aspect-ratio: 16 / 9;
   overflow: hidden;
+  display: block;
+}
+.article-card-image img { animation: none; }
+@keyframes card-img-skeleton { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .article-card-image { animation: none; background: rgba(201,168,108,0.08); }
 }
 .article-card-image img {
   width: 100%; height: 100%; object-fit: cover;
@@ -26,14 +92,25 @@
 .article-tag {
   font-size: 0.7rem; font-weight: 500; color: var(--gold);
   background: rgba(201,168,108,0.1); padding: 3px 10px; border-radius: 10px;
+  display: inline-block;
 }
+.article-tag-button {
+  border: none; cursor: pointer; font-family: var(--font-body);
+  transition: background 0.2s, color 0.2s;
+}
+.article-tag-button:hover { background: rgba(201,168,108,0.22); color: var(--gold-bright); }
+.article-tag-button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .article-date { font-size: 0.72rem; color: var(--text-dim); }
 .article-title {
   font-family: var(--font-display); font-size: 1.15rem; font-weight: 600;
-  color: var(--white); margin-bottom: 10px; line-height: 1.4;
+  color: var(--white); margin: 0 0 10px; line-height: 1.4;
 }
-.article-title-link { cursor: pointer; transition: color 0.3s; }
+.article-title-link {
+  cursor: pointer; transition: color 0.3s;
+  color: inherit; text-decoration: none;
+}
 .article-title-link:hover { color: var(--gold-bright); }
+.article-title-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 2px; }
 .article-question {
   font-style: italic; font-size: 0.85rem; color: var(--text);
   border-left: 3px solid var(--gold); padding-left: 14px;
