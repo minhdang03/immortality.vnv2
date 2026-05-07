@@ -40,7 +40,7 @@ export default function KhaiTriDetail({ item, lang, t, navigate, fontSize, onFon
           <span className="breadcrumb-sep">/</span>
           <button onClick={() => onBack()}>{lang === 'vi' ? 'Khai Trí' : 'Khai Trí'}</button>
           <span className="breadcrumb-sep">/</span>
-          <span className="breadcrumb-current">{(d.title || '').slice(0, 30)}{(d.title || '').length > 30 ? '...' : ''}</span>
+          <span className="breadcrumb-current" title={d.title || ''}>{d.title || ''}</span>
         </div>
 
         {/* Header */}

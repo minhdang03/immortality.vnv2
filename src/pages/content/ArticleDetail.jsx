@@ -86,7 +86,7 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
               <span className="breadcrumb-sep">/</span>
             </>
           )}
-          <span className="breadcrumb-current">{d?.title?.slice(0, 30)}{d?.title?.length > 30 ? '...' : ''}</span>
+          <span className="breadcrumb-current" title={d?.title}>{d?.title}</span>
         </div>
 
         {article.image ? (

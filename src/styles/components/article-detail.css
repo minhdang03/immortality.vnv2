@@ -19,17 +19,20 @@
 
 /* ─── ARTICLE DETAIL ─── */
 .detail-breadcrumb {
-  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  margin-bottom: 20px; font-size: 0.78rem;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  margin-bottom: 20px; font-size: 0.78rem; min-width: 0;
 }
 .detail-breadcrumb button {
   background: none; border: none; color: var(--gold); cursor: pointer;
   font-family: var(--font-body); font-size: 0.78rem; padding: 0;
-  transition: color 0.3s;
+  transition: color 0.3s; flex-shrink: 0; white-space: nowrap;
 }
 .detail-breadcrumb button:hover { color: var(--gold-bright); }
-.breadcrumb-sep { color: var(--text-dim); }
-.breadcrumb-current { color: var(--text-dim); }
+.breadcrumb-sep { color: var(--text-dim); flex-shrink: 0; }
+.breadcrumb-current {
+  color: var(--text-dim); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 
 .video-placeholder {
   background: var(--card); border-radius: 14px;

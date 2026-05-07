@@ -43,7 +43,7 @@ export default function StoryDetail({ story, lang, t, navigate, fontSize, onFont
           <span className="breadcrumb-sep">/</span>
           <button onClick={onBack}>{lang === 'vi' ? 'Câu Chuyện' : 'Stories'}</button>
           <span className="breadcrumb-sep">/</span>
-          <span className="breadcrumb-current">{title?.slice(0, 30)}{title?.length > 30 ? '...' : ''}</span>
+          <span className="breadcrumb-current" title={title || ''}>{title || ''}</span>
         </div>
 
         <div className="story-detail-header">
