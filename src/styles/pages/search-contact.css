@@ -29,3 +29,18 @@
 [data-theme="light"] .submit-btn { color: #fff; }
 .submit-btn:hover { box-shadow: 0 4px 20px rgba(201,168,108,0.4); }
 .contact-thanks { text-align: center; color: var(--gold-bright); padding: 16px 0; font-size: 0.9rem; }
+
+/* ─── Tablet+ ─── */
+@media (min-width: 768px) {
+  .search-input { padding: 16px 22px; font-size: 1rem; margin-bottom: 28px; }
+  .contact-form { gap: 18px; max-width: 640px; margin: 0 auto; }
+  .contact-form input, .contact-form textarea { padding: 16px 20px; font-size: 0.95rem; }
+  .contact-form textarea { min-height: 180px; }
+  .submit-btn { padding: 16px 32px; font-size: 0.95rem; min-height: 48px; max-width: 240px; align-self: center; }
+}
+/* ─── Desktop+ ─── */
+@media (min-width: 1024px) {
+  .search-input { padding: 18px 24px; font-size: 1.05rem; }
+  .contact-form { max-width: 720px; }
+  .contact-form textarea { min-height: 220px; }
+}

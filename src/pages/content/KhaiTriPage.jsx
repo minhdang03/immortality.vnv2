@@ -3,6 +3,7 @@ import { khaitriSlug } from '../../utils/slug'
 import { updateCanonical } from '../../hooks/useSEO'
 import KhaiTriList from '../../components/khaitri/KhaiTriList'
 import KhaiTriDetail from '../../components/khaitri/KhaiTriDetail'
+import { DetailSkeleton } from '../../components/shared/Skeleton'
 
 export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateKhaiTri }) {
   const [selected, setSelected] = useState(null)
@@ -63,6 +64,12 @@ export default function KhaiTriPage({ t, lang, items, navigate, fontSize, onFont
       />
     )
   }
+
+  // Deep-link refresh: URL says /khaitri/<slug> but items haven't loaded yet.
+  // Use the same DetailSkeleton as Suspense fallback so there's no visual swap.
+  const isDeepLink = typeof window !== 'undefined' && window.location.pathname.startsWith('/khaitri/')
+  if (isDeepLink && items.length === 0) return <DetailSkeleton />
+
 
   return <KhaiTriList items={items} lang={lang} onSelect={selectItem} />
 }

@@ -77,6 +77,16 @@ const PAGES = [
     navDefault: { visible: true, showInBottom: true },
   },
   {
+    id: 'cong-dong',
+    path: 'cong-dong',
+    labelVi: 'Cộng Đồng', labelEn: 'Community',
+    titleVi: 'Cộng Đồng Bất Tử Đạo', titleEn: 'Bất Tử Đạo Community',
+    descVi: 'Sắp ra mắt — App iOS & Android, đọc offline, thông báo bài mới, thảo luận với cộng đồng.',
+    descEn: 'Coming soon — iOS & Android app, offline reading, notifications, community discussions.',
+    icon: '✦',
+    navDefault: { visible: false, showInBottom: false }, // hidden from default nav until launch; admin can toggle on
+  },
+  {
     id: 'ungho',
     path: 'ungho',
     labelVi: 'Ủng Hộ', labelEn: 'Support',

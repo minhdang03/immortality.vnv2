@@ -1,12 +1,13 @@
-/* ─── HEADER BAR ─── */
+/* ─── HEADER BAR (Editorial Sacred — sticky glass) ─── */
 .header {
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--header-bg);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(201,168,108,0.12);
-  padding: 12px 0;
+  backdrop-filter: saturate(140%) blur(14px);
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 0;
 }
 
 .header-inner {

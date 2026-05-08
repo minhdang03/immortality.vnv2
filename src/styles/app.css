@@ -10,12 +10,14 @@
 @import './layout/overlay.css' layer(layout);
 @import './layout/bottom-nav.css' layer(layout);
 @import './footer.css' layer(layout);
+@import './layout/footer.css' layer(layout);
 
 /* Components */
 @import './home.css' layer(components);
 @import './components/article-card.css' layer(components);
 @import './components/article-detail.css' layer(components);
 @import './components/share.css' layer(components);
+@import './components/cta-bands.css' layer(components);
 
 /* Pages */
 @import './pages/comments.css' layer(pages);
@@ -27,6 +29,7 @@
 @import './pages/practice.css' layer(pages);
 @import './pages/rss.css' layer(pages);
 @import './pages/inline-edit.css' layer(pages);
+@import './pages/cong-dong.css' layer(pages);
 
 /* Utilities (highest specificity) */
 @import './responsive.css' layer(utilities);

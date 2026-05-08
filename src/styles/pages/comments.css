@@ -35,3 +35,20 @@
 .comment-delete-btn:hover { background: rgba(220,60,60,0.3); }
 .comment-success { font-size: 0.82rem; color: #50c878; background: rgba(80,200,120,0.1); border: 1px solid rgba(80,200,120,0.25); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
 .comment-rate-limit { font-size: 0.82rem; color: #e05555; background: rgba(220,60,60,0.08); border: 1px solid rgba(220,60,60,0.2); border-radius: 10px; padding: 10px 14px; }
+
+/* ─── Tablet+ ─── */
+@media (min-width: 768px) {
+  .comments-section { margin-top: 48px; padding-top: 40px; }
+  .comments-title { font-size: 1.4rem; margin-bottom: 24px; }
+  .comments-list { gap: 18px; }
+  .comment-item { padding: 18px 22px; }
+  .comment-text { font-size: 0.92rem; }
+  .comment-form { gap: 14px; }
+  .comment-form input, .comment-form textarea { padding: 14px 18px; font-size: 0.92rem; }
+  .comment-form button { padding: 12px 32px; font-size: 0.88rem; min-height: 44px; }
+}
+/* ─── Desktop+ ─── */
+@media (min-width: 1024px) {
+  .comments-section { margin-top: 56px; }
+  .comment-item { padding: 20px 24px; }
+}

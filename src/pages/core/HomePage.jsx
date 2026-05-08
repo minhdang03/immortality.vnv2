@@ -2,6 +2,8 @@ import SunIcon from '../../components/shared/SunIcon'
 import ArticleCard from '../../components/shared/ArticleCard'
 import WisdomQuotes from '../../components/shared/WisdomQuotes'
 import { HomeSkeleton } from '../../components/shared/Skeleton'
+import NewsletterBand from '../../components/shared/NewsletterBand'
+import AppBanner from '../../components/shared/AppBanner'
 
 const CARD_ICONS = {
   book: (
@@ -70,7 +72,14 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
     <>
       {/* Hero */}
       <section className="hero fade-up">
-        {hero.showSun !== false && <div className="hero-sun"><SunIcon size={90} /></div>}
+        {hero.showSun !== false && (
+          <div className="hero-sun">
+            <picture>
+              <source media="(max-width: 599px)" srcSet="/hero-cosmic-sm.webp" />
+              <img src="/hero-cosmic.webp" alt="" width="1916" height="821" loading="eager" decoding="async" />
+            </picture>
+          </div>
+        )}
         {hero.showTitle !== false && <h1>{t.heroTitle}</h1>}
         {hero.showSubtitle !== false && <p className="hero-tagline">{t.heroSub}</p>}
         {(hero.showCtaPrimary !== false || hero.showCtaSecondary !== false) && (
@@ -128,17 +137,25 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
       {/* Latest Articles */}
       <section className="section">
         <h2 className="section-title fade-up"><SunIcon size={20} /> {t.articlesTitle}</h2>
-        {articles.slice(0, 5).map((a, i) => (
-          <ArticleCard key={a.id} article={a} lang={lang} t={t} index={i} navigate={navigate} />
-        ))}
-        {articles.length > 5 && (
+        <div className="article-grid">
+          {articles.slice(0, 6).map((a, i) => (
+            <ArticleCard key={a.id} article={a} lang={lang} t={t} index={i} navigate={navigate} hideShare />
+          ))}
+        </div>
+        {articles.length > 6 && (
           <div className="home-see-all fade-up">
-            <button className="cta-btn-outline" onClick={() => navigate('search')}>
+            <button className="cta-btn-outline" onClick={() => navigate('articles')}>
               {lang === 'vi' ? `Xem tất cả ${articles.length} bài viết` : `View all ${articles.length} articles`}
             </button>
           </div>
         )}
       </section>
+
+      {/* Newsletter signup */}
+      <NewsletterBand lang={lang} source="home" />
+
+      {/* iOS app banner */}
+      <AppBanner lang={lang} navigate={navigate} />
     </>
   )
 }

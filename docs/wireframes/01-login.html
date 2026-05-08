@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Battudao — Login (3 hero variants)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap&subset=latin,vietnamese" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0612; --surface:#14101e; --hover:#1d1729;
+    --purple:#8b4dff; --purple-soft:rgba(139,77,255,0.16);
+    --gold:#c9a86c; --gold-soft:rgba(201,168,108,0.18);
+    --red:#d4234e;
+    --t1:#f5f1e8; --t2:#9a8fb8; --t3:#5a5170;
+    --border:rgba(255,255,255,0.06); --border-strong:rgba(255,255,255,0.12);
+    --display:'Cormorant Garamond',serif; --body:'Inter',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:var(--body); background:#06030c; color:var(--t1);
+    min-height:100vh; padding:32px 16px; display:flex; flex-direction:column; align-items:center; gap:32px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .lab-title{font-family:var(--display);font-size:22px;color:var(--t2);letter-spacing:.01em}
+  .row{display:flex;gap:24px;flex-wrap:wrap;justify-content:center}
+  .frame{
+    width:393px; height:852px; border-radius:48px;
+    background:var(--bg); position:relative; overflow:hidden;
+    box-shadow:0 0 0 8px #1a1626, 0 0 0 9px #322a44, 0 32px 80px rgba(0,0,0,0.6);
+  }
+  .island{
+    position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    width:120px; height:32px; border-radius:20px; background:#000; z-index:5;
+  }
+  .safe-top{padding-top:64px}
+  .safe-bottom{padding-bottom:34px}
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column}
+  .scrim{
+    position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 28%, rgba(139,77,255,0.18), transparent 55%),
+               radial-gradient(circle at 50% 70%, rgba(201,168,108,0.06), transparent 60%);
+    pointer-events:none;
+  }
+  .hero-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;padding-top:64px}
+  .hero{width:240px;height:240px;position:relative;display:flex;align-items:center;justify-content:center}
+  /* MANDALA — variant A */
+  .mandala{position:absolute;inset:0;animation:rot 60s linear infinite}
+  .mandala circle{fill:none;stroke:rgba(139,77,255,0.4);stroke-width:.6}
+  .mandala .gold{stroke:rgba(201,168,108,0.55)}
+  .mandala .center{fill:url(#g1)}
+  /* LOTUS — variant B */
+  .lotus path{fill:none;stroke-width:1.2}
+  .lotus .p1{stroke:rgba(139,77,255,0.85)}
+  .lotus .p2{stroke:rgba(201,168,108,0.8)}
+  .lotus .p3{stroke:rgba(154,143,184,0.6)}
+  /* BAGUA — variant C */
+  .bagua{animation:rot 90s linear infinite}
+  .bagua circle{fill:none;stroke:rgba(201,168,108,0.5);stroke-width:.8}
+  .bagua .yin{fill:#0a0612}
+  .bagua .yang{fill:rgba(245,241,232,0.92)}
+  .bagua line{stroke:rgba(139,77,255,0.6);stroke-width:1.2;stroke-linecap:round}
+
+  @keyframes rot{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+  .copy{padding:0 32px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+  .copy h1{font-family:var(--display);font-weight:600;font-size:32px;line-height:1.18;letter-spacing:-0.01em}
+  .copy h1 .accent{color:var(--gold)}
+  .copy p{color:var(--t2);font-size:15px;line-height:1.5;max-width:280px}
+  .divider-glint{
+    width:120px;height:1px;margin:8px auto;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.6;
+  }
+  .actions{padding:24px;display:flex;flex-direction:column;gap:12px}
+  .btn{
+    height:52px; border-radius:12px; display:flex;align-items:center;justify-content:center;gap:10px;
+    font-family:var(--body); font-size:16px; font-weight:500; cursor:pointer; user-select:none;
+  }
+  .btn-primary{background:var(--purple);color:var(--t1);box-shadow:0 8px 24px rgba(139,77,255,0.28)}
+  .btn-secondary{background:transparent;color:var(--t1);border:1px solid var(--border-strong)}
+  .btn-ghost{background:transparent;color:var(--t2)}
+  .legal{padding:0 24px 12px;text-align:center;color:var(--t3);font-size:11px;line-height:1.5}
+  .legal a{color:var(--t2);text-decoration:underline}
+  .home-indicator{
+    position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
+    width:134px;height:5px;border-radius:3px;background:rgba(245,241,232,0.6);
+  }
+  .label{
+    position:absolute;top:16px;right:24px;font-family:var(--mono);font-size:10px;color:var(--t3);
+    letter-spacing:.06em;text-transform:uppercase;z-index:10;
+  }
+  .annot{
+    max-width:393px;margin-top:8px;color:var(--t2);font-size:12px;line-height:1.5;
+    font-family:var(--mono);text-align:center;
+  }
+  .annot strong{color:var(--gold)}
+</style>
+</head>
+<body>
+
+<div class="lab-title">01 · Login / Onboarding — three hero direction variants</div>
+
+<div class="row">
+
+  <!-- ============== VARIANT A: GEOMETRIC MANDALA ============== -->
+  <div>
+  <div class="frame">
+    <span class="label">A · Mandala</span>
+    <div class="island"></div>
+    <div class="screen">
+      <div class="scrim"></div>
+      <div class="hero-area">
+        <div class="hero">
+          <svg viewBox="0 0 240 240" class="mandala" width="240" height="240">
+            <defs>
+              <radialGradient id="g1"><stop offset="0%" stop-color="#c9a86c" stop-opacity="0.9"/><stop offset="100%" stop-color="#8b4dff" stop-opacity="0"/></radialGradient>
+            </defs>
+            <circle cx="120" cy="120" r="110"/>
+            <circle cx="120" cy="120" r="92" class="gold"/>
+            <circle cx="120" cy="120" r="74"/>
+            <circle cx="120" cy="120" r="56" class="gold"/>
+            <circle cx="120" cy="120" r="38"/>
+            <g stroke="rgba(139,77,255,0.45)" stroke-width=".5">
+              <line x1="120" y1="10" x2="120" y2="230"/>
+              <line x1="10" y1="120" x2="230" y2="120"/>
+              <line x1="42" y1="42" x2="198" y2="198"/>
+              <line x1="42" y1="198" x2="198" y2="42"/>
+              <line x1="120" y1="20" x2="42" y2="120" stroke="rgba(201,168,108,0.35)"/>
+              <line x1="120" y1="20" x2="198" y2="120" stroke="rgba(201,168,108,0.35)"/>
+              <line x1="120" y1="220" x2="42" y2="120" stroke="rgba(201,168,108,0.35)"/>
+              <line x1="120" y1="220" x2="198" y2="120" stroke="rgba(201,168,108,0.35)"/>
+            </g>
+            <circle cx="120" cy="120" r="20" class="center"/>
+            <circle cx="120" cy="120" r="6" fill="#c9a86c"/>
+          </svg>
+        </div>
+      </div>
+      <div class="copy">
+        <h1>Chào mừng đến với<br><span class="accent">Bất Tử Đạo</span></h1>
+        <div class="divider-glint"></div>
+        <p>Hành trình tỉnh thức bắt đầu nơi tâm tĩnh lặng.</p>
+      </div>
+      <div class="actions safe-bottom">
+        <button class="btn btn-primary">Đăng nhập với Email</button>
+        <button class="btn btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5c1.6 0 3 .6 4.1 1.6l3-3C17.2 1.7 14.7.5 12 .5 7.3.5 3.3 3.4 1.5 7.5l3.6 2.8C6 7.4 8.7 5 12 5z" fill="#EA4335"/><path d="M23.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.4h6.5c-.3 1.5-1.1 2.7-2.3 3.6l3.6 2.8c2.1-2 3.7-4.9 3.7-8.5z" fill="#4285F4"/><path d="M5.1 14.3c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.5 7C.5 8.5 0 10.2 0 12s.5 3.5 1.5 5l3.6-2.7z" fill="#FBBC05"/><path d="M12 23.5c3.2 0 5.9-1 7.9-2.8l-3.6-2.8c-1 .7-2.4 1.1-4.3 1.1-3.3 0-6-2.4-7-5.6l-3.6 2.8C3.3 20.6 7.3 23.5 12 23.5z" fill="#34A853"/></svg>
+          Tiếp tục với Google
+        </button>
+        <button class="btn btn-ghost">Vào với tư cách khách</button>
+      </div>
+      <div class="legal">
+        Tiếp tục đồng nghĩa bạn chấp nhận <a>Điều khoản</a> và <a>Quyền riêng tư</a>.
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+  <div class="annot"><strong>A · Mandala</strong> — geometric, sacred-geometry, calm. Best for "wisdom" tone.</div>
+  </div>
+
+  <!-- ============== VARIANT B: LOTUS LINE ============== -->
+  <div>
+  <div class="frame">
+    <span class="label">B · Lotus</span>
+    <div class="island"></div>
+    <div class="screen">
+      <div class="scrim"></div>
+      <div class="hero-area">
+        <div class="hero">
+          <svg viewBox="0 0 240 240" class="lotus" width="240" height="240">
+            <!-- outer petals -->
+            <path class="p3" d="M120 30 C 70 90, 70 150, 120 210 C 170 150, 170 90, 120 30 Z"/>
+            <path class="p3" d="M30 120 C 90 70, 150 70, 210 120 C 150 170, 90 170, 30 120 Z"/>
+            <!-- mid petals -->
+            <path class="p2" d="M60 60 C 80 110, 130 130, 200 80 C 160 130, 130 180, 60 200 Z" opacity=".55"/>
+            <path class="p2" d="M180 60 C 160 110, 110 130, 40 80 C 80 130, 110 180, 180 200 Z" opacity=".55"/>
+            <!-- inner -->
+            <path class="p1" d="M120 80 C 95 110, 95 145, 120 165 C 145 145, 145 110, 120 80 Z"/>
+            <path class="p1" d="M85 100 C 110 120, 130 120, 155 100 C 130 145, 110 145, 85 100 Z" opacity=".7"/>
+            <!-- core -->
+            <circle cx="120" cy="125" r="6" fill="#c9a86c"/>
+            <circle cx="120" cy="125" r="14" fill="none" stroke="#c9a86c" stroke-width=".8" opacity=".5"/>
+            <circle cx="120" cy="125" r="28" fill="none" stroke="#8b4dff" stroke-width=".4" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+      <div class="copy">
+        <h1>Chào mừng đến với<br><span class="accent">Bất Tử Đạo</span></h1>
+        <div class="divider-glint"></div>
+        <p>Đoá sen nở giữa lòng đêm — nơi bạn tìm về chính mình.</p>
+      </div>
+      <div class="actions safe-bottom">
+        <button class="btn btn-primary">Đăng nhập với Email</button>
+        <button class="btn btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5c1.6 0 3 .6 4.1 1.6l3-3C17.2 1.7 14.7.5 12 .5 7.3.5 3.3 3.4 1.5 7.5l3.6 2.8C6 7.4 8.7 5 12 5z" fill="#EA4335"/><path d="M23.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.4h6.5c-.3 1.5-1.1 2.7-2.3 3.6l3.6 2.8c2.1-2 3.7-4.9 3.7-8.5z" fill="#4285F4"/><path d="M5.1 14.3c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.5 7C.5 8.5 0 10.2 0 12s.5 3.5 1.5 5l3.6-2.7z" fill="#FBBC05"/><path d="M12 23.5c3.2 0 5.9-1 7.9-2.8l-3.6-2.8c-1 .7-2.4 1.1-4.3 1.1-3.3 0-6-2.4-7-5.6l-3.6 2.8C3.3 20.6 7.3 23.5 12 23.5z" fill="#34A853"/></svg>
+          Tiếp tục với Google
+        </button>
+        <button class="btn btn-ghost">Vào với tư cách khách</button>
+      </div>
+      <div class="legal">
+        Tiếp tục đồng nghĩa bạn chấp nhận <a>Điều khoản</a> và <a>Quyền riêng tư</a>.
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+  <div class="annot"><strong>B · Lotus</strong> — organic, lyrical, devotional. Strong cultural anchor (Vietnamese Phật).</div>
+  </div>
+
+  <!-- ============== VARIANT C: BAGUA / YIN-YANG ============== -->
+  <div>
+  <div class="frame">
+    <span class="label">C · Bagua</span>
+    <div class="island"></div>
+    <div class="screen">
+      <div class="scrim"></div>
+      <div class="hero-area">
+        <div class="hero">
+          <svg viewBox="0 0 240 240" class="bagua" width="240" height="240">
+            <circle cx="120" cy="120" r="108" stroke-width="1.2"/>
+            <circle cx="120" cy="120" r="78"/>
+            <!-- yin yang -->
+            <path class="yang" d="M120 50 a70 70 0 0 1 0 140 a35 35 0 0 1 0 -70 a35 35 0 0 0 0 -70 z"/>
+            <circle cx="120" cy="85" r="9" class="yin"/>
+            <circle cx="120" cy="155" r="9" class="yang"/>
+            <!-- 8 trigram lines -->
+            <g>
+              <line x1="120" y1="6" x2="120" y2="22"/>
+              <line x1="120" y1="218" x2="120" y2="234"/>
+              <line x1="6" y1="120" x2="22" y2="120"/>
+              <line x1="218" y1="120" x2="234" y2="120"/>
+              <line x1="38" y1="38" x2="50" y2="50"/>
+              <line x1="202" y1="38" x2="190" y2="50"/>
+              <line x1="38" y1="202" x2="50" y2="190"/>
+              <line x1="202" y1="202" x2="190" y2="190"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="copy">
+        <h1>Chào mừng đến với<br><span class="accent">Bất Tử Đạo</span></h1>
+        <div class="divider-glint"></div>
+        <p>Âm dương hài hoà — đường đạo bắt đầu từ một bước.</p>
+      </div>
+      <div class="actions safe-bottom">
+        <button class="btn btn-primary">Đăng nhập với Email</button>
+        <button class="btn btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5c1.6 0 3 .6 4.1 1.6l3-3C17.2 1.7 14.7.5 12 .5 7.3.5 3.3 3.4 1.5 7.5l3.6 2.8C6 7.4 8.7 5 12 5z" fill="#EA4335"/><path d="M23.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.4h6.5c-.3 1.5-1.1 2.7-2.3 3.6l3.6 2.8c2.1-2 3.7-4.9 3.7-8.5z" fill="#4285F4"/><path d="M5.1 14.3c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.5 7C.5 8.5 0 10.2 0 12s.5 3.5 1.5 5l3.6-2.7z" fill="#FBBC05"/><path d="M12 23.5c3.2 0 5.9-1 7.9-2.8l-3.6-2.8c-1 .7-2.4 1.1-4.3 1.1-3.3 0-6-2.4-7-5.6l-3.6 2.8C3.3 20.6 7.3 23.5 12 23.5z" fill="#34A853"/></svg>
+          Tiếp tục với Google
+        </button>
+        <button class="btn btn-ghost">Vào với tư cách khách</button>
+      </div>
+      <div class="legal">
+        Tiếp tục đồng nghĩa bạn chấp nhận <a>Điều khoản</a> và <a>Quyền riêng tư</a>.
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+  <div class="annot"><strong>C · Bagua</strong> — Đạo / cultivation tone (Thái Dương Quyền). On-brand to "Đạo" name but heavier symbolism.</div>
+  </div>
+
+</div>
+
+</body>
+</html>

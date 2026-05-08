@@ -45,3 +45,29 @@
 .about-list-desc {
   font-size: 0.85rem; color: var(--text-dim); line-height: 1.7;
 }
+
+/* ─── Tablet+ ─── */
+@media (min-width: 768px) {
+  .about-page { max-width: var(--max-w); }
+  .about-header { padding: 56px 0 40px; }
+  .about-main-title { font-size: 2.8rem; }
+  .about-subtitle { font-size: 1.05rem; }
+  .about-section { padding: 32px 36px; margin-bottom: 40px; }
+  .about-section-title { font-size: 1.55rem; margin-bottom: 20px; }
+  .about-body p { font-size: 1rem; line-height: 1.95; }
+  .about-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .about-list-item { padding: 16px 18px; }
+}
+/* ─── Desktop+ ─── */
+@media (min-width: 1024px) {
+  .about-header { padding: 72px 0 48px; }
+  .about-main-title { font-size: 3.4rem; }
+  .about-section { padding: 40px 44px; }
+  .about-section-title { font-size: 1.75rem; }
+  .about-body p { font-size: 1.05rem; max-width: 65ch; }
+  .about-list { grid-template-columns: repeat(3, 1fr); }
+}
+/* ─── Ultrawide ─── */
+@media (min-width: 1536px) {
+  .about-list { grid-template-columns: repeat(4, 1fr); }
+}

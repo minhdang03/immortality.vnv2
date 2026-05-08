@@ -3,6 +3,7 @@ import { storySlug } from '../../utils/slug'
 import { updateCanonical } from '../../hooks/useSEO'
 import StoryDetail from '../../components/stories/StoryDetail'
 import StoryList from '../../components/stories/StoryList'
+import { DetailSkeleton } from '../../components/shared/Skeleton'
 
 export default function StoriesPage({ t, lang, firestoreStories, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateStory }) {
   const [selected, setSelected] = useState(null)
@@ -70,6 +71,11 @@ export default function StoriesPage({ t, lang, firestoreStories, navigate, fontS
       />
     )
   }
+
+  // Deep-link refresh: URL says /story/<slug> but stories haven't loaded yet.
+  const isDeepLink = typeof window !== 'undefined' && window.location.pathname.startsWith('/story/')
+  if (isDeepLink && allStories.length === 0) return <DetailSkeleton />
+
 
   const filtered = filter === 'all' ? allStories : allStories.filter(s => s.tag === filter)
 

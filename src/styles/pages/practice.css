@@ -41,3 +41,30 @@
 .practice-move-desc {
   font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; font-style: italic;
 }
+
+/* ─── Tablet+ ─── */
+@media (min-width: 768px) {
+  .practice-page { max-width: var(--max-w); }
+  .practice-header { padding: 56px 0 32px; }
+  .practice-title { font-size: 2.8rem; }
+  .practice-subtitle { font-size: 1.05rem; }
+  .practice-intro { padding: 28px 32px; margin-bottom: 40px; }
+  .practice-intro p { font-size: 1rem; line-height: 1.85; }
+  .practice-section-title { font-size: 1.65rem; margin-bottom: 24px; }
+  .practice-moves { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .practice-move { padding: 22px 24px; }
+}
+/* ─── Desktop+ ─── */
+@media (min-width: 1024px) {
+  .practice-header { padding: 72px 0 40px; }
+  .practice-title { font-size: 3.2rem; }
+  .practice-section-title { font-size: 1.85rem; }
+  .practice-moves { grid-template-columns: repeat(3, 1fr); }
+  .practice-move-num { font-size: 2rem; }
+  .practice-move-title { font-size: 1.15rem; }
+  .practice-move-desc { font-size: 0.88rem; }
+}
+/* ─── Ultrawide ─── */
+@media (min-width: 1536px) {
+  .practice-moves { grid-template-columns: repeat(4, 1fr); }
+}

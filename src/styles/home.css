@@ -1,6 +1,19 @@
 /* ─── HERO ─── */
 .hero { text-align: center; padding: 70px 20px 50px; max-width: var(--max-w); margin: 0 auto; }
-.hero-sun { margin-bottom: 28px; filter: drop-shadow(0 0 24px rgba(201,168,108,0.5)); }
+.hero-sun {
+  margin: 0 auto 24px;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 21 / 9;
+  filter: drop-shadow(0 0 48px rgba(201,168,108,0.25));
+}
+.hero-sun picture, .hero-sun img {
+  display: block; width: 100%; height: 100%; object-fit: contain;
+}
+@media (prefers-reduced-motion: reduce) { .hero-sun { filter: none; } }
+@media (min-width: 768px) { .hero-sun { max-width: 760px; margin-bottom: 32px; } }
+@media (min-width: 1024px) { .hero-sun { max-width: 880px; margin-bottom: 40px; } }
+@media (min-width: 1280px) { .hero-sun { max-width: 1000px; } }
 .hero h1 {
   font-family: var(--font-display); font-size: 2.6rem; font-weight: 700;
   color: var(--white); line-height: 1.15; margin-bottom: 16px;

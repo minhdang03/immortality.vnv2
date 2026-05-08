@@ -106,6 +106,15 @@ service cloud.firestore {
     match /comments/{id}        { allow read: if true; allow create: if true; allow update, delete: if canWriteArticles(); }
     match /khaitri/{id}         { allow read: if true; allow write: if canWriteKhaitri(); }
 
+    // Newsletter signups — public create (validated), admin read/manage
+    match /newsletter_signups/{id} {
+      allow create: if request.resource.data.email is string
+                    && request.resource.data.email.size() > 4
+                    && request.resource.data.email.size() < 200
+                    && request.resource.data.email.matches('.+@.+\\..+');
+      allow read, update, delete: if isAdmin();
+    }
+
     // All other content: admin only
     match /stories/{id}         { allow read: if true; allow write: if isAdmin(); }
     match /topics/{id}          { allow read: if true; allow write: if isAdmin(); }

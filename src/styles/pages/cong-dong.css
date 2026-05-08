@@ -1,0 +1,48 @@
+/* ─── CỘNG ĐỒNG / COMMUNITY page ─── */
+.page-cong-dong { padding-bottom: 40px; }
+
+.cong-dong-features {
+  display: grid; grid-template-columns: 1fr; gap: var(--sp-4);
+  max-width: var(--max-w); margin: 0 auto var(--sp-7);
+}
+.cd-feature {
+  background: var(--card); border: 1px solid var(--rule);
+  border-radius: var(--r-lg); padding: var(--sp-5);
+  transition: border-color 200ms ease, transform 200ms ease;
+}
+.cd-feature:hover { border-color: var(--gold); transform: translateY(-2px); }
+.cd-feature-icon { font-size: 1.8rem; line-height: 1; display: inline-block; margin-bottom: var(--sp-3); }
+.cd-feature h3 {
+  font-family: var(--font-display); font-size: 1.25rem; font-weight: 600;
+  color: var(--ink); margin-bottom: var(--sp-2); letter-spacing: -0.2px;
+}
+.cd-feature p { font-size: 0.92rem; color: var(--ink-soft); line-height: 1.6; }
+
+.cong-dong-roadmap {
+  list-style: none; max-width: var(--max-w); margin: 0 auto var(--sp-7);
+  padding: 0;
+}
+.cd-roadmap-item {
+  display: grid; grid-template-columns: 96px 1fr 32px;
+  gap: var(--sp-4); align-items: center;
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--rule);
+}
+.cd-roadmap-item:last-child { border-bottom: none; }
+.cd-q { font-family: var(--font-body); font-size: 0.86rem; font-weight: 600; color: var(--gold-deep); letter-spacing: 1px; text-transform: uppercase; }
+.cd-t { font-family: var(--font-display); font-size: 1.1rem; color: var(--ink); }
+.cd-s {
+  text-align: center; width: 28px; height: 28px; line-height: 28px;
+  border-radius: 50%; font-weight: 600;
+  background: var(--rule); color: var(--ink-muted);
+}
+.cd-roadmap-item.cd-done .cd-s { background: var(--gold); color: var(--ink); }
+.cd-roadmap-item.cd-done .cd-t { color: var(--ink-soft); }
+
+@media (min-width: 768px) {
+  .cong-dong-features { grid-template-columns: repeat(2, 1fr); gap: var(--sp-5); }
+  .cd-feature { padding: var(--sp-6); }
+}
+@media (min-width: 1024px) {
+  .cong-dong-features { grid-template-columns: repeat(3, 1fr); gap: var(--sp-5); }
+}

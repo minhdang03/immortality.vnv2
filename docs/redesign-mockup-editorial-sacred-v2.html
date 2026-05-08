@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editorial Sacred v2 (Modern) — Bất Tử Đạo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8f3ea;
+    --surface: #ffffff;
+    --ink: #161310;
+    --ink-soft: #3d3833;
+    --ink-muted: #8a8273;
+    --gold: #b08642;
+    --gold-deep: #7a5a28;
+    --gold-soft: #e9d9b4;
+    --gold-tint: rgba(176,134,66,0.07);
+    --rule: rgba(22,19,16,0.08);
+    --rule-strong: rgba(22,19,16,0.16);
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'Be Vietnam Pro', system-ui, sans-serif;
+    --content-w: 1320px;
+    --reading-w: 720px;
+    --shadow-sm: 0 1px 2px rgba(22,19,16,0.04), 0 1px 3px rgba(22,19,16,0.06);
+    --shadow-md: 0 4px 12px rgba(22,19,16,0.06), 0 8px 24px rgba(22,19,16,0.04);
+    --shadow-lg: 0 12px 32px rgba(22,19,16,0.08), 0 24px 56px rgba(22,19,16,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 17px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  body { font-family: var(--sans); color: var(--ink-soft); background: var(--bg); line-height: 1.65; }
+  img { max-width: 100%; display: block; }
+  a { color: var(--gold-deep); text-decoration: none; transition: color 180ms ease; }
+  a:hover { color: var(--gold); }
+
+  .page-label {
+    position: sticky; top: 0; z-index: 200;
+    background: var(--ink); color: var(--bg);
+    padding: 14px 32px; font-family: var(--sans); font-size: 0.78rem;
+    letter-spacing: 2px; text-transform: uppercase; font-weight: 500;
+  }
+
+  /* ── Sticky glass header ── */
+  .site-header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(248,243,234,0.82);
+    backdrop-filter: saturate(140%) blur(14px);
+    -webkit-backdrop-filter: saturate(140%) blur(14px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .header-inner {
+    max-width: var(--content-w); margin: 0 auto;
+    padding: 18px 40px;
+    display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  }
+  .brand {
+    font-family: var(--serif); font-size: 1.65rem; font-weight: 700;
+    letter-spacing: -0.5px; color: var(--ink);
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .brand-mark { font-size: 1rem; color: var(--gold); }
+  .nav { display: flex; gap: 32px; }
+  .nav a {
+    font-family: var(--sans); font-size: 0.86rem; font-weight: 500;
+    color: var(--ink-soft); padding: 10px 0; position: relative;
+  }
+  .nav a:hover { color: var(--ink); }
+  .nav a.active { color: var(--ink); }
+  .nav a.active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 4px;
+    height: 2px; background: var(--gold);
+  }
+  .nav-badge {
+    display: inline-block; vertical-align: middle; margin-left: 6px;
+    font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 3px;
+    background: var(--gold-soft); color: var(--gold-deep); letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .header-actions { display: flex; gap: 12px; align-items: center; }
+  .lang-switch {
+    display: inline-flex; gap: 1px; background: var(--rule);
+    border-radius: 999px; padding: 2px; font-size: 0.78rem;
+  }
+  .lang-switch button {
+    background: none; border: none; padding: 6px 12px; border-radius: 999px;
+    font-family: var(--sans); font-weight: 500; color: var(--ink-muted); cursor: pointer;
+    transition: all 180ms ease;
+  }
+  .lang-switch button.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .icon-btn {
+    width: 36px; height: 36px; border: none; background: transparent;
+    border-radius: 50%; cursor: pointer; color: var(--ink-soft);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 180ms ease;
+  }
+  .icon-btn:hover { background: var(--gold-tint); color: var(--ink); }
+
+  /* ── Hero ── */
+  .hero {
+    max-width: var(--content-w); margin: 0 auto;
+    padding: 72px 40px 96px;
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 80px; align-items: center;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--sans); font-size: 0.78rem; font-weight: 600;
+    letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold-deep);
+    margin-bottom: 28px;
+  }
+  .hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
+  .hero h1 {
+    font-family: var(--serif); font-size: clamp(2.6rem, 5.5vw, 5.4rem); font-weight: 600;
+    line-height: 1.02; color: var(--ink); letter-spacing: -1.8px;
+    margin-bottom: 32px;
+  }
+  .hero h1 em { font-style: italic; color: var(--gold-deep); }
+  .hero-deck {
+    font-family: var(--serif); font-size: clamp(1.15rem, 1.7vw, 1.4rem); font-weight: 400;
+    line-height: 1.55; color: var(--ink-soft); font-style: italic;
+    max-width: 480px; margin-bottom: 40px;
+  }
+  .hero-cta { display: inline-flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--sans); font-size: 0.92rem; font-weight: 600;
+    padding: 14px 28px; border-radius: 999px; border: none; cursor: pointer;
+    transition: all 200ms ease; text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--ink); color: var(--bg); box-shadow: var(--shadow-md);
+  }
+  .btn-primary:hover { background: var(--gold-deep); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .btn-ghost {
+    background: transparent; color: var(--ink); border: 1px solid var(--rule-strong);
+  }
+  .btn-ghost:hover { border-color: var(--ink); }
+  .hero-meta {
+    display: flex; gap: 20px; padding-top: 28px; margin-top: 32px;
+    border-top: 1px solid var(--rule); font-size: 0.82rem; color: var(--ink-muted);
+  }
+  .hero-meta strong { color: var(--ink); font-weight: 600; }
+  .hero-image {
+    aspect-ratio: 1 / 1.05;
+    background: radial-gradient(circle at 50% 40%, #f0d49a 0%, #d4823a 25%, #6a3a8e 65%, #1f1838 100%);
+    border-radius: 6px; position: relative; overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+  .hero-image::after {
+    content: '✦  Linh thai  ✦'; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.85); font-family: var(--serif); font-size: 1.2rem;
+    font-style: italic; letter-spacing: 4px;
+  }
+
+  /* ── Section ── */
+  .section { max-width: var(--content-w); margin: 0 auto; padding: 0 40px; }
+  .section-header {
+    padding: 72px 0 40px; border-top: 1px solid var(--rule);
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+  }
+  .section-eyebrow {
+    font-family: var(--sans); font-size: 0.74rem; font-weight: 600;
+    letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold-deep);
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: var(--serif); font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 600;
+    color: var(--ink); letter-spacing: -0.5px;
+  }
+  .section-title em { font-style: italic; color: var(--gold-deep); font-weight: 500; }
+  .section-link {
+    font-family: var(--sans); font-size: 0.86rem; font-weight: 600;
+    color: var(--ink); letter-spacing: 0.3px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 0; border-bottom: 1px solid var(--ink); transition: gap 180ms ease;
+  }
+  .section-link:hover { gap: 12px; color: var(--ink); }
+
+  /* ── Featured (hero card + side list) ── */
+  .featured-grid {
+    display: grid; grid-template-columns: 1.45fr 1fr; gap: 56px;
+    padding-bottom: 64px;
+  }
+  .featured-main { display: flex; flex-direction: column; gap: 22px; }
+  .featured-main .feat-img {
+    aspect-ratio: 16 / 10;
+    background: linear-gradient(120deg, #1a3a5c 0%, #4a7da8 50%, #f0d49a 100%);
+    border-radius: 6px; box-shadow: var(--shadow-md);
+    transition: transform 300ms ease, box-shadow 300ms ease;
+  }
+  .featured-main a:hover .feat-img { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+  .feat-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--sans); font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gold-deep);
+  }
+  .feat-tag::before { content: ''; width: 14px; height: 1px; background: var(--gold); }
+  .featured-main h2 {
+    font-family: var(--serif); font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 600;
+    line-height: 1.1; color: var(--ink); letter-spacing: -0.5px;
+  }
+  .featured-main h2 a { color: inherit; transition: color 180ms ease; }
+  .featured-main h2 a:hover { color: var(--gold-deep); }
+  .featured-main .deck {
+    font-family: var(--serif); font-size: 1.2rem; font-style: italic;
+    color: var(--ink-soft); line-height: 1.55; max-width: 560px;
+  }
+  .featured-meta {
+    display: flex; gap: 16px; font-size: 0.8rem; color: var(--ink-muted);
+    align-items: center;
+  }
+  .featured-meta .dot { color: var(--gold); }
+
+  .featured-side { display: flex; flex-direction: column; gap: 28px; }
+  .side-card {
+    display: grid; grid-template-columns: 96px 1fr; gap: 18px;
+    padding-bottom: 28px; border-bottom: 1px solid var(--rule);
+    cursor: pointer; transition: transform 200ms ease;
+  }
+  .side-card:hover { transform: translateX(4px); }
+  .side-card:last-child { border-bottom: none; padding-bottom: 0; }
+  .side-card .img {
+    aspect-ratio: 1; border-radius: 4px;
+    background: linear-gradient(135deg, #6a3a8e, #d4823a);
+  }
+  .side-card .side-tag { font-size: 0.66rem; color: var(--gold-deep); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; display: block; }
+  .side-card h3 {
+    font-family: var(--serif); font-size: 1.25rem; font-weight: 600;
+    line-height: 1.2; color: var(--ink); margin-bottom: 8px;
+    transition: color 180ms ease;
+  }
+  .side-card:hover h3 { color: var(--gold-deep); }
+  .side-card .side-meta { font-size: 0.76rem; color: var(--ink-muted); }
+
+  /* ── Topic chips (modern pills) ── */
+  .topic-chips {
+    display: flex; flex-wrap: wrap; gap: 10px; padding: 16px 0 32px;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 999px;
+    font-family: var(--sans); font-size: 0.84rem; font-weight: 500;
+    background: var(--surface); color: var(--ink-soft);
+    border: 1px solid var(--rule);
+    cursor: pointer; transition: all 180ms ease;
+  }
+  .chip:hover { border-color: var(--ink); color: var(--ink); }
+  .chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .chip-count { font-size: 0.74rem; color: var(--ink-muted); }
+  .chip.active .chip-count { color: rgba(248,243,234,0.6); }
+
+  /* ── Article grid (3-col modern) ── */
+  .grid-cards {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px 32px;
+    padding-bottom: 80px;
+  }
+  .grid-card {
+    display: flex; flex-direction: column; gap: 16px;
+    cursor: pointer; transition: transform 250ms ease;
+  }
+  .grid-card:hover { transform: translateY(-4px); }
+  .grid-card .img {
+    aspect-ratio: 4 / 3; border-radius: 6px; box-shadow: var(--shadow-sm);
+    background: linear-gradient(120deg, #4a3267, #b08642);
+    transition: box-shadow 250ms ease;
+  }
+  .grid-card:hover .img { box-shadow: var(--shadow-md); }
+  .grid-card h3 {
+    font-family: var(--serif); font-size: 1.55rem; font-weight: 600;
+    line-height: 1.2; color: var(--ink);
+  }
+  .grid-card .summary { font-size: 0.92rem; color: var(--ink-soft); line-height: 1.6; }
+  .grid-card .meta { font-size: 0.76rem; color: var(--ink-muted); display: flex; gap: 12px; padding-top: 8px; align-items: center; }
+  .grid-card .meta .dot { color: var(--gold); }
+
+  /* ── Newsletter / Community CTA ── */
+  .cta-band {
+    max-width: var(--content-w); margin: 80px auto 0;
+    padding: 80px 40px;
+    background: var(--ink); color: var(--bg);
+    border-radius: 16px;
+    display: grid; grid-template-columns: 1.2fr 1fr; gap: 64px; align-items: center;
+    position: relative; overflow: hidden;
+  }
+  .cta-band::before {
+    content: ''; position: absolute; top: -50%; right: -20%;
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(176,134,66,0.18) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .cta-band h2 {
+    font-family: var(--serif); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 600;
+    line-height: 1.1; margin-bottom: 16px; letter-spacing: -0.5px;
+    color: white;
+  }
+  .cta-band h2 em { color: var(--gold-soft); font-style: italic; }
+  .cta-band p { color: rgba(248,243,234,0.7); font-size: 1.05rem; max-width: 480px; }
+  .cta-form {
+    display: flex; gap: 8px; padding: 4px;
+    background: rgba(255,255,255,0.06); border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.10);
+    position: relative; z-index: 1;
+  }
+  .cta-form input {
+    flex: 1; background: transparent; border: none; color: var(--bg);
+    padding: 14px 22px; font-family: var(--sans); font-size: 0.92rem; outline: none;
+  }
+  .cta-form input::placeholder { color: rgba(248,243,234,0.4); }
+  .cta-form button {
+    background: var(--gold); color: var(--ink); font-weight: 600;
+    padding: 12px 28px; border-radius: 999px; border: none; cursor: pointer;
+    font-family: var(--sans); font-size: 0.92rem; transition: background 180ms ease;
+  }
+  .cta-form button:hover { background: var(--gold-soft); }
+
+  /* ── iOS app banner ── */
+  .app-banner {
+    max-width: var(--content-w); margin: 80px auto 0;
+    padding: 64px 40px;
+    background: linear-gradient(135deg, #fdfaf3 0%, #f0e4cc 100%);
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center;
+  }
+  .app-banner-text h2 {
+    font-family: var(--serif); font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 600;
+    color: var(--ink); margin-bottom: 12px; letter-spacing: -0.3px;
+  }
+  .app-banner-text h2 em { color: var(--gold-deep); font-style: italic; }
+  .app-banner-text p { color: var(--ink-soft); margin-bottom: 24px; max-width: 420px; }
+  .badge-soon {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--gold-soft); color: var(--gold-deep);
+    padding: 4px 12px; border-radius: 999px;
+    font-size: 0.74rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .app-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+  .app-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 12px 20px; background: var(--ink); color: var(--bg);
+    border-radius: 12px; text-decoration: none;
+    font-family: var(--sans); font-size: 0.86rem;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .app-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); color: var(--bg); }
+  .app-btn .small { font-size: 0.66rem; opacity: 0.7; line-height: 1; }
+  .app-btn .big { font-size: 1.02rem; font-weight: 600; line-height: 1.1; }
+  .phone-mockup {
+    aspect-ratio: 9 / 16; max-width: 320px; margin: 0 auto;
+    background: linear-gradient(135deg, #2b1c4d, #6a3a8e, #d4823a);
+    border-radius: 32px; box-shadow: var(--shadow-lg);
+    border: 8px solid var(--ink);
+    position: relative;
+  }
+  .phone-mockup::after {
+    content: '✦ Cộng đồng Bất Tử Đạo ✦'; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    color: rgba(255,255,255,0.85); font-family: var(--serif); font-size: 1rem;
+    font-style: italic; letter-spacing: 2px; text-align: center;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid var(--rule); padding: 80px 40px 40px;
+    margin-top: 80px;
+  }
+  .footer-inner { max-width: var(--content-w); margin: 0 auto; }
+  .footer-cols {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 48px;
+    padding-bottom: 56px; border-bottom: 1px solid var(--rule);
+  }
+  .footer h4 {
+    font-family: var(--sans); font-size: 0.74rem; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--ink); margin-bottom: 18px;
+  }
+  .footer ul { list-style: none; }
+  .footer ul li { margin-bottom: 10px; }
+  .footer ul a { color: var(--ink-soft); font-size: 0.88rem; }
+  .footer-brand p { font-family: var(--serif); font-size: 1.15rem; font-style: italic; color: var(--ink-soft); max-width: 360px; line-height: 1.6; }
+  .copy { padding-top: 24px; font-size: 0.78rem; color: var(--ink-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding: 48px 24px 64px; gap: 40px; }
+    .header-inner { padding: 14px 20px; flex-wrap: wrap; gap: 12px; }
+    .nav { gap: 18px; font-size: 0.78rem; order: 3; width: 100%; overflow-x: auto; }
+    .section { padding: 0 24px; }
+    .featured-grid { grid-template-columns: 1fr; gap: 40px; }
+    .grid-cards { grid-template-columns: 1fr; gap: 32px; }
+    .cta-band { grid-template-columns: 1fr; gap: 32px; padding: 56px 28px; }
+    .app-banner { grid-template-columns: 1fr; gap: 32px; padding: 48px 28px; }
+    .footer-cols { grid-template-columns: 1fr 1fr; gap: 32px; }
+  }
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .footer-cols { grid-template-columns: 1.5fr 1fr 1fr 1fr; }
+    .footer-cols > div:last-child { grid-column: 2 / -1; display: flex; gap: 48px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-label">EDITORIAL SACRED v2 · MODERN · TRANG CHỦ</div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="#"><span class="brand-mark">✦</span>Bất Tử Đạo</a>
+    <nav class="nav">
+      <a class="active">Trang Chủ</a>
+      <a>Bài Viết</a>
+      <a>Khai Trí</a>
+      <a>Câu Chuyện</a>
+      <a>Cộng Đồng<span class="nav-badge">Soon</span></a>
+      <a>Giới Thiệu</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang-switch">
+        <button class="active">VI</button>
+        <button>EN</button>
+      </div>
+      <button class="icon-btn" aria-label="Tìm kiếm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div>
+    <div class="hero-eyebrow">Bài đọc nổi bật</div>
+    <h1>Linh thai —<br>vệ tinh tâm linh<br><em>của mỗi người</em></h1>
+    <p class="hero-deck">"Được nuôi bằng ánh sáng, trưởng thành để cảnh báo, học hỏi từ vũ trụ và hỗ trợ chữa lành."</p>
+    <div class="hero-cta">
+      <a href="#" class="btn btn-primary">Đọc bài →</a>
+      <a href="#" class="btn btn-ghost">Khám phá thêm</a>
+    </div>
+    <div class="hero-meta">
+      <span><strong>Tâm Linh</strong></span>
+      <span class="dot">·</span>
+      <span>06.05.2026</span>
+      <span class="dot">·</span>
+      <span>12 phút đọc</span>
+    </div>
+  </div>
+  <div class="hero-image"></div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <div>
+      <div class="section-eyebrow">Mới cập nhật</div>
+      <h2 class="section-title">Bài viết <em>mới nhất</em></h2>
+    </div>
+    <a class="section-link" href="#">Tất cả bài viết →</a>
+  </div>
+
+  <div class="topic-chips">
+    <span class="chip active">Tất cả <span class="chip-count">12</span></span>
+    <span class="chip">Tâm Linh <span class="chip-count">5</span></span>
+    <span class="chip">Bài học <span class="chip-count">3</span></span>
+    <span class="chip">Thanh Lọc <span class="chip-count">2</span></span>
+    <span class="chip">Năng Lượng <span class="chip-count">1</span></span>
+    <span class="chip">Cúng Dường <span class="chip-count">1</span></span>
+  </div>
+
+  <div class="featured-grid">
+    <a href="#" class="featured-main">
+      <div class="feat-img"></div>
+      <span class="feat-tag">Tâm Linh</span>
+      <h2><a href="#">Vì sao Chúa Giêsu bị kẹt — và lời nhắn của Thiên Chúa</a></h2>
+      <p class="deck">Bài viết giải thích hiện tượng đau tim, nhức đầu khi đọc kinh Giêsu, lời nhắn của Thiên Chúa, và cách con của Ngài cứu Ngài bằng việc không lặp lại mô thức đau khổ.</p>
+      <div class="featured-meta">
+        <span>06.05.2026</span><span class="dot">·</span><span>9 phút đọc</span>
+      </div>
+    </a>
+    <div class="featured-side">
+      <a href="#" class="side-card">
+        <div class="img"></div>
+        <div>
+          <span class="side-tag">Bài học</span>
+          <h3>Bài học Reset bộ não: Về Không Đạo</h3>
+          <div class="side-meta">22.03.2026 · 7 phút</div>
+        </div>
+      </a>
+      <a href="#" class="side-card">
+        <div class="img"></div>
+        <div>
+          <span class="side-tag">Bài học</span>
+          <h3>Bài học thứ nhất: Reset bộ não</h3>
+          <div class="side-meta">21.03.2026 · 8 phút</div>
+        </div>
+      </a>
+      <a href="#" class="side-card">
+        <div class="img"></div>
+        <div>
+          <span class="side-tag">Thanh Lọc</span>
+          <h3>Thanh lọc cơ thể và năng lượng mặt trời</h3>
+          <div class="side-meta">18.03.2026 · 6 phút</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <div>
+      <div class="section-eyebrow">Hỏi đáp</div>
+      <h2 class="section-title">Khai <em>Trí</em></h2>
+    </div>
+    <a class="section-link" href="#">37 câu hỏi →</a>
+  </div>
+  <div class="grid-cards">
+    <a href="#" class="grid-card">
+      <div class="img"></div>
+      <span class="feat-tag">Khai Trí · 06</span>
+      <h3>Vì sao ngồi thiền kiết già khí ngược lên não là phản khoa học?</h3>
+      <p class="summary">Khí ngược lên não tạo áp lực và làm rối loạn các kênh dẫn năng lượng tự nhiên...</p>
+      <div class="meta"><span>05.05.2026</span><span class="dot">·</span><span>5 phút</span></div>
+    </a>
+    <a href="#" class="grid-card">
+      <div class="img"></div>
+      <span class="feat-tag">Khai Trí · 05</span>
+      <h3>Cốt sống thư lỏng và mật thân chữa bệnh</h3>
+      <p class="summary">Cốt sống thư lỏng cho phép năng lượng lưu thông tự nhiên, kích hoạt mật thân...</p>
+      <div class="meta"><span>03.05.2026</span><span class="dot">·</span><span>6 phút</span></div>
+    </a>
+    <a href="#" class="grid-card">
+      <div class="img"></div>
+      <span class="feat-tag">Khai Trí · 04</span>
+      <h3>Cúng dường đúng chỗ hay đốt tiền vô nghĩa?</h3>
+      <p class="summary">Có những người đóng góp từ thiện rất nhiều, nhưng nghèo luôn — vì không đúng chỗ...</p>
+      <div class="meta"><span>14.03.2026</span><span class="dot">·</span><span>4 phút</span></div>
+    </a>
+  </div>
+</section>
+
+<!-- Newsletter -->
+<div class="section">
+  <div class="cta-band">
+    <div>
+      <div class="hero-eyebrow" style="color: var(--gold-soft); margin-bottom: 20px;">Bản tin tuần</div>
+      <h2>Nhận trí tuệ <em>mỗi sáng Chủ Nhật</em></h2>
+      <p>Một bài viết chọn lọc, một câu hỏi Khai Trí, một câu chuyện thật — gửi vào hộp thư của bạn mỗi tuần. Không spam, hủy bất kỳ lúc nào.</p>
+    </div>
+    <form class="cta-form" onsubmit="event.preventDefault()">
+      <input type="email" placeholder="email@cua-ban.com" />
+      <button type="submit">Đăng ký</button>
+    </form>
+  </div>
+</div>
+
+<!-- iOS app -->
+<div class="section">
+  <div class="app-banner">
+    <div class="app-banner-text">
+      <span class="badge-soon">✦ Sắp ra mắt</span>
+      <h2>Cộng đồng <em>Bất Tử Đạo</em><br>trên iOS &amp; Android</h2>
+      <p>Đọc offline, thông báo bài mới, thảo luận với cộng đồng, chia sẻ trải nghiệm cá nhân. Đăng ký nhận thông báo khi app phát hành.</p>
+      <div class="app-buttons">
+        <a href="#" class="app-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+          <div><div class="small">Tải xuống trên</div><div class="big">App Store</div></div>
+        </a>
+        <a href="#" class="app-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814 13.792 12 3.609 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .61-.92zm10.89 10.893 2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198 2.807 1.626a1 1 0 0 1 0 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658 16.802 8.99l-2.302 2.302L5.864 2.658z"/></svg>
+          <div><div class="small">Tải xuống trên</div><div class="big">Google Play</div></div>
+        </a>
+      </div>
+    </div>
+    <div class="phone-mockup"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-cols">
+      <div class="footer-brand">
+        <div class="brand" style="margin-bottom:16px"><span class="brand-mark">✦</span>Bất Tử Đạo</div>
+        <p>"Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời."</p>
+      </div>
+      <div>
+        <h4>Khám phá</h4>
+        <ul>
+          <li><a>Bài viết</a></li>
+          <li><a>Khai Trí</a></li>
+          <li><a>Câu chuyện</a></li>
+          <li><a>Thái Dương Quyền</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Cộng đồng</h4>
+        <ul>
+          <li><a>Forum</a></li>
+          <li><a>Hỏi đáp</a></li>
+          <li><a>iOS app</a></li>
+          <li><a>Android app</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Về</h4>
+        <ul>
+          <li><a>Giới thiệu</a></li>
+          <li><a>Liên hệ</a></li>
+          <li><a>Ủng hộ</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Theo dõi</h4>
+        <ul>
+          <li><a>Facebook</a></li>
+          <li><a>Telegram</a></li>
+          <li><a>YouTube</a></li>
+          <li><a>RSS</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="copy">
+      <span>© 2026 Bất Tử Đạo · battudao.com</span>
+      <span>Vietnamese · English</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

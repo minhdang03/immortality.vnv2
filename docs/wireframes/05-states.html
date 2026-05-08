@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Battudao — Empty / Loading / Error states</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap&subset=latin,vietnamese" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0612; --surface:#14101e; --hover:#1d1729;
+    --purple:#8b4dff; --gold:#c9a86c; --gold-soft:rgba(201,168,108,0.18); --red:#d4234e;
+    --t1:#f5f1e8; --t2:#9a8fb8; --t3:#5a5170;
+    --border:rgba(255,255,255,0.06); --border-strong:rgba(255,255,255,0.12);
+    --display:'Cormorant Garamond',serif; --body:'Inter',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:#06030c;color:var(--t1);min-height:100vh;padding:32px 16px;display:flex;flex-direction:column;align-items:center;gap:24px;-webkit-font-smoothing:antialiased}
+  .lab-title{font-family:var(--display);font-size:22px;color:var(--t2)}
+  .row{display:flex;gap:24px;flex-wrap:wrap;justify-content:center}
+  .frame{width:393px;height:852px;border-radius:48px;background:var(--bg);position:relative;overflow:hidden;box-shadow:0 0 0 8px #1a1626,0 0 0 9px #322a44,0 32px 80px rgba(0,0,0,0.6)}
+  .island{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:120px;height:32px;border-radius:20px;background:#000;z-index:5}
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column}
+
+  .header{padding:60px 12px 12px;display:flex;align-items:center;gap:8px;background:rgba(20,16,30,0.78);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:relative;z-index:3}
+  .iconbtn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--t1)}
+  .ch-title{flex:1;display:flex;flex-direction:column;line-height:1.1;padding-left:4px}
+  .ch-title .name{font-size:17px;font-weight:600}
+  .ch-title .meta{font-size:11px;color:var(--t2);font-family:var(--mono);margin-top:3px}
+
+  .body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;gap:16px}
+  .empty-illu{width:140px;height:140px;display:flex;align-items:center;justify-content:center;position:relative}
+  .empty-illu svg{filter:drop-shadow(0 0 24px rgba(139,77,255,0.25))}
+  .empty-title{font-family:var(--display);font-size:24px;color:var(--t1);font-weight:600;letter-spacing:-0.005em}
+  .empty-sub{font-size:14px;color:var(--t2);max-width:260px;line-height:1.5}
+
+  /* COMPOSER */
+  .composer{padding:8px 12px 34px;background:rgba(20,16,30,0.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:flex-end;gap:8px}
+  .composer .add{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--t2);background:var(--surface);border:1px solid var(--border)}
+  .composer .input{flex:1;min-height:40px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:10px 14px;color:var(--t3);font-size:15px;display:flex;align-items:center}
+  .composer .send{width:40px;height:40px;border-radius:50%;background:var(--surface);color:var(--t3);display:flex;align-items:center;justify-content:center}
+
+  .home-indicator{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:rgba(245,241,232,0.6)}
+  .label{position:absolute;top:16px;right:24px;font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;z-index:10}
+  .annot{max-width:393px;margin-top:8px;color:var(--t2);font-size:12px;line-height:1.5;font-family:var(--mono);text-align:center}
+  .annot strong{color:var(--gold)}
+
+  /* SHIMMER */
+  .shimmer-list{padding:12px;display:flex;flex-direction:column;gap:14px}
+  .shim-row{display:flex;align-items:center;gap:12px;padding:8px 4px}
+  .shim{background:linear-gradient(90deg,#1a1626 0%,#241d35 50%,#1a1626 100%);background-size:300% 100%;animation:shim 1.6s ease-in-out infinite;border-radius:8px}
+  @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .shim-circle{width:36px;height:36px;border-radius:50%}
+  .shim-line{flex:1;height:12px;border-radius:6px}
+  .shim-line.short{flex:.6}
+  .shim-line.tiny{height:10px;flex:.3}
+
+  .shim-cat{padding:18px 16px 8px;display:flex;align-items:center;gap:10px}
+  .shim-cat .shim{height:18px;width:120px;border-radius:6px}
+  .cat-divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.18;margin:0 16px}
+
+  /* ERROR BANNER */
+  .err-banner{
+    position:absolute;top:64px;left:16px;right:16px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--gold);
+    border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);z-index:6;
+  }
+  .err-banner .ic{width:28px;height:28px;border-radius:50%;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0}
+  .err-banner .txt{flex:1;font-size:13px;line-height:1.4;color:var(--t1)}
+  .err-banner .txt b{color:var(--gold);font-weight:600;display:block;font-size:13px;margin-bottom:2px}
+  .err-banner .close{color:var(--t3);font-size:18px;line-height:1;cursor:pointer}
+  .err-tips{font-size:11px;color:var(--t2);margin-top:2px}
+
+  /* BLURRED faded behind error */
+  .faded{opacity:.45;filter:saturate(.6)}
+</style>
+</head>
+<body>
+
+<div class="lab-title">05 · Empty / Loading / Error states</div>
+
+<div class="row">
+
+  <!-- ============== EMPTY ============== -->
+  <div>
+  <div class="frame">
+    <span class="label">Empty</span>
+    <div class="island"></div>
+    <div class="screen">
+      <div class="header">
+        <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="ch-title"><div class="name"># chia-se</div><div class="meta">8 thành viên · Thái Dương Quyền</div></div>
+        <div class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+      </div>
+
+      <div class="body">
+        <div class="empty-illu">
+          <svg viewBox="0 0 160 160" width="140" height="140">
+            <defs>
+              <radialGradient id="lotg"><stop offset="0%" stop-color="#c9a86c" stop-opacity=".4"/><stop offset="100%" stop-color="#8b4dff" stop-opacity="0"/></radialGradient>
+            </defs>
+            <circle cx="80" cy="80" r="70" fill="url(#lotg)"/>
+            <g fill="none" stroke-width="1.2">
+              <path d="M80 40 C 55 70, 55 90, 80 120 C 105 90, 105 70, 80 40 Z" stroke="#9a8fb8" opacity=".5"/>
+              <path d="M40 80 C 70 60, 90 60, 120 80 C 90 100, 70 100, 40 80 Z" stroke="#9a8fb8" opacity=".5"/>
+              <path d="M50 50 C 70 80, 100 90, 130 60 C 100 90, 90 110, 50 130 Z" stroke="#c9a86c" opacity=".55"/>
+              <path d="M110 50 C 90 80, 60 90, 30 60 C 60 90, 70 110, 110 130 Z" stroke="#c9a86c" opacity=".55"/>
+              <path d="M80 60 C 65 80, 65 100, 80 115 C 95 100, 95 80, 80 60 Z" stroke="#8b4dff"/>
+            </g>
+            <circle cx="80" cy="85" r="4" fill="#c9a86c"/>
+            <circle cx="80" cy="85" r="10" fill="none" stroke="#c9a86c" stroke-width=".6" opacity=".6"/>
+          </svg>
+        </div>
+        <div class="empty-title">Chưa ai cất tiếng</div>
+        <div class="empty-sub">Hãy là người đầu tiên gửi tin nhắn.<br>Một lời chào đủ để khai mở duyên lành.</div>
+      </div>
+
+      <div class="composer">
+        <div class="add"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="input">Viết tin nhắn...</div>
+        <div class="send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+      </div>
+
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+  <div class="annot"><strong>Empty channel</strong> — lotus illustration with soft purple/gold halo + invitation copy.</div>
+  </div>
+
+  <!-- ============== LOADING ============== -->
+  <div>
+  <div class="frame">
+    <span class="label">Loading</span>
+    <div class="island"></div>
+    <div class="screen">
+      <div class="header">
+        <div style="display:flex;align-items:center;gap:10px;flex:1">
+          <div class="shim shim-circle" style="width:32px;height:32px"></div>
+          <div class="shim shim-line" style="height:18px;width:120px;flex:none;border-radius:6px"></div>
+        </div>
+        <div class="shim shim-circle" style="width:32px;height:32px"></div>
+      </div>
+
+      <div class="shimmer-list">
+        <div class="shim-cat"><div class="shim"></div></div>
+        <div class="cat-divider"></div>
+        <div class="shim-row"><div class="shim shim-circle" style="border-radius:8px"></div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="shim shim-line" style="width:50%"></div><div class="shim shim-line tiny" style="width:80%"></div></div><div class="shim shim-line tiny" style="width:36px;flex:none"></div></div>
+        <div class="shim-row"><div class="shim shim-circle" style="border-radius:8px"></div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="shim shim-line" style="width:42%"></div><div class="shim shim-line tiny" style="width:90%"></div></div><div class="shim shim-line tiny" style="width:36px;flex:none"></div></div>
+
+        <div class="shim-cat"><div class="shim"></div></div>
+        <div class="cat-divider"></div>
+        <div class="shim-row"><div class="shim shim-circle" style="border-radius:8px"></div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="shim shim-line" style="width:38%"></div><div class="shim shim-line tiny" style="width:75%"></div></div><div class="shim shim-line tiny" style="width:36px;flex:none"></div></div>
+        <div class="shim-row"><div class="shim shim-circle" style="border-radius:8px"></div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="shim shim-line" style="width:55%"></div><div class="shim shim-line tiny" style="width:65%"></div></div><div class="shim shim-line tiny" style="width:36px;flex:none"></div></div>
+
+        <div class="shim-cat"><div class="shim"></div></div>
+        <div class="cat-divider"></div>
+        <div class="shim-row"><div class="shim shim-circle" style="border-radius:8px"></div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="shim shim-line" style="width:46%"></div><div class="shim shim-line tiny" style="width:88%"></div></div><div class="shim shim-line tiny" style="width:36px;flex:none"></div></div>
+      </div>
+
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+  <div class="annot"><strong>Loading skeleton</strong> — shimmer matches Channels List shape, gold dividers preserved for brand continuity.</div>
+  </div>
+
+  <!-- ============== ERROR ============== -->
+  <div>
+  <div class="frame">
+    <span class="label">Error</span>
+    <div class="island"></div>
+    <div class="screen">
+      <div class="header faded">
+        <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="ch-title"><div class="name"># tu-do</div><div class="meta">28 thành viên · Cộng đồng</div></div>
+        <div class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+      </div>
+
+      <div class="err-banner">
+        <div class="ic">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        </div>
+        <div class="txt">
+          <b>Mất kết nối</b>
+          Đang thử kết nối lại...
+          <div class="err-tips">Tin nhắn của bạn sẽ được gửi khi mạng phục hồi.</div>
+        </div>
+        <div class="close">×</div>
+      </div>
+
+      <div class="body faded">
+        <div style="opacity:.4;font-family:var(--display);font-size:18px;color:var(--t2)">Đang chờ tín hiệu...</div>
+      </div>
+
+      <div class="composer">
+        <div class="add"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="input">Viết tin nhắn...</div>
+        <div class="send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+      </div>
+
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+  <div class="annot"><strong>Error banner</strong> — discreet top toast, gold left bar (info-class), close affordance, content faded behind.</div>
+  </div>
+
+</div>
+
+</body>
+</html>

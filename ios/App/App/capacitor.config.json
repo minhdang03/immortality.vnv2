@@ -1,0 +1,6 @@
+{
+	"appId": "com.immortality.app",
+	"appName": "Immortality",
+	"webDir": "dist",
+	"packageClassList": []
+}

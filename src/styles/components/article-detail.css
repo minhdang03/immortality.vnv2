@@ -101,16 +101,45 @@
 /* Reader-optimized body */
 :root { --reader-scale: 1; }
 .detail-body {
-  font-size: calc(1rem * var(--reader-scale));
-  line-height: 2.0;
-  color: var(--text);
-  margin-bottom: 32px;
-  max-width: 600px;
+  font-family: var(--font-display);
+  font-size: calc(1.2rem * var(--reader-scale));
+  line-height: 1.8;
+  color: var(--ink);
+  margin: 0 auto 32px;
+  max-width: 720px;
 }
-.detail-body p {
-  margin-bottom: 1.5em;
-  letter-spacing: 0.01em;
+.detail-body p { margin-bottom: 1.5em; letter-spacing: 0.005em; }
+/* Drop cap on first paragraph */
+.detail-body > p:first-of-type::first-letter {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 4.5em; float: left; line-height: 0.85;
+  margin: 0.05em 0.12em 0 -0.04em; color: var(--gold-deep);
 }
+@media (min-width: 768px) {
+  .detail-body { font-size: calc(1.25rem * var(--reader-scale)); }
+  .detail-body > p:first-of-type::first-letter { font-size: 5.2em; }
+}
+/* Pull quote */
+.detail-body .pull-quote, .pull-quote {
+  text-align: center; padding: 56px 24px; margin: 56px 0;
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 2.4vw, 2.1rem);
+  font-style: italic; color: var(--gold-deep); line-height: 1.3;
+  letter-spacing: -0.2px;
+}
+/* Inline blockquote */
+.detail-body blockquote {
+  border-left: 3px solid var(--gold); padding-left: 24px; margin: 2em 0;
+  font-style: italic; font-size: 1.1em; color: var(--ink-soft);
+}
+/* H2 within article body */
+.detail-body h2 {
+  font-family: var(--font-display); font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  font-weight: 600; color: var(--ink); letter-spacing: -0.3px; line-height: 1.2;
+  margin: 2em 0 0.6em;
+}
+@media (prefers-reduced-motion: reduce) { .pull-quote { padding: 32px 16px; margin: 32px 0; } }
 
 /* Q/A blocks — Q = filled card (loud), A = open card (quiet) for visual hierarchy */
 .detail-body .qa-question, .detail-body .qa-answer {

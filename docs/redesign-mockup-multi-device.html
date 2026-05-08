@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editorial Sacred v2 — Mobile / Tablet / Desktop preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Be Vietnam Pro', sans-serif;
+    background: #1a1612; color: #f8f3ea; min-height: 100vh; padding: 32px 20px 60px;
+  }
+  .top-bar {
+    max-width: 1800px; margin: 0 auto 32px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif; font-weight: 600;
+    font-size: 1.6rem; letter-spacing: -0.5px;
+  }
+  h1 em { color: #e9d9b4; font-style: italic; }
+  .source-link {
+    font-size: 0.85rem; color: rgba(248,243,234,0.7); text-decoration: none;
+    padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(248,243,234,0.18);
+  }
+  .source-link:hover { background: rgba(248,243,234,0.06); }
+
+  .device-row {
+    display: grid; gap: 32px; max-width: 1800px; margin: 0 auto;
+    grid-template-columns: 360px 768px 1fr;
+    align-items: flex-start;
+  }
+  @media (max-width: 1500px) {
+    .device-row { grid-template-columns: 1fr; }
+  }
+
+  .device {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .device-label {
+    margin-bottom: 14px;
+    font-size: 0.78rem; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(248,243,234,0.55); font-weight: 500;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .device-label strong { color: #e9d9b4; font-weight: 600; }
+  .device-label .dot { color: #b08642; }
+
+  /* Mobile frame — phone-like */
+  .frame-mobile {
+    width: 360px; height: 780px;
+    border: 10px solid #161310; border-radius: 36px;
+    background: #f8f3ea; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .frame-mobile::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 22px; background: #161310;
+    border-radius: 0 0 14px 14px; z-index: 2;
+  }
+  .frame-mobile iframe {
+    width: 100%; height: 100%; border: 0; display: block;
+  }
+
+  /* Tablet frame */
+  .frame-tablet {
+    width: 768px; height: 1024px;
+    border: 14px solid #161310; border-radius: 24px;
+    background: #f8f3ea; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  }
+  .frame-tablet iframe {
+    width: 100%; height: 100%; border: 0; display: block;
+  }
+
+  /* Desktop frame */
+  .frame-desktop {
+    width: 100%; min-width: 1280px; max-width: 1440px; height: 900px;
+    border: 12px solid #161310; border-radius: 16px;
+    background: #f8f3ea; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .frame-desktop::before {
+    content: '● ● ●'; position: absolute; top: -38px; left: 16px;
+    color: rgba(248,243,234,0.4); letter-spacing: 4px; font-size: 1.1rem; line-height: 24px;
+  }
+  .frame-desktop iframe {
+    width: 100%; height: 100%; border: 0; display: block;
+  }
+
+  .scroll-hint {
+    margin-top: 12px;
+    font-size: 0.74rem; color: rgba(248,243,234,0.4);
+  }
+
+  /* Stack on small screens */
+  @media (max-width: 900px) {
+    .frame-mobile { width: 280px; height: 600px; }
+    .frame-tablet, .frame-desktop { width: calc(100vw - 40px); min-width: 0; height: 600px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>Editorial Sacred <em>v2</em> — 3 device preview</h1>
+  <a href="redesign-mockup-editorial-sacred-v2.html" class="source-link" target="_blank">Mở mockup full →</a>
+</div>
+
+<div class="device-row">
+
+  <div class="device">
+    <div class="device-label">
+      <span class="dot">●</span><strong>Mobile</strong> · iPhone 15 · 375×812
+    </div>
+    <div class="frame-mobile">
+      <iframe src="redesign-mockup-editorial-sacred-v2.html" title="Mobile preview"></iframe>
+    </div>
+    <div class="scroll-hint">Cuộn iframe để xem full layout</div>
+  </div>
+
+  <div class="device">
+    <div class="device-label">
+      <span class="dot">●</span><strong>Tablet</strong> · iPad · 768×1024
+    </div>
+    <div class="frame-tablet">
+      <iframe src="redesign-mockup-editorial-sacred-v2.html" title="Tablet preview"></iframe>
+    </div>
+    <div class="scroll-hint">Tablet portrait view</div>
+  </div>
+
+  <div class="device">
+    <div class="device-label">
+      <span class="dot">●</span><strong>Desktop</strong> · 1440px+ · large screen
+    </div>
+    <div class="frame-desktop">
+      <iframe src="redesign-mockup-editorial-sacred-v2.html" title="Desktop preview"></iframe>
+    </div>
+    <div class="scroll-hint">Hero asymmetric · 3-col grid · sticky header</div>
+  </div>
+
+</div>
+
+</body>
+</html>

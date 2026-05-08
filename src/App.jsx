@@ -25,6 +25,7 @@ import BottomNav from './components/layout/BottomNav'
 import RSSButton from './components/shared/RSSButton'
 import ErrorBoundary from './components/shared/ErrorBoundary'
 import { HomeSkeleton, ListSkeleton, DetailSkeleton, PageSkeleton } from './components/shared/Skeleton'
+import Footer from './components/layout/Footer'
 
 // Pages — core
 const HomePage = lazy(() => import('./pages/core/HomePage'))
@@ -40,6 +41,7 @@ const AboutPage = lazy(() => import('./pages/info/AboutPage'))
 const ContactPage = lazy(() => import('./pages/info/ContactPage'))
 const PracticePage = lazy(() => import('./pages/info/PracticePage'))
 const UngHoPage = lazy(() => import('./pages/info/UngHoPage'))
+const CongDongPage = lazy(() => import('./pages/info/CongDongPage'))
 // Admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
@@ -57,7 +59,17 @@ export default function App() {
     }
     return localStorage.getItem(`lang:${host}`) || domainDefault
   })
-  const [page, setPage] = useState('home')
+  // Initial page from URL — prevents flash of 'home' before applyPath() runs on deep-link refresh.
+  const [page, setPage] = useState(() => {
+    const p = typeof window !== 'undefined' ? window.location.pathname : '/'
+    if (p.startsWith('/article/') || p.startsWith('/articles/')) return 'article'
+    if (p.startsWith('/khaitri/')) return 'khaitri'
+    if (p.startsWith('/story/')) return 'stories'
+    if (p.startsWith('/topic/')) return 'topic'
+    if (p === '/' || !p) return 'home'
+    const id = p.replace(/^\//, '').replace(/\/$/, '').split('/')[0]
+    return id || 'home'
+  })
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [selectedArticle, setSelectedArticle] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -176,6 +188,9 @@ export default function App() {
         <main className="container">
           <ErrorBoundary key={page}>
           <Suspense fallback={
+            // On F5 of any detail URL, show DetailSkeleton — not ListSkeleton.
+            // (After SPA navigation, this branch becomes false and the page-state branch decides.)
+            (typeof window !== 'undefined' && /^\/(article|articles|khaitri|story)\//.test(window.location.pathname)) ? <DetailSkeleton /> :
             page === 'home' ? <HomeSkeleton /> :
             page === 'article' ? <DetailSkeleton /> :
             ['articles', 'stories', 'khaitri', 'topic'].includes(page) ? <ListSkeleton /> :
@@ -195,6 +210,7 @@ export default function App() {
               user={user} onUpdateArticle={updateArticle}
             />
           )}
+          {page === 'article' && !selectedArticle && <DetailSkeleton />}
           {page === 'search' && (
             <SearchPage t={t} lang={lang} articles={allArticles} navigate={navigate} />
           )}
@@ -225,6 +241,9 @@ export default function App() {
           {page === 'ungho' && (
             <UngHoPage t={t} lang={lang} channels={siteSettings.donationChannels} />
           )}
+          {page === 'cong-dong' && (
+            <CongDongPage lang={lang} navigate={navigate} />
+          )}
           {page === 'admin' && (
             <AdminPanel
               t={t} lang={lang} user={user} userRole={userRole}
@@ -245,12 +264,7 @@ export default function App() {
           </ErrorBoundary>
         </main>
 
-        <footer className="footer">
-          <div className="footer-links">
-            <RSSButton articles={allArticles} lang={lang} />
-          </div>
-          {t.footer}
-        </footer>
+        <Footer t={t} lang={lang} articles={allArticles} navigate={navigate} />
 
         <BottomNav t={t} lang={lang} page={page} navigate={navigate} navItems={siteSettings.navItems} />
       </div>

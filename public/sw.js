@@ -1,5 +1,5 @@
 // Service Worker — precache app shell for instant repeat loads
-const CACHE_NAME = 'app-shell-v2'
+const CACHE_NAME = 'app-shell-v3'
 
 // App shell: index + key assets cached on install
 const APP_SHELL = [

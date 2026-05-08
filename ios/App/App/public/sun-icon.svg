@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="sunGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e4c78a"/>
+      <stop offset="100%" stop-color="#c9a86c"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="50" r="18" fill="url(#sunGrad)"/>
+  <g stroke="#c9a86c" stroke-width="2" stroke-linecap="round">
+    <line x1="50" y1="8" x2="50" y2="22"/>
+    <line x1="50" y1="78" x2="50" y2="92"/>
+    <line x1="8" y1="50" x2="22" y2="50"/>
+    <line x1="78" y1="50" x2="92" y2="50"/>
+    <line x1="20.3" y1="20.3" x2="30.2" y2="30.2"/>
+    <line x1="69.8" y1="69.8" x2="79.7" y2="79.7"/>
+    <line x1="79.7" y1="20.3" x2="69.8" y2="30.2"/>
+    <line x1="30.2" y1="69.8" x2="20.3" y2="79.7"/>
+    <line x1="50" y1="4" x2="50" y2="14" opacity="0.6"/>
+    <line x1="50" y1="86" x2="50" y2="96" opacity="0.6"/>
+    <line x1="4" y1="50" x2="14" y2="50" opacity="0.6"/>
+    <line x1="86" y1="50" x2="96" y2="50" opacity="0.6"/>
+  </g>
+  <circle cx="50" cy="50" r="30" fill="none" stroke="#c9a86c" stroke-width="0.5" opacity="0.3"/>
+</svg>
