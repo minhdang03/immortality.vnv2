@@ -63,3 +63,15 @@ export function khaitriSlug(item) {
   const slug = toSlug(title)
   return slug ? `${num}-${slug}` : num
 }
+
+/**
+ * Humanize a slug for display — "tam-linh" → "Tâm linh" guess fallback.
+ * Used as last-resort label when topic doc has empty vi/en field.
+ */
+export function humanizeSlug(slug) {
+  if (!slug) return ''
+  return slug
+    .split('-')
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(' ')
+}

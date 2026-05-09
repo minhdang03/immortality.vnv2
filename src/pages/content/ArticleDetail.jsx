@@ -49,7 +49,9 @@ function ArticleBody({ body }) {
 
 export default function ArticleDetail({ t, lang, article, articles, topics, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateArticle }) {
   useArticleAnalytics(article, lang)
-  const d = article[lang]
+  // Fallback to other lang when current lang has no body — prevents blank page
+  // for articles only authored in one language.
+  const d = article[lang] || article[lang === 'vi' ? 'en' : 'vi'] || {}
   const topicObj = topics?.find(tp => tp.id === article.topic)
   const isAdmin = !!user
 

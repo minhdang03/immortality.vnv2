@@ -6,7 +6,12 @@ import { HomeSkeleton } from '../../components/shared/Skeleton'
 import NewsletterBand from '../../components/shared/NewsletterBand'
 import AppBanner from '../../components/shared/AppBanner'
 import { formatLocaleDate } from '../../utils/date'
-import { articleSlug } from '../../utils/slug'
+import { articleSlug, humanizeSlug } from '../../utils/slug'
+
+// Best label for a topic — prefer Firestore vi/en field, fallback to other lang, then humanize slug.
+function topicLabel(tp, lang) {
+  return (lang === 'vi' ? tp?.vi : tp?.en) || tp?.vi || tp?.en || humanizeSlug(tp?.id)
+}
 
 const CARD_ICONS = {
   book: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="28" height="28"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>),
@@ -64,16 +69,15 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
     return articles.filter(a => a.topic === selectedTopic)
   }, [articles, selectedTopic])
 
-  // Derive chip list: prefer Firestore topics for nice labels, else derive from article topic IDs.
+  // Chip list: union of (Firestore topics) + (any article topic without a topic doc).
+  // Always shows a humanized label so chips never display raw slugs like "tam-linh".
   const chipItems = useMemo(() => {
-    if (topics.length > 0) {
-      return topics
-        .map(tp => ({ id: tp.id, label: lang === 'vi' ? tp.vi : tp.en, count: articles.filter(a => a.topic === tp.id).length }))
-        .filter(t => t.count > 0)
-    }
     const counts = new Map()
     articles.forEach(a => { if (a.topic) counts.set(a.topic, (counts.get(a.topic) || 0) + 1) })
-    return [...counts.entries()].map(([id, count]) => ({ id, label: id, count }))
+    const known = new Map(topics.map(tp => [tp.id, tp]))
+    return [...counts.entries()]
+      .map(([id, count]) => ({ id, label: topicLabel(known.get(id) || { id }, lang), count }))
+      .filter(t => t.count > 0)
   }, [topics, articles, lang])
 
   // Hero featured: pick random article that has an image; fallback to articles[0].
@@ -87,8 +91,9 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
 
   if (loading) return <HomeSkeleton />
 
-  const featuredTopic = featured && topics.find(tp => tp.id === featured.topic)
-  const featuredTopicLabel = featuredTopic ? (lang === 'vi' ? featuredTopic.vi : featuredTopic.en) : null
+  const featuredTopicLabel = featured?.topic
+    ? topicLabel(topics.find(tp => tp.id === featured.topic) || { id: featured.topic }, lang)
+    : null
 
   // Featured grid: 1 main + 3 side from current filter.
   const main = filteredArticles[0]
@@ -214,8 +219,7 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
                   style={main.image ? { backgroundImage: `url(${main.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                 />
                 {(() => {
-                  const tp = topics.find(x => x.id === main.topic)
-                  const label = tp ? (lang === 'vi' ? tp.vi : tp.en) : main.tag?.[lang]
+                  const label = main.topic ? topicLabel(topics.find(x => x.id === main.topic) || { id: main.topic }, lang) : main.tag?.[lang]
                   return label ? <span className="feat-tag">{label}</span> : null
                 })()}
                 <h2><span>{(main[lang] || main[lang === 'vi' ? 'en' : 'vi'])?.title}</span></h2>
@@ -229,8 +233,7 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
               {sides.length > 0 && (
                 <div className="featured-side">
                   {sides.map(a => {
-                    const tp = topics.find(x => x.id === a.topic)
-                    const tag = tp ? (lang === 'vi' ? tp.vi : tp.en) : a.tag?.[lang]
+                    const tag = a.topic ? topicLabel(topics.find(x => x.id === a.topic) || { id: a.topic }, lang) : a.tag?.[lang]
                     const d = a[lang] || a[lang === 'vi' ? 'en' : 'vi'] || {}
                     return (
                       <a
@@ -260,8 +263,9 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
           {rest.length > 0 && (
             <div className="grid-cards">
               {rest.map(a => {
-                const tp = topics.find(x => x.id === a.topic)
-                const tag = tp ? (lang === 'vi' ? tp.vi : tp.en) : (a.tag?.[lang] || a.topic)
+                const tag = a.topic
+                  ? topicLabel(topics.find(x => x.id === a.topic) || { id: a.topic }, lang)
+                  : a.tag?.[lang]
                 const d = a[lang] || a[lang === 'vi' ? 'en' : 'vi'] || {}
                 return (
                   <a
@@ -302,7 +306,7 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
             {topics.map((tp, i) => (
               <div key={tp.id} className={`topic-card fade-up fade-up-d${i + 1}`} onClick={() => navigate('topic', tp.id)}>
                 <span className="topic-icon">{tp.icon}</span>
-                <div className="topic-name">{lang === 'vi' ? tp.vi : tp.en}</div>
+                <div className="topic-name">{topicLabel(tp, lang)}</div>
                 <div className="topic-desc">{lang === 'vi' ? tp.descVi : tp.descEn}</div>
                 <span className="topic-count">{articles.filter(a => a.topic === tp.id).length} {t.articles}</span>
               </div>
