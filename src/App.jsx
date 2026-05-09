@@ -17,6 +17,7 @@ import { matchRoute } from './config/pages'
 import { usePageView, trackThemeToggle, trackLanguageChange, trackNavigation } from './hooks/useAnalytics'
 import { useSEO } from './hooks/useSEO'
 import './styles/app.css'
+import './styles/chatbot.css'
 
 // Layout
 import BackgroundEffects from './components/layout/BackgroundEffects'
@@ -26,6 +27,7 @@ import RSSButton from './components/shared/RSSButton'
 import ErrorBoundary from './components/shared/ErrorBoundary'
 import { HomeSkeleton, ListSkeleton, DetailSkeleton, PageSkeleton } from './components/shared/Skeleton'
 import Footer from './components/layout/Footer'
+import Chatbot from './components/shared/Chatbot'
 
 // Pages — core
 const HomePage = lazy(() => import('./pages/core/HomePage'))
@@ -267,6 +269,7 @@ export default function App() {
         <Footer t={t} lang={lang} articles={allArticles} navigate={navigate} />
 
         <BottomNav t={t} lang={lang} page={page} navigate={navigate} navItems={siteSettings.navItems} />
+        <Chatbot lang={lang} userId={user?.uid} />
       </div>
     </>
   )
