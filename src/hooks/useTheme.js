@@ -7,7 +7,7 @@ export function useTheme(defaultTheme) {
     const saved = localStorage.getItem('theme')
     if (saved) return saved === 'dark'
     if (defaultTheme) return defaultTheme === 'dark'
-    return true
+    return false
   })
 
   // When siteSettings load async, apply admin default if user hasn't picked yet
