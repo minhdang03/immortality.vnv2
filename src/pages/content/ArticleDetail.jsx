@@ -95,7 +95,7 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
 
         {article.image ? (
           <div className="article-hero">
-            <img src={article.image} alt={d?.title || ''} loading="eager" onError={e => { e.target.parentElement.style.display = 'none' }} />
+            <img src={article.image} alt={d?.title || ''} loading="eager" fetchpriority="high" decoding="async" onError={e => { e.target.parentElement.style.display = 'none' }} />
           </div>
         ) : (
           <div className="video-placeholder">{t.videoPlaceholder}</div>

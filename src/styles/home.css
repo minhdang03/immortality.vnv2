@@ -171,7 +171,13 @@
 .home-see-all { text-align: center; margin-top: 20px; }
 
 /* ─── SECTION ─── */
-.section { padding: 40px 0; max-width: var(--max-w); margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+.section {
+  padding: 40px 0; max-width: var(--max-w); margin: 0 auto;
+  padding-left: 20px; padding-right: 20px;
+  /* Skip rendering work for off-screen sections — scroll perf win on long pages. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
 .section-title {
   display: flex; align-items: center; gap: 10px;
   font-family: var(--font-display); font-size: 1.6rem; font-weight: 700;

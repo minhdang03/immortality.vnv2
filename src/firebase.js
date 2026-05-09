@@ -1,7 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
-import { getAnalytics, logEvent as firebaseLogEvent } from 'firebase/analytics'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -22,19 +21,46 @@ export const db = initializeFirestore(app, {
 
 export const auth = getAuth(app)
 
-// Analytics - only in browser environment
-let analytics = null
-if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
-  try {
-    analytics = getAnalytics(app)
-  } catch (e) {
-    // Analytics not available (e.g. blocked by ad blocker)
+// Analytics is lazy-loaded — saves ~60KB on initial bundle.
+// First logEvent() call triggers dynamic import; events before SDK loads are
+// queued and flushed once ready.
+let analyticsPromise = null
+const eventQueue = []
+
+function loadAnalytics() {
+  if (typeof window === 'undefined' || !firebaseConfig.measurementId) return null
+  if (!analyticsPromise) {
+    analyticsPromise = import('firebase/analytics')
+      .then(({ getAnalytics, logEvent }) => {
+        const a = getAnalytics(app)
+        // Flush any queued events
+        for (const [name, params] of eventQueue) {
+          try { logEvent(a, name, params) } catch {}
+        }
+        eventQueue.length = 0
+        return { a, logEvent }
+      })
+      .catch(() => null)
   }
+  return analyticsPromise
 }
-export { analytics }
+
+// Preload analytics during browser idle time so first user event is fast.
+if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+  const schedule = window.requestIdleCallback || ((cb) => setTimeout(cb, 2000))
+  schedule(() => loadAnalytics())
+}
 
 export function logEvent(eventName, params) {
-  if (analytics) {
-    try { firebaseLogEvent(analytics, eventName, params) } catch {}
-  }
+  const p = loadAnalytics()
+  if (!p) return
+  // If SDK not loaded yet, queue the event
+  if (!p.then) return
+  p.then(mod => {
+    if (mod) {
+      try { mod.logEvent(mod.a, eventName, params) } catch {}
+    } else {
+      eventQueue.push([eventName, params])
+    }
+  })
 }
