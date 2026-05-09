@@ -1,6 +1,7 @@
 import ShareButtons from './ShareButtons'
 import { articleSlug } from '../../utils/slug'
 import { formatLocaleDate } from '../../utils/date'
+import { cdnImage } from '../../utils/image-cdn'
 
 // Hide question if it just paraphrases the title (substring either way after lowercasing).
 function questionAddsValue(title, question) {
@@ -35,7 +36,7 @@ export default function ArticleCard({ article, lang, t, index, navigate, onTagCl
           tabIndex={-1}
           aria-hidden="true"
         >
-          <img src={article.image} alt="" loading="lazy" onError={e => { e.target.parentElement.style.display = 'none' }} />
+          <img src={cdnImage(article.image, { w: 600 })} alt="" loading="lazy" decoding="async" onError={e => { e.target.parentElement.style.display = 'none' }} />
         </div>
       )}
       <div className="article-card-body">

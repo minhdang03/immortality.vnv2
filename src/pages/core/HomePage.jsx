@@ -7,6 +7,7 @@ import NewsletterBand from '../../components/shared/NewsletterBand'
 import AppBanner from '../../components/shared/AppBanner'
 import { formatLocaleDate } from '../../utils/date'
 import { articleSlug, humanizeSlug } from '../../utils/slug'
+import { cdnImage } from '../../utils/image-cdn'
 
 // Best label for a topic — prefer Firestore vi/en field, fallback to other lang, then humanize slug.
 function topicLabel(tp, lang) {
@@ -145,7 +146,7 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
         {hero.showSun !== false && (
           <div
             className={`hero-image${featured?.image ? ' has-image' : ''}`}
-            style={featured?.image ? { backgroundImage: `url(${featured.image})` } : undefined}
+            style={featured?.image ? { backgroundImage: `url(${cdnImage(featured.image, { w: 800 })})` } : undefined}
             aria-hidden="true"
           />
         )}
@@ -216,7 +217,7 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
               >
                 <div
                   className="feat-img"
-                  style={main.image ? { backgroundImage: `url(${main.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                  style={main.image ? { backgroundImage: `url(${cdnImage(main.image, { w: 1000 })})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                 />
                 {(() => {
                   const label = main.topic ? topicLabel(topics.find(x => x.id === main.topic) || { id: main.topic }, lang) : main.tag?.[lang]
@@ -244,7 +245,7 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
                       >
                         <div
                           className="img"
-                          style={a.image ? { backgroundImage: `url(${a.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                          style={a.image ? { backgroundImage: `url(${cdnImage(a.image, { w: 400 })})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                         />
                         <div>
                           {tag && <span className="side-tag">{tag}</span>}
@@ -276,7 +277,7 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
                   >
                     <div
                       className="img"
-                      style={a.image ? { backgroundImage: `url(${a.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                      style={a.image ? { backgroundImage: `url(${cdnImage(a.image, { w: 600 })})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                     />
                     {tag && <span className="feat-tag">{tag}</span>}
                     <h3>{d.title}</h3>

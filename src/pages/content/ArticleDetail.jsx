@@ -6,6 +6,7 @@ import ArticleCard from '../../components/shared/ArticleCard'
 import InlineEdit from '../../components/shared/InlineEdit'
 import { ReadingProgress, ReadingTime, FontSizeControls } from '../../components/shared/ReadingHelpers'
 import { articleSlug } from '../../utils/slug'
+import { cdnImage } from '../../utils/image-cdn'
 
 function TableOfContents({ body, lang }) {
   const paragraphs = useMemo(() => {
@@ -95,7 +96,7 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
 
         {article.image ? (
           <div className="article-hero">
-            <img src={article.image} alt={d?.title || ''} loading="eager" fetchpriority="high" decoding="async" onError={e => { e.target.parentElement.style.display = 'none' }} />
+            <img src={cdnImage(article.image, { w: 1200, q: 85 })} alt={d?.title || ''} loading="eager" fetchpriority="high" decoding="async" onError={e => { e.target.parentElement.style.display = 'none' }} />
           </div>
         ) : (
           <div className="video-placeholder">{t.videoPlaceholder}</div>
