@@ -21,5 +21,18 @@ ios/App/DerivedData/
 ios/App/App.xcworkspace/xcuserdata/
 ios/App/App.xcodeproj/xcuserdata/
 
+# Capacitor Android — generated artifacts (Gradle project source IS tracked)
+android/app/src/main/assets/public/
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/app/release/
+android/app/debug/
+android/*.iml
+android/app/*.iml
+
 # Claude Code hook logs
 .claude/hooks/.logs/
