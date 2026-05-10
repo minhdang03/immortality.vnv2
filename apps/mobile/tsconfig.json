@@ -1,0 +1,15 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "types": ["jest"],
+    "paths": {
+      "@btd/ui-tokens": ["../../packages/ui-tokens/src/index.ts"],
+      "@btd/shared": ["../../packages/shared/src/index.ts"],
+      "@btd/firebase-config": ["../../packages/firebase-config/src/index.ts"],
+      "@mobile/*": ["./src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules"]
+}
