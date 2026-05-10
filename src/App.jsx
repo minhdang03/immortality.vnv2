@@ -17,6 +17,7 @@ import { matchRoute } from './config/pages'
 import { usePageView, trackThemeToggle, trackLanguageChange, trackNavigation } from './hooks/useAnalytics'
 import { useSEO } from './hooks/useSEO'
 import './styles/app.css'
+import './styles/chatbot.css'
 
 // Layout
 import BackgroundEffects from './components/layout/BackgroundEffects'
@@ -26,6 +27,7 @@ import RSSButton from './components/shared/RSSButton'
 import ErrorBoundary from './components/shared/ErrorBoundary'
 import { HomeSkeleton, ListSkeleton, DetailSkeleton, PageSkeleton } from './components/shared/Skeleton'
 import Footer from './components/layout/Footer'
+import Chatbot from './components/shared/Chatbot'
 
 // Pages — core
 const HomePage = lazy(() => import('./pages/core/HomePage'))
@@ -47,17 +49,16 @@ const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
   const [lang, setLang] = useState(() => {
-    // Domain dictates default language. Per-domain override lives at lang:<host>
-    // so toggling EN on immortality.vn doesn't leak EN into battudao.com.
+    // Default to VI everywhere — content is Vietnamese-first. EN visitors can
+    // toggle via the lang switcher; their pick is persisted per host.
     const host = window.location.hostname
-    const domainDefault = host.includes('immortality.vn') ? 'en' : 'vi'
-    // One-shot migrate legacy unscoped key to per-domain (only on the host where it was last set).
+    // One-shot migrate legacy unscoped key to per-domain.
     const legacy = localStorage.getItem('lang')
     if (legacy && !localStorage.getItem(`lang:${host}`)) {
       localStorage.setItem(`lang:${host}`, legacy)
       localStorage.removeItem('lang')
     }
-    return localStorage.getItem(`lang:${host}`) || domainDefault
+    return localStorage.getItem(`lang:${host}`) || 'vi'
   })
   // Initial page from URL — prevents flash of 'home' before applyPath() runs on deep-link refresh.
   const [page, setPage] = useState(() => {
@@ -113,7 +114,7 @@ export default function App() {
     }
     if (path.startsWith('/article/')) {
       const slug = path.slice(9)
-      const found = allArticles.find(a =>
+      const found = articlesRef.current.find(a =>
         articleSlug(a) === slug ||
         String(a.id) === slug ||
         a.sourceRef === slug ||
@@ -132,6 +133,11 @@ export default function App() {
     }
   }
 
+  // Stable ref to articles — popstate handler reads current value without re-binding
+  // every time SWR cache → network revalidate produces a new array reference.
+  const articlesRef = useRef(allArticles)
+  useEffect(() => { articlesRef.current = allArticles }, [allArticles])
+
   const pathAppliedRef = useRef(false)
   useEffect(() => {
     if (pathAppliedRef.current) return
@@ -145,7 +151,7 @@ export default function App() {
     const onPopState = () => applyPath()
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
-  }, [allArticles])
+  }, [])
 
   useEffect(() => { window.scrollTo(0, 0) }, [page, selectedArticle])
 
@@ -172,6 +178,11 @@ export default function App() {
     }
   }
 
+  // Strip /ungho from nav when admin has the page hidden (master toggle off).
+  const navItems = (siteSettings.navItems || []).filter(
+    item => item.id !== 'ungho' || siteSettings.unghoEnabled
+  )
+
   return (
     <>
       <BackgroundEffects />
@@ -182,7 +193,7 @@ export default function App() {
           toggleTheme={() => { toggleTheme(); trackThemeToggle(dark ? 'light' : 'dark') }}
           setLang={(l) => { setLang(l); localStorage.setItem(`lang:${window.location.hostname}`, l); trackLanguageChange(l) }}
           setMenuOpen={setMenuOpen}
-          user={user} navItems={siteSettings.navItems}
+          user={user} navItems={navItems}
         />
 
         <main className="container">
@@ -238,8 +249,13 @@ export default function App() {
           {page === 'contact' && (
             <ContactPage t={t} />
           )}
-          {page === 'ungho' && (
+          {page === 'ungho' && siteSettings.unghoEnabled && (
             <UngHoPage t={t} lang={lang} channels={siteSettings.donationChannels} />
+          )}
+          {page === 'ungho' && !siteSettings.unghoEnabled && (
+            <p style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--ink-muted)', fontStyle: 'italic' }}>
+              {lang === 'vi' ? 'Trang đang chuẩn bị, vui lòng quay lại sau.' : 'Page coming soon. Please check back later.'}
+            </p>
           )}
           {page === 'cong-dong' && (
             <CongDongPage lang={lang} navigate={navigate} />
@@ -264,9 +280,10 @@ export default function App() {
           </ErrorBoundary>
         </main>
 
-        <Footer t={t} lang={lang} articles={allArticles} navigate={navigate} />
+        <Footer t={t} lang={lang} articles={allArticles} navigate={navigate} siteSettings={siteSettings} />
 
-        <BottomNav t={t} lang={lang} page={page} navigate={navigate} navItems={siteSettings.navItems} />
+        <BottomNav t={t} lang={lang} page={page} navigate={navigate} navItems={navItems} />
+        <Chatbot lang={lang} userId={user?.uid} />
       </div>
     </>
   )

@@ -1,12 +1,35 @@
-import { useState, useMemo } from 'react'
-import SunIcon from '../../components/shared/SunIcon'
+import { useMemo } from 'react'
 import ArticleCard from '../../components/shared/ArticleCard'
 import WisdomQuotes from '../../components/shared/WisdomQuotes'
 import { HomeSkeleton } from '../../components/shared/Skeleton'
 import NewsletterBand from '../../components/shared/NewsletterBand'
 import AppBanner from '../../components/shared/AppBanner'
 import { formatLocaleDate } from '../../utils/date'
-import { articleSlug } from '../../utils/slug'
+import { articleSlug, humanizeSlug } from '../../utils/slug'
+import { cdnImage } from '../../utils/image-cdn'
+
+// Best label for a topic — prefer Firestore vi/en field, fallback to other lang, then humanize slug.
+function topicLabel(tp, lang) {
+  return (lang === 'vi' ? tp?.vi : tp?.en) || tp?.vi || tp?.en || humanizeSlug(tp?.id)
+}
+
+// Resolve an article's topic label using the same priority chain everywhere:
+//   topic doc (lang) → topic doc (other lang) → article.tag (lang) → article.tag (other) → null
+// Returns null when nothing usable found, so callers can hide the eyebrow.
+function articleTopicLabel(article, topics, lang) {
+  if (!article?.topic) return article?.tag?.[lang] || article?.tag?.[lang === 'vi' ? 'en' : 'vi'] || null
+  const doc = topics.find(t => t.id === article.topic)
+  if (doc) {
+    const v = (lang === 'vi' ? doc.vi : doc.en) || doc.vi || doc.en
+    if (v) return v
+  }
+  const tag = article.tag
+  if (tag) {
+    const v = (lang === 'vi' ? tag.vi : tag.en) || tag.vi || tag.en
+    if (v) return v
+  }
+  return null
+}
 
 const CARD_ICONS = {
   book: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="28" height="28"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>),
@@ -41,8 +64,7 @@ function readingMinutes(article, lang) {
   return Math.max(1, Math.round(words / 200))
 }
 
-// Render h1 with last segment (after em-dash or comma) wrapped in <em> for editorial accent.
-// Falls back to plain when no separator found.
+// Wrap last segment after em-dash/comma in <em> for editorial accent.
 function HeroTitle({ text }) {
   if (!text) return null
   const m = text.match(/^(.*?)([—,–])(.+)$/)
@@ -50,64 +72,76 @@ function HeroTitle({ text }) {
   return (<>{m[1]}{m[2]}<br /><em>{m[3].trim()}</em></>)
 }
 
+// Daily-rotating hero background — picks deterministically by date so no flash on SWR revalidate.
+function pickHeroBg(articles, customImages) {
+  const pool = customImages?.length
+    ? customImages
+    : articles.filter(a => a.image).slice(0, 8).map(a => a.image)
+  if (!pool.length) return null
+  const dayKey = new Date().toISOString().slice(0, 10)
+  let seed = 0
+  for (let i = 0; i < dayKey.length; i++) seed = (seed * 31 + dayKey.charCodeAt(i)) >>> 0
+  return pool[seed % pool.length]
+}
+
 export default function HomePage({ t, lang, topics, articles, stories, loading, navigate, siteSettings }) {
   const homeCards = (siteSettings?.homeCards || []).filter(c => c.visible !== false)
   const hero = siteSettings?.hero || {}
 
-  const ctaPrimaryLabel = (lang === 'vi' ? hero.ctaPrimaryVi : hero.ctaPrimaryEn) || (lang === 'vi' ? 'Đọc bài' : 'Read article')
-  const ctaSecondaryLabel = (lang === 'vi' ? hero.ctaSecondaryVi : hero.ctaSecondaryEn) || (lang === 'vi' ? 'Khám phá thêm' : 'Explore more')
+  const ctaPrimaryLabel = (lang === 'vi' ? hero.ctaPrimaryVi : hero.ctaPrimaryEn) || (lang === 'vi' ? 'Khám phá' : 'Explore')
+  const ctaSecondaryLabel = (lang === 'vi' ? hero.ctaSecondaryVi : hero.ctaSecondaryEn) || (lang === 'vi' ? 'Xem bài viết' : 'Browse articles')
 
-  const [selectedTopic, setSelectedTopic] = useState('all')
+  // Pick the best content for the current lang, falling back to the other lang
+  // when the requested one is empty. Keeps cards from rendering blank.
+  const pickLang = (article) => {
+    const wanted = article?.[lang]
+    if (wanted?.title?.trim()) return { d: wanted }
+    const other = lang === 'vi' ? 'en' : 'vi'
+    return { d: article?.[other] || {} }
+  }
 
-  const filteredArticles = useMemo(() => {
-    if (selectedTopic === 'all') return articles
-    return articles.filter(a => a.topic === selectedTopic)
-  }, [articles, selectedTopic])
-
-  // Derive chip list: prefer Firestore topics for nice labels, else derive from article topic IDs.
-  const chipItems = useMemo(() => {
-    if (topics.length > 0) {
-      return topics
-        .map(tp => ({ id: tp.id, label: lang === 'vi' ? tp.vi : tp.en, count: articles.filter(a => a.topic === tp.id).length }))
-        .filter(t => t.count > 0)
-    }
-    const counts = new Map()
-    articles.forEach(a => { if (a.topic) counts.set(a.topic, (counts.get(a.topic) || 0) + 1) })
-    return [...counts.entries()].map(([id, count]) => ({ id, label: id, count }))
-  }, [topics, articles, lang])
-
-  // Hero featured: pick random article that has an image; fallback to articles[0].
-  // useMemo keyed on articles so it's stable for the session but rotates per page load.
+  // Featured: prefer one with current-lang content + image, else any with image.
   const featured = useMemo(() => {
     if (!articles.length) return null
-    const withImage = articles.filter(a => a.image)
-    const pool = withImage.length > 0 ? withImage : articles
-    return pool[Math.floor(Math.random() * pool.length)]
-  }, [articles])
+    return articles.find(a => a.image && a[lang]?.title?.trim())
+      || articles.find(a => a.image)
+      || articles[0]
+  }, [articles, lang])
+
+  // Hero background — daily-rotated decoration, decoupled from `featured`.
+  const heroBg = useMemo(() => pickHeroBg(articles, hero.images), [articles, hero.images])
 
   if (loading) return <HomeSkeleton />
 
-  const featuredTopic = featured && topics.find(tp => tp.id === featured.topic)
-  const featuredTopicLabel = featuredTopic ? (lang === 'vi' ? featuredTopic.vi : featuredTopic.en) : null
+  const featuredTopicLabel = featured ? articleTopicLabel(featured, topics, lang) : null
+  const featuredData = featured ? pickLang(featured).d : {}
 
-  // Featured grid: 1 main + 3 side from current filter.
-  const main = filteredArticles[0]
-  const sides = filteredArticles.slice(1, 4)
-  const rest = filteredArticles.slice(4, 10)
+  // Latest grid: skip the featured article (shown above) and show next 9.
+  const latest = articles.filter(a => !featured || a.id !== featured.id).slice(0, 9)
 
   const eyebrowFeatured = lang === 'vi' ? 'Bài đọc nổi bật' : 'Featured reading'
   const eyebrowRecent = lang === 'vi' ? 'Mới cập nhật' : 'Recent updates'
+  const eyebrowExplore = lang === 'vi' ? 'Khám phá' : 'Explore'
   const titleArticles = lang === 'vi' ? <>Bài viết <em>mới nhất</em></> : <>Latest <em>articles</em></>
-  const allLabel = lang === 'vi' ? 'Tất cả' : 'All'
+  const titleExplore = lang === 'vi' ? <>Hành trình <em>khám phá</em></> : <>Your <em>journey</em></>
   const viewAllLabel = lang === 'vi' ? `Tất cả ${articles.length} bài viết →` : `All ${articles.length} articles →`
   const minReadLabel = (n) => lang === 'vi' ? `${n} phút đọc` : `${n} min read`
+  const readArticleLabel = lang === 'vi' ? 'Đọc bài viết' : 'Read article'
 
   return (
     <>
-      {/* Hero — 2-col asymmetric (mockup: editorial-sacred-v2) */}
-      <section className="hero fade-up">
-        <div className="hero-text">
-          <div className="hero-eyebrow">{eyebrowFeatured}</div>
+      {/* HERO — Cinematic, brand-level, decoupled from any article */}
+      <section className={`hero-cinematic${heroBg ? ' has-bg' : ''}`}>
+        {heroBg && (
+          <div
+            className="hero-bg"
+            style={{ backgroundImage: `url(${cdnImage(heroBg, { w: 1800 })})` }}
+            aria-hidden="true"
+          />
+        )}
+        <div className="hero-bg-overlay" aria-hidden="true" />
+        <div className="hero-cinematic-inner fade-up">
+          <div className="hero-eyebrow">{lang === 'vi' ? 'Bất Tử Đạo' : 'Path of Immortality'}</div>
           {hero.showTitle !== false && (
             <h1><HeroTitle text={t.heroTitle} /></h1>
           )}
@@ -117,152 +151,69 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
           {(hero.showCtaPrimary !== false || hero.showCtaSecondary !== false) && (
             <div className="hero-cta">
               {hero.showCtaPrimary !== false && (
-                <button className="btn btn-primary" onClick={() => navigate(hero.ctaPrimaryLink || (featured ? 'article' : 'articles'), featured)}>
+                <button className="btn btn-primary" onClick={() => navigate(hero.ctaPrimaryLink || 'articles')}>
                   {ctaPrimaryLabel} →
                 </button>
               )}
               {hero.showCtaSecondary !== false && (
-                <button className="btn btn-ghost" onClick={() => navigate(hero.ctaSecondaryLink || 'articles')}>
+                <button className="btn btn-ghost-light" onClick={() => navigate(hero.ctaSecondaryLink || 'about')}>
                   {ctaSecondaryLabel}
                 </button>
               )}
             </div>
           )}
-          {featured && (
-            <div className="hero-meta">
-              {featuredTopicLabel && <><span><strong>{featuredTopicLabel}</strong></span><span className="dot">·</span></>}
-              <span>{formatLocaleDate(featured.date, lang)}</span>
-              <span className="dot">·</span>
-              <span>{minReadLabel(readingMinutes(featured, lang))}</span>
-            </div>
-          )}
         </div>
-        {hero.showSun !== false && (
-          <div
-            className={`hero-image${featured?.image ? ' has-image' : ''}`}
-            style={featured?.image ? { backgroundImage: `url(${featured.image})` } : undefined}
-            aria-hidden="true"
-          />
-        )}
+        <div className="hero-scroll-hint" aria-hidden="true">
+          <span></span>
+        </div>
       </section>
 
-      {/* Wisdom Quotes (app-specific, kept) */}
+      {/* WISDOM QUOTES — signature element */}
       <WisdomQuotes stories={stories} lang={lang} navigate={navigate} />
 
-      {/* Quick Access Grid */}
-      {homeCards.length > 0 && (
-        <section className="section">
-          <div className="home-grid">
-            {homeCards.map((card, i) => (
-              <div key={card.id + i} className={`home-card fade-up fade-up-d${i + 1}`} onClick={() => navigate(card.id)}>
-                <div className="home-card-icon">{CARD_ICONS[card.icon] || CARD_ICONS.star}</div>
-                <h3 className="home-card-title">{lang === 'vi' ? card.labelVi : card.labelEn}</h3>
-                <p className="home-card-desc">{lang === 'vi' ? card.descVi : card.descEn}</p>
-                <span className="home-card-arrow">&rarr;</span>
-              </div>
-            ))}
+      {/* FEATURED ARTICLE — properly framed with meta */}
+      {featured && (
+        <section className="section featured-block">
+          <div className="section-header">
+            <div className="section-eyebrow">{eyebrowFeatured}</div>
           </div>
+          <a
+            className="featured-card"
+            href={`/article/${articleSlug(featured)}`}
+            onClick={(e) => { e.preventDefault(); navigate('article', featured) }}
+          >
+            <div
+              className="featured-card-img"
+              style={featured.image ? { backgroundImage: `url(${cdnImage(featured.image, { w: 1200 })})` } : undefined}
+            />
+            <div className="featured-card-body">
+              {featuredTopicLabel && <span className="feat-tag">{featuredTopicLabel}</span>}
+              <h2>{featuredData.title}</h2>
+              {featuredData.summary && <p className="deck">{featuredData.summary}</p>}
+              <div className="featured-meta">
+                <span>{formatLocaleDate(featured.date, lang)}</span>
+                <span className="dot">·</span>
+                <span>{minReadLabel(readingMinutes(featured, lang))}</span>
+                <span className="featured-cta">{readArticleLabel} →</span>
+              </div>
+            </div>
+          </a>
         </section>
       )}
 
-      {/* Latest Articles — section-header + chips + featured-grid + grid-cards */}
+      {/* LATEST ARTICLES — chips filter + 3-col grid */}
       {articles.length > 0 && (
         <section className="section">
           <div className="section-header">
-            <div>
-              <div className="section-eyebrow">{eyebrowRecent}</div>
-              <h2 className="section-title-editorial">{titleArticles}</h2>
-            </div>
-            <button className="section-link" onClick={() => navigate('articles')}>{viewAllLabel}</button>
+            <div className="section-eyebrow">{eyebrowRecent}</div>
+            <h2 className="section-title-editorial">{titleArticles}</h2>
           </div>
 
-          {/* Topic chips filter */}
-          {chipItems.length > 0 && (
-            <div className="topic-chips" role="tablist" aria-label={lang === 'vi' ? 'Lọc theo chủ đề' : 'Filter by topic'}>
-              <button
-                role="tab"
-                aria-selected={selectedTopic === 'all'}
-                className={`chip ${selectedTopic === 'all' ? 'active' : ''}`}
-                onClick={() => setSelectedTopic('all')}
-              >
-                {allLabel} <span className="chip-count">{articles.length}</span>
-              </button>
-              {chipItems.map(tp => (
-                <button
-                  key={tp.id}
-                  role="tab"
-                  aria-selected={selectedTopic === tp.id}
-                  className={`chip ${selectedTopic === tp.id ? 'active' : ''}`}
-                  onClick={() => setSelectedTopic(tp.id)}
-                >
-                  {tp.label} <span className="chip-count">{tp.count}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Featured grid — 1 main + 3 side */}
-          {main && (
-            <div className="featured-grid">
-              <a
-                className="featured-main"
-                href={`/article/${articleSlug(main)}`}
-                onClick={(e) => { e.preventDefault(); navigate('article', main) }}
-              >
-                <div
-                  className="feat-img"
-                  style={main.image ? { backgroundImage: `url(${main.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
-                />
-                {(() => {
-                  const tp = topics.find(x => x.id === main.topic)
-                  const label = tp ? (lang === 'vi' ? tp.vi : tp.en) : main.tag?.[lang]
-                  return label ? <span className="feat-tag">{label}</span> : null
-                })()}
-                <h2><span>{(main[lang] || main[lang === 'vi' ? 'en' : 'vi'])?.title}</span></h2>
-                <p className="deck">{(main[lang] || main[lang === 'vi' ? 'en' : 'vi'])?.summary}</p>
-                <div className="featured-meta">
-                  <span>{formatLocaleDate(main.date, lang)}</span>
-                  <span className="dot">·</span>
-                  <span>{minReadLabel(readingMinutes(main, lang))}</span>
-                </div>
-              </a>
-              {sides.length > 0 && (
-                <div className="featured-side">
-                  {sides.map(a => {
-                    const tp = topics.find(x => x.id === a.topic)
-                    const tag = tp ? (lang === 'vi' ? tp.vi : tp.en) : a.tag?.[lang]
-                    const d = a[lang] || a[lang === 'vi' ? 'en' : 'vi'] || {}
-                    return (
-                      <a
-                        key={a.id}
-                        className="side-card"
-                        href={`/article/${articleSlug(a)}`}
-                        onClick={(e) => { e.preventDefault(); navigate('article', a) }}
-                      >
-                        <div
-                          className="img"
-                          style={a.image ? { backgroundImage: `url(${a.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
-                        />
-                        <div>
-                          {tag && <span className="side-tag">{tag}</span>}
-                          <h3>{d.title}</h3>
-                          <div className="side-meta">{formatLocaleDate(a.date, lang)} · {minReadLabel(readingMinutes(a, lang))}</div>
-                        </div>
-                      </a>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Remainder in 3-col editorial grid (mockup grid-card style) */}
-          {rest.length > 0 && (
+          {latest.length > 0 ? (
             <div className="grid-cards">
-              {rest.map(a => {
-                const tp = topics.find(x => x.id === a.topic)
-                const tag = tp ? (lang === 'vi' ? tp.vi : tp.en) : (a.tag?.[lang] || a.topic)
-                const d = a[lang] || a[lang === 'vi' ? 'en' : 'vi'] || {}
+              {latest.map(a => {
+                const tag = articleTopicLabel(a, topics, lang)
+                const { d } = pickLang(a)
                 return (
                   <a
                     key={a.id}
@@ -272,7 +223,7 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
                   >
                     <div
                       className="img"
-                      style={a.image ? { backgroundImage: `url(${a.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                      style={a.image ? { backgroundImage: `url(${cdnImage(a.image, { w: 600 })})` } : undefined}
                     />
                     {tag && <span className="feat-tag">{tag}</span>}
                     <h3>{d.title}</h3>
@@ -286,35 +237,41 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
                 )
               })}
             </div>
-          )}
+          ) : null}
 
-          {filteredArticles.length === 0 && (
-            <p className="empty-state">{lang === 'vi' ? 'Chưa có bài viết cho chủ đề này.' : 'No articles in this topic yet.'}</p>
+          {articles.length > 0 && (
+            <div className="section-cta">
+              <button className="section-link" onClick={() => navigate('articles')}>{viewAllLabel}</button>
+            </div>
           )}
         </section>
       )}
 
-      {/* Topics overview (kept — has descriptions chips don't show) */}
-      {topics.length > 0 && (
+      {/* EXPLORE — quick-access tiles (homeCards) */}
+      {homeCards.length > 0 && (
         <section className="section">
-          <h2 className="section-title fade-up"><SunIcon size={20} /> {t.topicsTitle}</h2>
-          <div className="topics-grid">
-            {topics.map((tp, i) => (
-              <div key={tp.id} className={`topic-card fade-up fade-up-d${i + 1}`} onClick={() => navigate('topic', tp.id)}>
-                <span className="topic-icon">{tp.icon}</span>
-                <div className="topic-name">{lang === 'vi' ? tp.vi : tp.en}</div>
-                <div className="topic-desc">{lang === 'vi' ? tp.descVi : tp.descEn}</div>
-                <span className="topic-count">{articles.filter(a => a.topic === tp.id).length} {t.articles}</span>
-              </div>
+          <div className="section-header">
+            <div className="section-eyebrow">{eyebrowExplore}</div>
+            <h2 className="section-title-editorial">{titleExplore}</h2>
+          </div>
+          <div className="explore-grid">
+            {homeCards.map((card, i) => (
+              <button
+                key={card.id + i}
+                className={`explore-tile fade-up fade-up-d${(i % 4) + 1}`}
+                onClick={() => navigate(card.id)}
+              >
+                <div className="explore-tile-icon">{CARD_ICONS[card.icon] || CARD_ICONS.star}</div>
+                <h3 className="explore-tile-title">{lang === 'vi' ? card.labelVi : card.labelEn}</h3>
+                <p className="explore-tile-desc">{lang === 'vi' ? card.descVi : card.descEn}</p>
+                <span className="explore-tile-arrow">→</span>
+              </button>
             ))}
           </div>
         </section>
       )}
 
-      {/* Newsletter signup */}
       <NewsletterBand lang={lang} source="home" />
-
-      {/* iOS app banner */}
       <AppBanner lang={lang} navigate={navigate} />
     </>
   )

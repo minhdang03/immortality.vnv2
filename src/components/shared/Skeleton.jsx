@@ -18,74 +18,64 @@ function CardSkeleton({ style }) {
   )
 }
 
-/* Home page — matches: .hero → WisdomQuotes → .home-grid → .topics-grid → articles */
+/* Home page — matches: cinematic hero → wisdom → featured → latest grid → explore */
 export function HomeSkeleton() {
   return (
     <div className="fade-up">
-      {/* Hero — matches .hero: padding 70px 20px 50px */}
-      <div className="skeleton-hero">
-        <div className={`skeleton-sun-circle ${S}`} />
-        <Line w={50} h={28} style={{ margin: '0 auto 16px' }} />
-        <Line w={70} h={14} style={{ margin: '0 auto 32px' }} />
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <div className={`skeleton-btn ${S}`} style={{ width: 160, padding: '13px 32px' }} />
-          <div className={`skeleton-btn ${S}`} style={{ width: 140, padding: '12px 28px' }} />
+      {/* Cinematic hero — full-bleed dark */}
+      <div className="skeleton-hero-cinematic">
+        <div className="skeleton-hero-cinematic-inner">
+          <Line w={20} h={10} style={{ margin: '0 auto 32px', background: 'rgba(230,200,137,0.25)' }} />
+          <Line w={70} h={48} style={{ margin: '0 auto 24px', background: 'rgba(248,243,234,0.12)' }} />
+          <Line w={55} h={16} style={{ margin: '0 auto 40px', background: 'rgba(248,243,234,0.08)' }} />
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <div className={`skeleton-btn ${S}`} style={{ width: 160, height: 46, background: 'rgba(230,200,137,0.18)' }} />
+            <div className={`skeleton-btn ${S}`} style={{ width: 150, height: 46, background: 'rgba(248,243,234,0.08)' }} />
+          </div>
         </div>
       </div>
 
-      {/* Wisdom quotes — matches .wisdom-card: border-radius 20px, min-height 200px */}
-      <div style={{ textAlign: 'center', padding: '0 0 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
-          <Line w={15} h={12} style={{ margin: 0 }} />
-        </div>
+      {/* Wisdom quotes */}
+      <div style={{ textAlign: 'center', padding: '40px 20px 24px', maxWidth: 'var(--max-w)', margin: '0 auto' }}>
+        <Line w={15} h={12} style={{ margin: '0 auto 20px' }} />
         <div className="skeleton-wisdom">
           <Line w={85} h={16} style={{ margin: '20px auto 12px' }} />
           <Line w={70} h={16} style={{ margin: '0 auto 12px' }} />
           <Line w={50} h={12} style={{ margin: '16px auto 0' }} />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 16 }}>
-          {[1,2,3].map(i => <div key={i} className={S} style={{ width: 6, height: 6, borderRadius: '50%' }} />)}
-        </div>
       </div>
 
-      {/* Home cards grid — matches .home-grid: 1fr 1fr, desktop repeat(4, 1fr) */}
+      {/* Featured article */}
       <section className="section">
-        <div className="skeleton-home-grid">
-          {[1,2,3,4].map(i => (
-            <div key={i} className="skeleton-home-card">
-              <div className={`skeleton-circle ${S}`} />
-              <Line w={60} h={16} style={{ margin: '12px auto 8px' }} />
-              <Line w={85} h={10} style={{ margin: '0 auto' }} />
-            </div>
-          ))}
+        <Line w={16} h={10} style={{ marginBottom: 24 }} />
+        <div className="skeleton-featured-card">
+          <div className={`skeleton-featured-img ${S}`} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Line w={20} h={10} />
+            <Line w={85} h={28} />
+            <Line w={70} h={16} />
+            <Line w={45} h={12} style={{ marginTop: 8 }} />
+          </div>
         </div>
       </section>
 
-      {/* Topics grid — matches .topics-grid: repeat(2, 1fr), desktop repeat(3, 1fr) */}
+      {/* Latest articles grid */}
       <section className="section">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-          <div className={S} style={{ width: 20, height: 20, borderRadius: '50%' }} />
-          <Line w={25} h={22} style={{ margin: 0 }} />
+        <Line w={16} h={10} style={{ marginBottom: 12 }} />
+        <Line w={45} h={28} style={{ marginBottom: 24 }} />
+        <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
+          {[1,2,3,4].map(i => <div key={i} className={`skeleton-btn ${S}`} style={{ width: 70 + i * 10, height: 32 }} />)}
         </div>
-        <div className="skeleton-topics-grid">
-          {[1,2,3,4].map(i => (
-            <div key={i} className="skeleton-topic-card">
-              <div className={S} style={{ width: 32, height: 32, borderRadius: 8, margin: '0 auto 10px' }} />
-              <Line w={60} h={14} style={{ margin: '0 auto 6px' }} />
-              <Line w={80} h={10} style={{ margin: '0 auto 8px' }} />
-              <div className={S} style={{ width: 60, height: 18, borderRadius: 12, margin: '0 auto' }} />
+        <div className="skeleton-grid-cards">
+          {[1,2,3].map(i => (
+            <div key={i} className="skeleton-grid-card">
+              <div className={`skeleton-grid-card-img ${S}`} />
+              <Line w={20} h={10} style={{ marginTop: 4 }} />
+              <Line w={85} h={20} />
+              <Line w={70} h={12} />
             </div>
           ))}
         </div>
-      </section>
-
-      {/* Latest articles — matches .article-card layout */}
-      <section className="section">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-          <div className={S} style={{ width: 20, height: 20, borderRadius: '50%' }} />
-          <Line w={25} h={22} style={{ margin: 0 }} />
-        </div>
-        {[1,2,3].map(i => <CardSkeleton key={i} />)}
       </section>
     </div>
   )

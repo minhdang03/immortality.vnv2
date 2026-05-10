@@ -4,7 +4,12 @@ import RSSButton from '../shared/RSSButton'
  * Editorial Sacred — 5-col footer with brand + links + social.
  * Mounts once at App level under <main>.
  */
-export default function Footer({ t, lang, articles, navigate }) {
+const DEFAULT_TAGLINE_VI = 'Loài người Kim Cương — Bình đẳng, Tự do, Hạnh phúc. Thiên đường tại thế.'
+const DEFAULT_TAGLINE_EN = 'Diamond Humanity — Equality, Freedom, Happiness. Heaven on Earth.'
+
+export default function Footer({ t, lang, articles, navigate, siteSettings = {} }) {
+  const taglineVi = siteSettings.footerTaglineVi || DEFAULT_TAGLINE_VI
+  const taglineEn = siteSettings.footerTaglineEn || DEFAULT_TAGLINE_EN
   const exploreLinks = [
     { id: 'articles', vi: 'Bài viết', en: 'Articles' },
     { id: 'khaitri', vi: 'Khai Trí', en: 'Khai Trí' },
@@ -19,7 +24,7 @@ export default function Footer({ t, lang, articles, navigate }) {
   const aboutLinks = [
     { id: 'about', vi: 'Giới thiệu', en: 'About' },
     { id: 'contact', vi: 'Liên hệ', en: 'Contact' },
-    { id: 'ungho', vi: 'Ủng hộ', en: 'Support' },
+    ...(siteSettings.unghoEnabled ? [{ id: 'ungho', vi: 'Ủng hộ', en: 'Support' }] : []),
   ]
 
   const go = (id) => (e) => { e.preventDefault(); navigate(id) }
@@ -33,11 +38,7 @@ export default function Footer({ t, lang, articles, navigate }) {
               <span className="footer-mark">✦</span>
               <span>{t.siteName || 'Bất Tử Đạo'}</span>
             </div>
-            <p>
-              {lang === 'vi'
-                ? '"Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời."'
-                : '"Discover the light within — a healing journey from a thousand years of Vietnamese wisdom."'}
-            </p>
+            <p>"{lang === 'vi' ? taglineVi : taglineEn}"</p>
           </div>
 
           <div>

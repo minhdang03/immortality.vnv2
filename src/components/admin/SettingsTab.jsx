@@ -10,6 +10,9 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
   const [navItems, setNavItems] = useState(() => settings.navItems || DEFAULT_NAV_ITEMS)
   const [defaultFontSize, setDefaultFontSize] = useState(() => settings.defaultFontSize ?? 100)
   const [defaultTheme, setDefaultTheme] = useState(() => settings.defaultTheme || 'dark')
+  const [footerTaglineVi, setFooterTaglineVi] = useState(() => settings.footerTaglineVi || '')
+  const [footerTaglineEn, setFooterTaglineEn] = useState(() => settings.footerTaglineEn || '')
+  const [unghoEnabled, setUnghoEnabled] = useState(() => settings.unghoEnabled === true)
   const [donationChannels, setDonationChannels] = useState(() => ({
     ...DEFAULT_DONATION_CHANNELS,
     ...settings.donationChannels,
@@ -58,7 +61,7 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await onUpdate({ navItems, defaultFontSize, defaultTheme, donationChannels })
+      await onUpdate({ navItems, defaultFontSize, defaultTheme, donationChannels, footerTaglineVi, footerTaglineEn, unghoEnabled })
     } catch (err) {
       console.error(err)
     }
@@ -109,6 +112,34 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Footer Tagline */}
+      <div className="admin-settings-section">
+        <h3 className="admin-settings-title">
+          {vi ? '✦ Tagline footer' : '✦ Footer tagline'}
+        </h3>
+        <div className="admin-form" style={{ padding: '16px 18px', display: 'grid', gap: 10 }}>
+          <div className="admin-settings-hint">
+            {vi
+              ? 'Câu trích dẫn ở góc trái footer. Để trống dùng mặc định.'
+              : 'Quote in the footer brand column. Empty = default.'}
+          </div>
+          <textarea
+            placeholder={vi ? 'Tagline tiếng Việt' : 'Vietnamese tagline'}
+            value={footerTaglineVi}
+            onChange={e => setFooterTaglineVi(e.target.value)}
+            rows={2}
+            style={{ padding: 10, background: 'var(--bg)', border: '1px solid rgba(201,168,108,0.2)', borderRadius: 6, color: 'var(--text)', fontSize: '0.9rem', resize: 'vertical' }}
+          />
+          <textarea
+            placeholder={vi ? 'Tagline tiếng Anh' : 'English tagline'}
+            value={footerTaglineEn}
+            onChange={e => setFooterTaglineEn(e.target.value)}
+            rows={2}
+            style={{ padding: 10, background: 'var(--bg)', border: '1px solid rgba(201,168,108,0.2)', borderRadius: 6, color: 'var(--text)', fontSize: '0.9rem', resize: 'vertical' }}
+          />
         </div>
       </div>
 
@@ -231,6 +262,15 @@ export default function SettingsTab({ lang, settings, onUpdate }) {
           {vi ? '🤝 Kênh ủng hộ (trang /ungho)' : '🤝 Donation channels (/ungho page)'}
         </h3>
         <div className="admin-form" style={{ padding: '16px 18px', display: 'grid', gap: 18 }}>
+          {/* Master toggle — hide /ungho page entirely until info is ready */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.92rem', fontWeight: 600, color: 'var(--white)', padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--border-subtle)', borderRadius: 6 }}>
+            <input type="checkbox" checked={unghoEnabled} onChange={e => setUnghoEnabled(e.target.checked)} />
+            {vi ? 'Hiện trang /ungho trên web' : 'Show /ungho page on site'}
+            <span style={{ marginLeft: 'auto', fontSize: '0.78rem', color: 'var(--text-dim)', fontWeight: 400 }}>
+              {vi ? '(tắt nếu chưa điền xong thông tin)' : '(turn off while info is incomplete)'}
+            </span>
+          </label>
+
           {/* VietQR */}
           <div style={{ display: 'grid', gap: 8 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.92rem', fontWeight: 600, color: 'var(--white)' }}>

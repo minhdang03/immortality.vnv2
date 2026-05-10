@@ -1,25 +1,10 @@
-/* ─── FADE-UP ANIMATION ─── */
-.fade-up { opacity: 0; transform: translateY(24px); animation: fadeUp 0.6s ease forwards; }
-@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-.fade-up-d1 { animation-delay: 0.1s; }
-.fade-up-d2 { animation-delay: 0.2s; }
-.fade-up-d3 { animation-delay: 0.3s; }
-.fade-up-d4 { animation-delay: 0.4s; }
-.fade-up-d5 { animation-delay: 0.5s; }
-.fade-up-d6 { animation-delay: 0.6s; }
-
-/* ─── @STARTING-STYLE ENTRY ANIMATIONS ─── */
-/* Native CSS entry animation for elements inserted into DOM (Chrome 117+, Safari 17.5+) */
-@supports (selector(:popover-open)) {
-  .home-card, .topic-card, .article-card, .wisdom-card {
-    transition: opacity 0.4s ease, transform 0.4s ease;
-  }
-  @starting-style {
-    .home-card, .topic-card, .article-card, .wisdom-card {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-  }
+/* ─── FADE-UP — disabled (caused full-page flash on every navigation/F5) ─── */
+.fade-up,
+.fade-up-d1, .fade-up-d2, .fade-up-d3,
+.fade-up-d4, .fade-up-d5, .fade-up-d6 {
+  opacity: 1;
+  transform: none;
+  animation: none;
 }
 
 /* ─── SKELETON LOADING ─── */
@@ -48,6 +33,42 @@
 }
 .skeleton-hero {
   text-align: center; padding: 70px 20px 50px;
+}
+/* Matches new .hero-cinematic — full-bleed dark hero */
+.skeleton-hero-cinematic {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  min-height: 70vh;
+  background: linear-gradient(180deg, #1f1838 0%, #0f0c0a 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 96px 24px;
+}
+.skeleton-hero-cinematic-inner {
+  max-width: 880px; width: 100%; text-align: center;
+}
+/* Matches .featured-card */
+.skeleton-featured-card {
+  display: grid; grid-template-columns: 1fr; gap: 24px;
+}
+@media (min-width: 900px) {
+  .skeleton-featured-card { grid-template-columns: 1.25fr 1fr; gap: 56px; align-items: center; }
+}
+.skeleton-featured-img {
+  aspect-ratio: 16 / 10; border-radius: 8px;
+}
+/* Matches .grid-cards */
+.skeleton-grid-cards {
+  display: grid; grid-template-columns: 1fr; gap: 32px;
+}
+@media (min-width: 700px) { .skeleton-grid-cards { grid-template-columns: repeat(2, 1fr); gap: 36px 28px; } }
+@media (min-width: 1000px) { .skeleton-grid-cards { grid-template-columns: repeat(3, 1fr); gap: 40px 32px; } }
+.skeleton-grid-card {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.skeleton-grid-card-img {
+  aspect-ratio: 4 / 3; border-radius: 6px;
 }
 .skeleton-sun-circle {
   width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 28px;
