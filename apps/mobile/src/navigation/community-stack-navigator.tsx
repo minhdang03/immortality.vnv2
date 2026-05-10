@@ -1,12 +1,17 @@
 /**
  * CommunityStackNavigator — Hub → individual community space screens.
- * Phases 6–11 will replace placeholder screens with real implementations.
+ * Phase 7: DoiThoaiSau + DoiThoaiSauThread implemented.
+ * Phases 6, 8–11 will replace remaining placeholder screens.
  */
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { colors, typography } from '../theme';
 import { CommunityHubScreen } from '../screens/community/community-hub-screen';
 import { CommunitySpacePlaceholderScreen } from '../screens/community/_placeholders/community-space-placeholder-screen';
+import { DoiThoaiSauBrowseChannelsScreen } from '../screens/community/doi-thoai-sau/doi-thoai-sau-browse-channels-screen';
+import { DoiThoaiSauChannelThreadScreen } from '../screens/community/doi-thoai-sau/doi-thoai-sau-channel-thread-screen';
+import { ForumQaBrowseScreen } from '../screens/community/forum-qa/forum-qa-browse-screen';
+import { ForumQaDetailScreen } from '../screens/community/forum-qa/forum-qa-detail-screen';
 import type { CommunityStackParamList } from '../types/navigation-types';
 
 const Stack = createNativeStackNavigator<CommunityStackParamList>();
@@ -36,17 +41,27 @@ export function CommunityStackNavigator() {
         options={{ title: 'Tự Khai Trí' }}
         initialParams={{ spaceName: 'Tự Khai Trí' } as never}
       />
+      {/* Phase 7: real Đối thoại sâu screens */}
       <Stack.Screen
         name="DoiThoaiSau"
-        component={CommunitySpacePlaceholderScreen}
+        component={DoiThoaiSauBrowseChannelsScreen}
         options={{ title: 'Đối thoại sâu' }}
-        initialParams={{ spaceName: 'Đối thoại sâu' } as never}
       />
       <Stack.Screen
+        name="DoiThoaiSauThread"
+        component={DoiThoaiSauChannelThreadScreen}
+        options={{ title: '' }} // title set dynamically via navigation.setOptions
+      />
+      {/* Phase 6: Forum Q&A screens */}
+      <Stack.Screen
         name="HoiDapForum"
-        component={CommunitySpacePlaceholderScreen}
-        options={{ title: 'Hỏi đáp · Forum Q&A' }}
-        initialParams={{ spaceName: 'Hỏi đáp · Forum Q&A' } as never}
+        component={ForumQaBrowseScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ForumQaDetail"
+        component={ForumQaDetailScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="BayCung"

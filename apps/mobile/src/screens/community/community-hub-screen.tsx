@@ -34,11 +34,14 @@ type Nav = CommunityStackScreenProps<'CommunityHub'>['navigation'];
 
 // ── Hub card data (mock — Phase 6+ wires to API) ─────────────────────────────
 
+// Only routes that accept no required params can be navigated from hub cards
+type HubRoute = 'CommunityHub' | 'TuKhaiTri' | 'DoiThoaiSau' | 'HoiDapForum' | 'BayCung' | 'TraoDoiNLTT';
+
 interface HubCard {
   id: string;
   title: string;
   meta: React.ReactNode;
-  route: keyof import('../../types/navigation-types').CommunityStackParamList;
+  route: HubRoute;
   icon: React.ReactNode;
 }
 
@@ -203,7 +206,7 @@ export function CommunityHubScreen() {
             <HubCardView
               key={card.id}
               card={card}
-              onPress={() => navigation.navigate(card.route)}
+              onPress={() => navigation.navigate(card.route as never)}
             />
           ))}
         </View>

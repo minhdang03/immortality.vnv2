@@ -23,8 +23,19 @@ export type MainTabParamList = {
 export type CommunityStackParamList = {
   CommunityHub: undefined;
   TuKhaiTri: undefined;
+  /** Đối thoại sâu — browse channels grouped by Trục (Phase 7) */
   DoiThoaiSau: undefined;
-  HoiDapForum: undefined;
+  /** Đối thoại sâu — individual channel thread with WS chat (Phase 7) */
+  DoiThoaiSauThread: {
+    channelId: string;
+    channelSlug: string;
+    slowModeSeconds: number;
+    ephemeralTtlHours: number;
+  };
+  /** Forum Q&A browse — optionally highlight a promoted question (Phase 6) */
+  HoiDapForum: { prefillFromQuestionId?: string } | undefined;
+  /** Forum Q&A detail — single question with answers (Phase 6) */
+  ForumQaDetail: { questionId: string };
   BayCung: undefined;
   TraoDoiNLTT: undefined;
 };
