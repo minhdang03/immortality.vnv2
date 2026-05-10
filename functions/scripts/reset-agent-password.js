@@ -6,7 +6,7 @@ const admin = require('firebase-admin')
 const crypto = require('crypto')
 const path = require('path')
 
-const sa = require(path.resolve(__dirname, '../../src/immortalityvn-firebase-adminsdk-fbsvc-a75c1f4b0e.json'))
+const sa = require(path.resolve(__dirname, '../../secrets/firebase-admin-sa.json'))
 admin.initializeApp({ credential: admin.credential.cert(sa) })
 
 const EMAIL = 'agent@battudao.com'

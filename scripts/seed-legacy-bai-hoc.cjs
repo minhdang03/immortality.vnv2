@@ -11,7 +11,7 @@
  * Run: node scripts/seed-legacy-bai-hoc.cjs
  */
 const admin = require('firebase-admin')
-const serviceAccount = require('../src/immortalityvn-firebase-adminsdk-fbsvc-a75c1f4b0e.json')
+const serviceAccount = require('../secrets/firebase-admin-sa.json')
 
 const TARGET_IDS = [
   'bai-hoc-reset-bo-nao-ve-khong-dao',

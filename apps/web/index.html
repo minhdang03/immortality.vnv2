@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bất Tử Đạo - Immortality | Trí Tuệ Người Việt Nam</title>
+    <meta name="description" content="Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời. Phương pháp phi thuyền, thiền định, năng lượng vũ trụ." />
+    <meta name="keywords" content="Bất Tử Đạo, Immortality, trí tuệ Việt Nam, thiền định, phi thuyền, chữa lành, năng lượng, Vietnamese wisdom, meditation, healing" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Bất Tử Đạo - Immortality | Trí Tuệ Người Việt Nam" />
+    <meta property="og:description" content="Nếu có thể tự lựa chọn cho mình một cuộc sống bất tử, sung sướng hay là chết, thì bạn có lựa chọn nào cho chính mình hay không?" />
+    <meta property="og:image" content="https://battudao.com/og-image.png" />
+    <meta property="og:url" content="https://battudao.com" />
+    <meta property="og:site_name" content="BẤT TỬ ĐẠO" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bất Tử Đạo - Immortality | Trí Tuệ Người Việt Nam" />
+    <meta name="twitter:description" content="Nếu có thể tự lựa chọn cho mình một cuộc sống bất tử, sung sướng hay là chết, thì bạn có lựa chọn nào cho chính mình hay không?" />
+    <meta name="twitter:image" content="https://battudao.com/og-image.png" />
+
+    <!-- Zalo -->
+    <meta property="zalo:official_account" content="" />
+
+    <link rel="icon" href="/fav.ico" />
+    <link rel="canonical" href="https://battudao.com" />
+
+    <!-- Preconnect — resolve DNS + TLS early for fonts & Firebase -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+    <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+
+    <!-- Fonts — swap ensures text renders immediately with fallback -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+    <!-- Theme bootstrap — set data-theme BEFORE render so bg matches resolved theme (no flash on F5) -->
+    <script>
+      (function(){
+        try {
+          // Priority: explicit user choice > last resolved theme (cached from previous visit) > system pref > light
+          var theme = localStorage.getItem('theme')
+                    || localStorage.getItem('theme:resolved')
+                    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          document.documentElement.setAttribute('data-theme', theme)
+        } catch(e) { document.documentElement.setAttribute('data-theme', 'light') }
+      })()
+    </script>
+    <!-- Critical bg styles — match design tokens so initial paint matches loaded CSS (no flash) -->
+    <style>
+      html[data-theme="light"]{background:#f8f3ea;color:#161310}
+      html[data-theme="dark"]{background:#14110d;color:#f5ede0}
+      body{margin:0;background:inherit;color:inherit;font-family:'Be Vietnam Pro',system-ui,sans-serif;overflow-x:hidden}
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

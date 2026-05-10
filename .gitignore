@@ -11,6 +11,22 @@ scripts/serviceAccountKey.json
 .vercel
 .env.tmp.*
 
+# Monorepo workspace node_modules + build outputs
+apps/*/node_modules/
+apps/*/dist/
+apps/*/.env
+apps/*/.env.*
+packages/*/node_modules/
+packages/*/dist/
+workers/*/node_modules/
+workers/*/dist/
+workers/*/.dev.vars
+
+# Expo / React Native (apps/mobile)
+apps/mobile/.expo/
+apps/mobile/android/
+apps/mobile/ios/
+
 # Capacitor iOS — generated artifacts (Xcode project source IS tracked)
 ios/App/App/public/
 ios/App/Pods/
@@ -36,3 +52,7 @@ android/app/*.iml
 
 # Claude Code hook logs
 .claude/hooks/.logs/
+
+# Service account keys — never commit
+secrets/
+*firebase-admin-sa*.json

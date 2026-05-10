@@ -1,5 +1,5 @@
 const admin = require('firebase-admin')
-const serviceAccount = require('../src/immortalityvn-firebase-adminsdk-fbsvc-a75c1f4b0e.json')
+const serviceAccount = require('../secrets/firebase-admin-sa.json')
 
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
 const db = admin.firestore()

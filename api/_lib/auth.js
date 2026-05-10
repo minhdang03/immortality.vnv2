@@ -29,7 +29,9 @@ export async function requireAgent(req) {
   const m = auth.match(/^Bearer\s+(.+)$/i)
   if (!m) return { ok: false, status: 401, error: 'missing_bearer_token' }
   try {
-    const decoded = await getAuth().verifyIdToken(m[1])
+    // checkRevoked=true → instant revoke via revokeRefreshTokens(uid).
+    // Costs 1 extra RPC per request but enables key compromise containment.
+    const decoded = await getAuth().verifyIdToken(m[1], true)
     if (!AGENT_ALLOWLIST_EMAILS.includes(decoded.email)) {
       return { ok: false, status: 403, error: 'forbidden', detail: `email ${decoded.email} not in agent allowlist` }
     }
@@ -37,6 +39,33 @@ export async function requireAgent(req) {
   } catch (e) {
     return { ok: false, status: 401, error: 'invalid_token', detail: e.message }
   }
+}
+
+// CORS allowlist for /api/* endpoints. Reject cross-origin tokens from anywhere else.
+const CORS_ALLOWLIST = new Set([
+  'https://battudao.com',
+  'https://www.battudao.com',
+  'https://immortality.vn',
+  'https://www.immortality.vn',
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'capacitor://localhost', // Capacitor iOS WebView
+  'ionic://localhost',     // Capacitor older
+])
+export function applyCors(req, res) {
+  const origin = req.headers.origin
+  if (origin && CORS_ALLOWLIST.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Vary', 'Origin')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    res.setHeader('Access-Control-Max-Age', '600')
+  }
+  if (req.method === 'OPTIONS') {
+    res.status(origin && CORS_ALLOWLIST.has(origin) ? 204 : 403).end()
+    return true // request handled
+  }
+  return false
 }
 
 export function jsonError(res, status, error, detail) {

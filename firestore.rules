@@ -1,13 +1,11 @@
 // Firestore Security Rules — Bất Tử Đạo
 //
-// NOTE: This project's firebase.json does NOT have a `firestore` section, so these
-// rules are NOT auto-deployed by `firebase deploy`. Copy the contents below into:
-//   Firebase Console → Firestore → Rules tab → paste & publish
-// (Or add a `"firestore": { "rules": "firestore.rules" }` section to firebase.json
-// to enable CLI deployment.)
+// Canonical source of truth. Deploy via CLI:
+//   firebase deploy --only firestore:rules
+// (firebase.json declares `"firestore": { "rules": "firestore.rules" }`)
 //
-// These rules cover the new /ungho (Support / Donations) feature plus baseline
-// access for existing collections. Adjust other collections as needed.
+// Covers donations, donor PII, comments (article subcollection), newsletter,
+// content collections, and admin role management.
 
 rules_version = '2';
 
@@ -29,8 +27,7 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     function isAdmin() {
-      return isSignedInAdminDoc()
-        && (!('role' in adminDoc()) || adminDoc().role == 'admin');
+      return isSignedInAdminDoc() && adminDoc().role == 'admin';
     }
     function hasRole(r) {
       return isSignedInAdminDoc() && adminDoc().role == r;
@@ -58,6 +55,9 @@ service cloud.firestore {
                     && request.resource.data.amount > 0
                     && request.resource.data.amount < 1000000000  // < 1B VND sanity cap
                     && request.resource.data.isAnonymous is bool
+                    && request.resource.data.createdAt == request.time
+                    && !('approvedAt' in request.resource.data)
+                    && !('approvedBy' in request.resource.data)
                     && (
                       request.resource.data.displayName == ''
                       || (
@@ -73,7 +73,15 @@ service cloud.firestore {
                       )
                     );
 
-      allow update, delete: if isAdmin();
+      // Admin can transition status / set approvedAt / add adminNote.
+      // Append-only on financial fields — amount, createdAt, displayName, isAnonymous CANNOT change post-create.
+      allow update: if isAdmin()
+                    && request.resource.data.amount == resource.data.amount
+                    && request.resource.data.createdAt == resource.data.createdAt
+                    && request.resource.data.displayName == resource.data.displayName
+                    && request.resource.data.isAnonymous == resource.data.isAnonymous
+                    && request.resource.data.message == resource.data.message;
+      allow delete: if isAdmin();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -87,13 +95,23 @@ service cloud.firestore {
 
       allow create: if (
         request.resource.data.realName is string
+        && request.resource.data.realName.size() >= 2
         && request.resource.data.realName.size() <= 100
       ) && (
         request.resource.data.email == null
-        || (request.resource.data.email is string && request.resource.data.email.size() <= 120)
+        || (
+          request.resource.data.email is string
+          && request.resource.data.email.size() <= 120
+          && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        )
       ) && (
         request.resource.data.phone == null
-        || (request.resource.data.phone is string && request.resource.data.phone.size() <= 30)
+        || (
+          request.resource.data.phone is string
+          && request.resource.data.phone.size() >= 8
+          && request.resource.data.phone.size() <= 30
+          && request.resource.data.phone.matches('^[+0-9\\s\\-()]+$')
+        )
       );
     }
 
@@ -102,9 +120,35 @@ service cloud.firestore {
     // ─────────────────────────────────────────────────────────────
     // Per-collection writes scoped to specific roles. Each goclaw agent gets ONLY the role
     // matching the content it produces — minimal blast radius if an agent's creds leak.
-    match /articles/{id}        { allow read: if true; allow write: if canWriteArticles(); }
-    match /comments/{id}        { allow read: if true; allow create: if true; allow update, delete: if canWriteArticles(); }
-    match /khaitri/{id}         { allow read: if true; allow write: if canWriteKhaitri(); }
+    match /articles/{id} {
+      // Drafts hidden from public — only published or admin can read.
+      // Article docs without a `status` field are treated as published (legacy).
+      allow read: if !('status' in resource.data)
+                  || resource.data.status == 'published'
+                  || canWriteArticles();
+      allow write: if canWriteArticles();
+
+      // Comments live as a subcollection at /articles/{id}/comments/{cid}
+      match /comments/{cid} {
+        allow read: if true;
+        allow create: if request.resource.data.text is string
+                      && request.resource.data.text.size() > 0
+                      && request.resource.data.text.size() <= 2000
+                      && request.resource.data.name is string
+                      && request.resource.data.name.size() <= 80
+                      && request.resource.data.status == 'pending';
+        allow update, delete: if canWriteArticles();
+      }
+    }
+    // Legacy top-level comments path — kept for backwards compat with anything still writing here.
+    match /comments/{id} { allow read: if true; allow create: if true; allow update, delete: if canWriteArticles(); }
+    // Khai Trí — drafts hidden from public.
+    match /khaitri/{id} {
+      allow read: if !('status' in resource.data)
+                  || resource.data.status == 'published'
+                  || canWriteKhaitri();
+      allow write: if canWriteKhaitri();
+    }
 
     // Newsletter signups — public create (validated), admin read/manage
     match /newsletter_signups/{id} {
@@ -122,7 +166,20 @@ service cloud.firestore {
     match /practices/{id}       { allow read: if true; allow write: if isAdmin(); }
     match /translations/{lang}  { allow read: if true; allow write: if isAdmin(); }
     match /settings/{id}        { allow read: if true; allow write: if isAdmin(); }
-    match /contacts/{id}        { allow read, update, delete: if isAdmin(); allow create: if true; }
+    match /contacts/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if request.resource.data.name is string
+                    && request.resource.data.name.size() >= 2
+                    && request.resource.data.name.size() <= 100
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() >= 5
+                    && request.resource.data.email.size() <= 200
+                    && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() >= 5
+                    && request.resource.data.message.size() <= 4000
+                    && request.resource.data.status == 'new';
+    }
 
     // /admins — read rules:
     //   • Self-read: any signed-in user reads their OWN doc (so useUserRole resolves

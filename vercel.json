@@ -1,4 +1,6 @@
 {
+  "buildCommand": "pnpm --filter @btd/web build",
+  "outputDirectory": "apps/web/dist",
   "rewrites": [
     { "source": "/story/:slug*", "destination": "/api/og?p=/story/:slug*" },
     { "source": "/khaitri/:slug*", "destination": "/api/og?p=/khaitri/:slug*" },

@@ -39,47 +39,30 @@
     <!-- Fonts — swap ensures text renders immediately with fallback -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-    <!-- Inline critical styles for instant skeleton render before CSS loads -->
+    <!-- Theme bootstrap — set data-theme BEFORE render so bg matches resolved theme (no flash on F5) -->
+    <script>
+      (function(){
+        try {
+          // Priority: explicit user choice > last resolved theme (cached from previous visit) > system pref > light
+          var theme = localStorage.getItem('theme')
+                    || localStorage.getItem('theme:resolved')
+                    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          document.documentElement.setAttribute('data-theme', theme)
+        } catch(e) { document.documentElement.setAttribute('data-theme', 'light') }
+      })()
+    </script>
+    <!-- Critical bg styles — match design tokens so initial paint matches loaded CSS (no flash) -->
     <style>
-      body{margin:0;background:#0a0a0f;font-family:'Be Vietnam Pro',system-ui,sans-serif;overflow-x:hidden}
-      [data-theme="light"] body,.light-body{background:#faf8f5}
-      #root-skeleton{max-width:480px;margin:0 auto;padding:0 16px;opacity:1;transition:opacity .2s}
-      #root-skeleton.hide{opacity:0;pointer-events:none}
-      .sk-shimmer{background:linear-gradient(90deg,rgba(201,168,108,.06) 25%,rgba(201,168,108,.12) 50%,rgba(201,168,108,.06) 75%);background-size:200% 100%;animation:sk-sh 1.5s ease-in-out infinite}
-      @keyframes sk-sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-      .sk-hero{text-align:center;padding:70px 20px 50px}
-      .sk-sun{width:80px;height:80px;border-radius:50%;margin:0 auto 28px}
-      .sk-line{height:14px;border-radius:8px;margin:0 auto 12px}
-      .sk-btn{height:36px;border-radius:30px;display:inline-block}
-      .sk-card{background:rgba(18,18,26,1);border-radius:16px;padding:22px 16px 18px;border:1px solid rgba(201,168,108,.08);text-align:center}
-      .sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
-      .sk-circle{width:28px;height:28px;border-radius:50%;margin:0 auto 12px}
-      @media(min-width:768px){#root-skeleton{max-width:720px}.sk-grid{grid-template-columns:repeat(4,1fr)}}
+      html[data-theme="light"]{background:#f8f3ea;color:#161310}
+      html[data-theme="dark"]{background:#14110d;color:#f5ede0}
+      body{margin:0;background:inherit;color:inherit;font-family:'Be Vietnam Pro',system-ui,sans-serif;overflow-x:hidden}
     </style>
-    <script type="module" crossorigin src="/assets/index-BHUaS4ei.js"></script>
+    <script type="module" crossorigin src="/assets/index-CwnO24NA.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/react-DghaKJPf.js">
     <link rel="modulepreload" crossorigin href="/assets/firebase-BC2YfrYZ.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-BDpEeStP.css">
+    <link rel="stylesheet" crossorigin href="/assets/index-BcVIJI4L.css">
   </head>
   <body>
-    <!-- Inline skeleton — visible instantly, hidden when React mounts -->
-    <div id="root-skeleton">
-      <div class="sk-hero">
-        <div class="sk-sun sk-shimmer"></div>
-        <div class="sk-line sk-shimmer" style="width:50%;height:28px;margin-bottom:16px"></div>
-        <div class="sk-line sk-shimmer" style="width:70%;margin-bottom:32px"></div>
-        <div style="display:flex;gap:12px;justify-content:center">
-          <div class="sk-btn sk-shimmer" style="width:160px"></div>
-          <div class="sk-btn sk-shimmer" style="width:140px"></div>
-        </div>
-      </div>
-      <div class="sk-grid">
-        <div class="sk-card"><div class="sk-circle sk-shimmer"></div><div class="sk-line sk-shimmer" style="width:60%;height:16px"></div><div class="sk-line sk-shimmer" style="width:85%;height:10px"></div></div>
-        <div class="sk-card"><div class="sk-circle sk-shimmer"></div><div class="sk-line sk-shimmer" style="width:60%;height:16px"></div><div class="sk-line sk-shimmer" style="width:85%;height:10px"></div></div>
-        <div class="sk-card"><div class="sk-circle sk-shimmer"></div><div class="sk-line sk-shimmer" style="width:60%;height:16px"></div><div class="sk-line sk-shimmer" style="width:85%;height:10px"></div></div>
-        <div class="sk-card"><div class="sk-circle sk-shimmer"></div><div class="sk-line sk-shimmer" style="width:60%;height:16px"></div><div class="sk-line sk-shimmer" style="width:85%;height:10px"></div></div>
-      </div>
-    </div>
     <div id="root"></div>
   </body>
 </html>

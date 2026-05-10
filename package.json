@@ -1,26 +1,21 @@
 {
-  "name": "immortality-vnv2",
+  "name": "@btd/monorepo",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build && cp dist/index.html functions/spa.html",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.1043.0",
-    "@capacitor/core": "^8.2.0",
-    "@capacitor/ios": "^8.2.0",
-    "dotenv": "^17.3.1",
-    "firebase": "^12.10.0",
-    "firebase-admin": "^13.8.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "dev:web": "pnpm --filter @btd/web dev",
+    "build:web": "pnpm --filter @btd/web build",
+    "preview:web": "pnpm --filter @btd/web preview",
+    "deploy": "firebase deploy --only hosting,functions",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions:ogRenderer"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.6.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.1.0"
+    "typescript": "^5.4.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "fast-xml-builder": ">=1.1.7"
+    }
   }
 }

@@ -14,19 +14,29 @@
  */
 
 const admin = require('firebase-admin')
+const os = require('os')
 
 if (!admin.apps.length) {
   admin.initializeApp({ credential: admin.credential.applicationDefault() })
 }
 const db = admin.firestore()
 
-async function logAgentOp({ action, params = {}, status = 'success', error = null, actor = 'agent-cli' }) {
+// Pin actor identity from process env so a CLI caller cannot forge `actor` field.
+// Format: `cli:<user>@<host>` — non-spoofable via JS args (still requires SA file access).
+function deriveCliActor() {
+  const user = process.env.USER || process.env.USERNAME || 'unknown'
+  const host = os.hostname() || 'unknown-host'
+  return `cli:${user}@${host}`
+}
+
+async function logAgentOp({ action, params = {}, status = 'success', error = null, actor }) {
   if (!action) throw new Error('logAgentOp: action required')
   const doc = {
     action,
     params,
     status,
-    actor,
+    // Force-derive actor — caller-supplied value ignored to prevent log forgery.
+    actor: deriveCliActor(),
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
   }
   if (error) doc.error = String(error?.message || error).slice(0, 1000)

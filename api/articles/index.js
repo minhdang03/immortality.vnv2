@@ -2,11 +2,12 @@
 // Auth: Bearer Firebase ID token (allowlist).
 
 import { validateArticle } from '../../schemas/articles.js'
-import { requireAgent, jsonError } from '../_lib/auth.js'
+import { requireAgent, jsonError, applyCors } from '../_lib/auth.js'
 import { db, FieldValue } from '../_lib/db.js'
 import { articleSlugFields } from '../_lib/slug.js'
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return
   const auth = await requireAgent(req)
   if (!auth.ok) return jsonError(res, auth.status, auth.error, auth.detail)
 

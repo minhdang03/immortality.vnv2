@@ -5,7 +5,7 @@
 const admin = require('firebase-admin')
 const path = require('path')
 
-const SA_PATH = path.resolve(__dirname, '../../src/immortalityvn-firebase-adminsdk-fbsvc-a75c1f4b0e.json')
+const SA_PATH = path.resolve(__dirname, '../../secrets/firebase-admin-sa.json')
 const sa = require(SA_PATH)
 
 admin.initializeApp({ credential: admin.credential.cert(sa) })

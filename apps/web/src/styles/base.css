@@ -1,0 +1,154 @@
+/* ─── RESET & BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ─── EDITORIAL SACRED — Design Tokens ─── */
+:root, [data-theme="dark"] {
+  /* Surface */
+  --bg: #14110d;
+  --card: #1d1814;
+  --surface: #1d1814;
+  /* Ink (text scale) — kept legacy aliases (--text, --text-dim, --white) */
+  --ink: #f5ede0;
+  --ink-soft: #d6cdbc;
+  --ink-muted: #8a8273;
+  --text: var(--ink-soft);
+  --text-dim: var(--ink-muted);
+  --white: var(--ink);
+  /* Gold (accent) */
+  --gold: #d4a76a;
+  --gold-deep: #b08642;
+  --gold-soft: #e9d9b4;
+  --gold-tint: rgba(212,167,106,0.10);
+  --gold-bright: #e4c78a;          /* legacy alias */
+  /* Rules / dividers */
+  --rule: rgba(245,237,224,0.10);
+  --rule-strong: rgba(245,237,224,0.20);
+  /* Header / overlay */
+  --header-bg: rgba(20,17,13,0.78);
+  --overlay-bg: rgba(20,17,13,0.97);
+  --bottom-bg: rgba(20,17,13,0.92);
+  /* Type families */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Be Vietnam Pro', system-ui, sans-serif;
+  /* Fluid type scale */
+  --fs-display-1: clamp(2.4rem, 5.4vw, 5.4rem);
+  --fs-display-2: clamp(1.8rem, 3.6vw, 2.6rem);
+  --fs-h2:        clamp(1.5rem, 2.5vw, 2rem);
+  --fs-body:      1.05rem;
+  --fs-reading:   clamp(1.05rem, 1.4vw, 1.25rem);
+  /* Spacing scale (4-base) */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+  --sp-9: 80px; --sp-10: 120px;
+  /* Radius */
+  --r-sm: 4px; --r-md: 8px; --r-lg: 16px; --r-pill: 999px;
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.16);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.24), 0 8px 24px rgba(0,0,0,0.18);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.30), 0 24px 56px rgba(0,0,0,0.22);
+  /* Container */
+  --max-w: 480px;
+  --side-pad: 16px;
+  --section-gap: 32px;
+}
+[data-theme="light"] {
+  --bg: #f8f3ea;
+  --card: #ffffff;
+  --surface: #ffffff;
+  --ink: #161310;
+  --ink-soft: #3d3833;
+  --ink-muted: #8a8273;
+  --text: var(--ink-soft);
+  --text-dim: var(--ink-muted);
+  --white: var(--ink);
+  --gold: #b08642;
+  --gold-deep: #7a5a28;
+  --gold-soft: #e9d9b4;
+  --gold-tint: rgba(176,134,66,0.08);
+  --gold-bright: #7a5a28;          /* legacy alias maps to gold-deep on light */
+  --rule: rgba(22,19,16,0.08);
+  --rule-strong: rgba(22,19,16,0.16);
+  --header-bg: rgba(248,243,234,0.82);
+  --overlay-bg: rgba(248,243,234,0.98);
+  --bottom-bg: rgba(248,243,234,0.92);
+  --shadow-sm: 0 1px 2px rgba(22,19,16,0.04), 0 1px 3px rgba(22,19,16,0.06);
+  --shadow-md: 0 4px 12px rgba(22,19,16,0.06), 0 8px 24px rgba(22,19,16,0.04);
+  --shadow-lg: 0 12px 32px rgba(22,19,16,0.08), 0 24px 56px rgba(22,19,16,0.06);
+}
+body { background: var(--bg); color: var(--text); }
+/* Foldable open (Galaxy Z Fold inner: ~717-884px depending on orientation) */
+@media (min-width: 600px) { :root { --max-w: 640px; --side-pad: 20px; --section-gap: 40px; } }
+/* Tablet portrait */
+@media (min-width: 768px) { :root { --max-w: 720px; --side-pad: 24px; } }
+/* Tablet landscape / small desktop */
+@media (min-width: 1024px) { :root { --max-w: 960px; --side-pad: 32px; --section-gap: 56px; } }
+/* Desktop */
+@media (min-width: 1280px) { :root { --max-w: 1140px; --side-pad: 40px; } }
+/* Large desktop / ultrawide */
+@media (min-width: 1536px) { :root { --max-w: 1280px; --side-pad: 48px; } }
+
+/* ─── ANIMATED SUN ─── */
+.sun-icon .sun-ray { animation: rayPulse 2.5s ease-in-out infinite; }
+.sun-icon .sun-glow { animation: glowPulse 3s ease-in-out infinite; }
+@keyframes rayPulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+@keyframes glowPulse { 0%, 100% { r: 30; opacity: 0.2; } 50% { r: 36; opacity: 0.45; } }
+
+/* ─── FLOATING PARTICLES ─── */
+.particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.particle {
+  position: absolute; bottom: -10px; width: 3px; height: 3px;
+  background: var(--gold); border-radius: 50%;
+  animation: floatUp linear infinite; opacity: 0;
+}
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 0.7; } 90% { opacity: 0.3; }
+  100% { transform: translateY(-100vh) scale(0.3); opacity: 0; }
+}
+[data-theme="light"] .particles { opacity: 0.3; }
+
+/* ─── AMBIENT GLOW ─── */
+.ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.ambient::before, .ambient::after {
+  content: ''; position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,108,0.08) 0%, transparent 70%);
+  animation: ambientPulse 6s ease-in-out infinite;
+}
+.ambient::before { top: -20%; left: -10%; width: 80vw; height: 80vw; }
+.ambient::after { bottom: -30%; right: -20%; width: 90vw; height: 90vw; animation-delay: 3s; }
+@keyframes ambientPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 1; } }
+[data-theme="light"] .ambient { opacity: 0.4; }
+
+/* ─── LIGHT RAYS ─── */
+.light-rays { position: fixed; top: 0; left: 0; right: 0; height: 100vh; pointer-events: none; z-index: 0; overflow: hidden; }
+.light-ray {
+  position: absolute; top: -10%; width: 2px; height: 120%;
+  background: linear-gradient(to bottom, rgba(201,168,108,0.15), transparent 80%);
+  animation: raySwing 8s ease-in-out infinite;
+}
+@keyframes raySwing { 0%, 100% { transform: rotate(-15deg); opacity: 0.3; } 50% { transform: rotate(15deg); opacity: 0.7; } }
+[data-theme="light"] .light-rays { opacity: 0.3; }
+
+/* ─── VIEW TRANSITIONS ─── */
+@view-transition { navigation: auto; }
+::view-transition-old(root) {
+  animation: 150ms ease-out both fade-out;
+}
+::view-transition-new(root) {
+  animation: 200ms ease-in 50ms both fade-in;
+}
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } }
+
+/* ─── LAYOUT ─── */
+.app-wrap { position: relative; z-index: 1; }
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--side-pad); }
+

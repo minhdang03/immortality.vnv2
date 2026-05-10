@@ -18,12 +18,69 @@
 // content stays separated from other projects sharing the same bucket.
 
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-import { requireAgent, jsonError } from './_lib/auth.js'
+import { promises as dns } from 'node:dns'
+import { requireAgent, jsonError, applyCors } from './_lib/auth.js'
 import { db, FieldValue } from './_lib/db.js'
 
 const MAX_BYTES = 8 * 1024 * 1024
 const ALLOWED_CT = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
 const ALLOWED_INTENTS = new Set(['article', 'khaitri'])
+const MAX_REDIRECTS = 3
+
+// SSRF defense — reject private/loopback/cloud-metadata IPs.
+// Resolves DNS at every redirect hop to defeat DNS-rebinding.
+function isPrivateIp(ip) {
+  if (!ip) return true
+  // IPv4
+  const m = ip.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+  if (m) {
+    const [a, b] = m.slice(1).map(Number)
+    if (a === 10) return true                      // 10.0.0.0/8
+    if (a === 127) return true                     // 127.0.0.0/8 loopback
+    if (a === 0) return true                       // 0.0.0.0/8
+    if (a === 169 && b === 254) return true        // 169.254.0.0/16 link-local + cloud metadata
+    if (a === 172 && b >= 16 && b <= 31) return true // 172.16.0.0/12
+    if (a === 192 && b === 168) return true        // 192.168.0.0/16
+    if (a >= 224) return true                      // multicast / reserved
+    return false
+  }
+  // IPv6 — block loopback, link-local, ULA, mapped
+  const lower = ip.toLowerCase()
+  if (lower === '::1' || lower === '::') return true
+  if (lower.startsWith('fe80:') || lower.startsWith('fc') || lower.startsWith('fd')) return true
+  if (lower.startsWith('::ffff:')) {
+    return isPrivateIp(lower.slice(7)) // IPv4-mapped — recurse on v4 part
+  }
+  return true // unknown format → deny
+}
+
+async function safeFetch(rawUrl) {
+  let url = rawUrl
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    let parsed
+    try { parsed = new URL(url) } catch { throw new Error('invalid_url') }
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      throw new Error('protocol_not_allowed')
+    }
+    // Resolve host → all IPs, deny if any are private (defense against DNS rebinding)
+    const hostname = parsed.hostname
+    let addrs
+    try { addrs = await dns.lookup(hostname, { all: true, verbatim: true }) }
+    catch { throw new Error('dns_lookup_failed') }
+    if (!addrs.length) throw new Error('dns_no_addrs')
+    if (addrs.some(a => isPrivateIp(a.address))) throw new Error('private_ip_blocked')
+
+    const r = await fetch(url, { redirect: 'manual' })
+    if (r.status >= 300 && r.status < 400) {
+      const next = r.headers.get('location')
+      if (!next) throw new Error('redirect_no_location')
+      url = new URL(next, url).toString()
+      continue
+    }
+    return r
+  }
+  throw new Error('too_many_redirects')
+}
 
 let s3 = null
 function getS3() {
@@ -56,6 +113,7 @@ function extFromContentType(ct) {
 }
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return jsonError(res, 405, 'method_not_allowed', 'POST only')
 
   const auth = await requireAgent(req)
@@ -72,11 +130,11 @@ export default async function handler(req, res) {
     return jsonError(res, 400, 'invalid_intent', 'intent must be "article" or "khaitri"')
   }
 
-  // Download source bytes
+  // Download source bytes — SSRF-hardened (deny private IPs at every redirect hop)
   let bytes, contentType
   try {
-    const r = await fetch(url, { redirect: 'follow' })
-    if (!r.ok) return jsonError(res, 422, 'source_fetch_failed', `${r.status} ${r.statusText}`)
+    const r = await safeFetch(url)
+    if (!r.ok) return jsonError(res, 422, 'source_fetch_failed', `${r.status}`)
     contentType = (r.headers.get('content-type') || 'image/png').toLowerCase().split(';')[0].trim()
     if (!ALLOWED_CT.has(contentType)) {
       return jsonError(res, 415, 'unsupported_content_type', contentType)
@@ -87,7 +145,8 @@ export default async function handler(req, res) {
     }
     bytes = Buffer.from(ab)
   } catch (e) {
-    return jsonError(res, 502, 'source_fetch_error', e.message)
+    // Generic message to caller — don't leak which validation tripped (info disclosure)
+    return jsonError(res, 422, 'source_fetch_blocked')
   }
 
   // Upload to R2 — prefix keys with project name (bucket is shared across projects)
