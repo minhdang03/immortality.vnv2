@@ -49,16 +49,17 @@ const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 export default function App() {
   const [lang, setLang] = useState(() => {
-    // Default to VI everywhere — content is Vietnamese-first. EN visitors can
-    // toggle via the lang switcher; their pick is persisted per host.
+    // Per-domain default: immortality.vn targets international audience → EN.
+    // battudao.com (and any other host, incl. localhost) → VI (content is VI-first).
     const host = window.location.hostname
+    const domainDefault = host.includes('immortality.vn') ? 'en' : 'vi'
     // One-shot migrate legacy unscoped key to per-domain.
     const legacy = localStorage.getItem('lang')
     if (legacy && !localStorage.getItem(`lang:${host}`)) {
       localStorage.setItem(`lang:${host}`, legacy)
       localStorage.removeItem('lang')
     }
-    return localStorage.getItem(`lang:${host}`) || 'vi'
+    return localStorage.getItem(`lang:${host}`) || domainDefault
   })
   // Initial page from URL — prevents flash of 'home' before applyPath() runs on deep-link refresh.
   const [page, setPage] = useState(() => {
