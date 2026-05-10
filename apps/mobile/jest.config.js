@@ -39,5 +39,7 @@ module.exports = {
     '^@btd/firebase-config$': '<rootDir>/../../packages/firebase-config/src/index.ts',
     // react-native-track-player requires native build; stub for jest
     '^react-native-track-player$': '<rootDir>/src/__mocks__/react-native-track-player-stub.js',
+    // expo-crypto uses native random; stub with Node crypto for jest
+    '^expo-crypto$': '<rootDir>/src/__mocks__/expo-crypto-random-bytes-stub.js',
   },
 };
