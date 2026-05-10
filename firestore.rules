@@ -199,5 +199,33 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if false;
     }
+
+    // btd_knowledge — Notion → Firestore sync mirror (1-way, server-only write).
+    // Public read for published articles; write blocked on client (Worker uses service account).
+    match /btd_knowledge/{docId} {
+      allow read: if resource.data.published == true && resource.data.archivedAt == null;
+      allow write: if false; // written only by btd-notion-sync Worker via service account
+    }
+
+    // btd_ai_flags — flagged AI responses for admin review queue.
+    // Written by btd-notion-sync Worker (service account). Readable by admins only.
+    match /btd_ai_flags/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // btd_ai_usage — per-request AI usage log for billing telemetry.
+    // Written by btd-notion-sync Worker (service account). Readable by admins only.
+    match /btd_ai_usage/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // _sync_logs — internal sync operation logs.
+    // Admin read only; never client-writable.
+    match /_sync_logs/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
   }
 }

@@ -1,0 +1,52 @@
+name = "btd-notion-sync"
+main = "src/notion-worker-entry.ts"
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ── Cron trigger: Notion → Firestore sync every 5 minutes ────────────────────
+[triggers]
+crons = ["*/5 * * * *"]
+
+# ── KV Namespaces ─────────────────────────────────────────────────────────────
+# Quota counter: key = quota:{uid}:{YYYY-MM-DD}, value = count string
+# Create via: wrangler kv:namespace create KV_QUOTA
+[[kv_namespaces]]
+binding = "KV_QUOTA"
+id = "REPLACE_WITH_KV_QUOTA_ID"
+
+# ── Static vars (non-secret) ──────────────────────────────────────────────────
+[vars]
+ENV = "development"
+CORS_ORIGINS = "http://localhost:8081,http://localhost:5173,http://localhost:3000"
+# Default daily AI request quota per Pro user
+AI_DAILY_QUOTA = "100"
+# Max output tokens for Claude to prevent cost runaway
+AI_MAX_OUTPUT_TOKENS = "800"
+# Max conversation history turns to include (server-side truncation)
+AI_MAX_HISTORY_TURNS = "5"
+
+# ── Secrets (set via CLI, never in toml) ─────────────────────────────────────
+# wrangler secret put ANTHROPIC_API_KEY
+# wrangler secret put NOTION_TOKEN              (Notion integration token)
+# wrangler secret put NOTION_DB_KNOWLEDGE       (Notion knowledge DB ID)
+# wrangler secret put NOTION_DB_KHAITRI_ARCHIVE (optional: second DB ID)
+# wrangler secret put FIREBASE_PROJECT_ID
+# wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON
+
+# ── Staging environment ───────────────────────────────────────────────────────
+[env.staging]
+name = "btd-notion-sync-staging"
+vars = { ENV = "staging", CORS_ORIGINS = "https://staging.battudao.com,http://localhost:8081", AI_DAILY_QUOTA = "100", AI_MAX_OUTPUT_TOKENS = "800", AI_MAX_HISTORY_TURNS = "5" }
+
+[[env.staging.kv_namespaces]]
+binding = "KV_QUOTA"
+id = "REPLACE_WITH_KV_QUOTA_STAGING_ID"
+
+# ── Production environment ────────────────────────────────────────────────────
+[env.production]
+name = "btd-notion-sync-production"
+vars = { ENV = "production", CORS_ORIGINS = "https://battudao.com,https://immortality.vn", AI_DAILY_QUOTA = "100", AI_MAX_OUTPUT_TOKENS = "800", AI_MAX_HISTORY_TURNS = "5" }
+
+[[env.production.kv_namespaces]]
+binding = "KV_QUOTA"
+id = "REPLACE_WITH_KV_QUOTA_PRODUCTION_ID"
