@@ -1,8 +1,9 @@
 /**
  * CommunityStackNavigator — Hub → individual community space screens.
  * Phase 7: DoiThoaiSau + DoiThoaiSauThread implemented.
+ * Phase 8: TuKhaiTri browse, TuKhaiTriParallelAnswers, TuKhaiTriAiHoiNguoc implemented.
  * Phase 9: BayCungProfile, BayCungEditProfile, PhaNoLe, ChuNoLog implemented.
- * Phases 8, 10–11 will replace remaining placeholder screens.
+ * Phase 10: TraoDoiNlttHub, Book1on1, PeerSessionDetail, MyBookings implemented.
  */
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -13,11 +14,20 @@ import { DoiThoaiSauBrowseChannelsScreen } from '../screens/community/doi-thoai-
 import { DoiThoaiSauChannelThreadScreen } from '../screens/community/doi-thoai-sau/doi-thoai-sau-channel-thread-screen';
 import { ForumQaBrowseScreen } from '../screens/community/forum-qa/forum-qa-browse-screen';
 import { ForumQaDetailScreen } from '../screens/community/forum-qa/forum-qa-detail-screen';
+// Phase 8: Tự Khai Trí screens
+import { TuKhaiTriBrowseScreen } from '../screens/community/tu-khai-tri/tu-khai-tri-browse-screen';
+import { TuKhaiTriParallelAnswersScreen } from '../screens/community/tu-khai-tri/tu-khai-tri-parallel-answers-screen';
+import { TuKhaiTriAiHoiNguocScreen } from '../screens/community/tu-khai-tri/tu-khai-tri-ai-hoi-nguoc-screen';
 // Phase 9: Bay Cùng + Phá Nô Lệ screens
 import { BayCungProfileScreen } from '../screens/community/bay-cung/bay-cung-profile-screen';
 import { BayCungEditOwnProfileScreen } from '../screens/community/bay-cung/bay-cung-edit-own-profile-screen';
 import { PhaNoLeFourMastersOverviewScreen } from '../screens/community/pha-no-le/pha-no-le-four-masters-overview-screen';
 import { ChuNoEncryptedJournalLogScreen } from '../screens/community/pha-no-le/chu-no-encrypted-journal-log-screen';
+// Phase 10: Trao Đổi Năng Lượng Trí Tuệ screens
+import { TraoDoiNlttHubScreen } from '../screens/community/trao-doi-nltt/trao-doi-nltt-hub-screen';
+import { Book1on1WithDangCalendarScreen } from '../screens/community/trao-doi-nltt/book-1on1-with-dang-calendar-screen';
+import { PeerSessionDetailScreen } from '../screens/community/trao-doi-nltt/peer-session-detail-screen';
+import { MyBookingsUpcomingAndPastScreen } from '../screens/community/trao-doi-nltt/my-bookings-upcoming-and-past-screen';
 import type { CommunityStackParamList } from '../types/navigation-types';
 
 const CHU_NO_TITLES: Record<string, string> = {
@@ -48,11 +58,21 @@ export function CommunityStackNavigator() {
         component={CommunityHubScreen}
         options={{ headerShown: false }}
       />
+      {/* Phase 8: real Tự Khai Trí screens */}
       <Stack.Screen
         name="TuKhaiTri"
-        component={CommunitySpacePlaceholderScreen}
-        options={{ title: 'Tự Khai Trí' }}
-        initialParams={{ spaceName: 'Tự Khai Trí' } as never}
+        component={TuKhaiTriBrowseScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TuKhaiTriParallelAnswers"
+        component={TuKhaiTriParallelAnswersScreen}
+        options={{ title: 'Hướng đi song song' }}
+      />
+      <Stack.Screen
+        name="TuKhaiTriAiHoiNguoc"
+        component={TuKhaiTriAiHoiNguocScreen}
+        options={{ title: 'AI hỏi ngược', headerShown: false }}
       />
       {/* Phase 7: real Đối thoại sâu screens */}
       <Stack.Screen
@@ -106,11 +126,32 @@ export function CommunityStackNavigator() {
           title: CHU_NO_TITLES[route.params.chuNo] ?? 'Nhật ký',
         })}
       />
+      {/* Phase 10: TraoDoiNLTT legacy route → redirect to hub */}
       <Stack.Screen
         name="TraoDoiNLTT"
-        component={CommunitySpacePlaceholderScreen}
-        options={{ title: 'Trao Đổi Năng Lượng Trí Tuệ' }}
-        initialParams={{ spaceName: 'Trao Đổi Năng Lượng Trí Tuệ' } as never}
+        component={TraoDoiNlttHubScreen}
+        options={{ headerShown: false }}
+      />
+      {/* Phase 10: Trao Đổi Năng Lượng Trí Tuệ screens */}
+      <Stack.Screen
+        name="TraoDoiNlttHub"
+        component={TraoDoiNlttHubScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TraoDoiNlttBook1on1"
+        component={Book1on1WithDangCalendarScreen}
+        options={{ title: 'Đặt lịch 1-on-1 với Đăng' }}
+      />
+      <Stack.Screen
+        name="TraoDoiNlttPeerSessionDetail"
+        component={PeerSessionDetailScreen}
+        options={{ title: 'Chi tiết phiên' }}
+      />
+      <Stack.Screen
+        name="TraoDoiNlttMyBookings"
+        component={MyBookingsUpcomingAndPastScreen}
+        options={{ title: 'Lịch đặt của tôi' }}
       />
     </Stack.Navigator>
   );

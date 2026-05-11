@@ -38,7 +38,12 @@ export type MainTabParamList = {
 
 export type CommunityStackParamList = {
   CommunityHub: undefined;
+  /** Tự Khai Trí browse — question list + AI promo card (Phase 8) */
   TuKhaiTri: undefined;
+  /** Tự Khai Trí parallel answers — N hướng đi for one question (Phase 8) */
+  TuKhaiTriParallelAnswers: { questionId: string; questionContent: string };
+  /** AI hỏi ngược — Pro-gated turn-based AI conversation (Phase 8) */
+  TuKhaiTriAiHoiNguoc: undefined;
   /** Đối thoại sâu — browse channels by Trục (Phase 7) */
   DoiThoaiSau: undefined;
   /** Đối thoại sâu — individual channel thread (Phase 7) */
@@ -62,6 +67,14 @@ export type CommunityStackParamList = {
   /** Encrypted journal for one chủ nô (Phase 9) */
   ChuNoLog: { chuNo: ChuNo };
   TraoDoiNLTT: undefined;
+  /** Trao Đổi NLTT hub — Phone 8 two-section view (Phase 10) */
+  TraoDoiNlttHub: undefined;
+  /** Book 1-on-1 with Đăng — full calendar + slot picker (Phase 10) */
+  TraoDoiNlttBook1on1: { slotId: string | undefined };
+  /** Peer session detail — session info + join button (Phase 10) */
+  TraoDoiNlttPeerSessionDetail: { sessionId: string };
+  /** My bookings — upcoming + past 1-on-1 and peer sessions (Phase 10) */
+  TraoDoiNlttMyBookings: undefined;
 };
 
 // ── Typed screen prop helpers ─────────────────────────────────────────────────
