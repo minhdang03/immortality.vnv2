@@ -30,14 +30,26 @@ function isCrawler(req) {
 }
 
 async function serveApp(res) {
+  // Try monorepo path first (apps/web/dist), fall back to legacy single-app path.
+  const candidates = [
+    join(process.cwd(), 'apps/web/dist/index.html'),
+    join(process.cwd(), 'dist/index.html'),
+  ]
+  for (const p of candidates) {
+    try {
+      const html = readFileSync(p, 'utf8')
+      res.setHeader('Content-Type', 'text/html; charset=utf-8')
+      return res.send(html)
+    } catch { /* try next */ }
+  }
+  // Last-ditch network fetch — hits the static catch-all rewrite, NOT this function.
   try {
-    const html = readFileSync(join(process.cwd(), 'dist/index.html'), 'utf8')
+    const html = await fetch(`${CANONICAL_URL}/index.html`).then(r => r.text())
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     return res.send(html)
-  } catch {
-    const html = await fetch(`${CANONICAL_URL}/`).then(r => r.text())
-    res.setHeader('Content-Type', 'text/html; charset=utf-8')
-    return res.send(html)
+  } catch (e) {
+    res.status(500).setHeader('Content-Type', 'text/html; charset=utf-8')
+    return res.send('<!doctype html><meta charset=utf-8><title>SPA shell unavailable</title><p>App shell could not be served. Try refreshing.</p>')
   }
 }
 
