@@ -11,6 +11,11 @@
     "deploy:hosting": "firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions:ogRenderer"
   },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1043.0",
+    "firebase": "^12.10.0",
+    "firebase-admin": "^13.8.0"
+  },
   "devDependencies": {
     "typescript": "^5.4.0"
   },

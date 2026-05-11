@@ -10,6 +10,16 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.1043.0
+        version: 3.1043.0
+      firebase:
+        specifier: ^12.10.0
+        version: 12.12.1
+      firebase-admin:
+        specifier: ^13.8.0
+        version: 13.8.0
     devDependencies:
       typescript:
         specifier: ^5.4.0
