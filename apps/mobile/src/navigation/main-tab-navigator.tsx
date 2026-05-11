@@ -1,24 +1,21 @@
 /**
- * MainTabNavigator — 5-tab bottom navigation matching mockup tab bar.
- * Tab order: Trang chủ · Bài viết · Khai Trí · Cộng đồng · Hồ sơ
- *
- * Screens for tabs other than Community are placeholder stubs (filled in
- * Phases 6–11). Community tab hosts its own stack navigator.
+ * main-tab-navigator.tsx
+ * 5-tab bottom navigation. Phase 11: Articles + KhaiTri replaced with WebView screens.
+ * Home tab now uses HomeStackNavigator (Knowledge + Audio sub-screens).
  */
 import React from 'react';
 import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { colors, typography, fontSizes } from '../theme';
-import { HomeScreen } from '../screens/home/home-screen';
-import { ArticlesPlaceholderScreen } from '../screens/articles/articles-placeholder-screen';
-import { KhaiTriPlaceholderScreen } from '../screens/khaitri/khai-tri-placeholder-screen';
+import { HomeStackNavigator } from './home-stack-navigator';
+import { ArticlesWebViewScreen } from '../screens/articles/articles-webview-screen';
+import { KhaiTriWebViewScreen } from '../screens/khaitri/khai-tri-webview-screen';
 import { CommunityStackNavigator } from './community-stack-navigator';
 import { ProfilePlaceholderScreen } from '../screens/profile/profile-placeholder-screen';
 import { TabIcon } from '../components/ui/tab-icon';
 import type { MainTabParamList } from '../types/navigation-types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
-
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 83 : 60;
 
 export function MainTabNavigator() {
@@ -36,41 +33,15 @@ export function MainTabNavigator() {
           paddingBottom: Platform.OS === 'ios' ? 28 : 8,
           paddingTop: 8,
         },
-        tabBarLabelStyle: {
-          fontFamily: typography.sansMedium,
-          fontSize: fontSizes.xs,
-          marginTop: 2,
-        },
-        tabBarIcon: ({ color, focused }) => (
-          <TabIcon routeName={route.name} color={color} focused={focused} />
-        ),
+        tabBarLabelStyle: { fontFamily: typography.sansMedium, fontSize: fontSizes.xs, marginTop: 2 },
+        tabBarIcon: ({ color, focused }) => <TabIcon routeName={route.name} color={color} focused={focused} />,
       })}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ tabBarLabel: 'Trang chủ' }}
-      />
-      <Tab.Screen
-        name="Articles"
-        component={ArticlesPlaceholderScreen}
-        options={{ tabBarLabel: 'Bài viết' }}
-      />
-      <Tab.Screen
-        name="KhaiTri"
-        component={KhaiTriPlaceholderScreen}
-        options={{ tabBarLabel: 'Khai Trí' }}
-      />
-      <Tab.Screen
-        name="Community"
-        component={CommunityStackNavigator}
-        options={{ tabBarLabel: 'Cộng đồng' }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfilePlaceholderScreen}
-        options={{ tabBarLabel: 'Hồ sơ' }}
-      />
+      <Tab.Screen name="Home" component={HomeStackNavigator} options={{ tabBarLabel: 'Trang chủ' }} />
+      <Tab.Screen name="Articles" component={ArticlesWebViewScreen} options={{ tabBarLabel: 'Bài viết' }} />
+      <Tab.Screen name="KhaiTri" component={KhaiTriWebViewScreen} options={{ tabBarLabel: 'Khai Trí' }} />
+      <Tab.Screen name="Community" component={CommunityStackNavigator} options={{ tabBarLabel: 'Cộng đồng' }} />
+      <Tab.Screen name="Profile" component={ProfilePlaceholderScreen} options={{ tabBarLabel: 'Hồ sơ' }} />
     </Tab.Navigator>
   );
 }

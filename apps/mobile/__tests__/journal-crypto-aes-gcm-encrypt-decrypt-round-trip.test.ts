@@ -19,13 +19,8 @@ jest.mock('expo-secure-store', () => ({
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }));
 
-// Mock expo-crypto — provide random bytes via Node crypto
-jest.mock('expo-crypto', () => ({
-  getRandomBytes: (size: number) => {
-    const { randomBytes } = require('crypto');
-    return new Uint8Array(randomBytes(size));
-  },
-}));
+// expo-crypto is mapped to src/__mocks__/expo-crypto-random-bytes-stub.js via jest.config.js moduleNameMapper
+// No jest.mock() needed here — the stub provides getRandomBytes via Node crypto
 
 import {
   encryptEntry,
