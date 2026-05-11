@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đang offline — Bất Tử Đạo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #f8f3ea;
+      --ink: #161310;
+      --gold: #b08642;
+      --gold-light: #d4a853;
+      --muted: #7a6a55;
+    }
+
+    html, body {
+      min-height: 100dvh;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      gap: 1.5rem;
+    }
+
+    .glyph {
+      font-size: 4rem;
+      line-height: 1;
+      color: var(--gold);
+      opacity: 0.6;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(2rem, 6vw, 2.8rem);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+    }
+
+    p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 340px;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      opacity: 0.7;
+      margin-top: -0.5rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 280px;
+      margin-top: 0.5rem;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary:hover { background: var(--gold-light); }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid rgba(176,134,66,0.3);
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      text-decoration: none;
+      display: block;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .status {
+      font-size: 0.75rem;
+      color: var(--muted);
+      opacity: 0.6;
+      margin-top: 1rem;
+    }
+
+    #online-status { color: var(--gold); font-weight: 500; display: none; }
+  </style>
+  <!-- Preload fonts to match main app -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Be+Vietnam+Pro:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="glyph" aria-hidden="true">✦</div>
+
+  <div>
+    <h1>Đang offline</h1>
+    <p class="subtitle">Bất Tử Đạo</p>
+  </div>
+
+  <p>Hãy thử lại khi có mạng.<br />Nội dung đã xem trước đó vẫn có thể truy cập.</p>
+
+  <div class="actions">
+    <button class="btn-primary" onclick="tryReconnect()">Thử lại</button>
+    <a href="/" class="btn-secondary">Về trang chủ</a>
+  </div>
+
+  <div class="status">
+    <span id="offline-status">Không có kết nối mạng</span>
+    <span id="online-status">Đã kết nối lại — đang chuyển hướng…</span>
+  </div>
+
+  <script>
+    function tryReconnect() {
+      window.location.reload()
+    }
+
+    // Auto-redirect when network returns
+    window.addEventListener('online', () => {
+      document.getElementById('offline-status').style.display = 'none'
+      document.getElementById('online-status').style.display = 'inline'
+      setTimeout(() => window.location.reload(), 800)
+    })
+
+    // Check if we're actually online already (SW served this page when cached)
+    if (navigator.onLine) {
+      setTimeout(() => window.location.href = '/', 200)
+    }
+  </script>
+</body>
+</html>

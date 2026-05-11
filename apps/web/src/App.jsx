@@ -28,6 +28,7 @@ import ErrorBoundary from './components/shared/ErrorBoundary'
 import { HomeSkeleton, ListSkeleton, DetailSkeleton, PageSkeleton } from './components/shared/Skeleton'
 import Footer from './components/layout/Footer'
 import Chatbot from './components/shared/Chatbot'
+import PwaInstallBanner from './components/pwa/PwaInstallBanner'
 
 // Pages — core
 const HomePage = lazy(() => import('./pages/core/HomePage'))
@@ -285,6 +286,7 @@ export default function App() {
 
         <BottomNav t={t} lang={lang} page={page} navigate={navigate} navItems={navItems} />
         <Chatbot lang={lang} userId={user?.uid} />
+        <PwaInstallBanner lang={lang} />
       </div>
     </>
   )

@@ -18,6 +18,7 @@
 @import './components/article-detail.css' layer(components);
 @import './components/share.css' layer(components);
 @import './components/cta-bands.css' layer(components);
+@import './components/pwa-install-and-push-ui.css' layer(components);
 
 /* Pages */
 @import './pages/comments.css' layer(pages);

@@ -1,0 +1,247 @@
+/* ── PWA Install Banner ──────────────────────────────────────────────────────
+   Subtle bottom banner (mobile-only) prompting home screen install.
+   Desktop: hidden. Mobile: slides up after 30s on first visit.
+───────────────────────────────────────────────────────────────────────────── */
+
+.pwa-install-banner {
+  /* Mobile-only */
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) 1rem;
+  background: var(--surface, #fff);
+  border-top: 1px solid var(--border, rgba(176, 134, 66, 0.2));
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+  animation: pwa-banner-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes pwa-banner-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Show only on mobile viewports */
+@media (max-width: 768px) {
+  .pwa-install-banner {
+    display: block;
+  }
+}
+
+.pwa-install-banner__content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.pwa-install-banner__icon {
+  font-size: 1.4rem;
+  color: var(--gold, #b08642);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.pwa-install-banner__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.pwa-install-banner__text strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #161310);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pwa-install-banner__text span {
+  font-size: 0.775rem;
+  color: var(--text-muted, #7a6a55);
+  line-height: 1.4;
+}
+
+.pwa-install-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.pwa-install-banner__btn-install {
+  background: var(--gold, #b08642);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s;
+  white-space: nowrap;
+}
+
+.pwa-install-banner__btn-install:hover {
+  background: #c49a4e;
+}
+
+.pwa-install-banner__btn-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #7a6a55);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.4rem;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.pwa-install-banner__btn-dismiss:hover {
+  color: var(--text-primary, #161310);
+  background: var(--surface-hover, rgba(0,0,0,0.05));
+}
+
+/* Dark theme */
+[data-theme="dark"] .pwa-install-banner {
+  background: var(--surface-dark, #1e1a14);
+  border-top-color: rgba(176, 134, 66, 0.15);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .pwa-install-banner__text strong {
+  color: #f5ede0;
+}
+
+[data-theme="dark"] .pwa-install-banner__text span {
+  color: #a89070;
+}
+
+[data-theme="dark"] .pwa-install-banner__btn-dismiss:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+
+/* ── Push Notification Opt-in ────────────────────────────────────────────────
+   Inline component for deliberate push subscription (e.g. in KhaiTriPage,
+   settings, community page). Not a banner — embedded in page content.
+───────────────────────────────────────────────────────────────────────────── */
+
+.pwa-push {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pwa-push__topics {
+  font-size: 0.85rem;
+  color: var(--text-muted, #7a6a55);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pwa-push__btn-enable {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--gold, #b08642);
+  color: var(--gold, #b08642);
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  align-self: flex-start;
+}
+
+.pwa-push__btn-enable:hover:not(:disabled) {
+  background: var(--gold, #b08642);
+  color: #fff;
+}
+
+.pwa-push__btn-enable:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.pwa-push__granted {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pwa-push__badge {
+  font-size: 0.875rem;
+  color: var(--gold, #b08642);
+  font-weight: 500;
+}
+
+.pwa-push__btn-disable {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #7a6a55);
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.15s, color 0.15s;
+}
+
+.pwa-push__btn-disable:hover {
+  color: var(--text-primary, #161310);
+  text-decoration-color: currentColor;
+}
+
+.pwa-push__denied {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pwa-push__denied p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted, #7a6a55);
+}
+
+.pwa-push__denied-hint {
+  font-size: 0.8rem !important;
+  opacity: 0.8;
+}
+
+.pwa-push__unsupported {
+  font-size: 0.85rem;
+  color: var(--text-muted, #7a6a55);
+  margin: 0;
+}
+
+/* Foreground toast — brief inline notification when app is open */
+.pwa-push__fg-toast {
+  background: var(--gold, #b08642);
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  animation: pwa-toast-fade 5s ease forwards;
+}
+
+@keyframes pwa-toast-fade {
+  0%   { opacity: 0; transform: translateY(-4px); }
+  10%  { opacity: 1; transform: translateY(0); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
