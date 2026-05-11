@@ -54,13 +54,14 @@ export default function App() {
     // battudao.com (and any other host, incl. localhost) → VI (content is VI-first).
     const host = window.location.hostname
     const domainDefault = host.includes('immortality.vn') ? 'en' : 'vi'
-    // One-shot migrate legacy unscoped key to per-domain.
-    const legacy = localStorage.getItem('lang')
-    if (legacy && !localStorage.getItem(`lang:${host}`)) {
-      localStorage.setItem(`lang:${host}`, legacy)
-      localStorage.removeItem('lang')
-    }
-    return localStorage.getItem(`lang:${host}`) || domainDefault
+    // v2 key — bumped to invalidate stale prefs from a prior build when battudao.com
+    // briefly defaulted to EN. Any explicit toggle on the new build re-saves to v2.
+    const stored = localStorage.getItem(`lang:v2:${host}`)
+    if (stored === 'vi' || stored === 'en') return stored
+    // Clear legacy keys so they don't keep overriding the domain default.
+    localStorage.removeItem(`lang:${host}`)
+    localStorage.removeItem('lang')
+    return domainDefault
   })
   // Initial page from URL — prevents flash of 'home' before applyPath() runs on deep-link refresh.
   const [page, setPage] = useState(() => {
@@ -193,7 +194,7 @@ export default function App() {
           t={t} lang={lang} dark={dark} page={page} menuOpen={menuOpen}
           navigate={navigate}
           toggleTheme={() => { toggleTheme(); trackThemeToggle(dark ? 'light' : 'dark') }}
-          setLang={(l) => { setLang(l); localStorage.setItem(`lang:${window.location.hostname}`, l); trackLanguageChange(l) }}
+          setLang={(l) => { setLang(l); localStorage.setItem(`lang:v2:${window.location.hostname}`, l); trackLanguageChange(l) }}
           setMenuOpen={setMenuOpen}
           user={user} navItems={navItems}
         />
