@@ -2,6 +2,18 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 
+// Self-host fonts so Vietnamese diacritics render correctly even when
+// fonts.googleapis.com is slow/blocked (common on some VN ISPs / Android).
+// Each weight import bundles latin + latin-ext + vietnamese subsets.
+import '@fontsource/be-vietnam-pro/300.css'
+import '@fontsource/be-vietnam-pro/400.css'
+import '@fontsource/be-vietnam-pro/500.css'
+import '@fontsource/be-vietnam-pro/600.css'
+import '@fontsource/cormorant-garamond/400.css'
+import '@fontsource/cormorant-garamond/600.css'
+import '@fontsource/cormorant-garamond/700.css'
+import '@fontsource/cormorant-garamond/400-italic.css'
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />

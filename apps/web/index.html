@@ -41,15 +41,15 @@
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
 
-    <!-- Preconnect — resolve DNS + TLS early for fonts & Firebase -->
+    <!-- Preconnect — resolve DNS + TLS early for Firebase -->
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
     <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
 
-    <!-- Fonts — swap ensures text renders immediately with fallback -->
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <!-- Fonts self-hosted via @fontsource (see src/main.jsx) — no Google Fonts
+         CDN dependency, so Vietnamese diacritics render even when fonts.googleapis.com
+         is slow/blocked (some VN ISPs) and on Windows/Android where serif fallbacks
+         have weak Vietnamese coverage. -->
 
     <!-- Theme bootstrap — set data-theme BEFORE render so bg matches resolved theme (no flash on F5) -->
     <script>
@@ -67,7 +67,7 @@
     <style>
       html[data-theme="light"]{background:#f8f3ea;color:#161310}
       html[data-theme="dark"]{background:#14110d;color:#f5ede0}
-      body{margin:0;background:inherit;color:inherit;font-family:'Be Vietnam Pro',system-ui,sans-serif;overflow-x:hidden}
+      body{margin:0;background:inherit;color:inherit;font-family:'Be Vietnam Pro','Segoe UI','Roboto','Noto Sans',system-ui,-apple-system,sans-serif;overflow-x:hidden}
     </style>
   </head>
   <body>

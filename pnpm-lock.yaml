@@ -154,6 +154,12 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.1043.0
         version: 3.1043.0
+      '@fontsource/be-vietnam-pro':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/cormorant-garamond':
+        specifier: ^5.2.11
+        version: 5.2.11
       dotenv:
         specifier: ^17.3.1
         version: 17.4.2
@@ -1848,6 +1854,12 @@ packages:
 
   '@firebase/webchannel-wrapper@1.0.5':
     resolution: {integrity: sha512-+uGNN7rkfn41HLO0vekTFhTxk61eKa8mTpRGLO0QSqlQdKvIoGAvLp3ppdVIWbTGYJWM6Kp0iN+PjMIOcnVqTw==}
+
+  '@fontsource/be-vietnam-pro@5.2.8':
+    resolution: {integrity: sha512-lqTtfpkAy0GdFH0fqwR0sW4VP+3CNGaQV6SpW2TSZaNmixZMlou+2dp5ErGidrS1MPiDDPfPbfW2i358PVFLZA==}
+
+  '@fontsource/cormorant-garamond@5.2.11':
+    resolution: {integrity: sha512-5JjpN023lhA5soijgVT0BdRGzmlijm402ppjccMd6h+vRE0mX2lJnE+41UPfnlidrkV9/rCo1mf58WZlHnB0CA==}
 
   '@google-cloud/firestore@7.11.6':
     resolution: {integrity: sha512-EW/O8ktzwLfyWBOsNuhRoMi8lrC3clHM5LVFhGvO1HCsLozCOOXRAlHrYBoE6HL42Sc8yYMuCb2XqcnJ4OOEpw==}
@@ -8449,6 +8461,10 @@ snapshots:
   '@firebase/webchannel-wrapper@1.0.3': {}
 
   '@firebase/webchannel-wrapper@1.0.5': {}
+
+  '@fontsource/be-vietnam-pro@5.2.8': {}
+
+  '@fontsource/cormorant-garamond@5.2.11': {}
 
   '@google-cloud/firestore@7.11.6':
     dependencies:
