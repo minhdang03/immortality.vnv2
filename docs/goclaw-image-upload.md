@@ -96,13 +96,37 @@ Success (200):
 
 Errors (JSON `{ ok: false, error, detail }`):
 - 400 `missing_url` / `invalid_intent` / `path_not_allowed`
+- 400 `public_url_required` — body `url` was `data:`/`blob:`/`file:`; use `/api/upload-file` (see below)
 - 401 `missing_bearer_token` / `invalid_token`
 - 403 `forbidden` (email not in agent allowlist)
 - 413 `payload_too_large` (>8 MB)
 - 415 `unsupported_content_type`
 - 422 `source_fetch_failed` (4xx from source URL)
-- 502 `source_fetch_error` (network)
+- 422 `source_fetch_blocked` (SSRF guard — private IP, DNS failure, redirect to non-public host)
 - 500 `upload_failed`
+
+### Alternative: `POST /api/upload-file` (raw bytes — for local images)
+
+Use when the agent already has the image bytes locally (e.g. generated in workspace
+by `create_image`) and has no public URL to point at. Avoids base64-inflated payload
+(and the SSRF guard that blocks `data:` URLs in `/api/upload-from-url`).
+
+Headers:
+- `Authorization: Bearer <firebase-id-token>`
+- `Content-Type: image/png | image/jpeg | image/webp | image/gif`
+- `X-Intent: article | khaitri`
+- `X-Slug: <kebab-slug>` (optional)
+
+Body: raw image bytes (≤ 8 MB; Vercel platform may cap lower — downscale if 413).
+
+Success (200): same shape as `/api/upload-from-url`.
+
+Errors:
+- 400 `invalid_intent` (missing/invalid `X-Intent`) / `empty_body`
+- 401 / 403 same as above
+- 413 `payload_too_large` (Vercel platform limit OR 8 MB internal cap)
+- 415 `unsupported_content_type`
+- 500 `upload_failed` / `r2_not_configured`
 
 ## Step 2: signIn (Go pseudocode)
 

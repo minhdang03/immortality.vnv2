@@ -17,15 +17,27 @@
 // Object keys are prefixed with "immortality-vn/<intent>/<file>" so this app's
 // content stays separated from other projects sharing the same bucket.
 
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { promises as dns } from 'node:dns'
 import { requireAgent, jsonError, applyCors } from './_lib/auth.js'
 import { db, FieldValue } from './_lib/db.js'
+import {
+  MAX_BYTES, ALLOWED_CT, ALLOWED_INTENTS, uploadToR2,
+} from './_lib/r2.js'
 
-const MAX_BYTES = 8 * 1024 * 1024
-const ALLOWED_CT = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
-const ALLOWED_INTENTS = new Set(['article', 'khaitri'])
 const MAX_REDIRECTS = 3
+
+// Detect scheme up front so we can return an actionable error
+// (instead of the generic source_fetch_blocked) when an agent sends a
+// data:/blob:/file: URL — the right answer is /api/upload-file.
+function detectScheme(url) {
+  if (typeof url !== 'string') return 'unknown'
+  const head = url.slice(0, 16).toLowerCase()
+  if (head.startsWith('data:')) return 'data'
+  if (head.startsWith('blob:')) return 'blob'
+  if (head.startsWith('file:')) return 'file'
+  if (head.startsWith('http://') || head.startsWith('https://')) return 'http'
+  return 'other'
+}
 
 // SSRF defense — reject private/loopback/cloud-metadata IPs.
 // Resolves DNS at every redirect hop to defeat DNS-rebinding.
@@ -82,36 +94,6 @@ async function safeFetch(rawUrl) {
   throw new Error('too_many_redirects')
 }
 
-let s3 = null
-function getS3() {
-  if (s3) return s3
-  const accountId = process.env.R2_ACCOUNT_ID
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
-  if (!accountId || !accessKeyId || !secretAccessKey) {
-    throw new Error('R2 env vars not configured (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY)')
-  }
-  s3 = new S3Client({
-    region: 'auto',
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    credentials: { accessKeyId, secretAccessKey },
-  })
-  return s3
-}
-
-function safeFilename(slug, ext) {
-  const clean = (slug || 'untitled').toString().toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').slice(0, 80)
-  return `${clean}-${Date.now()}.${ext}`
-}
-
-function extFromContentType(ct) {
-  if (ct.includes('jpeg')) return 'jpg'
-  if (ct.includes('webp')) return 'webp'
-  if (ct.includes('gif')) return 'gif'
-  return 'png'
-}
-
 export default async function handler(req, res) {
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return jsonError(res, 405, 'method_not_allowed', 'POST only')
@@ -130,57 +112,65 @@ export default async function handler(req, res) {
     return jsonError(res, 400, 'invalid_intent', 'intent must be "article" or "khaitri"')
   }
 
+  // Early reject non-http(s) schemes with an actionable pointer.
+  const scheme = detectScheme(url)
+  if (scheme !== 'http') {
+    return jsonError(
+      res, 400, 'public_url_required',
+      `this endpoint accepts only http(s) URLs (got "${scheme}"); to upload local bytes use POST /api/upload-file with Content-Type: image/<type> and X-Intent header`,
+    )
+  }
+
   // Download source bytes — SSRF-hardened (deny private IPs at every redirect hop)
-  let bytes, contentType
+  let bytes, contentType, fetchReason = null
   try {
     const r = await safeFetch(url)
-    if (!r.ok) return jsonError(res, 422, 'source_fetch_failed', `${r.status}`)
+    if (!r.ok) {
+      fetchReason = `http_${r.status}`
+      return jsonError(res, 422, 'source_fetch_failed', `${r.status}`)
+    }
     contentType = (r.headers.get('content-type') || 'image/png').toLowerCase().split(';')[0].trim()
     if (!ALLOWED_CT.has(contentType)) {
+      fetchReason = 'unsupported_content_type'
       return jsonError(res, 415, 'unsupported_content_type', contentType)
     }
     const ab = await r.arrayBuffer()
     if (ab.byteLength > MAX_BYTES) {
+      fetchReason = 'payload_too_large'
       return jsonError(res, 413, 'payload_too_large', `max ${MAX_BYTES} bytes`)
     }
     bytes = Buffer.from(ab)
   } catch (e) {
-    // Generic message to caller — don't leak which validation tripped (info disclosure)
+    // Generic outward message (don't leak which check tripped — info disclosure),
+    // but log the precise reason for ops.
+    fetchReason = e.message || 'unknown'
+    console.warn('upload-from-url source fetch blocked', {
+      reason: fetchReason,
+      sourceHost: (() => { try { return new URL(url).hostname } catch { return null } })(),
+    })
     return jsonError(res, 422, 'source_fetch_blocked')
   }
 
-  // Upload to R2 — prefix keys with project name (bucket is shared across projects)
-  const ext = extFromContentType(contentType)
-  const folder = intent === 'article' ? 'articles' : 'khaitri'
-  const filename = safeFilename(slug, ext)
-  const prefix = process.env.R2_KEY_PREFIX || 'immortality-vn'
-  const key = `${prefix}/${folder}/${filename}`
-
-  const bucket = process.env.R2_BUCKET_NAME
-  const publicBase = (process.env.R2_PUBLIC_URL || '').replace(/\/+$/, '')
-  if (!bucket || !publicBase) {
-    return jsonError(res, 500, 'r2_not_configured', 'R2_BUCKET_NAME / R2_PUBLIC_URL missing')
-  }
-
+  let uploaded
   try {
-    await getS3().send(new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: bytes,
-      ContentType: contentType,
-      CacheControl: 'public, max-age=31536000, immutable',
-    }))
+    uploaded = await uploadToR2({ bytes, contentType, intent, slug })
   } catch (e) {
+    if (e.code === 'r2_not_configured') return jsonError(res, 500, 'r2_not_configured', e.message)
     return jsonError(res, 500, 'upload_failed', e.message)
   }
 
-  const downloadUrl = `${publicBase}/${key}`
-
-  // Audit
   try {
     await db().collection('agent_log').add({
       action: 'upload.image',
-      params: { intent, key, contentType, size: bytes.length, sourceUrl: url.slice(0, 200), backend: 'r2' },
+      params: {
+        source: 'upload-from-url',
+        intent,
+        key: uploaded.key,
+        contentType: uploaded.contentType,
+        size: uploaded.bytes,
+        sourceUrl: url.slice(0, 200),
+        backend: 'r2',
+      },
       status: 'success',
       actor: auth.email,
       timestamp: FieldValue.serverTimestamp(),
@@ -190,11 +180,5 @@ export default async function handler(req, res) {
   }
 
   res.setHeader('Content-Type', 'application/json')
-  return res.status(200).send(JSON.stringify({
-    ok: true,
-    url: downloadUrl,
-    key,
-    bytes: bytes.length,
-    contentType,
-  }))
+  return res.status(200).send(JSON.stringify({ ok: true, ...uploaded }))
 }
