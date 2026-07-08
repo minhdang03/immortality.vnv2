@@ -20,18 +20,7 @@
   to { transform: translate3d(2%, 2%, 0) scale(1.08); }
 }
 
-/* Flash big bang khi vào trang (1 lần, đồng bộ với vòng nổ trên canvas) */
-.nl-bigbang {
-  position: fixed; inset: 0; z-index: 2; pointer-events: none;
-  background: radial-gradient(circle at 50% 42%,
-    rgba(255, 246, 216, 0.95), rgba(255, 196, 100, 0.5) 16%, transparent 46%);
-  animation: nl-bigbang 1.5s cubic-bezier(0.16, 0.84, 0.3, 1) forwards;
-}
-@keyframes nl-bigbang {
-  0% { opacity: 1; transform: scale(0.35); }
-  55% { opacity: 0.55; }
-  100% { opacity: 0; transform: scale(1.9); }
-}
+/* (Flash .nl-bigbang cũ đã bỏ — BigBangIntro cinematic đảm nhiệm vụ nổ) */
 
 /* God-rays xoay chậm sau hero + title thở sáng.
    blur + alpha thấp + mask gắt để thành hào quang mềm, không lộ sọc cứng. */
@@ -98,6 +87,5 @@
 @media (prefers-reduced-motion: reduce) {
   .nl-page::before, .nl-hero::before, .nl-hero-title,
   .nl-card::after, .nl-earth-pulse::before, .nl-earth-pulse::after { animation: none; }
-  .nl-bigbang { display: none; }
   .nl-stage .nl-art-img { transform: none; }
 }

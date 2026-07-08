@@ -1,33 +1,20 @@
+import BigBangIntro from '../../components/nangluong/BigBangIntro'
 import ScrollStory from '../../components/nangluong/ScrollStory'
 import CosmicBackdrop from '../../components/nangluong/cosmic-backdrop'
-import { ENERGY_INTRO } from '../../data/nang-luong-steps'
 
 /**
  * Trang /nang-luong — đồ hình "Hấp Thu Năng Lượng — Nuôi Dưỡng Toàn Thân".
- * Bố cục tối giản: big bang + nền sao → hero → scroll story (10 bước, pin). Hết.
+ * Bố cục: nền sao vũ trụ (suốt trang) → Big Bang intro cinematic (skip được)
+ * → scroll story (10 bước, pin). Hết — không explore/outro.
  */
 export default function NangLuongPage({ lang }) {
-  const i = ENERGY_INTRO[lang] || ENERGY_INTRO.vi
-
   return (
     <div className="nl-page">
-      {/* Vũ trụ: sao parallax + hyperspace + sao băng; flash big bang khi vào trang */}
-      <CosmicBackdrop />
-      <div className="nl-bigbang" aria-hidden="true" />
+      {/* Vũ trụ: sao parallax + hyperspace + sao băng — delay sao nở đúng lúc Big Bang nổ */}
+      <CosmicBackdrop delay={1940} />
 
-      {/* Hero */}
-      <header className="nl-hero">
-        <p className="nl-hero-tagline">{i.tagline}</p>
-        <h1 className="nl-hero-title">{i.title}</h1>
-        <p className="nl-hero-subtitle">{i.subtitle}</p>
-        <div className="nl-sources">
-          <h2 className="nl-sources-title">{i.sourcesTitle}</h2>
-          <ul className="nl-sources-list">
-            {i.sources.map((s, idx) => <li key={idx}>{s}</li>)}
-          </ul>
-        </div>
-        <p className="nl-scroll-hint" aria-hidden="true">{i.scrollHint} <span className="nl-scroll-arrow">↓</span></p>
-      </header>
+      {/* Intro "Khai Thiên" — hư không → Big Bang → ánh sáng chiếu vào não (kèm strip nguồn năng lượng) */}
+      <BigBangIntro lang={lang} />
 
       {/* Scroll story — 10 bước ghim màn hình */}
       <ScrollStory lang={lang} />

@@ -14,7 +14,7 @@ const LAYERS = [
   { par: 0.22, size: 2.1, alpha: 0.95, share: 0.18 },
 ]
 
-export default function CosmicBackdrop() {
+export default function CosmicBackdrop({ delay = 0 }) {
   const canvasRef = useRef(null)
 
   useEffect(() => {
@@ -71,7 +71,9 @@ export default function CosmicBackdrop() {
       lastY = sy
       ctx.clearRect(0, 0, w, h)
 
-      const t = (now - born) / 1600 // pha big bang 0..1
+      // delay: chờ intro cinematic tới khoảnh khắc nổ rồi sao mới bùng ra
+      const t = (now - born - delay) / 1600 // pha big bang 0..1
+      if (!reduced && t < 0) { raf = requestAnimationFrame(frame); return }
       const intro = !reduced && t < 1
       const k = intro ? 1 - Math.pow(1 - t, 3) : 1 // easeOutCubic
       const cx = w / 2, cy = h * 0.42
@@ -133,7 +135,7 @@ export default function CosmicBackdrop() {
     raf = requestAnimationFrame(frame)
     window.addEventListener('resize', resize)
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
-  }, [])
+  }, [delay])
 
   return <canvas ref={canvasRef} className="nl-cosmic" aria-hidden="true" />
 }

@@ -1,5 +1,13 @@
 # Bất Tử Đạo Project Changelog
 
+## [2026-07-08] /nang-luong Big Bang Intro "Khai Thiên" — Complete
+
+### Added
+- **Cinematic autoplay intro (~5s)** thay hero tĩnh: hư không → điểm kỳ dị tụ khí → Big Bang (chớp + 3 vòng xung kích + ~240 hạt canvas toả trắng→vàng→cam + rung màn) → tàn dư thành sao trôi → nón sáng đổ xuống thắp sáng trung tâm não của đồ hình năng lượng → reveal chữ
+- `BigBangIntro.jsx` (GSAP timeline + skip + reduced-motion fallback = hero tĩnh cũ), `bigbang-canvas.js` (particle engine 3 pha: in/out/star, composite `lighter`, DPR cap 2), `nang-luong-bigbang.css`
+- Hình cơ thể tái dùng `energy-body.webp` crop đầu–ngực, mask oval tan vào nền vũ trụ; trục sáng dọc nối tiếp `ENERGY_PATH` của scroll story
+- Skip bằng cuộn/chạm/phím (nhảy thẳng trạng thái cuối); canvas tự tắt rAF khi rời viewport; "Nguồn năng lượng" tách thành strip riêng dưới scene
+
 ## [2026-07-08] /nang-luong Scroll Story v2 — Complete
 
 ### Fixed (bugs từ bản Codex)
