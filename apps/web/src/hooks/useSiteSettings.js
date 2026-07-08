@@ -26,11 +26,21 @@ function migrateSettings(data) {
     migrated.navItems = migrated.navItems.map(item =>
       item.id === 'revelations' ? { ...item, id: 'khaitri', labelVi: item.labelVi === 'Khai Thị' ? 'Khai Trí' : item.labelVi, labelEn: item.labelEn === 'Revelations' ? 'Khai Trí' : item.labelEn } : item
     )
+    // Trang mới thêm vào registry sau khi settings đã lưu trên Firestore
+    // (vd nang-luong): tự merge vào cuối nav, admin vẫn ẩn/sắp xếp được như thường.
+    const saved = new Set(migrated.navItems.map(i => i.id))
+    DEFAULT_NAV_ITEMS.forEach(def => {
+      if (!saved.has(def.id)) migrated.navItems.push({ ...def })
+    })
   }
   if (migrated.homeCards) {
     migrated.homeCards = migrated.homeCards.map(card =>
       card.id === 'revelations' ? { ...card, id: 'khaitri', labelVi: card.labelVi === 'Khai Thị' ? 'Khai Trí' : card.labelVi, labelEn: card.labelEn === 'Revelations' ? 'Enlightenment Q&A' : card.labelEn } : card
     )
+    const savedCards = new Set(migrated.homeCards.map(c => c.id))
+    DEFAULT_HOME_CARDS.forEach(def => {
+      if (!savedCards.has(def.id)) migrated.homeCards.push({ ...def })
+    })
   }
   return migrated
 }

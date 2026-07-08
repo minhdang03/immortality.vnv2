@@ -44,6 +44,7 @@ const AboutPage = lazy(() => import('./pages/info/AboutPage'))
 const ContactPage = lazy(() => import('./pages/info/ContactPage'))
 const PracticePage = lazy(() => import('./pages/info/PracticePage'))
 const UngHoPage = lazy(() => import('./pages/info/UngHoPage'))
+const NangLuongPage = lazy(() => import('./pages/info/NangLuongPage'))
 const CongDongPage = lazy(() => import('./pages/info/CongDongPage'))
 // Admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
@@ -78,11 +79,11 @@ export default function App() {
   const [selectedArticle, setSelectedArticle] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState(null)
-  const { firestoreArticles, loading: articlesLoading, addArticle, updateArticle, deleteArticle } = useArticles()
+  const { firestoreArticles, loading: articlesLoading, fresh: articlesFresh, addArticle, updateArticle, deleteArticle } = useArticles()
   const { getT, firestoreVi, firestoreEn, updateTranslations } = useTranslations()
   const { topics: TOPICS, loading: topicsLoading, addTopic, updateTopic, deleteTopic } = useTopics()
-  const { stories: firestoreStories, loading: storiesLoading, addStory, updateStory, deleteStory } = useStories()
-  const { khaitri, addKhaiTri, updateKhaiTri, deleteKhaiTri } = useKhaiTri()
+  const { stories: firestoreStories, loading: storiesLoading, fresh: storiesFresh, addStory, updateStory, deleteStory } = useStories()
+  const { khaitri, fresh: khaitriFresh, addKhaiTri, updateKhaiTri, deleteKhaiTri } = useKhaiTri()
   const { teachings, addTeaching, updateTeaching, deleteTeaching } = useTeachings()
   const { practices, addPractice, updatePractice, deletePractice } = usePractices()
   const { settings: siteSettings, loading: settingsLoading, updateSettings } = useSiteSettings()
@@ -143,12 +144,17 @@ export default function App() {
 
   const pathAppliedRef = useRef(false)
   useEffect(() => {
-    if (pathAppliedRef.current) return
     const path = window.location.pathname
-    if (path?.startsWith('/article/') && allArticles.length === 0) return
+    const isArticlePath = path?.startsWith('/article/') || path?.startsWith('/articles/')
+    // For non-article paths, run applyPath exactly once.
+    // For article paths, keep re-running until either the slug is matched OR Firestore
+    // has confirmed a fresh snapshot — guards against stale SWR cache missing the slug
+    // (would otherwise leave the page stuck on DetailSkeleton forever).
+    if (pathAppliedRef.current && !(isArticlePath && !selectedArticle && !articlesFresh)) return
+    if (isArticlePath && allArticles.length === 0) return
     applyPath()
     pathAppliedRef.current = true
-  }, [allArticles.length])
+  }, [allArticles, articlesFresh, selectedArticle])
 
   useEffect(() => {
     const onPopState = () => applyPath()
@@ -235,7 +241,7 @@ export default function App() {
             <ArticlesPage t={t} lang={lang} articles={allArticles} topics={TOPICS} navigate={navigate} />
           )}
           {page === 'stories' && (
-            <StoriesPage t={t} lang={lang} firestoreStories={firestoreStories} navigate={navigate}
+            <StoriesPage t={t} lang={lang} firestoreStories={firestoreStories} fresh={storiesFresh} navigate={navigate}
               fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
               user={user} onUpdateStory={updateStory}
             />
@@ -244,13 +250,16 @@ export default function App() {
             <PracticePage t={t} lang={lang} practices={practices} />
           )}
           {page === 'khaitri' && (
-            <KhaiTriPage t={t} lang={lang} items={user ? khaitri : khaitri.filter(k => k.status !== 'draft')} navigate={navigate}
+            <KhaiTriPage t={t} lang={lang} items={user ? khaitri : khaitri.filter(k => k.status !== 'draft')} fresh={khaitriFresh} navigate={navigate}
               fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
               user={user} onUpdateKhaiTri={updateKhaiTri}
             />
           )}
           {page === 'contact' && (
             <ContactPage t={t} />
+          )}
+          {page === 'nang-luong' && (
+            <NangLuongPage lang={lang} />
           )}
           {page === 'ungho' && siteSettings.unghoEnabled && (
             <UngHoPage t={t} lang={lang} channels={siteSettings.donationChannels} />

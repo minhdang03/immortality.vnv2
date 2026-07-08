@@ -1,0 +1,307 @@
+/* ─── /nang-luong — Hấp Thu Năng Lượng: scroll story + explore ───
+   Trang trải nghiệm nền tối cosmic cố định (không theo theme) để tôn artwork. */
+
+.nl-page {
+  /* Full-bleed thoát khỏi .container (xem home.css .hero-cinematic) */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: radial-gradient(120% 60% at 50% 0%, #1b2340 0%, #0d1020 55%, #0a0c16 100%);
+  color: #f5ede0;
+  overflow-x: clip;
+}
+
+/* ── Hero ── */
+.nl-hero {
+  min-height: 88vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 96px 20px 64px; gap: var(--sp-4);
+}
+.nl-hero > * { max-width: 100%; box-sizing: border-box; }
+.nl-hero-tagline {
+  font-size: 0.85rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--gold-soft); border: 1px solid rgba(233,217,180,0.35);
+  padding: 6px 14px; border-radius: var(--r-pill);
+  line-height: 1.5;
+}
+.nl-hero-title {
+  font-family: var(--font-display); font-size: var(--fs-display-2);
+  max-width: 760px; line-height: 1.2; margin: 0;
+  background: linear-gradient(180deg, #fff6d8, #d4a76a);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.nl-hero-subtitle { color: #cfc7b6; max-width: 560px; margin: 0; }
+.nl-sources { margin-top: var(--sp-5); }
+.nl-sources-title {
+  font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-muted); margin: 0 0 var(--sp-3);
+}
+.nl-sources-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2);
+}
+.nl-sources-list li {
+  font-size: 0.88rem; color: #e6dcc8;
+  background: rgba(212,167,106,0.12); border: 1px solid rgba(212,167,106,0.25);
+  padding: 6px 14px; border-radius: var(--r-pill);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.nl-scroll-hint { margin-top: var(--sp-6); color: var(--ink-muted); font-size: 0.9rem; }
+.nl-scroll-arrow { display: inline-block; animation: nl-bounce 1.8s ease-in-out infinite; }
+@keyframes nl-bounce { 0%,100% { transform: translateY(0) } 50% { transform: translateY(6px) } }
+
+/* ── Artwork + lớp motion ── */
+.nl-art {
+  position: relative;
+  /* Khung LUÔN đúng tỉ lệ artwork → overlay (tia/node) khớp hình ở mọi màn hình.
+     Rộng theo cột nhưng không cao quá 1 màn hình (trừ header). */
+  width: min(100%, calc((100vh - 96px) * 0.66667));
+  width: min(100%, calc((100dvh - 96px) * 0.66667));
+  aspect-ratio: 1024 / 1536;
+  margin: 0 auto;
+}
+/* Layer chứa toàn bộ img + overlay. Desktop: phủ khít khung (đã đúng tỉ lệ).
+   Mobile story: use-step-camera đặt cover + zoom/pan theo bước qua inline style. */
+.nl-art-fit {
+  position: absolute; inset: 0;
+  transition: transform 0.9s cubic-bezier(0.25, 0.8, 0.25, 1);
+  will-change: transform;
+}
+.nl-art-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.nl-art-svg, .nl-particles { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* --cam-inv bù camera zoom để tia giữ độ mảnh cố định trên màn hình */
+.nl-beam-path { will-change: stroke-dashoffset; stroke-width: calc(7px * var(--cam-inv, 1)); }
+
+/* Glow node — điểm neo từng bước.
+   translate TRƯỚC, scale SAU trong cùng transform → tâm node luôn đúng toạ độ
+   dù scale bao nhiêu; --cam-inv bù camera zoom mobile để node không phình to. */
+.nl-node {
+  position: absolute;
+  --s: 0.4;
+  transform: translate(-50%, -50%) scale(calc(var(--s) * var(--cam-inv, 1)));
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, rgba(255,246,216,0.95) 0%, rgba(255,196,90,0.75) 45%, rgba(255,160,40,0) 75%);
+  border: none; padding: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Node đã qua (story): chấm sáng nhỏ không số — thấy dòng chảy đã đi qua đâu. */
+.nl-node.lit { opacity: 0.82; --s: 0.7; }
+.nl-node.current {
+  opacity: 1; --s: 1.35;
+  animation: nl-pulse 1.6s ease-in-out infinite;
+}
+.nl-node.tappable { cursor: pointer; pointer-events: auto; }
+.nl-node.tappable.lit { --s: 1; opacity: 0.9; }
+.nl-node.tappable.current { --s: 1.3; }
+.nl-node-num {
+  font-size: 0.68rem; font-weight: 700; color: #4a2e08;
+  text-shadow: 0 0 6px rgba(255,246,216,0.9);
+}
+@keyframes nl-pulse {
+  0%, 100% { box-shadow: 0 0 12px 4px rgba(255,200,100,0.55); }
+  50% { box-shadow: 0 0 26px 12px rgba(255,200,100,0.85); }
+}
+
+/* ── Scroll story scene ── */
+.nl-scene { position: relative; }
+.nl-stage {
+  height: 100vh; height: 100dvh;
+  display: grid; grid-template-columns: minmax(0, 56vw) minmax(380px, 1fr);
+  align-items: center; gap: clamp(24px, 3vw, 56px);
+  width: 100vw; max-width: none; margin: 0;
+  padding: 48px clamp(32px, 5vw, 96px) 32px;
+}
+.nl-stage .nl-art-col { min-height: 100%; padding-top: 0; }
+.nl-art-col { display: flex; align-items: center; justify-content: center; min-width: 0; padding-top: 56px; /* né header fixed */ }
+.nl-card-col { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
+
+/* Card bước — key đổi → remount → fade+slide chạy lại mỗi bước */
+.nl-card {
+  background: rgba(18, 22, 40, 0.72);
+  border: 1px solid rgba(212,167,106,0.28);
+  border-radius: var(--r-lg);
+  max-width: 560px;
+  overflow: hidden; /* bo góc hình media */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,246,216,0.08);
+  animation: nl-card-in 0.55s ease both;
+}
+@keyframes nl-card-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+/* Hình cận cảnh của bước */
+.nl-card-media {
+  width: 100%; aspect-ratio: 16 / 9; max-height: 260px;
+  border-bottom: 1px solid rgba(212,167,106,0.2);
+}
+.nl-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nl-card-body { padding: var(--sp-5) var(--sp-6); }
+.nl-card-num {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.95rem; color: #2b1a04;
+  background: linear-gradient(160deg, #fff6d8, #d4a76a);
+  box-shadow: 0 0 16px rgba(255,200,100,0.45);
+  margin-bottom: var(--sp-3);
+}
+.nl-card-title {
+  font-family: var(--font-display); font-size: clamp(1.6rem, 2.2vw, 2.25rem); margin: 0 0 var(--sp-3);
+  color: var(--gold-soft);
+}
+.nl-card-points { margin: 0; padding-left: 18px; display: grid; gap: var(--sp-2); }
+.nl-card-points li { color: #d9d1c0; line-height: 1.55; font-size: clamp(0.98rem, 1.25vw, 1.18rem); }
+.nl-card-points li::marker { color: var(--gold); }
+
+/* Chấm tiến trình */
+.nl-progress { display: flex; gap: 8px; padding-left: 2px; }
+.nl-progress-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(245,237,224,0.18); transition: background 0.3s ease;
+}
+.nl-progress-dot.on { background: var(--gold); box-shadow: 0 0 8px rgba(212,167,106,0.7); }
+
+/* ── Explore mode ── */
+.nl-explore { padding: var(--sp-10) var(--sp-5); max-width: 1100px; margin: 0 auto; }
+.nl-explore-title {
+  font-family: var(--font-display); font-size: var(--fs-h2); text-align: center;
+  color: var(--gold-soft); margin: 0 0 var(--sp-2);
+}
+.nl-explore-hint { text-align: center; color: var(--ink-muted); margin: 0 0 var(--sp-7); }
+.nl-explore-grid {
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: var(--sp-6); align-items: start;
+}
+.nl-explore-grid .nl-art { width: 100%; }
+.nl-explore-grid .nl-card-col { position: sticky; top: 90px; }
+.nl-explore-nav { display: flex; flex-direction: column; gap: 6px; }
+.nl-explore-navbtn {
+  display: flex; align-items: center; gap: 10px;
+  background: transparent; border: 1px solid transparent; border-radius: var(--r-md);
+  color: #cfc7b6; padding: 8px 12px; cursor: pointer; text-align: left;
+  font-size: 0.92rem; transition: background 0.25s ease, border-color 0.25s ease;
+}
+.nl-explore-navbtn span {
+  width: 22px; height: 22px; border-radius: 50%; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+  background: rgba(212,167,106,0.18); color: var(--gold-soft);
+}
+.nl-explore-navbtn:hover { background: rgba(212,167,106,0.10); }
+.nl-explore-navbtn.active {
+  background: rgba(212,167,106,0.14); border-color: rgba(212,167,106,0.4); color: var(--gold-soft);
+}
+
+/* ── Outro: lợi ích / lưu ý / mantra ── */
+.nl-outro { padding: var(--sp-9) var(--sp-5) var(--sp-10); max-width: 900px; margin: 0 auto; }
+.nl-outro-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); }
+.nl-outro-box {
+  background: rgba(18, 22, 40, 0.6); border: 1px solid rgba(212,167,106,0.22);
+  border-radius: var(--r-lg); padding: var(--sp-5) var(--sp-6);
+}
+.nl-outro-box h2 {
+  font-family: var(--font-display); color: var(--gold-soft); margin: 0 0 var(--sp-3); font-size: 1.35rem;
+}
+.nl-outro-box ul { margin: 0; padding-left: 18px; display: grid; gap: var(--sp-2); }
+.nl-outro-box li { color: #d9d1c0; line-height: 1.5; font-size: 0.95rem; }
+.nl-outro-box li::marker { color: var(--gold); }
+.nl-mantra {
+  font-family: var(--font-display); font-style: italic; text-align: center;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem); color: var(--gold-soft);
+  margin: var(--sp-8) auto 0; max-width: 640px; line-height: 1.5;
+}
+
+/* ── Static fallback (prefers-reduced-motion) ── */
+.nl-scene-static { max-width: 720px; margin: 0 auto; padding: var(--sp-7) var(--sp-5); }
+.nl-static-list { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); }
+.nl-static-list .nl-card { max-width: none; animation: none; }
+
+/* ── Tablet / Mobile ── */
+@media (max-width: 1180px) {
+  .nl-hero { padding-inline: 16px; overflow: hidden; }
+  .nl-hero-tagline {
+    width: 100%;
+    max-width: min(330px, calc(100vw - 32px));
+    letter-spacing: 0.08em;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .nl-hero-title {
+    max-width: min(280px, calc(100vw - 32px));
+    font-size: clamp(1.9rem, 9vw, 2.35rem);
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+  }
+  .nl-hero-subtitle {
+    max-width: min(330px, calc(100vw - 32px));
+    overflow-wrap: anywhere;
+  }
+  .nl-sources { width: 100%; }
+  .nl-sources-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .nl-sources-list li {
+    min-width: 0;
+    max-width: calc(100vw - 48px);
+    white-space: normal;
+    word-break: break-word;
+  }
+  .nl-stage {
+    grid-template-columns: 1fr;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Chỉ stage (scroll story) mới full-bleed — KHÔNG áp vào .nl-explore-grid
+     (rule cũ không scope từng làm artwork explore absolute đè lên nội dung) */
+  .nl-stage .nl-art-col { position: absolute; inset: 0; z-index: 0; padding-top: 0; }
+  /* Full-bleed: cover + zoom theo bước do use-step-camera đặt inline trên .nl-art-fit
+     (KHÔNG dùng object-fit:cover — từng làm node/tia lệch khỏi cơ thể) */
+  .nl-stage .nl-art {
+    height: 100%;
+    width: 100%;
+    max-width: none;
+    aspect-ratio: auto;
+    margin: 0;
+    overflow: hidden;
+  }
+  .nl-stage .nl-node.lit:not(.current):not(.tappable) { opacity: 0.65; --s: 0.5; }
+  .nl-stage .nl-node.current { z-index: 2; }
+  .nl-stage .nl-card-col {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+    /* chừa chỗ bottom-nav fixed (~64px) + safe area */
+    padding: var(--sp-8) var(--sp-4) calc(76px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(10,12,22,0) 0%, rgba(10,12,22,0.82) 38%, rgba(10,12,22,0.95) 100%);
+  }
+  /* Bước cuối: card đảo lên đỉnh để rễ sáng chiếm nửa dưới màn hình */
+  .nl-stage .nl-card-col--top {
+    bottom: auto; top: 0;
+    padding: calc(64px + env(safe-area-inset-top)) var(--sp-4) var(--sp-7);
+    background: linear-gradient(0deg, rgba(10,12,22,0) 0%, rgba(10,12,22,0.82) 38%, rgba(10,12,22,0.95) 100%);
+  }
+  .nl-stage .nl-card-col--top .nl-card-media { display: none; } /* rễ thật đang hiện phía dưới */
+  /* Card bottom-sheet: không cao quá nửa màn hình, tự cuộn khi bước dài (bước 10) */
+  .nl-card { max-width: none; }
+  .nl-stage .nl-card { max-height: 52vh; max-height: 52dvh; overflow-y: auto; }
+  .nl-card-body { padding: var(--sp-4) var(--sp-5); }
+  .nl-card-media { aspect-ratio: auto; height: 120px; }
+  .nl-card-title { font-size: 1.3rem; }
+  .nl-card-points li { font-size: 0.9rem; }
+  .nl-explore-grid { grid-template-columns: 1fr; }
+  .nl-explore-grid .nl-card-col { position: static; }
+  .nl-outro-cols { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nl-scroll-arrow, .nl-node.current { animation: none; }
+  .nl-card { animation: none; }
+  .nl-art-fit, .nl-node { transition: none; }
+}

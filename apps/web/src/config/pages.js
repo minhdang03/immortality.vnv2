@@ -68,6 +68,18 @@ const PAGES = [
     homeCard: { icon: 'sun', descVi: '10 chiêu thức luyện năng lượng mặt trời', descEn: '10 movements of solar energy cultivation' },
   },
   {
+    id: 'nang-luong',
+    path: 'nang-luong',
+    aliases: ['hap-thu-nang-luong'],
+    labelVi: 'Năng Lượng', labelEn: 'Energy',
+    titleVi: 'Hấp Thu Năng Lượng — Nuôi Dưỡng Toàn Thân', titleEn: 'Absorbing Energy — Nourishing the Whole Body',
+    descVi: 'Đồ hình tương tác: hấp thu năng lượng trực tiếp vào trung tâm não và các tuyến — không dùng luân xa — cho chạy xuống lòng đất, ra ngoài cơ thể.',
+    descEn: 'Interactive diagram: absorbing energy directly into the brain center and glands — no chakras — flowing into the earth and released outside the body.',
+    icon: '✨',
+    navDefault: { visible: true, showInBottom: false },
+    homeCard: { icon: 'sun', descVi: 'Đồ hình tương tác: dòng chảy năng lượng nuôi dưỡng toàn thân', descEn: 'Interactive map of the energy flow nourishing the whole body' },
+  },
+  {
     id: 'contact',
     path: 'contact',
     labelVi: 'Liên Hệ', labelEn: 'Contact',
