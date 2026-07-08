@@ -10,13 +10,13 @@ function isImmortality() {
 
 const OG_DEFAULTS = {
   battudao: {
-    title: 'Bất Tử Đạo - Immortality | Trí Tuệ Người Việt Nam',
+    title: 'Bất Tử Đạo, Lạc Việt Quốc, Trí Tuệ Người Việt Nam, Khoa Học Y Vũ Trụ',
     description: 'Nếu có thể tự lựa chọn cho mình một cuộc sống bất tử, sung sướng hay là chết, thì bạn có lựa chọn nào cho chính mình hay không?',
     siteName: 'BẤT TỬ ĐẠO',
     locale: 'vi_VN',
   },
   immortality: {
-    title: 'Immortality - The Path of Eternal Wisdom',
+    title: 'Immortality — Lạc Việt Nation, Vietnamese Wisdom, Cosmic Medical Science',
     description: 'Discover the light within you — a healing journey from ancient Vietnamese wisdom. Solar energy, meditation, and cosmic intelligence.',
     siteName: 'IMMORTALITY',
     locale: 'en_US',
