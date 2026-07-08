@@ -10,7 +10,7 @@ import {
 const DEFAULT_LIMIT = 500
 
 export default function useCRUD(collectionName, orderField = 'order') {
-  const { data: items, loading } = useFirestoreSWR(
+  const { data: items, loading, fresh } = useFirestoreSWR(
     `cached_${collectionName}`,
     (onData, onError) => {
       const q = query(collection(db, collectionName), orderBy(orderField, 'asc'), fsLimit(DEFAULT_LIMIT))
@@ -25,5 +25,5 @@ export default function useCRUD(collectionName, orderField = 'order') {
   const update = async (id, data) => { await updateDoc(doc(db, collectionName, id), data) }
   const remove = async (id) => { await deleteDoc(doc(db, collectionName, id)) }
 
-  return { items, loading, add, update, remove }
+  return { items, loading, fresh, add, update, remove }
 }

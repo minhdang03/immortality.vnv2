@@ -5,7 +5,7 @@ import StoryDetail from '../../components/stories/StoryDetail'
 import StoryList from '../../components/stories/StoryList'
 import { DetailSkeleton } from '../../components/shared/Skeleton'
 
-export default function StoriesPage({ t, lang, firestoreStories, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateStory }) {
+export default function StoriesPage({ t, lang, firestoreStories, fresh, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateStory }) {
   const [selected, setSelected] = useState(null)
   const [filter, setFilter] = useState('all')
 
@@ -72,9 +72,10 @@ export default function StoriesPage({ t, lang, firestoreStories, navigate, fontS
     )
   }
 
-  // Deep-link refresh: URL says /story/<slug> but stories haven't loaded yet.
+  // Deep-link refresh: hold skeleton until Firestore confirms a fresh snapshot,
+  // otherwise a stale SWR cache (length > 0, missing the new slug) flashes the list.
   const isDeepLink = typeof window !== 'undefined' && window.location.pathname.startsWith('/story/')
-  if (isDeepLink && allStories.length === 0) return <DetailSkeleton />
+  if (isDeepLink && !fresh) return <DetailSkeleton />
 
 
   const filtered = filter === 'all' ? allStories : allStories.filter(s => s.tag === filter)

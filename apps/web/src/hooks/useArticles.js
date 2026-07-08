@@ -8,7 +8,7 @@ import {
 } from 'firebase/firestore'
 
 export function useArticles() {
-  const { data: firestoreArticles, loading } = useFirestoreSWR(
+  const { data: firestoreArticles, loading, fresh } = useFirestoreSWR(
     'cached_articles',
     (onData, onError) => {
       // Cap initial load at 200 articles. Older content stays in Firestore but isn't
@@ -37,5 +37,5 @@ export function useArticles() {
   }
   const deleteArticle = async (id) => { await deleteDoc(doc(db, 'articles', id)) }
 
-  return { firestoreArticles, loading, addArticle, updateArticle, deleteArticle }
+  return { firestoreArticles, loading, fresh, addArticle, updateArticle, deleteArticle }
 }

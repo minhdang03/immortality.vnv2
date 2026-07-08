@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore'
 
 export function useStories() {
-  const { data: stories, loading } = useFirestoreSWR(
+  const { data: stories, loading, fresh } = useFirestoreSWR(
     'cached_stories',
     (onData, onError) => {
       const q = query(collection(db, 'stories'), orderBy('order', 'asc'))
@@ -21,5 +21,5 @@ export function useStories() {
   const updateStory = async (id, data) => { await updateDoc(doc(db, 'stories', id), data) }
   const deleteStory = async (id) => { await deleteDoc(doc(db, 'stories', id)) }
 
-  return { stories, loading, addStory, updateStory, deleteStory }
+  return { stories, loading, fresh, addStory, updateStory, deleteStory }
 }

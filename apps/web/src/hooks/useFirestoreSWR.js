@@ -84,6 +84,11 @@ export function useFirestoreSWR(cacheKey, subscribe, fallback) {
   const [cached] = useState(() => readCache(cacheKey))
   const [data, setData] = useState(cached?.data ?? fallback)
   const [loading, setLoading] = useState(!cached)
+  // `fresh` = true after the first live Firestore snapshot arrives.
+  // Distinguishes "we have cached data but haven't revalidated yet" from
+  // "we have the current truth". Deep-link skeletons rely on this to avoid
+  // rendering a stale list when the requested detail isn't in cache yet.
+  const [fresh, setFresh] = useState(false)
 
   useEffect(() => {
     try {
@@ -91,15 +96,16 @@ export function useFirestoreSWR(cacheKey, subscribe, fallback) {
         (newData) => {
           setData(newData)
           setLoading(false)
+          setFresh(true)
           writeCache(cacheKey, newData)
         },
-        () => setLoading(false)
+        () => { setLoading(false); setFresh(true) }
       )
       return unsub
-    } catch { setLoading(false) }
+    } catch { setLoading(false); setFresh(true) }
   }, [cacheKey])
 
-  return { data, loading }
+  return { data, loading, fresh }
 }
 
 /**
