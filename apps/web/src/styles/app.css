@@ -32,6 +32,7 @@
 @import './pages/inline-edit.css' layer(pages);
 @import './pages/cong-dong.css' layer(pages);
 @import './pages/nang-luong.css' layer(pages);
+@import './pages/nang-luong-bigbang.css' layer(pages);
 
 /* Utilities (highest specificity) */
 @import './responsive.css' layer(utilities);

@@ -1,0 +1,157 @@
+/* ─── /nang-luong — Big Bang intro "Khai Thiên" ───
+   Trục sáng dọc giữa nối tiếp ENERGY_PATH của scroll story phía dưới.
+   Mọi layer motion khởi tạo ẩn (opacity 0) — GSAP đưa về trạng thái cuối.
+   --figw: bề rộng hình cơ thể (crop đầu–ngực = 62% bề rộng theo tỉ lệ 1024×1536).
+   --bang-y: tâm vụ nổ. Crown (não giữa) nằm tại 17.25% chiều cao ảnh = 0.1725 × 1.5 × figw. */
+
+.nl-bb {
+  --figw: min(70vw, 52dvh, 420px);
+  --bang-y: 37%;
+  position: relative;
+  /* trừ header sticky (~58px) để đáy scene = đáy viewport — hint/hình không tụt khỏi màn */
+  min-height: calc(100vh - 58px); min-height: calc(100dvh - 58px);
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(130% 80% at 50% 30%, #10142a 0%, #090b18 55%, #05060d 100%);
+}
+
+.nl-bb-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+
+/* ── Điểm kỳ dị — hạt sáng đầu tiên của vũ trụ ── */
+.nl-bb-dot {
+  position: absolute; left: 50%; top: var(--bang-y); z-index: 3;
+  width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+  background: radial-gradient(circle, #fffdf4 0%, #ffd878 55%, rgba(255,157,60,0) 78%);
+  box-shadow: 0 0 18px 6px rgba(255,214,120,0.85), 0 0 60px 24px rgba(255,170,70,0.35);
+  opacity: 0; transform: scale(0.4);
+  pointer-events: none;
+}
+
+/* ── Chớp sáng vụ nổ ── */
+.nl-bb-flash {
+  position: absolute; inset: 0; z-index: 3; opacity: 0; pointer-events: none;
+  background: radial-gradient(circle at 50% var(--bang-y),
+    rgba(255,252,240,0.98) 0%, rgba(255,214,130,0.85) 26%,
+    rgba(255,150,60,0.32) 52%, transparent 74%);
+}
+
+/* ── Vòng xung kích ×3 ── */
+.nl-bb-ring {
+  position: absolute; left: 50%; top: var(--bang-y); z-index: 2;
+  width: 12vmin; height: 12vmin; margin: -6vmin 0 0 -6vmin;
+  border-radius: 50%; opacity: 0; pointer-events: none;
+  border: 1.5px solid rgba(255,224,150,0.9);
+  box-shadow: 0 0 24px rgba(255,190,90,0.5), inset 0 0 24px rgba(255,190,90,0.35);
+}
+
+/* ── Rẻ quạt tia sáng quay chậm quanh tâm nổ ── */
+.nl-bb-rays {
+  position: absolute; left: 50%; top: var(--bang-y); z-index: 0;
+  width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax;
+  opacity: 0; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg,
+    transparent 0deg 9deg, rgba(255,224,150,0.055) 12deg 15deg, transparent 18deg 26deg);
+  -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 30%, transparent 60%);
+          mask-image: radial-gradient(circle, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 30%, transparent 60%);
+  animation: nl-bb-spin 90s linear infinite;
+}
+@keyframes nl-bb-spin { to { transform: rotate(360deg); } }
+
+/* ── Nón sáng đổ từ tâm nổ xuống đỉnh đầu ── */
+.nl-bb-beam {
+  position: absolute; left: 50%; top: var(--bang-y); z-index: 2;
+  mix-blend-mode: screen; /* đè lên hình vẫn đọc là ánh sáng */
+  /* đáy nón chạm não giữa: cao hình 0.93figw − crown 0.1725figw = 0.7575figw từ đáy scene */
+  height: calc(100% - var(--bang-y) - var(--figw) * 0.7575 + 4%);
+  width: clamp(56px, 10vmin, 110px);
+  margin-left: calc(clamp(56px, 10vmin, 110px) / -2);
+  transform: scaleY(0); transform-origin: top center;
+  opacity: 0; pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(255,246,216,0.05), rgba(255,246,216,0.14) 30%,
+    rgba(255,214,120,0.26) 70%, rgba(255,196,90,0.42) 100%);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.nl-bb-beam::after { /* lõi tia sáng */
+  content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(255,252,240,0.9), rgba(255,214,120,0.95));
+  box-shadow: 0 0 14px 3px rgba(255,224,150,0.8);
+  animation: nl-bb-shimmer 2.8s ease-in-out infinite;
+}
+@keyframes nl-bb-shimmer {
+  0%, 100% { opacity: 0.75; } 50% { opacity: 1; }
+}
+
+/* ── Hình cơ thể năng lượng — crop đầu–ngực, tan dần vào đáy ── */
+.nl-bb-figure {
+  position: absolute; left: 50%; bottom: 0; z-index: 1;
+  width: var(--figw);
+  height: calc(var(--figw) * 0.93); /* 62% ảnh: đầu + ngực (ảnh cao 1.5 × figw) */
+  margin: 0; transform: translateX(-50%);
+  overflow: hidden; opacity: 0; pointer-events: none;
+  /* Mask oval — tan mọi rìa tranh (nền mây sáng) vào vũ trụ tối, giữ sáng vùng đầu */
+  -webkit-mask-image: radial-gradient(ellipse 62% 56% at 50% 32%,
+    #000 40%, rgba(0,0,0,0.5) 66%, transparent 92%);
+          mask-image: radial-gradient(ellipse 62% 56% at 50% 32%,
+    #000 40%, rgba(0,0,0,0.5) 66%, transparent 92%);
+}
+.nl-bb-figure img { width: 100%; height: auto; display: block; }
+
+/* Glow não giữa — core sáng + halo thở nhịp */
+.nl-bb-glow {
+  position: absolute; left: 50%; top: calc(var(--figw) * 0.1725);
+  width: 0; height: 0; opacity: 0;
+}
+.nl-bb-glow-core, .nl-bb-glow-halo {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%); border-radius: 50%;
+}
+.nl-bb-glow-core {
+  width: calc(var(--figw) * 0.17); aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(255,252,238,0.95) 0%, rgba(255,206,110,0.6) 45%, transparent 72%);
+}
+.nl-bb-glow-halo {
+  width: calc(var(--figw) * 0.34); aspect-ratio: 1;
+  border: 1px solid rgba(255,224,150,0.4);
+  box-shadow: 0 0 30px rgba(255,200,100,0.45), inset 0 0 22px rgba(255,200,100,0.3);
+  animation: nl-bb-breathe 2.6s ease-in-out infinite;
+}
+@keyframes nl-bb-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.82); opacity: 0.9; }
+  50% { transform: translate(-50%, -50%) scale(1.12); opacity: 0.45; }
+}
+
+/* ── Chữ — tái dùng style .nl-hero-* (tagline/title/subtitle) ── */
+.nl-bb-copy {
+  position: absolute; left: 50%; top: clamp(64px, 10dvh, 120px); z-index: 4;
+  transform: translateX(-50%);
+  width: min(760px, calc(100vw - 40px));
+  display: grid; gap: var(--sp-3); justify-items: center; text-align: center;
+}
+.nl-bb-copy > * { opacity: 0; }
+
+.nl-bb-hint {
+  position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 4;
+  transform: translateX(-50%); margin: 0;
+  color: #cfc7b6; font-size: 0.9rem; white-space: nowrap;
+  text-shadow: 0 1px 10px rgba(5,6,13,0.95), 0 0 4px rgba(5,6,13,0.9);
+  opacity: 0;
+}
+
+/* ── Strip "Nguồn năng lượng" ngay dưới scene ── */
+.nl-bb-sources {
+  padding: var(--sp-8) var(--sp-5) var(--sp-6);
+  max-width: 900px; margin: 0 auto; text-align: center;
+}
+
+/* ── Mobile ── */
+@media (max-width: 1180px) {
+  .nl-bb { --figw: min(76vw, 46dvh); }
+  /* né bottom-nav fixed (~64px) */
+  .nl-bb-hint { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nl-bb-rays, .nl-bb-beam::after, .nl-bb-glow-halo { animation: none; }
+}
