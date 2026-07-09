@@ -50,37 +50,51 @@
   width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax;
   opacity: 0; pointer-events: none;
   background: repeating-conic-gradient(from 0deg,
-    transparent 0deg 9deg, rgba(255,224,150,0.055) 12deg 15deg, transparent 18deg 26deg);
+    transparent 0deg 7deg, rgba(255,224,150,0.05) 13deg 14deg, transparent 20deg 27deg);
   -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 30%, transparent 60%);
           mask-image: radial-gradient(circle, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 30%, transparent 60%);
   animation: nl-bb-spin 90s linear infinite;
 }
 @keyframes nl-bb-spin { to { transform: rotate(360deg); } }
 
-/* ── Nón sáng đổ từ tâm nổ xuống đỉnh đầu ── */
+/* ── Nón sáng đổ từ tâm nổ xuống đỉnh đầu ──
+   Conic gradient toả từ đỉnh + blur + mask dọc = ánh sáng khối mềm,
+   KHÔNG dùng clip-path tam giác (mép vector cứng nhìn giả). */
 .nl-bb-beam {
   position: absolute; left: 50%; top: var(--bang-y); z-index: 2;
   mix-blend-mode: screen; /* đè lên hình vẫn đọc là ánh sáng */
   /* đáy nón chạm não giữa: cao hình 0.93figw − crown 0.1725figw = 0.7575figw từ đáy scene */
   height: calc(100% - var(--bang-y) - var(--figw) * 0.7575 + 4%);
-  width: clamp(56px, 10vmin, 110px);
-  margin-left: calc(clamp(56px, 10vmin, 110px) / -2);
+  width: clamp(220px, 34vmin, 400px);
+  margin-left: calc(clamp(220px, 34vmin, 400px) / -2);
   transform: scaleY(0); transform-origin: top center;
   opacity: 0; pointer-events: none;
-  background: linear-gradient(180deg,
-    rgba(255,246,216,0.05), rgba(255,246,216,0.14) 30%,
-    rgba(255,214,120,0.26) 70%, rgba(255,196,90,0.42) 100%);
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  background: conic-gradient(from 171.5deg at 50% 0%,
+    transparent 0deg, rgba(255,236,190,0.04) 3deg, rgba(255,240,205,0.20) 8.5deg,
+    rgba(255,236,190,0.04) 14deg, transparent 17deg);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.3), #000 55%);
+          mask-image: linear-gradient(180deg, rgba(0,0,0,0.3), #000 55%);
+  filter: blur(6px);
 }
+.nl-bb-beam::before { /* xung ánh sáng chảy dọc xuống — nối trời với não */
+  content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 34px;
+  transform: translateX(-50%);
+  background: repeating-linear-gradient(180deg,
+    transparent 0, transparent 42px, rgba(255,246,216,0.5) 58px, transparent 74px);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 35% 65%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 35% 65%, transparent);
+  animation: nl-bb-flow 2.8s linear infinite;
+}
+@keyframes nl-bb-flow { to { background-position: 0 74px; } }
 .nl-bb-beam::after { /* lõi tia sáng */
-  content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px;
+  content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 3px;
   transform: translateX(-50%);
   background: linear-gradient(180deg, rgba(255,252,240,0.9), rgba(255,214,120,0.95));
-  box-shadow: 0 0 14px 3px rgba(255,224,150,0.8);
+  box-shadow: 0 0 18px 5px rgba(255,224,150,0.7);
   animation: nl-bb-shimmer 2.8s ease-in-out infinite;
 }
 @keyframes nl-bb-shimmer {
-  0%, 100% { opacity: 0.75; } 50% { opacity: 1; }
+  0%, 100% { opacity: 0.7; } 50% { opacity: 1; }
 }
 
 /* ── Hình cơ thể năng lượng — crop đầu–ngực, tan dần vào đáy ── */
@@ -90,11 +104,13 @@
   height: calc(var(--figw) * 0.93); /* 62% ảnh: đầu + ngực (ảnh cao 1.5 × figw) */
   margin: 0; transform: translateX(-50%);
   overflow: hidden; opacity: 0; pointer-events: none;
-  /* Mask oval — tan mọi rìa tranh (nền mây sáng) vào vũ trụ tối, giữ sáng vùng đầu */
-  -webkit-mask-image: radial-gradient(ellipse 62% 56% at 50% 32%,
-    #000 40%, rgba(0,0,0,0.5) 66%, transparent 92%);
-          mask-image: radial-gradient(ellipse 62% 56% at 50% 32%,
-    #000 40%, rgba(0,0,0,0.5) 66%, transparent 92%);
+  /* screen blend: nền tối của tranh ≈ đen → tan vào scene, chỉ còn phần ánh sáng.
+     Mask rộng chỉ để xoá nốt rìa — hết hẳn "khung tranh treo giữa không gian". */
+  mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(ellipse 74% 68% at 50% 34%,
+    #000 52%, rgba(0,0,0,0.55) 78%, transparent 98%);
+          mask-image: radial-gradient(ellipse 74% 68% at 50% 34%,
+    #000 52%, rgba(0,0,0,0.55) 78%, transparent 98%);
 }
 .nl-bb-figure img { width: 100%; height: auto; display: block; }
 
@@ -107,15 +123,21 @@
   position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -50%); border-radius: 50%;
 }
+/* Nhịp 2.8s dùng chung cho lõi tia + xung chảy + core + halo → cả cảnh thở như một */
 .nl-bb-glow-core {
   width: calc(var(--figw) * 0.17); aspect-ratio: 1;
   background: radial-gradient(circle, rgba(255,252,238,0.95) 0%, rgba(255,206,110,0.6) 45%, transparent 72%);
+  animation: nl-bb-corepulse 2.8s ease-in-out infinite;
+}
+@keyframes nl-bb-corepulse {
+  0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(0.94); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
 }
 .nl-bb-glow-halo {
   width: calc(var(--figw) * 0.34); aspect-ratio: 1;
   border: 1px solid rgba(255,224,150,0.4);
   box-shadow: 0 0 30px rgba(255,200,100,0.45), inset 0 0 22px rgba(255,200,100,0.3);
-  animation: nl-bb-breathe 2.6s ease-in-out infinite;
+  animation: nl-bb-breathe 2.8s ease-in-out infinite;
 }
 @keyframes nl-bb-breathe {
   0%, 100% { transform: translate(-50%, -50%) scale(0.82); opacity: 0.9; }
@@ -153,5 +175,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nl-bb-rays, .nl-bb-beam::after, .nl-bb-glow-halo { animation: none; }
+  .nl-bb-rays, .nl-bb-beam::before, .nl-bb-beam::after,
+  .nl-bb-glow-core, .nl-bb-glow-halo { animation: none; }
 }
