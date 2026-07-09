@@ -3,32 +3,78 @@ main = "api/src/index.ts"
 compatibility_date = "2026-05-01"
 compatibility_flags = ["nodejs_compat"]
 
+# ── Cron triggers ─────────────────────────────────────────────────────────────
+# 18:00 UTC = 01:00 ICT (+7) — after Workers AI free-tier neuron reset (00:00 UTC)
+# so the embed-backfill drain has the full daily budget.
+[triggers]
+crons = ["0 18 * * *"]
+
 # ── KV Namespaces ─────────────────────────────────────────────────────────────
-# Create via: wrangler kv:namespace create KV_JWKS
-# Then paste the id below.
+# Create via: wrangler kv namespace create KV_JWKS
 [[kv_namespaces]]
 binding = "KV_JWKS"
 id = "REPLACE_WITH_KV_JWKS_ID"
 
-# Create via: wrangler kv:namespace create KV_CACHE
+# Create via: wrangler kv namespace create KV_CACHE
 [[kv_namespaces]]
 binding = "KV_CACHE"
 id = "REPLACE_WITH_KV_CACHE_ID"
+
+# ── D1 (content replica + FTS5 search + api_keys + audit) ───────────────────
+# Create via: wrangler d1 create btd-content
+# Migrate:    pnpm -F @btd/api run d1:migrate:local  (or :remote)
+[[d1_databases]]
+binding = "DB"
+database_name = "btd-content"
+database_id = "REPLACE_WITH_D1_ID"
+migrations_dir = "api/migrations"
+
+# ── Vectorize (semantic search / chatbot-ready embeddings) ──────────────────
+# Create via: wrangler vectorize create battudao-content --dimensions=1024 --metric=cosine
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "battudao-content"
+
+# ── R2 (media uploads — shared bucket, project key prefix "btd/") ───────────
+# Bucket already exists (used by Vercel /api upload endpoints).
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "REPLACE_WITH_R2_BUCKET_NAME"
+
+# ── Workers AI (bge-m3 embeddings) ───────────────────────────────────────────
+[ai]
+binding = "AI"
 
 # ── Static vars (non-secret) ──────────────────────────────────────────────────
 [vars]
 ENV = "development"
 # CORS origins for local dev (Expo + web)
 CORS_ORIGINS = "http://localhost:8081,http://localhost:5173,http://localhost:3000"
+# Supabase project URL — public, not sensitive (phase-05: agent write plane)
+SUPABASE_URL = "https://dzctvmrlsxwkcuidsqzk.supabase.co"
 
 # ── Secrets (set via CLI, never in toml) ─────────────────────────────────────
 # wrangler secret put FIREBASE_PROJECT_ID
 # wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON   (full JSON string)
+# wrangler secret put ANTHROPIC_API_KEY               (enrich: taxonomy + SEO meta)
+# wrangler secret put R2_PUBLIC_BASE_URL              (e.g. https://media.battudao.com)
+#
+# --- Agent write plane (phase-05) ---
+# wrangler secret put SUPABASE_SERVICE_ROLE
+#   Value: the service_role JWT from Supabase dashboard → Settings → API → service_role key
+#   SECURITY: service_role bypasses ALL RLS. Never put it in [vars], client code, or goclaw.
+#   Provision once per environment (dev/staging/production):
+#     wrangler secret put SUPABASE_SERVICE_ROLE                    # default (dev)
+#     wrangler secret put SUPABASE_SERVICE_ROLE --env staging
+#     wrangler secret put SUPABASE_SERVICE_ROLE --env production
 
 # ── Staging environment ───────────────────────────────────────────────────────
 [env.staging]
 name = "btd-api-staging"
-vars = { ENV = "staging", CORS_ORIGINS = "https://staging.battudao.com,http://localhost:8081,http://localhost:5173" }
+vars = { ENV = "staging", CORS_ORIGINS = "https://staging.battudao.com,http://localhost:8081,http://localhost:5173", SUPABASE_URL = "https://dzctvmrlsxwkcuidsqzk.supabase.co" }
+
+[env.staging.triggers]
+crons = ["0 18 * * *"]
 
 [[env.staging.kv_namespaces]]
 binding = "KV_JWKS"
@@ -38,10 +84,30 @@ id = "REPLACE_WITH_KV_JWKS_STAGING_ID"
 binding = "KV_CACHE"
 id = "REPLACE_WITH_KV_CACHE_STAGING_ID"
 
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "btd-content-staging"
+database_id = "REPLACE_WITH_D1_STAGING_ID"
+migrations_dir = "api/migrations"
+
+[[env.staging.vectorize]]
+binding = "VECTORIZE"
+index_name = "battudao-content-staging"
+
+[[env.staging.r2_buckets]]
+binding = "R2"
+bucket_name = "REPLACE_WITH_R2_BUCKET_NAME"
+
+[env.staging.ai]
+binding = "AI"
+
 # ── Production environment ────────────────────────────────────────────────────
 [env.production]
 name = "btd-api-production"
-vars = { ENV = "production", CORS_ORIGINS = "https://battudao.com,https://immortality.vn" }
+vars = { ENV = "production", CORS_ORIGINS = "https://battudao.com,https://immortality.vn", SUPABASE_URL = "https://dzctvmrlsxwkcuidsqzk.supabase.co" }
+
+[env.production.triggers]
+crons = ["0 18 * * *"]
 
 [[env.production.kv_namespaces]]
 binding = "KV_JWKS"
@@ -50,3 +116,28 @@ id = "REPLACE_WITH_KV_JWKS_PRODUCTION_ID"
 [[env.production.kv_namespaces]]
 binding = "KV_CACHE"
 id = "REPLACE_WITH_KV_CACHE_PRODUCTION_ID"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "btd-content"
+database_id = "REPLACE_WITH_D1_PRODUCTION_ID"
+migrations_dir = "api/migrations"
+
+[[env.production.vectorize]]
+binding = "VECTORIZE"
+index_name = "battudao-content"
+
+[[env.production.r2_buckets]]
+binding = "R2"
+bucket_name = "REPLACE_WITH_R2_BUCKET_NAME"
+
+[env.production.ai]
+binding = "AI"
+
+# Route: api.battudao.com handles all paths (/* wildcard).
+# Zone ID required — set after domain is added to Cloudflare.
+# wrangler deploy --env production will bind the worker to this route.
+# Uncomment and fill zone_id when DNS is live:
+# [[env.production.routes]]
+# pattern = "api.battudao.com/*"
+# zone_name = "battudao.com"

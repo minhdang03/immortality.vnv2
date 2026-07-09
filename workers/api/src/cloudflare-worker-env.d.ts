@@ -11,6 +11,12 @@ export interface Env {
   FIREBASE_PROJECT_ID: string;
   FIREBASE_SERVICE_ACCOUNT_JSON: string; // Full service account JSON as string
 
+  // Supabase — agent write plane (phase-05)
+  // SUPABASE_URL is a [vars] entry (public URL, not sensitive)
+  // SUPABASE_SERVICE_ROLE is a wrangler secret — NEVER in toml/repo/goclaw
+  SUPABASE_URL: string;
+  SUPABASE_SERVICE_ROLE: string;
+
   // Static vars from wrangler.toml [vars]
   ENV: "development" | "staging" | "production";
   CORS_ORIGINS: string; // Comma-separated allowed origins

@@ -1,12 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
-
-const url = import.meta.env.VITE_SUPABASE_URL
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-if (!url || !key) {
-  // Non-fatal: Supabase client will be null; hooks fall back to Firestore path
-  // when VITE_DATA_BACKEND != 'supabase'
-  console.warn('[supabase] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set')
-}
-
-export const supabase = (url && key) ? createClient(url, key) : null
+// Single Supabase client instance for the whole web app.
+// Canonical config lives in ./lib/supabase-client.js (persistSession etc.).
+// Re-export here so both historical import paths ('../supabase' and
+// '../lib/supabase-client') resolve to ONE GoTrue instance — avoids the
+// "Multiple GoTrueClient instances" runtime warning + auth-state races.
+export { supabase } from './lib/supabase-client'

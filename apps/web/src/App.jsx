@@ -3,6 +3,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { useTheme } from './hooks/useTheme'
 import { useUserRole } from './hooks/useUserRole'
+import { useAuth as useSupabaseAuth } from './hooks/useAuth'
 import { useArticles } from './hooks/useArticles'
 import { useTranslations } from './hooks/useTranslations'
 import { useTopics } from './hooks/useTopics'
@@ -78,6 +79,12 @@ export default function App() {
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [selectedArticle, setSelectedArticle] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
+
+  // Supabase auth state (only active when flag is 'supabase').
+  // Hook always called (rules of hooks) — result used conditionally below.
+  const supabaseAuth = useSupabaseAuth()
+
   const [user, setUser] = useState(null)
   const { firestoreArticles, loading: articlesLoading, fresh: articlesFresh, addArticle, updateArticle, deleteArticle } = useArticles()
   const { getT, firestoreVi, firestoreEn, updateTranslations } = useTranslations()
@@ -88,7 +95,10 @@ export default function App() {
   const { practices, addPractice, updatePractice, deletePractice } = usePractices()
   const { settings: siteSettings, loading: settingsLoading, updateSettings } = useSiteSettings()
   const { dark, toggle: toggleTheme } = useTheme(siteSettings?.defaultTheme)
-  const { role: userRole } = useUserRole(user)
+  // On the Supabase path, user + role come from useSupabaseAuth; pass supabase user
+  // to useUserRole so it can also resolve role (useUserRole handles both shapes).
+  const activeUser = USE_SUPABASE ? supabaseAuth.user : user
+  const { role: userRole } = useUserRole(activeUser)
   const homeLoading = articlesLoading || topicsLoading || storiesLoading || settingsLoading
   const { fontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useFontSize(siteSettings?.defaultFontSize)
   const t = getT(lang)
@@ -98,11 +108,13 @@ export default function App() {
   usePageView(page, selectedArticle, lang)
   useSEO(page, selectedArticle, selectedTopic, lang, TOPICS)
 
-  // Firebase auth
+  // Firebase auth — only active when NOT on Supabase path.
+  // On Supabase path, user state comes from supabaseAuth above.
   useEffect(() => {
+    if (USE_SUPABASE) return
     try { return onAuthStateChanged(auth, setUser) }
     catch { /* not configured */ }
-  }, [])
+  }, [USE_SUPABASE])
 
   // History API routing
   const applyPath = () => {
@@ -227,7 +239,7 @@ export default function App() {
               t={t} lang={lang} article={selectedArticle} navigate={navigate}
               articles={allArticles} topics={TOPICS}
               fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
-              user={user} onUpdateArticle={updateArticle}
+              user={activeUser} onUpdateArticle={updateArticle}
             />
           )}
           {page === 'article' && !selectedArticle && <DetailSkeleton />}
@@ -243,16 +255,16 @@ export default function App() {
           {page === 'stories' && (
             <StoriesPage t={t} lang={lang} firestoreStories={firestoreStories} fresh={storiesFresh} navigate={navigate}
               fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
-              user={user} onUpdateStory={updateStory}
+              user={activeUser} onUpdateStory={updateStory}
             />
           )}
           {page === 'practice' && (
             <PracticePage t={t} lang={lang} practices={practices} />
           )}
           {page === 'khaitri' && (
-            <KhaiTriPage t={t} lang={lang} items={user ? khaitri : khaitri.filter(k => k.status !== 'draft')} fresh={khaitriFresh} navigate={navigate}
+            <KhaiTriPage t={t} lang={lang} items={activeUser ? khaitri : khaitri.filter(k => k.status !== 'draft')} fresh={khaitriFresh} navigate={navigate}
               fontSize={fontSize} onFontIncrease={fontIncrease} onFontDecrease={fontDecrease} onFontReset={fontReset}
-              user={user} onUpdateKhaiTri={updateKhaiTri}
+              user={activeUser} onUpdateKhaiTri={updateKhaiTri}
             />
           )}
           {page === 'contact' && (
@@ -274,7 +286,9 @@ export default function App() {
           )}
           {page === 'admin' && (
             <AdminPanel
-              t={t} lang={lang} user={user} userRole={userRole}
+              t={t} lang={lang} user={activeUser} userRole={userRole}
+              supabaseSignIn={USE_SUPABASE ? supabaseAuth.signIn : null}
+              supabaseSignOut={USE_SUPABASE ? supabaseAuth.signOut : null}
               articles={allArticles} topics={TOPICS} stories={firestoreStories}
               khaitri={khaitri} teachings={teachings} practices={practices}
               firestoreVi={firestoreVi} firestoreEn={firestoreEn}
@@ -295,7 +309,7 @@ export default function App() {
         <Footer t={t} lang={lang} articles={allArticles} navigate={navigate} siteSettings={siteSettings} />
 
         <BottomNav t={t} lang={lang} page={page} navigate={navigate} navItems={navItems} />
-        <Chatbot lang={lang} userId={user?.uid} />
+        <Chatbot lang={lang} userId={activeUser?.uid ?? activeUser?.id} />
         <PwaInstallBanner lang={lang} />
       </div>
     </>

@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { auth } from '../firebase'
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { clearAllCaches } from '../hooks/useFirestoreSWR'
 import { ADMIN_TABS } from '../config/pages'
 import ArticlesTab from './admin/ArticlesTab'
@@ -37,6 +35,8 @@ export default function AdminPanel({
   onAddPractice, onUpdatePractice, onDeletePractice,
   onUpdateTranslations,
   siteSettings, onUpdateSettings,
+  // Supabase auth helpers — non-null when VITE_DATA_BACKEND === 'supabase'
+  supabaseSignIn, supabaseSignOut,
 }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -50,7 +50,16 @@ export default function AdminPanel({
     e.preventDefault()
     setError('')
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      if (supabaseSignIn) {
+        // Supabase path: flag === 'supabase'
+        const { error } = await supabaseSignIn(email, password)
+        if (error) setError(t.loginError)
+      } else {
+        // Firebase path: flag === 'firestore' (original behaviour, unchanged)
+        const { auth } = await import('../firebase')
+        const { signInWithEmailAndPassword } = await import('firebase/auth')
+        await signInWithEmailAndPassword(auth, email, password)
+      }
     } catch {
       setError(t.loginError)
     }
@@ -108,7 +117,16 @@ export default function AdminPanel({
         <aside className={`admin-sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
           <div className="admin-sidebar-user">
             <span className="admin-sidebar-email">{user.email}</span>
-            <button className="admin-sidebar-signout" onClick={() => { clearAllCaches(); signOut(auth) }}>
+            <button className="admin-sidebar-signout" onClick={async () => {
+              clearAllCaches()
+              if (supabaseSignOut) {
+                await supabaseSignOut()  // clearAllCaches also called via onAuthStateChange
+              } else {
+                const { auth } = await import('../firebase')
+                const { signOut } = await import('firebase/auth')
+                await signOut(auth)
+              }
+            }}>
               {t.adminSignOut}
             </button>
           </div>
