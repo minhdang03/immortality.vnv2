@@ -47,8 +47,10 @@
 /* ── Rẻ quạt tia sáng quay chậm quanh tâm nổ ── */
 .nl-bb-rays {
   position: absolute; left: 50%; top: var(--bang-y); z-index: 0;
-  width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax;
+  /* 120vmax đủ phủ màn; layer quá lớn làm raster chậm trên máy yếu */
+  width: 120vmax; height: 120vmax; margin: -60vmax 0 0 -60vmax;
   opacity: 0; pointer-events: none;
+  will-change: transform;
   background: repeating-conic-gradient(from 0deg,
     transparent 0deg 9deg, rgba(255,224,150,0.055) 12deg 15deg, transparent 18deg 26deg);
   -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 30%, transparent 60%);
@@ -90,13 +92,20 @@
   height: calc(var(--figw) * 0.93); /* 62% ảnh: đầu + ngực (ảnh cao 1.5 × figw) */
   margin: 0; transform: translateX(-50%);
   overflow: hidden; opacity: 0; pointer-events: none;
-  /* Mask oval — tan mọi rìa tranh (nền mây sáng) vào vũ trụ tối, giữ sáng vùng đầu */
-  -webkit-mask-image: radial-gradient(ellipse 62% 56% at 50% 32%,
-    #000 40%, rgba(0,0,0,0.5) 66%, transparent 92%);
-          mask-image: radial-gradient(ellipse 62% 56% at 50% 32%,
-    #000 40%, rgba(0,0,0,0.5) 66%, transparent 92%);
+  /* Mask oval hẹp — tan rìa tranh vào vũ trụ tối, giữ sáng trục thân giữa */
+  -webkit-mask-image: radial-gradient(ellipse 54% 56% at 50% 30%,
+    #000 34%, rgba(0,0,0,0.55) 60%, transparent 88%);
+          mask-image: radial-gradient(ellipse 54% 56% at 50% 30%,
+    #000 34%, rgba(0,0,0,0.55) 60%, transparent 88%);
 }
 .nl-bb-figure img { width: 100%; height: auto; display: block; }
+/* "Nhuộm vũ trụ": phủ màu nền scene lên vùng mây quanh thân — trong suốt ở trục
+   đầu–thân, đậm dần ra rìa → nền mây ban ngày đọc thành tinh vân chìm trong bóng */
+.nl-bb-figure::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 38% 46% at 50% 26%,
+    rgba(10,12,22,0) 26%, rgba(10,12,22,0.5) 62%, rgba(13,16,32,0.9) 100%);
+}
 
 /* Glow não giữa — core sáng + halo thở nhịp */
 .nl-bb-glow {
