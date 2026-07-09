@@ -56,3 +56,4 @@ android/app/*.iml
 # Service account keys — never commit
 secrets/
 *firebase-admin-sa*.json
+scripts/migrate/.dump/
