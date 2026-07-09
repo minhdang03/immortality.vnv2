@@ -72,16 +72,18 @@ Delta: --since <iso> top-up right before phase-08 cutover
 10. Add `scripts/migrate/.dump/` + service_role env to `.gitignore`.
 
 ## Todo List
-- [ ] service_role + Firestore admin clients (`_lib/supabase-admin.mjs`)
-- [ ] `export-firestore.mjs` per-collection dump
-- [ ] content-transform (5 types → content, ids + slugs preserved)
-- [ ] engagement-transform (comments/donations/contacts)
-- [ ] config-transform (translations/settings)
-- [ ] topics-stage (topics → categories input, handed to phase-07)
-- [ ] slug-map + slug_redirects writer
-- [ ] `import-postgres.mjs` with --dry-run / --collection / --since
-- [ ] Full dry-run report reviewed; real import; counts verified
-- [ ] `.gitignore` dump dir + service_role; README run order
+- [x] Firestore read (client SDK, public collections — NO admin key needed) `export-firestore.cjs`
+- [x] content-transform (article/khaitri/story shapes → content, ids + slugs preserved) `transform-to-sql.cjs`
+- [x] Import content into cloud + counts verified — **71 docs (18 article + 16 khaitri + 37 story), idempotent** (2026-07-09)
+- [x] khaitri order-slug generated; article content_date; VI FTS on real data (47 hits "nang luong")
+- [x] `.gitignore` dump dir
+- [ ] engagement-transform (comments=0 now; donations/contacts) — **needs admin key for PII**
+- [ ] config-transform (translations/settings) — 3 config docs; phase-01 seed covers defaults
+- [ ] topics-stage (topics=0 docs now; handed to phase-07)
+- [ ] slug-map: explicit `slug_redirects` rows for any changed slugs (khaitri slugs currently generated fresh)
+- [ ] `--since` delta path for pre-cutover top-up (phase-08)
+
+**Status: content migration DONE + verified on cloud.** Remaining = PII (admin key), config, topics, delta, slug_redirects — lower priority / blocked on admin creds.
 
 ## Success Criteria
 - Dry-run prints accurate per-collection source vs target counts + zero unexpected collisions.

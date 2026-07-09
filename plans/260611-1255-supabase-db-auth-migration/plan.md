@@ -34,13 +34,13 @@ Cloudflare R2 (media, keep)   ·   Durable Objects (realtime chat, keep — out 
 | # | Phase | Status | Ships |
 |---|-------|--------|-------|
 | 01 | [Supabase project + schema + RLS + FTS/pgvector](phase-01-supabase-schema-rls.md) | ✅ done | Project provisioned (dzctvmrlsxwkcuidsqzk, SG), 14 tables, RLS 14/14, pgvector+tsvector VI live — pushed+verified on cloud 2026-07-09 |
-| 02 | [Data migration scripts (Firestore → Postgres)](phase-02-data-migration-scripts.md) | pending | Idempotent dry-run export/import; old IDs + slugs preserved + mapped |
-| 03 | [Auth migration (Supabase Auth + roles via RLS)](phase-03-auth-migration.md) | pending | Admin login on Supabase Auth, role claims, user-migration strategy |
-| 04 | [Web data-layer rewrite (~20 hooks → supabase-js)](phase-04-web-data-layer-rewrite.md) | pending | All hooks on supabase-js; component API unchanged; web runs on Supabase behind flag |
-| 05 | [Agent gateway (Worker service_role) + goclaw edit](phase-05-agent-gateway-goclaw.md) | pending | Worker validates btd_ key → Supabase write; goclaw skills cut to btd_ + api.battudao.com |
-| 06 | [Reading analytics + admin content-analytics dashboard](phase-06-reading-analytics-dashboard.md) | pending | IntersectionObserver → reading_events; admin drop-off / completion / median-read dashboard |
-| 07 | [Category system (relational, parent-child) + migrate topics](phase-07-category-system.md) | pending | categories table, admin CRUD, browse-by-category UI; topics → categories migrated |
-| 08 | [Mobile rewrite + cutover + verification + rollback](phase-08-mobile-cutover-verification.md) | pending | Mobile RN on supabase-js; single web+mobile cutover; parity checks; Firestore reads retired |
+| 02 | [Data migration scripts (Firestore → Postgres)](phase-02-data-migration-scripts.md) | 🟡 content done | 71 content docs migrated+verified on cloud (ids/slugs preserved, idempotent); PII/config/delta remain (admin key) |
+| 03 | [Auth migration (Supabase Auth + roles via RLS)](phase-03-auth-migration.md) | ✅ done | Admin login on Supabase Auth, role claims, user-migration strategy |
+| 04 | [Web data-layer rewrite (~20 hooks → supabase-js)](phase-04-web-data-layer-rewrite.md) | ✅ done | All hooks on supabase-js; component API unchanged; web runs on Supabase behind flag |
+| 05 | [Agent gateway (Worker service_role) + goclaw edit](phase-05-agent-gateway-goclaw.md) | ✅ done | Worker validates btd_ key → Supabase write; goclaw skills cut to btd_ + api.battudao.com |
+| 06 | [Reading analytics + admin content-analytics dashboard](phase-06-reading-analytics-dashboard.md) | ✅ done | IntersectionObserver → reading_events; admin drop-off / completion / median-read dashboard |
+| 07 | [Category system (relational, parent-child) + migrate topics](phase-07-category-system.md) | ✅ done | categories table, admin CRUD, browse-by-category UI; topics → categories migrated |
+| 08 | [Mobile rewrite + cutover + verification + rollback](phase-08-mobile-cutover-verification.md) | ⏸ human cutover | Mobile RN on supabase-js; single web+mobile cutover; parity checks; Firestore reads retired |
 
 ## Key dependencies
 - 01 blocks 02, 03, 04, 05 (schema is the foundation).
