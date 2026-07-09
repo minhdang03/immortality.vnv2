@@ -38,6 +38,7 @@ const SearchPage = lazy(() => import('./pages/core/SearchPage'))
 const ArticlesPage = lazy(() => import('./pages/content/ArticlesPage'))
 const ArticleDetail = lazy(() => import('./pages/content/ArticleDetail'))
 const TopicPage = lazy(() => import('./pages/content/TopicPage'))
+const CategoryBrowsePage = lazy(() => import('./pages/content/category-browse-page'))
 const StoriesPage = lazy(() => import('./pages/content/StoriesPage'))
 const KhaiTriPage = lazy(() => import('./pages/content/KhaiTriPage'))
 // Pages — info
@@ -72,12 +73,14 @@ export default function App() {
     if (p.startsWith('/khaitri/')) return 'khaitri'
     if (p.startsWith('/story/')) return 'stories'
     if (p.startsWith('/topic/')) return 'topic'
+    if (p.startsWith('/category/')) return 'category'
     if (p === '/' || !p) return 'home'
     const id = p.replace(/^\//, '').replace(/\/$/, '').split('/')[0]
     return id || 'home'
   })
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [selectedArticle, setSelectedArticle] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState(null) // slug for /category/:slug
   const [menuOpen, setMenuOpen] = useState(false)
   const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
 
@@ -123,6 +126,7 @@ export default function App() {
 
     // Special parameterized routes
     if (path.startsWith('/topic/')) { setSelectedTopic(path.slice(7)); setPage('topic'); return }
+    if (path.startsWith('/category/')) { setSelectedCategory(path.slice(10)); setPage('category'); return }
     // Accept both /article/:slug (canonical) and /articles/:slug (common typo) — redirect plural to singular.
     if (path.startsWith('/articles/')) {
       const slug = path.slice(10)
@@ -183,6 +187,9 @@ export default function App() {
       if (p === 'topic') {
         setSelectedTopic(extra); setPage('topic')
         history.pushState({}, '', `/topic/${extra}`)
+      } else if (p === 'category') {
+        setSelectedCategory(extra); setPage('category')
+        history.pushState({}, '', `/category/${extra}`)
       } else if (p === 'article') {
         setSelectedArticle(extra); setPage('article')
         history.pushState({}, '', `/article/${articleSlug(extra)}`)
@@ -233,6 +240,9 @@ export default function App() {
           )}
           {page === 'topic' && (
             <TopicPage t={t} lang={lang} topics={TOPICS} articles={allArticles} selectedTopic={selectedTopic} navigate={navigate} />
+          )}
+          {page === 'category' && (
+            <CategoryBrowsePage t={t} lang={lang} slug={selectedCategory} navigate={navigate} articles={allArticles} />
           )}
           {page === 'article' && selectedArticle && (
             <ArticleDetail

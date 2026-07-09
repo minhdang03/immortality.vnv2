@@ -119,6 +119,15 @@ const PAGES = [
     icon: '🔍',
   },
   {
+    id: 'category',
+    path: 'category',
+    labelVi: 'Danh Mục', labelEn: 'Categories',
+    titleVi: 'Danh Mục', titleEn: 'Categories',
+    descVi: 'Duyệt nội dung theo danh mục.', descEn: 'Browse content by category.',
+    icon: '📂',
+    navDefault: { visible: false, showInBottom: false },
+  },
+  {
     id: 'admin',
     path: 'admin',
     labelVi: 'Quản Trị', labelEn: 'Admin',
@@ -175,6 +184,8 @@ export const ADMIN_TABS = [
   })),
   { id: 'teachings', icon: 'ℹ️', vi: 'Giới Thiệu', en: 'Teachings' },
   { id: 'topics', icon: '🏷️', vi: 'Chủ đề', en: 'Topics' },
+  { id: 'categories', icon: '📂', vi: 'Danh mục', en: 'Categories' },
+  { id: 'analytics', icon: '📊', vi: 'Phân tích nội dung', en: 'Content Analytics' },
   { id: 'translations', icon: '🌐', vi: 'Ngôn ngữ', en: 'Translations' },
   { id: 'homepage', icon: '🏠', vi: 'Trang chủ', en: 'Home Page' },
   { id: 'settings', icon: '⚙️', vi: 'Cài đặt', en: 'Settings' },
@@ -187,6 +198,12 @@ export const ADMIN_TABS = [
 export function matchRoute(pathname) {
   const clean = pathname.replace(/^\//, '')
   if (!clean) return { id: 'home' }
+
+  // Parameterised routes: /category/:slug
+  if (clean.startsWith('category/')) {
+    const slug = clean.slice('category/'.length)
+    if (slug) return { id: 'category', params: { slug } }
+  }
 
   for (const p of PAGES) {
     if (!p.path) continue

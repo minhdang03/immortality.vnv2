@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useArticleAnalytics } from '../../hooks/useAnalytics'
+import { useReadingTracker } from '../../hooks/useReadingTracker'
 import ShareButtons from '../../components/shared/ShareButtons'
 import Comments from '../../components/shared/Comments'
 import ArticleCard from '../../components/shared/ArticleCard'
@@ -36,11 +37,11 @@ function TableOfContents({ body, lang }) {
   )
 }
 
-function ArticleBody({ body }) {
+function ArticleBody({ body, bodyRef }) {
   if (!body) return null
   const paragraphs = body.split('\n\n')
   return (
-    <div className="detail-body">
+    <div className="detail-body" ref={bodyRef}>
       {paragraphs.map((p, i) => (
         <p key={i} data-para={i}>{p}</p>
       ))}
@@ -50,6 +51,10 @@ function ArticleBody({ body }) {
 
 export default function ArticleDetail({ t, lang, article, articles, topics, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateArticle }) {
   useArticleAnalytics(article, lang)
+  const bodyRef = useRef(null)
+  // Supabase micro-analytics: track per-paragraph dwell + completion.
+  // No-op when VITE_DATA_BACKEND !== 'supabase'. GA4 macro events unchanged.
+  useReadingTracker(article?.id ?? null, bodyRef)
   // Fallback to other lang when current lang has no body — prevents blank page
   // for articles only authored in one language.
   const d = article[lang] || article[lang === 'vi' ? 'en' : 'vi'] || {}
@@ -136,7 +141,7 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
               multiline
             />
           )}
-          <ArticleBody body={d?.body} />
+          <ArticleBody body={d?.body} bodyRef={bodyRef} />
         </div>
 
         <div className="detail-share">

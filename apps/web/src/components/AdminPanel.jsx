@@ -14,6 +14,8 @@ import DonationsTab from './admin/DonationsTab'
 import ContactsTab from './admin/ContactsTab'
 import AdminUsersTab from './admin/AdminUsersTab'
 import AgentLogTab from './admin/AgentLogTab'
+import CategoriesTab from './admin/CategoriesTab'
+import ContentAnalyticsTab from './admin/ContentAnalyticsTab'
 
 // Tabs each non-admin role may access. Admin sees everything (no entry needed).
 // Legacy 'moderator' = 'mod-articles' for backward compat.
@@ -175,6 +177,8 @@ export default function AdminPanel({
           {effectiveTab === 'settings' && <SettingsTab lang={lang} settings={siteSettings} onUpdate={onUpdateSettings} />}
           {effectiveTab === 'admins' && <AdminUsersTab lang={lang} currentUser={user} />}
           {effectiveTab === 'agentlog' && <AgentLogTab lang={lang} />}
+          {effectiveTab === 'categories' && <CategoriesTab lang={lang} />}
+          {effectiveTab === 'analytics' && <ContentAnalyticsTab lang={lang} />}
         </div>
       </div>
     </div>
