@@ -1,8 +1,21 @@
-import { useState } from 'react'
 import { useFirestoreSWR } from './useFirestoreSWR'
+import { useSupabaseSWR } from './useSupabaseSWR'
+import { supabase } from '../supabase'
 import { db } from '../firebase'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { DEFAULT_HOME_CARDS, DEFAULT_NAV_ITEMS } from '../config/pages'
+
+const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
+
+async function fetchSupabaseSettings() {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', 'site')
+    .single()
+  if (error || !data) return null
+  return data.value
+}
 
 export const DEFAULT_HERO = {
   showSun: true,
@@ -46,20 +59,28 @@ function migrateSettings(data) {
 }
 
 export function useSiteSettings() {
-  const { data: settings, loading } = useFirestoreSWR(
+  const supaResult = useSupabaseSWR(
+    'cached_site_settings',
+    async () => {
+      const raw = await fetchSupabaseSettings()
+      return migrateSettings(raw) ?? DEFAULT_SETTINGS
+    },
+    DEFAULT_SETTINGS
+  )
+
+  const fsResult = useFirestoreSWR(
     'cached_site_settings',
     (onData, onError) => {
       return onSnapshot(doc(db, 'settings', 'site'), (snap) => {
-        if (snap.exists()) {
-          onData(migrateSettings(snap.data()))
-        } else {
-          onData(DEFAULT_SETTINGS)
-        }
+        onData(snap.exists() ? migrateSettings(snap.data()) : DEFAULT_SETTINGS)
       }, onError)
     },
     DEFAULT_SETTINGS
   )
 
+  const { data: settings, loading } = USE_SUPABASE ? supaResult : fsResult
+
+  // Writes stay on Firestore for this phase
   const updateSettings = async (data) => {
     const { setDoc } = await import('firebase/firestore')
     await setDoc(doc(db, 'settings', 'site'), data, { merge: true })

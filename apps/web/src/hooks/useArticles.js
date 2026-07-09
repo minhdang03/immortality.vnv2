@@ -1,4 +1,6 @@
 import { useFirestoreSWR } from './useFirestoreSWR'
+import { useSupabaseSWR } from './useSupabaseSWR'
+import { fetchContentByType } from './_supabase-content'
 import { db } from '../firebase'
 import { DEFAULT_ARTICLES } from '../data/articles'
 import { articleSlugFields } from '../utils/slug'
@@ -7,28 +9,32 @@ import {
   onSnapshot, orderBy, query, limit, serverTimestamp
 } from 'firebase/firestore'
 
+const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
+
 export function useArticles() {
-  const { data: firestoreArticles, loading, fresh } = useFirestoreSWR(
+  // --- Supabase path ---
+  const supaResult = useSupabaseSWR(
+    'cached_articles',
+    () => fetchContentByType('article', { orderCol: 'content_date', ascending: false, limit: 200 }),
+    DEFAULT_ARTICLES
+  )
+
+  // --- Firestore path (unchanged) ---
+  const firestoreResult = useFirestoreSWR(
     'cached_articles',
     (onData, onError) => {
-      // Cap initial load at 200 articles. Older content stays in Firestore but isn't
-      // pulled until pagination is added (TODO: useArticlesPaginated for /articles list view).
       const q = query(collection(db, 'articles'), orderBy('date', 'desc'), limit(200))
       return onSnapshot(q, (snap) => {
         const articles = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        // Seed fallback only when Firestore is genuinely empty (first install / dev).
-        // Avoids re-running merge on every snapshot which churned downstream renders
-        // and risked duplicates if a seed was migrated under a new id.
-        if (articles.length === 0) {
-          onData(DEFAULT_ARTICLES)
-        } else {
-          onData(articles)
-        }
+        onData(articles.length === 0 ? DEFAULT_ARTICLES : articles)
       }, onError)
     },
     DEFAULT_ARTICLES
   )
 
+  const { data: firestoreArticles, loading, fresh } = USE_SUPABASE ? supaResult : firestoreResult
+
+  // Writes stay on Firestore for this phase (reads-first migration)
   const addArticle = async (article) => {
     await addDoc(collection(db, 'articles'), { ...article, ...articleSlugFields(article), createdAt: serverTimestamp() })
   }
