@@ -14,6 +14,24 @@
 - **Bước 10 card đảo lên đỉnh** (`cardTop: true` + `focusY`) — nhường nửa dưới màn hình cho rễ sáng lan xuống lòng đất
 - Card mobile bottom-sheet max-height 52dvh + tự cuộn; preload 10 hình khi scene vào viewport
 
+### FX v2 (cosmic wow layer — cùng ngày)
+- **Big bang intro**: flash + vòng nổ + sao bùng từ tâm khi vào trang (1.6s, chạy 1 lần)
+- **Nền vũ trụ** `cosmic-backdrop.jsx`: 3 lớp sao parallax theo scroll, twinkle, sao vàng 18%, sao băng ngẫu nhiên, cuộn nhanh → sao kéo vệt hyperspace theo vận tốc
+- **Nebula** trôi chậm (CSS radial, GPU) + god-rays xoay sau hero + title thở sáng
+- **Sóng xung kích node**: mỗi bước kích hoạt bắn vòng lan + 14 tia lửa tại node (cả explore khi chạm)
+- **Comet particles**: 5 hạt dẫn dòng có đuôi gradient dài
+- **Ken-burns desktop**: artwork zoom 1→1.07 theo tiến trình (--story-p)
+- **Card shine**: vệt sáng quét ngang card mỗi lần đổi bước
+- **Finale**: vòng sóng vàng lan toả từ rễ (2 ring lệch pha) + reveal outro/mantra khi cuộn tới
+- Perf: 61fps desktop viewport; reduced-motion tắt toàn bộ, vẽ sao tĩnh 1 frame
+
+### v3 dark-cosmic + tinh gọn (cùng ngày, theo feedback Đăng)
+- **Artwork vẽ lại toàn bộ (Codex CLI)**: master 1024x1536 + 10 hình bước, nền vũ trụ tối #0d1020 trùng background trang — hết cảnh "hình chữ nhật tách rời"; thêm mask tan mép trên .nl-art-img
+- **Bỏ section Khám phá tự do** (ExploreMode.jsx + CSS + data ENERGY_OUTRO) và **bỏ outro Lợi ích/Lưu ý/mantra** — trang còn: big bang → hero → 10 bước → footer
+- God-rays hero làm mềm (blur 14px, alpha 0.03, mask gắt) — hết sọc thô
+- Card mobile gọn (media 92px, max-height 58dvh) — hết cắt chữ bước 2/3
+- Căn lại toạ độ node 5-9 theo giải phẫu artwork mới
+
 ## [2026-05-11] Hybrid Mobile Bootstrap — Complete
 
 ### Major Changes

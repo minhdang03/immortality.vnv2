@@ -1,17 +1,20 @@
 import ScrollStory from '../../components/nangluong/ScrollStory'
-import ExploreMode from '../../components/nangluong/ExploreMode'
-import { ENERGY_INTRO, ENERGY_OUTRO } from '../../data/nang-luong-steps'
+import CosmicBackdrop from '../../components/nangluong/cosmic-backdrop'
+import { ENERGY_INTRO } from '../../data/nang-luong-steps'
 
 /**
  * Trang /nang-luong — đồ hình "Hấp Thu Năng Lượng — Nuôi Dưỡng Toàn Thân".
- * Bố cục: hero intro → scroll story (10 bước, pin) → explore mode → lợi ích/lưu ý + mantra.
+ * Bố cục tối giản: big bang + nền sao → hero → scroll story (10 bước, pin). Hết.
  */
 export default function NangLuongPage({ lang }) {
   const i = ENERGY_INTRO[lang] || ENERGY_INTRO.vi
-  const o = ENERGY_OUTRO[lang] || ENERGY_OUTRO.vi
 
   return (
     <div className="nl-page">
+      {/* Vũ trụ: sao parallax + hyperspace + sao băng; flash big bang khi vào trang */}
+      <CosmicBackdrop />
+      <div className="nl-bigbang" aria-hidden="true" />
+
       {/* Hero */}
       <header className="nl-hero">
         <p className="nl-hero-tagline">{i.tagline}</p>
@@ -26,26 +29,8 @@ export default function NangLuongPage({ lang }) {
         <p className="nl-scroll-hint" aria-hidden="true">{i.scrollHint} <span className="nl-scroll-arrow">↓</span></p>
       </header>
 
-      {/* Scroll story — 11 bước ghim màn hình */}
+      {/* Scroll story — 10 bước ghim màn hình */}
       <ScrollStory lang={lang} />
-
-      {/* Explore tự do */}
-      <ExploreMode lang={lang} />
-
-      {/* Lợi ích & lưu ý */}
-      <section className="nl-outro">
-        <div className="nl-outro-cols">
-          <div className="nl-outro-box">
-            <h2>{o.benefitsTitle}</h2>
-            <ul>{o.benefits.map((b, idx) => <li key={idx}>{b}</li>)}</ul>
-          </div>
-          <div className="nl-outro-box">
-            <h2>{o.notesTitle}</h2>
-            <ul>{o.notes.map((n, idx) => <li key={idx}>{n}</li>)}</ul>
-          </div>
-        </div>
-        <p className="nl-mantra">{o.mantra}</p>
-      </section>
     </div>
   )
 }

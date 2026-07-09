@@ -165,56 +165,6 @@
 }
 .nl-progress-dot.on { background: var(--gold); box-shadow: 0 0 8px rgba(212,167,106,0.7); }
 
-/* ── Explore mode ── */
-.nl-explore { padding: var(--sp-10) var(--sp-5); max-width: 1100px; margin: 0 auto; }
-.nl-explore-title {
-  font-family: var(--font-display); font-size: var(--fs-h2); text-align: center;
-  color: var(--gold-soft); margin: 0 0 var(--sp-2);
-}
-.nl-explore-hint { text-align: center; color: var(--ink-muted); margin: 0 0 var(--sp-7); }
-.nl-explore-grid {
-  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: var(--sp-6); align-items: start;
-}
-.nl-explore-grid .nl-art { width: 100%; }
-.nl-explore-grid .nl-card-col { position: sticky; top: 90px; }
-.nl-explore-nav { display: flex; flex-direction: column; gap: 6px; }
-.nl-explore-navbtn {
-  display: flex; align-items: center; gap: 10px;
-  background: transparent; border: 1px solid transparent; border-radius: var(--r-md);
-  color: #cfc7b6; padding: 8px 12px; cursor: pointer; text-align: left;
-  font-size: 0.92rem; transition: background 0.25s ease, border-color 0.25s ease;
-}
-.nl-explore-navbtn span {
-  width: 22px; height: 22px; border-radius: 50%; flex: none;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.7rem; font-weight: 700;
-  background: rgba(212,167,106,0.18); color: var(--gold-soft);
-}
-.nl-explore-navbtn:hover { background: rgba(212,167,106,0.10); }
-.nl-explore-navbtn.active {
-  background: rgba(212,167,106,0.14); border-color: rgba(212,167,106,0.4); color: var(--gold-soft);
-}
-
-/* ── Outro: lợi ích / lưu ý / mantra ── */
-.nl-outro { padding: var(--sp-9) var(--sp-5) var(--sp-10); max-width: 900px; margin: 0 auto; }
-.nl-outro-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); }
-.nl-outro-box {
-  background: rgba(18, 22, 40, 0.6); border: 1px solid rgba(212,167,106,0.22);
-  border-radius: var(--r-lg); padding: var(--sp-5) var(--sp-6);
-}
-.nl-outro-box h2 {
-  font-family: var(--font-display); color: var(--gold-soft); margin: 0 0 var(--sp-3); font-size: 1.35rem;
-}
-.nl-outro-box ul { margin: 0; padding-left: 18px; display: grid; gap: var(--sp-2); }
-.nl-outro-box li { color: #d9d1c0; line-height: 1.5; font-size: 0.95rem; }
-.nl-outro-box li::marker { color: var(--gold); }
-.nl-mantra {
-  font-family: var(--font-display); font-style: italic; text-align: center;
-  font-size: clamp(1.15rem, 2.4vw, 1.5rem); color: var(--gold-soft);
-  margin: var(--sp-8) auto 0; max-width: 640px; line-height: 1.5;
-}
-
 /* ── Static fallback (prefers-reduced-motion) ── */
 .nl-scene-static { max-width: 720px; margin: 0 auto; padding: var(--sp-7) var(--sp-5); }
 .nl-static-list { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); }
@@ -288,16 +238,15 @@
     background: linear-gradient(0deg, rgba(10,12,22,0) 0%, rgba(10,12,22,0.82) 38%, rgba(10,12,22,0.95) 100%);
   }
   .nl-stage .nl-card-col--top .nl-card-media { display: none; } /* rễ thật đang hiện phía dưới */
-  /* Card bottom-sheet: không cao quá nửa màn hình, tự cuộn khi bước dài (bước 10) */
+  /* Card bottom-sheet: gọn để đủ chỗ 3-4 ý không bị cắt; vẫn tự cuộn khi quá dài */
   .nl-card { max-width: none; }
-  .nl-stage .nl-card { max-height: 52vh; max-height: 52dvh; overflow-y: auto; }
-  .nl-card-body { padding: var(--sp-4) var(--sp-5); }
-  .nl-card-media { aspect-ratio: auto; height: 120px; }
-  .nl-card-title { font-size: 1.3rem; }
-  .nl-card-points li { font-size: 0.9rem; }
-  .nl-explore-grid { grid-template-columns: 1fr; }
-  .nl-explore-grid .nl-card-col { position: static; }
-  .nl-outro-cols { grid-template-columns: 1fr; }
+  .nl-stage .nl-card { max-height: 58vh; max-height: 58dvh; overflow-y: auto; }
+  .nl-card-body { padding: var(--sp-3) var(--sp-4) var(--sp-4); }
+  .nl-card-media { aspect-ratio: auto; height: 92px; }
+  .nl-card-num { width: 28px; height: 28px; font-size: 0.82rem; margin-bottom: var(--sp-2); }
+  .nl-card-title { font-size: 1.2rem; margin-bottom: var(--sp-2); }
+  .nl-card-points { gap: 6px; }
+  .nl-card-points li { font-size: 0.88rem; line-height: 1.45; }
 }
 
 @media (prefers-reduced-motion: reduce) {

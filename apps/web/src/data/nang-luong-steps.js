@@ -47,27 +47,27 @@ export const ENERGY_STEPS = [
     en: { title: 'Pituitary Gland', points: ['Governs the entire endocrine system', 'Hormone balance, growth, recovery'] },
   },
   {
-    id: 'tim-phoi', num: 5, pos: { x: 50, y: 30 }, zoom: 1.9, img: stepImg(5),
+    id: 'tim-phoi', num: 5, pos: { x: 50, y: 31.5 }, zoom: 1.9, img: stepImg(5),
     vi: { title: 'Tim & Phổi', points: ['Năng lượng làm sạch và mở rộng lồng ngực, phổi', 'Tăng oxy, tăng tuần hoàn, giúp tim khỏe, cảm xúc an hòa'] },
     en: { title: 'Heart & Lungs', points: ['Energy cleanses and expands the chest and lungs', 'More oxygen, better circulation, a strong heart, peaceful emotions'] },
   },
   {
-    id: 'thuong-than', num: 6, pos: { x: 44, y: 41 }, zoom: 2.1, img: stepImg(6),
+    id: 'thuong-than', num: 6, pos: { x: 44, y: 38.5 }, zoom: 2.1, img: stepImg(6),
     vi: { title: 'Tuyến Thượng Thận', points: ['Tăng sức chịu đựng, giảm stress', 'Điều hòa năng lượng, huyết áp, phản ứng cơ thể'] },
     en: { title: 'Adrenal Glands', points: ['Greater endurance, less stress', 'Regulates energy, blood pressure, bodily responses'] },
   },
   {
-    id: 'tieu-hoa', num: 7, pos: { x: 52, y: 44.5 }, zoom: 2.1, img: stepImg(7),
+    id: 'tieu-hoa', num: 7, pos: { x: 52, y: 42.5 }, zoom: 2.1, img: stepImg(7),
     vi: { title: 'Hệ Tiêu Hóa', points: ['Năng lượng làm ấm, kích hoạt dạ dày, ruột, gan, tụy…', 'Tăng hấp thu, chuyển hóa, đào thải độc tố'] },
     en: { title: 'Digestive System', points: ['Energy warms and activates the stomach, intestines, liver, pancreas…', 'Better absorption, metabolism, detoxification'] },
   },
   {
-    id: 'sinh-duc', num: 8, pos: { x: 50, y: 50 }, zoom: 2.1, img: stepImg(8),
+    id: 'sinh-duc', num: 8, pos: { x: 50, y: 47.5 }, zoom: 2.1, img: stepImg(8),
     vi: { title: 'Tuyến Sinh Dục', points: ['Nam: tăng sinh lực, tinh khí — điều hòa hormone, cải thiện sinh lý', 'Nữ: cân bằng nội tiết tố — điều hòa chu kỳ, nuôi dưỡng, gìn giữ năng lượng nữ tính'] },
     en: { title: 'Reproductive Glands', points: ['Men: greater vitality and essence — balanced hormones, improved function', 'Women: balanced hormones — regulated cycles, nurturing feminine energy'] },
   },
   {
-    id: 'lan-toa', num: 9, pos: { x: 50, y: 62 }, zoom: 1.15, img: stepImg(9),
+    id: 'lan-toa', num: 9, pos: { x: 50, y: 60 }, zoom: 1.15, img: stepImg(9),
     vi: { title: 'Lan Tỏa & Nuôi Dưỡng', points: ['Năng lượng lan tỏa khắp cơ thể: tế bào, cơ, xương, máu, thần kinh…', 'Tăng đề kháng, phục hồi tổn thương', 'Mang lại sức khỏe, sự tập trung, trí tuệ và bình an'] },
     en: { title: 'Radiating & Nourishing', points: ['Energy spreads through the whole body: cells, muscles, bones, blood, nerves…', 'Stronger immunity, healing of damage', 'Health, focus, wisdom and peace'] },
   },
@@ -77,27 +77,6 @@ export const ENERGY_STEPS = [
     en: { title: 'Into the Earth & Outside the Body', points: ['Excess energy, toxins and impurities are guided down the legs', 'Returned to the earth, merging with the planet’s energy', 'Negative energy and toxins leave through sweat, breath, urine, elimination, skin, hair, and nails…', 'The body feels light, clean and refreshed'] },
   },
 ]
-
-export const ENERGY_OUTRO = {
-  vi: {
-    benefitsTitle: 'Lợi ích',
-    benefits: ['Sức khỏe toàn diện', 'Tinh thần an lạc, trí tuệ sáng suốt', 'Tăng năng lượng sống', 'Kết nối vũ trụ và Trái Đất', 'Sống tỉnh thức, yêu thương và có ích'],
-    notesTitle: 'Lưu ý',
-    notes: ['Tâm thanh tịnh, ý thiện lành', 'Hít thở sâu, thư giãn', 'Duy trì đều đặn mỗi ngày', 'Uống đủ nước, ăn uống lành mạnh', 'Biết ơn vũ trụ và thiên nhiên'],
-    mantra: 'Hấp thu ánh sáng — Nuôi dưỡng sự sống · Trao yêu thương — Trả về Trái Đất',
-    exploreTitle: 'Khám phá tự do',
-    exploreHint: 'Chạm vào từng điểm sáng để xem chi tiết',
-  },
-  en: {
-    benefitsTitle: 'Benefits',
-    benefits: ['Whole-body health', 'A peaceful mind, lucid wisdom', 'More life energy', 'Connection with the universe and the Earth', 'Living awake, loving and useful'],
-    notesTitle: 'Notes',
-    notes: ['A pure heart, kind intentions', 'Breathe deeply, relax', 'Practice steadily every day', 'Drink enough water, eat healthily', 'Be grateful to the universe and nature'],
-    mantra: 'Absorb the light — Nourish life · Give love — Return to the Earth',
-    exploreTitle: 'Free exploration',
-    exploreHint: 'Tap each glowing point to see details',
-  },
-}
 
 // Đường năng lượng chính (viewBox 0 0 1024 1536): thiên hà → đỉnh đầu → cột sống → chân → rễ đất
 export const ENERGY_PATH = 'M512,20 C512,80 512,140 512,205 C512,340 500,480 512,620 C520,760 512,900 512,1040 C512,1180 512,1300 512,1450'

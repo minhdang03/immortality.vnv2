@@ -30,6 +30,7 @@ export default function ScrollStory({ lang }) {
   const sceneRef = useRef(null)
   const pathRef = useRef(null)
   const progressRef = useRef(0)
+  const burstsRef = useRef([]) // sóng xung kích khi node kích hoạt (EnergyParticles vẽ)
   const [activeIndex, setActiveIndex] = useState(0)
   const [inView, setInView] = useState(false) // chỉ chạy particles khi scene trên màn hình
   const [reduced] = useState(reducedMotion)
@@ -59,12 +60,24 @@ export default function ScrollStory({ lang }) {
           const idx = getActiveStepIndex(p, N)
           progressRef.current = p
           if (pathRef.current) pathRef.current.style.strokeDashoffset = String(1 - p)
+          // Ken-burns desktop: CSS đọc --story-p để zoom chậm theo tiến trình
+          if (sceneRef.current) sceneRef.current.style.setProperty('--story-p', p.toFixed(4))
           setActiveIndex(prev => (prev === idx ? prev : idx)) // guard re-render
         },
       })
     }, sceneRef)
     return () => ctx.revert()
   }, [reduced])
+
+  // Node mới kích hoạt → bắn sóng xung kích + tia lửa tại vị trí node
+  useEffect(() => {
+    if (!inView || reduced) return
+    const s = ENERGY_STEPS[activeIndex]
+    burstsRef.current.push({
+      x: s.pos.x, y: s.pos.y, at: performance.now(),
+      sparks: Array.from({ length: 14 }, () => ({ ang: Math.random() * Math.PI * 2, sp: 0.35 + Math.random() * 0.65 })),
+    })
+  }, [activeIndex, inView, reduced])
 
   // Preload hình cận cảnh các bước ngay khi scene vào màn hình → crossfade không giật
   useEffect(() => {
@@ -95,7 +108,7 @@ export default function ScrollStory({ lang }) {
           <EnergyArtwork
             mode="story" activeIndex={activeIndex}
             pathRef={pathRef} progressRef={progressRef}
-            particlesActive={inView}
+            burstsRef={burstsRef} particlesActive={inView}
           />
         </div>
         {/* Bước cuối: card đảo lên đỉnh màn hình để nhường chỗ cho rễ sáng phía dưới (mobile) */}

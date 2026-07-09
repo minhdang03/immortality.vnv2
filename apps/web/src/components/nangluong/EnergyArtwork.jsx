@@ -13,7 +13,7 @@ import { ENERGY_STEPS, ENERGY_PATH } from '../../data/nang-luong-steps'
  * - mode 'story': node hiện theo tiến trình · mode 'explore': tất cả node sáng, bấm được
  */
 export default function EnergyArtwork({
-  activeIndex = -1, mode = 'story', pathRef, progressRef,
+  activeIndex = -1, mode = 'story', pathRef, progressRef, burstsRef,
   particlesActive = true, onNodeClick, selectedId,
 }) {
   const artRef = useRef(null)
@@ -48,7 +48,13 @@ export default function EnergyArtwork({
             style={{ strokeDasharray: 1, strokeDashoffset: mode === 'explore' ? 0 : 1 }} />
         </svg>
 
-        <EnergyParticles pathRef={pathRef} progressRef={progressRef} active={particlesActive} />
+        <EnergyParticles pathRef={pathRef} progressRef={progressRef} burstsRef={burstsRef} active={particlesActive} />
+
+        {/* Bước cuối: vòng sóng vàng lan toả từ rễ xuống lòng đất */}
+        {mode === 'story' && activeIndex === ENERGY_STEPS.length - 1 && (
+          <span className="nl-earth-pulse" aria-hidden="true"
+            style={{ left: `${ENERGY_STEPS[ENERGY_STEPS.length - 1].pos.x}%`, top: `${ENERGY_STEPS[ENERGY_STEPS.length - 1].pos.y + 6}%` }} />
+        )}
 
         {/* Glow nodes — toạ độ % từ data; số chỉ hiện ở node đang active (tránh chồng chữ 2-3-4) */}
         {ENERGY_STEPS.map((s, i) => {
