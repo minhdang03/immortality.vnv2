@@ -3,7 +3,7 @@
 
 /* Canvas sao fixed sau nội dung — các section phải relative + z-index 1 */
 .nl-cosmic { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-.nl-hero, .nl-scene { position: relative; z-index: 1; }
+.nl-hero, .nl-scene, .nl-bb, .nl-bb-sources { position: relative; z-index: 1; }
 
 /* Nebula trôi chậm (2 mảng màu radial, GPU-friendly) */
 .nl-page::before {
