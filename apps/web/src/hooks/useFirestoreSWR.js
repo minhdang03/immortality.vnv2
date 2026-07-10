@@ -5,7 +5,7 @@ const TTL = 5 * 60 * 1000 // 5 minutes
 // Bump CACHE_VERSION whenever the data shape on Firestore changes incompatibly
 // (e.g. new required field, schema migration). All cached data with older
 // versions is silently ignored, forcing a fresh Firestore read.
-const CACHE_VERSION = 'v2'
+const CACHE_VERSION = 'v3' // v3: cutover Supabase 2026-07-10 — wipe cache shape Firestore cũ
 const versioned = (key) => `${key}::${CACHE_VERSION}`
 
 // One-shot purge: drop any leftover keys from the unversioned era so they
