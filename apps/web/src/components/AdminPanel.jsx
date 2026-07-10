@@ -95,15 +95,32 @@ export default function AdminPanel({
     topics: topics.length,
   }
 
-  // Per-role tab visibility. Admin (or unknown role string) sees everything.
+  // Per-role tab visibility — FAIL-CLOSED: chỉ 'admin' thấy hết;
+  // role có trong ROLE_TABS thấy đúng tab của mình; role lạ/'user' không thấy gì
+  // (trước đây role lạ rơi vào nhánh "thấy tất cả" — lỗ hổng audit P0 #5).
   const allowed = ROLE_TABS[userRole]
-  const visibleTabs = allowed
-    ? ADMIN_TABS.filter(tb => allowed.has(tb.id))
-    : ADMIN_TABS
+  const visibleTabs = userRole === 'admin'
+    ? ADMIN_TABS
+    : allowed
+      ? ADMIN_TABS.filter(tb => allowed.has(tb.id))
+      : []
 
   // If current tab is hidden for this role, fall back to first visible
   const activeTab = visibleTabs.find(tb => tb.id === tab) || visibleTabs[0]
   const effectiveTab = activeTab?.id
+
+  // Role không có quyền tab nào → thông báo rõ thay vì panel trống
+  if (visibleTabs.length === 0) {
+    return (
+      <div className="fade-up" style={{ textAlign: 'center', padding: '64px 20px' }}>
+        <p style={{ color: 'var(--text-dim)' }}>
+          {lang === 'vi'
+            ? 'Tài khoản của bạn chưa được cấp quyền quản trị. Liên hệ admin để được cấp role.'
+            : 'Your account has no admin permissions. Contact an admin to be granted a role.'}
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="fade-up">
