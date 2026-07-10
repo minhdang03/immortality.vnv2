@@ -119,6 +119,15 @@ export default function App() {
     catch { /* not configured */ }
   }, [USE_SUPABASE])
 
+  // Match bài viết theo mọi biến thể slug/id — dùng chung cho applyPath + deep-link retry
+  const findArticleBySlug = (list, slug) => list.find(a =>
+    articleSlug(a) === slug ||
+    String(a.id) === slug ||
+    a.sourceRef === slug ||
+    a.viSlug === slug ||
+    a.enSlug === slug
+  )
+
   // History API routing
   const applyPath = () => {
     const path = window.location.pathname
@@ -133,14 +142,7 @@ export default function App() {
       if (slug) { history.replaceState({}, '', `/article/${slug}`) }
     }
     if (path.startsWith('/article/')) {
-      const slug = path.slice(9)
-      const found = articlesRef.current.find(a =>
-        articleSlug(a) === slug ||
-        String(a.id) === slug ||
-        a.sourceRef === slug ||
-        a.viSlug === slug ||
-        a.enSlug === slug
-      )
+      const found = findArticleBySlug(articlesRef.current, path.slice(9))
       if (found) { setSelectedArticle(found); setPage('article') }
       return
     }
@@ -162,14 +164,31 @@ export default function App() {
   useEffect(() => {
     const path = window.location.pathname
     const isArticlePath = path?.startsWith('/article/') || path?.startsWith('/articles/')
-    // For non-article paths, run applyPath exactly once.
-    // For article paths, keep re-running until either the slug is matched OR Firestore
-    // has confirmed a fresh snapshot — guards against stale SWR cache missing the slug
-    // (would otherwise leave the page stuck on DetailSkeleton forever).
-    if (pathAppliedRef.current && !(isArticlePath && !selectedArticle && !articlesFresh)) return
-    if (isArticlePath && allArticles.length === 0) return
-    applyPath()
-    pathAppliedRef.current = true
+    if (!isArticlePath) {
+      // Route thường: áp path đúng 1 lần
+      if (!pathAppliedRef.current) { applyPath(); pathAppliedRef.current = true }
+      return
+    }
+    if (selectedArticle) { pathAppliedRef.current = true; return }
+
+    // Deep-link bài viết (Facebook/Zalo): thử match lại MỖI LẦN danh sách đổi —
+    // snapshot đầu có thể rỗng/thiếu bài; KHÔNG dừng chỉ vì fresh bật.
+    const slug = path.startsWith('/articles/') ? path.slice(10) : path.slice(9)
+    const found = findArticleBySlug(allArticles, slug)
+    if (found) {
+      if (path.startsWith('/articles/')) history.replaceState({}, '', `/article/${slug}`)
+      setSelectedArticle(found)
+      setPage('article')
+      pathAppliedRef.current = true
+      return
+    }
+    // Data đã fresh mà vẫn không có slug (bài bị xoá/sai link/fetch lỗi trả rỗng)
+    // → 404 mềm về danh sách bài viết thay vì kẹt DetailSkeleton vĩnh viễn.
+    if (articlesFresh) {
+      setPage('articles')
+      history.replaceState({}, '', '/articles')
+      pathAppliedRef.current = true
+    }
   }, [allArticles, articlesFresh, selectedArticle])
 
   useEffect(() => {

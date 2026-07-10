@@ -5,10 +5,12 @@
   background: var(--ink); color: var(--bg);
   font-family: var(--font-display); font-size: 1.6rem;
   cursor: pointer; box-shadow: var(--shadow-lg);
-  transition: transform 200ms ease, background 200ms ease;
+  transition: transform 260ms ease, opacity 260ms ease, background 200ms ease;
 }
 .chatbot-fab:hover { transform: translateY(-2px); background: var(--gold-deep); }
 .chatbot-fab-active { background: var(--gold-deep); }
+/* Ẩn khi cuộn xuống đọc — không che đoạn văn (hiện lại khi cuộn lên) */
+.chatbot-fab-hidden { transform: translateY(160px); opacity: 0; pointer-events: none; }
 
 .chatbot-panel {
   position: fixed; bottom: 156px; right: 20px; z-index: 9001;

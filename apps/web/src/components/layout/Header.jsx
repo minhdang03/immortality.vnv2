@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import SunIcon from '../shared/SunIcon'
 import { DEFAULT_NAV_ITEMS } from '../../config/pages'
 
@@ -6,6 +7,19 @@ const ACTION_IDS = ['contact']
 
 export default function Header({ t, lang, dark, page, menuOpen, navigate, toggleTheme, setLang, setMenuOpen, user, navItems }) {
   const allItems = (navItems || DEFAULT_NAV_ITEMS).filter(i => i.visible)
+
+  // Menu mở: Escape để đóng + khoá scroll nền
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = e => { if (e.key === 'Escape') setMenuOpen(false) }
+    window.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [menuOpen, setMenuOpen])
   const mainNav = allItems.filter(i => !ACTION_IDS.includes(i.id))
   const actionNav = allItems.filter(i => ACTION_IDS.includes(i.id))
 
@@ -48,14 +62,18 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
             <button className="lang-btn" onClick={() => setLang(l => l === 'vi' ? 'en' : 'vi')}>
               {lang === 'vi' ? 'EN' : 'VI'}
             </button>
-            <button className={`hamburger ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(o => !o)} aria-label={t.menuOpen}>
+            <button className={`hamburger ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(o => !o)}
+              aria-label={t.menuOpen} aria-expanded={menuOpen} aria-controls="overlay-nav">
               <span /><span /><span />
             </button>
           </div>
         </div>
       </header>
 
-      <div className={`overlay-nav ${menuOpen ? 'open' : ''}`}>
+      {/* inert khi đóng: loại toàn bộ controls khỏi keyboard/accessibility tree
+          (opacity 0 + pointer-events none không đủ — vẫn Tab vào được) */}
+      <div id="overlay-nav" className={`overlay-nav ${menuOpen ? 'open' : ''}`}
+        inert={menuOpen ? undefined : ''}>
         <button className="overlay-close" onClick={() => setMenuOpen(false)} aria-label="Close">✕</button>
         <nav className="overlay-links">
           {allItems.map(item => (

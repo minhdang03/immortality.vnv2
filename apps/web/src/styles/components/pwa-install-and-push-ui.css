@@ -4,16 +4,18 @@
 ───────────────────────────────────────────────────────────────────────────── */
 
 .pwa-install-banner {
-  /* Mobile-only */
+  /* Mobile-only. Card nổi phía TRÊN bottom-nav (nav cao ~64px + safe area) —
+     không đè lên navigation như bản cũ (bottom:0, z-index 900 > nav 100). */
   display: none;
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 900;
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) 1rem;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  left: 12px;
+  right: 12px;
+  z-index: 90; /* dưới bottom-nav (100) — nav luôn bấm được */
+  padding: 0.75rem 1rem;
   background: var(--surface, #fff);
-  border-top: 1px solid var(--border, rgba(176, 134, 66, 0.2));
+  border: 1px solid var(--border, rgba(176, 134, 66, 0.2));
+  border-radius: 12px;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
   animation: pwa-banner-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

@@ -10,9 +10,16 @@
   justify-content: center;
   opacity: 0;
   pointer-events: none;
+  /* visibility hidden khi đóng: ẩn khỏi focus/screen reader; delay để fade-out chạy xong */
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+.overlay-nav.open {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
   transition: opacity 0.35s ease;
 }
-.overlay-nav.open { opacity: 1; pointer-events: auto; }
 
 .overlay-close {
   position: absolute;

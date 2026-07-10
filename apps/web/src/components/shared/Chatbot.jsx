@@ -12,12 +12,29 @@ export default function Chatbot({ lang = 'vi', userId }) {
   const [messages, setMessages] = useState([{ role: 'assistant', content: GREETING[lang] || GREETING.vi }])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
+  const [fabHidden, setFabHidden] = useState(false)
   const scrollRef = useRef(null)
   const abortRef = useRef(null)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, open])
+
+  // FAB tránh che chữ khi đọc: cuộn xuống → ẩn, cuộn lên/về đầu trang → hiện.
+  // Panel đang mở thì giữ nguyên.
+  useEffect(() => {
+    if (open) { setFabHidden(false); return }
+    let lastY = window.scrollY
+    const onScroll = () => {
+      const y = window.scrollY
+      const delta = y - lastY
+      if (Math.abs(delta) < 8) return
+      setFabHidden(delta > 0 && y > 160)
+      lastY = y
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [open])
 
   async function send() {
     const text = input.trim()
@@ -85,7 +102,7 @@ export default function Chatbot({ lang = 'vi', userId }) {
   return (
     <>
       <button
-        className={`chatbot-fab${open ? ' chatbot-fab-active' : ''}`}
+        className={`chatbot-fab${open ? ' chatbot-fab-active' : ''}${fabHidden ? ' chatbot-fab-hidden' : ''}`}
         onClick={() => setOpen(o => !o)}
         aria-label={TITLE[lang]}
       >
