@@ -10,7 +10,9 @@
   display: flex; align-items: center; justify-content: center;
   padding: 96px 24px 120px;
   overflow: hidden;
-  background: var(--ink);
+  /* Hero cinematic luôn TỐI ở cả 2 theme — chữ cream #f8f3ea thiết kế cho nền tối.
+     Bug cũ: var(--ink) ở dark mode là màu SÁNG → nền kem + chữ kem tàng hình. */
+  background: #161310;
   isolation: isolate;
   color: #f8f3ea;
 }

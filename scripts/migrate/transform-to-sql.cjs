@@ -33,7 +33,14 @@ const read = (name) => {
 
 const COLS = ['id','type','status','vi_title','en_title','vi_summary','en_summary',
   'vi_body','en_body','vi_question','en_question','vi_slug','en_slug','order_index',
-  'content_date','source_ref','created_by','thumbnail_url']
+  'content_date','source_ref','created_by','thumbnail_url','extra']
+
+// extra jsonb (NOT NULL default '{}'): field per-type ngoài schema phẳng (0013).
+// Bỏ key null/undefined; luôn trả JSON hợp lệ (không trả null — cột NOT NULL).
+function extraJson(obj) {
+  const clean = Object.fromEntries(Object.entries(obj).filter(([, v]) => v != null && v !== ''))
+  return JSON.stringify(clean)
+}
 
 function row(o) {
   return '(' + COLS.map((c) => (c === 'order_index' && o[c] != null ? o[c] : q(o[c]))).join(', ') + ')'
@@ -50,6 +57,8 @@ function fromNested(d, type) {
     order_index: type === 'khaitri' ? (d.order ?? null) : null,
     content_date: d.date || null, source_ref: d.sourceRef || null,
     created_by: d.createdBy || null, thumbnail_url: d.image || null,
+    // tag/topic/source: card chips + filter trên web dùng trực tiếp (mất trong bản import đầu)
+    extra: extraJson({ tag: d.tag, topic: d.topic, source: d.source }),
   }
 }
 function fromStory(d) {
@@ -58,8 +67,14 @@ function fromStory(d) {
     vi_title: d.titleVi, en_title: d.titleEn, vi_summary: d.lessonVi, en_summary: d.lessonEn,
     vi_body: d.contentVi, en_body: d.contentEn, vi_question: null, en_question: null,
     vi_slug: d.order != null ? `${d.order}-${slugify(d.titleVi)}` : slugify(d.titleVi), en_slug: null,
-    order_index: null, content_date: null, source_ref: null,
+    // order: StoriesPage sort + storySlug đều cần (bản đầu để null → trang 37 chuyện vỡ)
+    order_index: d.order ?? null, content_date: null, source_ref: null,
     created_by: null, thumbnail_url: d.image || null,
+    extra: extraJson({
+      tag: d.tag,
+      threadVi: d.threadVi, threadEn: d.threadEn,
+      highlightsVi: d.highlightsVi, highlightsEn: d.highlightsEn,
+    }),
   }
 }
 
@@ -81,7 +96,7 @@ on conflict (id) do update set
   vi_slug=excluded.vi_slug, en_slug=excluded.en_slug,
   order_index=excluded.order_index, content_date=excluded.content_date,
   source_ref=excluded.source_ref, created_by=excluded.created_by,
-  thumbnail_url=excluded.thumbnail_url, updated_at=now();
+  thumbnail_url=excluded.thumbnail_url, extra=excluded.extra, updated_at=now();
 `
 fs.writeFileSync(path.join(DUMP, 'import.sql'), sql)
 const byType = rows.reduce((m, r) => ((m[r.type] = (m[r.type] || 0) + 1), m), {})

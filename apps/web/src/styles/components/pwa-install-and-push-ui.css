@@ -90,6 +90,8 @@
   transition: background 0.18s;
   white-space: nowrap;
 }
+/* Light: gold đậm hơn để chữ trắng đạt tương phản (4.68:1) */
+[data-theme="light"] .pwa-install-banner__btn-install { background: #8a672f; }
 
 .pwa-install-banner__btn-install:hover {
   background: #c49a4e;

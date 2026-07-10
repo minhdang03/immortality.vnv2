@@ -15,14 +15,18 @@ import { supabase } from '../supabase'
  * @returns {object}
  */
 export function adaptContentRow(row) {
-  return {
+  const extra = row.extra || {} // jsonb 0013: tag/topic/source, story thread/highlights…
+  const base = {
     id: row.id,
     type: row.type,
     status: row.status,
     order: row.order_index ?? null,
     date: row.content_date ?? null,
-    tag: row.tags ?? null,
-    topic: row.source_ref ?? null,
+    tag: extra.tag ?? null,
+    topic: extra.topic ?? null,
+    source: extra.source ?? null,
+    sourceRef: row.source_ref ?? null,
+    image: row.thumbnail_url ?? null,       // ArticleCard dùng article.image
     thumbnail: row.thumbnail_url ?? null,
     viSlug: row.vi_slug ?? null,
     enSlug: row.en_slug ?? null,
@@ -41,6 +45,19 @@ export function adaptContentRow(row) {
       question: row.en_question ?? '',
     },
   }
+
+  // Stories: components dùng shape PHẲNG (titleVi, contentVi, lessonVi, thread, highlights…)
+  if (row.type === 'story') {
+    return {
+      ...base,
+      titleVi: row.vi_title ?? '', titleEn: row.en_title ?? '',
+      contentVi: row.vi_body ?? '', contentEn: row.en_body ?? '',
+      lessonVi: row.vi_summary ?? '', lessonEn: row.en_summary ?? '',
+      threadVi: extra.threadVi ?? '', threadEn: extra.threadEn ?? '',
+      highlightsVi: extra.highlightsVi ?? [], highlightsEn: extra.highlightsEn ?? [],
+    }
+  }
+  return base
 }
 
 /**

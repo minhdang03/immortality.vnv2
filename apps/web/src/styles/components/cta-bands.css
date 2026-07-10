@@ -5,8 +5,11 @@
   max-width: var(--max-w);
 }
 .newsletter-band-inner {
-  background: var(--ink);
-  color: var(--bg);
+  /* Band luôn TỐI ở cả 2 theme — chữ bên trong (white/cream) thiết kế cho nền tối.
+     Bug cũ: var(--ink) ở dark mode là màu SÁNG → card kem + chữ trắng tàng hình. */
+  background: linear-gradient(135deg, #1c1610 0%, #261c12 100%);
+  color: #f5ede0;
+  border: 1px solid rgba(212, 167, 106, 0.18);
   border-radius: var(--r-lg);
   padding: var(--sp-7) var(--sp-5);
   display: grid;
@@ -47,12 +50,12 @@
 }
 .newsletter-form input {
   flex: 1 1 200px; min-width: 0; background: transparent; border: none;
-  color: var(--bg); padding: 14px 22px; font-family: var(--font-body); font-size: 0.95rem;
+  color: #f5ede0; padding: 14px 22px; font-family: var(--font-body); font-size: 0.95rem;
   outline: none;
 }
 .newsletter-form input::placeholder { color: rgba(245,237,224,0.4); }
 .newsletter-form button {
-  background: var(--gold); color: var(--ink); font-weight: 600;
+  background: #c9a86c; color: #241a0c; font-weight: 600; /* nút vàng chữ tối — mọi theme */
   padding: 12px 28px; border-radius: var(--r-pill); border: none; cursor: pointer;
   font-family: var(--font-body); font-size: 0.95rem;
   transition: background 180ms ease;

@@ -1,0 +1,8 @@
+# KHÔNG upload env local lên build Vercel — backend flag do Vercel env vars quyết định.
+# (Sự cố 260710: vercel deploy CLI upload .env chứa VITE_DATA_BACKEND=supabase,
+#  khiến xoá env trên dashboard vô dụng, rollback không ăn.)
+.env
+.env.*
+scripts/migrate/.dump
+plans
+docs
