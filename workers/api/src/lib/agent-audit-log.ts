@@ -13,6 +13,7 @@ import { insertRow, type SupabaseEnv } from "./supabase-service-client.js";
 export type AuditAction =
   | "content.create"
   | "content.update"
+  | "content.duplicate_rejected"
   | "media.upload"
   | "key.create"
   | "key.revoke";

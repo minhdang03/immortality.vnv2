@@ -16,8 +16,9 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { upsertRows, updateRows, type SupabaseEnv } from "../lib/supabase-service-client.js";
+import { upsertRows, updateRows, selectRows, type SupabaseEnv } from "../lib/supabase-service-client.js";
 import { insertAuditRow } from "../lib/agent-audit-log.js";
+import { computeContentHash } from "../lib/content-hash.js";
 import type { ApiKeyRow } from "../middleware/api-key-auth-middleware.js";
 import type { Env } from "../cloudflare-worker-env.js";
 
@@ -65,6 +66,9 @@ const ContentUpsertSchema = z.object({
   tags: z.array(z.string()).default([]),
   seo_meta: z.record(z.unknown()).optional(),
   created_by: z.string().optional(),
+
+  // Set true to bypass the content-hash duplicate check for a deliberate repost.
+  allow_duplicate: z.boolean().optional(),
 }).refine(
   (d) => d.id !== undefined || d.source_ref !== undefined,
   { message: "At least one of 'id' or 'source_ref' is required" }
@@ -141,6 +145,48 @@ router.post(
 
     // Determine conflict column: prefer source_ref for agent idempotency, fallback to id
     const onConflict = body.source_ref ? "source_ref" : "id";
+
+    // Duplicate-content check: same title+body already published under a
+    // DIFFERENT source_ref (re-runs of the same source_ref are legitimate
+    // updates, not duplicates — source_ref upsert already handles those).
+    const titleForHash = body.vi_title || body.en_title || "";
+    const bodyForHash = body.vi_body || body.en_body || "";
+    if (!body.allow_duplicate && (titleForHash || bodyForHash)) {
+      const contentHash = await computeContentHash(titleForHash, bodyForHash);
+      row.content_hash = contentHash;
+
+      const dupes = await selectRows<{ id: string; source_ref: string | null; vi_title: string | null }>(
+        c.env,
+        "content",
+        new URLSearchParams({
+          content_hash: `eq.${contentHash}`,
+          select: "id,source_ref,vi_title",
+        })
+      );
+      const conflict = dupes.find((d) => d.source_ref !== body.source_ref);
+      if (conflict) {
+        c.executionCtx.waitUntil(
+          insertAuditRow(c.env, {
+            key_id: keyRow.id,
+            agent_name: keyRow.agent_name,
+            action: "content.duplicate_rejected",
+            content_id: conflict.id,
+            status_code: 409,
+            detail: `duplicate of source_ref=${conflict.source_ref}`,
+          })
+        );
+        return c.json(
+          {
+            error: {
+              code: "DUPLICATE_CONTENT",
+              message: "Content with this title+body already exists",
+              existing: conflict,
+            },
+          },
+          409
+        );
+      }
+    }
 
     let upserted: Record<string, unknown>[];
     try {
