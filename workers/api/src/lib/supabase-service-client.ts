@@ -89,10 +89,11 @@ export async function upsertRows<T = Record<string, unknown>>(
   rows: Record<string, unknown>[],
   onConflict: string
 ): Promise<T[]> {
-  const params = new URLSearchParams();
+  // PostgREST takes the conflict target as the on_conflict QUERY PARAM —
+  // there is no on-conflict header; sending one silently degrades to plain INSERT.
+  const params = new URLSearchParams({ on_conflict: onConflict });
   const headers: HeadersInit = {
     "Prefer": `resolution=merge-duplicates,return=representation`,
-    "on-conflict": onConflict,
   };
   return pgRequest<T[]>(env, "POST", table, params, rows, headers);
 }

@@ -1,0 +1,18 @@
+# Deploy TỐI THIỂU — chỉ agent write plane (/v1/content) cho goclaw publisher.
+# Không D1/KV/Vectorize/R2/cron: các route legacy (/api/profiles...) vẫn deploy nhưng
+# sẽ lỗi runtime nếu gọi (thiếu Firestore secrets) — chấp nhận, agent không gọi chúng.
+# Bản SP1 đầy đủ ở ./wrangler.toml — dùng khi đã tạo đủ resources.
+#
+# Deploy:  npx wrangler deploy --config wrangler-minimal.toml          (từ workers/)
+# Secret:  npx wrangler secret put SUPABASE_SERVICE_ROLE --config wrangler-minimal.toml
+
+name = "btd-api"
+main = "api/src/index.ts"
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+ENV = "production"
+CORS_ORIGINS = "https://battudao.com,https://immortality.vn"
+SUPABASE_URL = "https://dzctvmrlsxwkcuidsqzk.supabase.co"
