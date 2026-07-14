@@ -23,7 +23,7 @@
   gap: 2px;
   cursor: pointer;
   color: var(--text-dim);
-  font-size: 0.62rem;
+  font-size: 0.8rem; /* ~12.8px — dưới 12px không đọc được, độc giả 50+ */
   font-family: var(--font-body);
   transition: color 0.3s;
   padding: 4px 8px;

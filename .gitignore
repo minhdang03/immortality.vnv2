@@ -57,3 +57,4 @@ android/app/*.iml
 secrets/
 *firebase-admin-sa*.json
 scripts/migrate/.dump/
+.firebase/

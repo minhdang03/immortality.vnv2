@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import SunIcon from '../shared/SunIcon'
+import PageHero from '../shared/PageHero'
 
 const PAGE_SIZE = 20
 
@@ -42,17 +43,14 @@ export default function KhaiTriList({ items, lang, onSelect }) {
 
   return (
     <section className="khaitri-page fade-up">
-      <div className="khaitri-header">
-        <div className="khaitri-sun"><SunIcon size={60} /></div>
-        <h1 className="khaitri-title">
-          {lang === 'vi' ? 'Khai Trí' : 'Enlightenment Q&A'}
-        </h1>
-        <p className="khaitri-subtitle">
-          {lang === 'vi'
-            ? 'Hỏi đáp trực tiếp với Người Bất Tử'
-            : 'Direct Q&A with The Immortal'}
-        </p>
-      </div>
+      <PageHero
+        icon={<SunIcon size={60} />}
+        eyebrow={lang === 'vi' ? 'Hỏi Đáp' : 'Q&A'}
+        title={lang === 'vi' ? 'Khai Trí' : 'Enlightenment Q&A'}
+        subtitle={lang === 'vi'
+          ? 'Hỏi đáp trực tiếp với Người Bất Tử'
+          : 'Direct Q&A with The Immortal'}
+      />
 
       {/* Search */}
       <div className="khaitri-search">

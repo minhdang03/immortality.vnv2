@@ -1,0 +1,28 @@
+/* ─── PAGE HERO (editorial chuẩn — mọi content page) ─── */
+.page-hero { text-align: center; padding: 40px 0 28px; }
+.page-hero-icon { margin-bottom: 16px; }
+.page-hero-eyebrow {
+  font-size: var(--fs-label); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--gold); margin-bottom: 12px;
+}
+.page-hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 600; color: var(--ink);
+  letter-spacing: -0.5px; line-height: 1.1;
+  margin-bottom: 12px;
+}
+.page-hero-title em { font-style: italic; color: var(--gold-deep); }
+.page-hero-subtitle {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 1.15rem; color: var(--ink-soft);
+  max-width: 540px; margin: 0 auto; line-height: 1.5;
+}
+@media (min-width: 768px) {
+  .page-hero { padding: 56px 0 36px; }
+  .page-hero-subtitle { font-size: 1.25rem; }
+}
+@media (min-width: 1024px) {
+  .page-hero { padding: 72px 0 44px; }
+}

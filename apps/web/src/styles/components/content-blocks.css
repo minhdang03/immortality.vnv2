@@ -1,0 +1,27 @@
+/* ─── CONTENT BLOCKS — Callout / KeyPoints / ComingSoon ─── */
+.callout {
+  display: flex; gap: 12px; align-items: flex-start;
+  margin: 20px 0; padding: 16px 18px;
+  background: var(--gold-tint);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 12px 12px 0;
+}
+.callout-icon { color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+.callout-body { font-size: var(--fs-ui); color: var(--text); line-height: 1.75; }
+.callout-body p { margin: 0 0 10px; }
+.callout-body p:last-child { margin-bottom: 0; }
+
+.key-points { list-style: none; margin: 16px 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.key-points li {
+  display: flex; gap: 10px; align-items: baseline;
+  font-size: var(--fs-ui); color: var(--text); line-height: 1.7;
+}
+.key-point-bullet { color: var(--gold); font-size: 0.7rem; flex-shrink: 0; }
+
+.coming-soon-badge {
+  display: inline-block; padding: 3px 10px;
+  font-size: var(--fs-label); font-weight: 600;
+  color: var(--ink-muted); background: var(--surface-2);
+  border: 1px solid var(--rule); border-radius: 999px;
+  letter-spacing: 0.3px;
+}

@@ -1,18 +1,18 @@
 import { STORY_TAGS } from '../../data/stories'
+import PageHero from '../shared/PageHero'
 
 export default function StoryList({ allStories, filtered, filter, setFilter, lang, onSelect }) {
   const tags = ['all', ...Object.keys(STORY_TAGS)]
 
   return (
     <section className="stories-page fade-up">
-      <h1 className="stories-title">
-        {lang === 'vi' ? `${allStories.length} Câu Chuyện Người Bất Tử` : `${allStories.length} Stories of The Immortal`}
-      </h1>
-      <p className="stories-subtitle">
-        {lang === 'vi'
+      <PageHero
+        eyebrow={lang === 'vi' ? 'Câu Chuyện' : 'Stories'}
+        title={lang === 'vi' ? `${allStories.length} Câu Chuyện Người Bất Tử` : `${allStories.length} Stories of The Immortal`}
+        subtitle={lang === 'vi'
           ? 'Hành trình hơn 40 năm khám phá, chiến đấu và chữa lành'
           : 'A journey of over 40 years of discovery, battle and healing'}
-      </p>
+      />
 
       <div className="stories-filters">
         {tags.map(tag => (

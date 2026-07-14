@@ -16,6 +16,36 @@
   isolation: isolate;
   color: #f8f3ea;
 }
+.home-energy {
+  min-height: calc(100vh - 58px);
+  min-height: calc(100dvh - 58px);
+  justify-content: flex-start;
+  background: #05060d;
+}
+.home-energy-media,
+.home-energy-poster,
+.home-energy-video,
+.home-energy-scrim {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+}
+.home-energy-media { z-index: 0; overflow: hidden; background: #05060d; pointer-events: none; }
+.home-energy-poster,
+.home-energy-video { object-fit: cover; object-position: center; display: block; }
+.home-energy-poster { z-index: 0; }
+.home-energy-video { z-index: 1; }
+.home-energy-scrim {
+  z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(4,5,12,0.94) 0%, rgba(4,5,12,0.78) 28%, rgba(4,5,12,0.34) 50%, rgba(4,5,12,0.05) 75%),
+    linear-gradient(180deg, rgba(4,5,12,0.2), transparent 58%, rgba(4,5,12,0.48));
+}
+.home-energy .hero-cinematic-inner {
+  z-index: 3; width: min(47vw, 650px); max-width: none;
+  margin-left: clamp(32px, 7vw, 120px); text-align: left;
+}
+.home-energy .hero-deck { margin-left: 0; margin-right: 0; }
+.home-energy .hero-cta { justify-content: flex-start; }
+.home-energy .hero-scroll-hint { z-index: 3; }
 .hero-cinematic .hero-bg {
   position: absolute; inset: 0; z-index: 0;
   background-size: cover;
@@ -112,6 +142,40 @@
   .hero-cinematic { min-height: 70vh; padding: 80px 20px 96px; }
   .hero-cinematic h1 { letter-spacing: -1px; }
   .hero-scroll-hint { bottom: 20px; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .home-energy { padding-left: 32px; padding-right: 32px; }
+  .home-energy .hero-cinematic-inner {
+    width: min(48vw, 510px);
+    margin-left: clamp(18px, 4vw, 48px);
+  }
+  .home-energy h1 { font-size: clamp(2.5rem, 5.5vw, 4.4rem); }
+  .home-energy-scrim {
+    background:
+      linear-gradient(90deg, rgba(4,5,12,0.94) 0%, rgba(4,5,12,0.7) 38%, rgba(4,5,12,0.12) 68%),
+      linear-gradient(180deg, rgba(4,5,12,0.12), transparent 60%, rgba(4,5,12,0.5));
+  }
+}
+@media (max-width: 760px) {
+  .home-energy {
+    min-height: calc(100dvh - 58px); padding: 76px 20px 106px;
+    align-items: flex-end; justify-content: center;
+  }
+  .home-energy-scrim {
+    background:
+      linear-gradient(180deg, rgba(5,6,13,0.04) 0%, rgba(5,6,13,0.08) 38%, rgba(5,6,13,0.76) 68%, rgba(5,6,13,0.97) 100%),
+      linear-gradient(90deg, rgba(5,6,13,0.16), transparent 50%, rgba(5,6,13,0.16));
+  }
+  .home-energy .hero-cinematic-inner {
+    width: 100%; margin: 0; text-align: center;
+  }
+  .home-energy .hero-eyebrow { margin-bottom: 18px; }
+  .home-energy .hero-deck { margin: 0 auto 28px; }
+  .home-energy .hero-cta { justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-energy .hero-scroll-hint span { animation: none; }
 }
 
 /* ─── BUTTONS ─── */

@@ -2,26 +2,87 @@
 
 ## Tổng quan
 
-Web app song ngữ (VI/EN) về tâm linh — Bất Tử Đạo. Vite + React 18 SPA, Firebase Firestore làm CMS, Cloud Functions render OG meta cho crawler, Capacitor wrap thành iOS app.
+Hybrid platform song ngữ (VI/EN) về tâm linh — Bất Tử Đạo. **Monorepo pnpm workspaces** (2026-05-10/11) với:
+- **Web:** Vite 5 + React 18 PWA, Firebase Firestore CMS, Cloud Functions OG rendering
+- **Mobile:** Expo SDK 54 React Native (iOS + Android), WebView cho content reuse
+- **Backend:** Cloudflare Workers + Durable Objects (REST API + WebSocket chat)
+- **Shared:** Common Firebase config, UI tokens, utilities (packages/)
 
 ```
-immortality-vn/
-├── src/              ← Vite + React SPA (user + admin gộp 1 bundle)
-├── functions/        ← Firebase Functions (ogRenderer — OG/Twitter card cho crawler)
-├── api/              ← Vercel serverless OG endpoint (alt deploy target)
-├── scripts/          ← Seed/migration scripts (Node + Python) cho Firestore
-├── ios/              ← Capacitor iOS wrap (com.immortality.app)
-├── public/           ← Static assets, favicon, sw.js, og-image
-├── firebase.json     ← Hosting + functions config
-├── firestore.rules   ← Security rules (KHÔNG auto-deploy — copy thủ công)
-├── vercel.json       ← Vercel rewrites (alt host)
-├── capacitor.config.json
-└── CLAUDE.md         ← FILE NÀY
+immortality-vn/  (pnpm monorepo root — workspace setup)
+├── apps/
+│   ├── web/              ← Vite + React 18 SPA + PWA (swv3, manifest, FCM web push)
+│   └── mobile/           ← Expo SDK 54 RN (12 screens, iOS + Android, WebView content)
+├── workers/
+│   ├── api/              ← Hono REST API (Firebase Auth, Firestore, profiles, Q&A, votes)
+│   ├── realtime/         ← Durable Objects WebSocket chat (slow-mode, ephemeral TTL)
+│   └── notion/           ← Notion sync cron + Claude AI hỏi ngược
+├── packages/
+│   ├── firebase-config/  ← Shared Firebase init (web + RN)
+│   ├── shared/           ← Types, utils, hooks
+│   └── ui-tokens/        ← Design tokens (colors, spacing, typography)
+├── scripts/              ← Seed/migration (Node + Python) cho Firestore
+├── functions/            ← Firebase Functions v2 (ogRenderer — legacy)
+├── public/               ← Static assets (favicon, sw.js v3, og-image, manifest.json)
+├── pnpm-workspace.yaml   ← Workspace definition
+├── firebase.json         ← Hosting + functions config
+├── firestore.rules       ← Security rules (KHÔNG auto-deploy)
+├── vercel.json           ← Alt deploy target
+└── CLAUDE.md             ← FILE NÀY
 ```
 
-**Stack:** Vite 5 + React 18 (no SSR, no Next), Firebase 12 (Firestore + Auth + Analytics), Capacitor 8, Firebase Functions Node 20.
+**Main Stack:** Vite 5 + React 18 (web), Expo 54 + RN 0.76 (mobile), Cloudflare Workers + Durable Objects (API), Firebase 12 (Firestore + Auth + Analytics), pnpm workspaces.
 
-**Domain:** `https://battudao.com` (prod). Đang ở `immortality.vn` để switch ngôn ngữ mặc định EN.
+**Domain:** `https://battudao.com` (prod). Immortality.vn→EN, battudao.com→VI.
+
+---
+
+## Mobile App (apps/mobile/)
+
+Expo SDK 54 React Native with 12 screens (iOS + Android). Anti-Buddhist UX (no tier segregation, no engagement metrics on people, Đăng = peer).
+
+| Screen | Type | Features |
+|---|---|---|
+| Hub | Tab | Latest article, features, trending |
+| Tự Khai Trí | Browse+Parallel | Content cards, filter by difficulty, parallel track UI |
+| Tự Khai Trí AI | Interactive | Claude AI Q&A, context-aware suggestions |
+| Đối thoại sâu | Browse+Thread | Question list, inline reply threads, read-all |
+| Forum Q&A | Browse+Detail | Questions grid, detail page, vote system |
+| Bay Cùng | Profile | User profile, activity, bio, follow (TBD) |
+| Phá Nô Lệ | Modal/List | Self-liberation content, resources |
+| Trao Đổi NLTT | Browse+Booking | Workshops, bookings, calendar integration |
+| Knowledge Base | WebView | Embedded web articles (Firestore + rich text) |
+| Practice Journal | Tab | Audio Khai Trí, journaling |
+| Comments | Drawer | Inline comments on articles (async fetch) |
+| AI Hỏi Ngược | Paid/Modal | 99K/tháng subscription, Claude-powered reflection |
+
+**Tech:** Expo Router (file-based routing), @react-native-firebase (Firebase Auth + Firestore), Durable Objects WebSocket for chat, React Query for data, NativeWind for styling, expo-av for audio.
+
+**WebView strategy:** Content (articles, teachings) rendered via WebView component pointing to `/article/:slug` on web app. Eliminates custom Swift/Kotlin; single source of truth for rich text.
+
+**Deploy:** Apple TestFlight → App Store, Google Play Console (deferred: IAP framework TBD, video provider not chosen yet).
+
+---
+
+## Backend (workers/)
+
+Cloudflare Workers + Durable Objects multi-workspace architecture.
+
+### workers/api/ — REST API (Hono)
+- **Endpoints:** Profiles (GET, PATCH), Questions (GET, POST), Answers (POST, DELETE), Votes (POST), Comments (GET, POST)
+- **Auth:** Firebase Auth token validation, custom claims for admin/mods
+- **Data:** Firestore REST client (no SDKs), R2 for media (shared bucket with project key prefix)
+- **CORS:** Allow mobile + web origins, strict host check
+
+### workers/realtime/ — WebSocket Chat (Durable Objects)
+- **Protocol:** JSON messages, slow-mode (rate-limit 1msg/2sec), presence broadcast (anon user ID)
+- **TTL:** 5-minute idle auto-close, no persistence (ephemeral chat only)
+- **Use case:** Live "đối thoại sâu" threads, typing indicators, presence count
+
+### workers/notion/ — Notion Sync + AI
+- **Cron:** Daily sync from Notion database → Firestore articles + metadata
+- **AI:** Claude API (skill btd-comment-facebook v0.2) — hỏi ngược on comments, auto-suggest responses
+- **Flow:** Notion → Parse → Claude prompt → Firestore write
 
 ---
 
@@ -98,19 +159,37 @@ Admin SDK key (`*firebase-adminsdk*.json`) dùng cho scripts/seed — gitignored
 
 ## Build & Deploy
 
+### Web (apps/web/)
+
 | Cmd | Mô tả |
 |---|---|
-| `npm run dev` | Vite dev server, default port `5173` |
-| `npm run build` | `vite build` → `dist/` + copy `dist/index.html` → `functions/spa.html` (cho ogRenderer) |
-| `npm run preview` | Preview prod build |
-| `firebase deploy --only hosting,functions` | Deploy chính |
-| `firebase deploy --only functions:ogRenderer` | Chỉ deploy OG renderer |
+| `pnpm run dev` | Vite dev, port 5173 |
+| `pnpm run build` | `vite build` → `dist/` + copy → `functions/spa.html` (ogRenderer) |
+| `pnpm run preview` | Preview prod build |
+| `firebase deploy --only hosting,functions` | Deploy Firebase + functions |
+| `firebase deploy --only functions:ogRenderer` | Deploy OG function only |
+
+### Mobile (apps/mobile/)
+
+| Cmd | Mô tả |
+|---|---|
+| `pnpm run dev` | Expo dev client (physical device/simulator) |
+| `pnpm run build:ios` | EAS Build → TestFlight |
+| `pnpm run build:android` | EAS Build → Google Play Console |
+| `eas submit --platform ios` | Submit TestFlight → App Store |
+| `eas submit --platform android` | Submit APK/AAB → Play Store |
+
+### Workers (workers/api, workers/realtime, workers/notion)
+
+| Cmd | Mô tả |
+|---|---|
+| `pnpm -F @btd/workers-api run dev` | Wrangler dev, port 8787 |
+| `pnpm -F @btd/workers-api run deploy` | Deploy to CF |
+| `pnpm -F @btd/workers-realtime run dev` | Durable Objects dev |
 
 **Firestore rules:** KHÔNG deploy bằng CLI (xem section trên). Phải paste vào Console.
 
-**iOS:** `npx cap sync ios && npx cap open ios` → build qua Xcode.
-
-**Vercel:** Có `vercel.json` cho alt deploy. Hiện chưa rõ là active production hay backup.
+**Vercel:** Legacy — `vercel.json` cho backup. Canonical = Firebase Hosting.
 
 ---
 
@@ -122,12 +201,37 @@ App có SW precache. Khi đổi assets có thể cần bump cache name. Conventi
 
 ## Architecture notes
 
-- **No backend service.** Web đọc/ghi Firestore trực tiếp (KHÔNG giống `fly0-app` có API layer). Tất cả business logic ở client + security rules.
-- **Admin nằm chung bundle với user app** — `/admin` route render `<AdminPanel>` lazy-loaded. Auth check là `user != null` từ Firebase Auth.
-- **Hooks pattern:** mỗi collection có 1 hook (`useArticles`, `useStories`, `useKhaiTri`, …) wrap quanh `useFirestoreSWR` + `useCRUD`. Đừng gọi Firestore trực tiếp trong components — dùng hooks.
-- **i18n:** strings ở Firestore `translations/{lang}`, fallback static. Domain-based default lang: `immortality.vn` → EN, `battudao.com` → VI. User toggle lưu `localStorage.lang`.
-- **Theme:** `useTheme(siteSettings?.defaultTheme)` — admin set default qua settings, user override lưu local.
-- **Code-splitting:** mọi page `lazy()` import; Firebase + React tách chunk riêng (xem `vite.config.js`).
+### Layer 1 — UX
+- **Web:** Vite + React SPA (PWA v3, manifest, FCM web push), lazy-loaded pages
+- **Mobile:** Expo RN Router, WebView for articles/teachings (content reuse), native tabs
+- **Shared:** UI tokens (colors, typography, spacing), Firebase config, utils
+- **No custom Swift/Kotlin** — WebView eliminates platform-specific rich-text rendering
+
+### Layer 2 — Content & Services
+**Free tier (all platforms):**
+- Hub (home feed), Tự Khai Trí (learning), Đối thoại sâu (Q&A threads), Forum Q&A, Bay Cùng (profiles), Phá Nô Lệ (resources), Trao Đổi NLTT (workshops), Knowledge base, Practice journal, Audio Khai Trí
+
+**Paid tier (deferred):**
+- AI Hỏi Ngược: 99K/tháng, Claude-powered reflection
+- 1-on-1 with Đăng: 2-5tr (Khoá học deferred)
+
+### Layer 3 — Backend
+- **REST:** Cloudflare Workers (Hono), Firestore REST client (no JS SDK in Workers)
+- **WebSocket:** Durable Objects ephemeral chat (5min idle TTL, no persistence)
+- **Cron:** Notion sync + Claude AI hỏi ngược (daily)
+- **Media:** R2 with project key prefix (shared bucket)
+- **Auth:** Firebase Auth tokens → custom claims (admin, mod)
+
+### Layer 4 — Source of Truth
+- **Content:** Firestore collections (articles, teachings, Q&A)
+- **Config:** Notion database (synced daily to Firestore)
+- **AI:** Claude API (skill btd-comment-facebook v0.2)
+
+**Anti-patterns rejected:**
+- No Buddhist metaphor in UI (tone is peer-to-peer)
+- No tier segregation visible (paid features don't demote free)
+- No engagement metrics on people (no like counts, no follow scores)
+- Đăng = peer, not authority figure
 
 ---
 
@@ -146,4 +250,10 @@ App có SW precache. Khi đổi assets có thể cần bump cache name. Conventi
 1. **Firestore rules không auto-deploy** — dễ quên update prod khi sửa `firestore.rules`. Cân nhắc thêm section `firestore` vào `firebase.json`.
 2. **"Admin" check quá lỏng** — bất kỳ user nào login Firebase Auth đều có quyền write toàn bộ collections. Cần custom claim `admin=true` trước khi mở public sign-up.
 3. **Admin SDK key trong `src/`** — không leak (gitignored) nhưng nên move sang `scripts/` cho đúng convention.
-4. **Hai deploy target song song** (Firebase Hosting + Vercel) — clarify cái nào là canonical, tránh divergence trong `vercel.json` vs `firebase.json` rewrites.
+4. **pnpm only** — never `npm install`. Lock file is `pnpm-lock.yaml`, not `package-lock.json`.
+5. **iOS IAP deferred** — App Store in-app purchases not yet integrated; subscription payment via web/SePay for now.
+6. **Video provider TBD** — audio transcriptions + video hosting not chosen; placeholder for future.
+7. **PWA icons placeholder** — `public/manifest.json` has stub icon paths; replace with actual before app store submission.
+8. **Durable Objects costs** — realtime chat scales with users; test quota limits on production.
+9. **Notion sync credentials** — Notion API key stored in Cloudflare env (not .env); ensure CF dashboard has correct key.
+10. **WebView HTTPS only** — mobile WebView won't load http:// articles; dev environment must use https or localhost:3000.

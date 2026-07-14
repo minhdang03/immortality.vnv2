@@ -112,12 +112,54 @@
           mask-image: radial-gradient(ellipse 74% 68% at 50% 34%,
     #000 52%, rgba(0,0,0,0.55) 78%, transparent 98%);
 }
-.nl-bb-figure img { width: 100%; height: auto; display: block; }
+/* Hình thở — scale/nhấp nhô rất nhẹ trên img (GSAP chỉ đụng .nl-bb-figure nên không xung đột).
+   Nhịp 5.6s = 2× nhịp 2.8s của core/halo/beam — cả cảnh cùng một hơi thở. */
+.nl-bb-figure img {
+  width: 100%; height: auto; display: block;
+  transform-origin: 50% 22%;
+  animation: nl-bb-body-breathe 5.6s ease-in-out infinite;
+}
+@keyframes nl-bb-body-breathe {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.014) translateY(-3px); }
+}
+
+/* Vệt sáng quét chéo qua thân — "năng lượng chảy trên da".
+   Ảnh KHÔNG có alpha nên vệt sáng phải tự mask bó sát thân người:
+   ellipse hẹp hơn mask của cha, tan hết trước khi chạm mép ảnh — không lộ viền chữ nhật. */
+.nl-bb-figure::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(115deg,
+    transparent 38%, rgba(255,235,190,0.09) 46%,
+    rgba(255,246,216,0.17) 50%, rgba(255,235,190,0.09) 54%, transparent 62%);
+  background-size: 220% 100%;
+  background-position: 120% 0;
+  -webkit-mask-image: radial-gradient(ellipse 46% 50% at 50% 36%, #000 30%, rgba(0,0,0,0.4) 62%, transparent 82%);
+          mask-image: radial-gradient(ellipse 46% 50% at 50% 36%, #000 30%, rgba(0,0,0,0.4) 62%, transparent 82%);
+  animation: nl-bb-sweep 8.4s ease-in-out infinite;
+}
+/* Quét bằng background-position thay vì transform — mask đứng yên, sáng chỉ chạy bên trong */
+@keyframes nl-bb-sweep {
+  0%, 12% { background-position: 120% 0; }
+  55%, 100% { background-position: -20% 0; }
+}
 
 /* Glow não giữa — core sáng + halo thở nhịp */
 .nl-bb-glow {
   position: absolute; left: 50%; top: calc(var(--figw) * 0.1725);
   width: 0; height: 0; opacity: 0;
+}
+/* Ripple — vòng sóng lan từ crown mỗi nhịp thở, nối glow với không gian */
+.nl-bb-glow::before {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: calc(var(--figw) * 0.2); aspect-ratio: 1;
+  border-radius: 50%; border: 1px solid rgba(255,224,150,0.55);
+  transform: translate(-50%, -50%) scale(0.3);
+  animation: nl-bb-ripple 2.8s ease-out infinite;
+}
+@keyframes nl-bb-ripple {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0.8; }
+  70%, 100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
 }
 .nl-bb-glow-core, .nl-bb-glow-halo {
   position: absolute; left: 50%; top: 50%;
@@ -176,5 +218,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .nl-bb-rays, .nl-bb-beam::before, .nl-bb-beam::after,
-  .nl-bb-glow-core, .nl-bb-glow-halo { animation: none; }
+  .nl-bb-glow-core, .nl-bb-glow-halo,
+  .nl-bb-figure img, .nl-bb-figure::after, .nl-bb-glow::before { animation: none; }
 }

@@ -12,7 +12,7 @@ export default function Chatbot({ lang = 'vi', userId }) {
   const [messages, setMessages] = useState([{ role: 'assistant', content: GREETING[lang] || GREETING.vi }])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
-  const [fabHidden, setFabHidden] = useState(false)
+  const [fabMinimized, setFabMinimized] = useState(false)
   const scrollRef = useRef(null)
   const abortRef = useRef(null)
 
@@ -20,20 +20,24 @@ export default function Chatbot({ lang = 'vi', userId }) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, open])
 
-  // FAB tránh che chữ khi đọc: cuộn xuống → ẩn, cuộn lên/về đầu trang → hiện.
-  // Panel đang mở thì giữ nguyên.
+  // FAB tránh che chữ khi đọc: cuộn xuống → thu nhỏ mờ (vẫn bấm được),
+  // cuộn lên hoặc dừng cuộn 2.5s → hiện lại. Panel đang mở thì giữ nguyên.
   useEffect(() => {
-    if (open) { setFabHidden(false); return }
+    if (open) { setFabMinimized(false); return }
     let lastY = window.scrollY
+    let idleTimer
     const onScroll = () => {
       const y = window.scrollY
       const delta = y - lastY
-      if (Math.abs(delta) < 8) return
-      setFabHidden(delta > 0 && y > 160)
-      lastY = y
+      if (Math.abs(delta) >= 8) {
+        setFabMinimized(delta > 0 && y > 160)
+        lastY = y
+      }
+      clearTimeout(idleTimer)
+      idleTimer = setTimeout(() => setFabMinimized(false), 2500)
     }
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    return () => { clearTimeout(idleTimer); window.removeEventListener('scroll', onScroll) }
   }, [open])
 
   async function send() {
@@ -102,7 +106,7 @@ export default function Chatbot({ lang = 'vi', userId }) {
   return (
     <>
       <button
-        className={`chatbot-fab${open ? ' chatbot-fab-active' : ''}${fabHidden ? ' chatbot-fab-hidden' : ''}`}
+        className={`chatbot-fab${open ? ' chatbot-fab-active' : ''}${fabMinimized ? ' chatbot-fab-min' : ''}`}
         onClick={() => setOpen(o => !o)}
         aria-label={TITLE[lang]}
       >

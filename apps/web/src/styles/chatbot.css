@@ -9,8 +9,10 @@
 }
 .chatbot-fab:hover { transform: translateY(-2px); background: var(--gold-deep); }
 .chatbot-fab-active { background: var(--gold-deep); }
-/* Ẩn khi cuộn xuống đọc — không che đoạn văn (hiện lại khi cuộn lên) */
-.chatbot-fab-hidden { transform: translateY(160px); opacity: 0; pointer-events: none; }
+/* Thu nhỏ khi cuộn xuống đọc — không che đoạn văn, vẫn bấm được.
+   Hiện lại khi cuộn lên hoặc dừng cuộn (JS đặt/tháo class). */
+.chatbot-fab-min { transform: scale(0.6); opacity: 0.4; } /* ≥33px touch target — độc giả 50+ */
+.chatbot-fab-min:hover, .chatbot-fab-min:focus-visible { transform: scale(1); opacity: 1; }
 
 .chatbot-panel {
   position: fixed; bottom: 156px; right: 20px; z-index: 9001;
@@ -83,7 +85,8 @@
 .chatbot-input button:disabled { opacity: 0.3; cursor: not-allowed; }
 
 @media (max-width: 480px) {
-  .chatbot-fab { bottom: 80px; right: 16px; width: 52px; height: 52px; }
+  /* Nổi trên bottom nav (≈70px + safe area) — không đè label nav */
+  .chatbot-fab { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); right: 16px; width: 52px; height: 52px; }
   .chatbot-panel {
     bottom: 0; right: 0; left: 0;
     width: 100%; height: 80vh; border-radius: 16px 16px 0 0;

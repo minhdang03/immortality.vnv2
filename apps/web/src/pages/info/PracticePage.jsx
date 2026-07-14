@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import SunIcon from '../../components/shared/SunIcon'
+import PageHero from '../../components/shared/PageHero'
+import { Callout, ComingSoon } from '../../components/shared/ContentBlocks'
 
 const DEFAULT_MOVES = [
   { order: 1, titleVi: 'Khởi Động Năng Lượng Mặt Trời', titleEn: 'Solar Energy Activation', descVi: '', descEn: '' },
@@ -24,15 +26,12 @@ export default function PracticePage({ t, lang, practices }) {
 
   return (
     <section className="practice-page fade-up">
-      <div className="practice-header">
-        <div className="practice-sun"><SunIcon size={60} /></div>
-        <h1 className="practice-title">
-          {lang === 'vi' ? 'Thái Dương Quyền' : 'Solar Fist (Thái Dương Quyền)'}
-        </h1>
-        <p className="practice-subtitle">
-          {lang === 'vi' ? 'Võ Mặt Trời — Võ Năng Lượng Vũ Trụ' : 'Sun Martial Art — Cosmic Energy Martial Art'}
-        </p>
-      </div>
+      <PageHero
+        icon={<SunIcon size={60} />}
+        eyebrow={lang === 'vi' ? 'Thực Hành' : 'Practice'}
+        title={lang === 'vi' ? 'Thái Dương Quyền' : 'Solar Fist (Thái Dương Quyền)'}
+        subtitle={lang === 'vi' ? 'Võ Mặt Trời — Võ Năng Lượng Vũ Trụ' : 'Sun Martial Art — Cosmic Energy Martial Art'}
+      />
 
       <div className="practice-intro">
         <p>
@@ -40,12 +39,13 @@ export default function PracticePage({ t, lang, practices }) {
             ? 'Thái Dương Quyền là bộ võ năng lượng mặt trời, kết hợp giữa võ thuật cổ truyền Việt Nam và y học vũ trụ tiền Big Bang. Thực hành Thái Dương Quyền giúp kích hoạt năng lượng mặt trời trong cơ thể, tăng cường sức khỏe, tự chữa lành bệnh tật, và kết nối với nguồn năng lượng vũ trụ.'
             : 'Thái Dương Quyền (Solar Fist) is a solar energy martial art combining traditional Vietnamese martial arts with pre-Big Bang cosmic medicine. Practicing Solar Fist activates solar energy within the body, enhances health, self-heals diseases, and connects with cosmic energy sources.'}
         </p>
-        <p>
-          {lang === 'vi'
-            ? 'Bộ võ gồm 10 động tác cơ bản, mỗi động tác kích hoạt một trung tâm năng lượng khác nhau trong cơ thể, từ hệ thống dây thần kinh ADN đến hạt nguyên tử bất tử.'
-            : 'The art consists of 10 basic movements, each activating a different energy center in the body, from the DNA nervous system to the immortal atomic particle.'}
-        </p>
       </div>
+
+      <Callout>
+        {lang === 'vi'
+          ? 'Bộ võ gồm 10 động tác cơ bản, mỗi động tác kích hoạt một trung tâm năng lượng khác nhau trong cơ thể, từ hệ thống dây thần kinh ADN đến hạt nguyên tử bất tử.'
+          : 'The art consists of 10 basic movements, each activating a different energy center in the body, from the DNA nervous system to the immortal atomic particle.'}
+      </Callout>
 
       <h2 className="practice-section-title">
         {lang === 'vi' ? '10 Động Tác Cơ Bản' : '10 Basic Movements'}
@@ -60,9 +60,9 @@ export default function PracticePage({ t, lang, practices }) {
               <div className="practice-move-num">{String(move.order || i + 1).padStart(2, '0')}</div>
               <div className="practice-move-content">
                 <h3 className="practice-move-title">{title}</h3>
-                <p className="practice-move-desc">
-                  {desc || (lang === 'vi' ? 'Hướng dẫn chi tiết đang cập nhật...' : 'Detailed instructions being updated...')}
-                </p>
+                {desc
+                  ? <p className="practice-move-desc">{desc}</p>
+                  : <ComingSoon lang={lang} />}
               </div>
             </div>
           )

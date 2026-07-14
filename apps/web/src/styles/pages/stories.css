@@ -23,10 +23,11 @@
 .stories-list { display: flex; flex-direction: column; gap: 6px; }
 .story-item {
   display: flex; align-items: center; gap: 12px; padding: 14px 16px;
-  background: rgba(201,168,108,0.04); border: 1px solid rgba(201,168,108,0.08);
+  background: var(--card); border: 1px solid var(--rule);
   border-radius: 12px; cursor: pointer; transition: all 0.3s;
+  box-shadow: var(--shadow-sm);
 }
-.story-item:hover { background: rgba(201,168,108,0.1); border-color: rgba(201,168,108,0.2); }
+.story-item:hover { border-color: var(--rule-strong); box-shadow: var(--shadow-md); }
 .story-item.has-content { border-left: 3px solid var(--gold); }
 .story-num {
   font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;
@@ -34,18 +35,21 @@
 }
 .story-info { flex: 1; min-width: 0; }
 .story-item-title {
-  font-size: 0.88rem; color: var(--text); line-height: 1.4;
+  font-size: var(--fs-ui); color: var(--text); line-height: 1.4;
   margin-bottom: 4px;
 }
 .story-tag {
-  display: inline-block; font-size: 0.68rem; padding: 2px 8px;
+  display: inline-block; font-size: var(--fs-label); padding: 2px 8px;
   border-radius: 10px; font-weight: 500;
 }
-.tag-escape { background: rgba(72,187,120,0.15); color: #48bb78; }
-.tag-martial { background: rgba(237,137,54,0.15); color: #ed8936; }
-.tag-spiritual { background: rgba(159,122,234,0.15); color: #9f7aea; }
-.tag-battle { background: rgba(245,101,101,0.15); color: #f56565; }
-.tag-explore { background: rgba(66,153,225,0.15); color: #4299e5; }
+/* Category tonal — cùng họ vàng/đất (base.css --cat-*), phân biệt bằng sắc độ nhẹ.
+   Dòng background đầu = fallback cho Safari iOS <16.2 / Chrome Android <111 (không hiểu color-mix). */
+.tag-escape, .tag-martial, .tag-spiritual, .tag-battle, .tag-explore { background: var(--gold-tint); }
+.tag-escape { background: color-mix(in srgb, var(--cat-olive) 14%, transparent); color: var(--cat-olive); }
+.tag-martial { background: color-mix(in srgb, var(--cat-copper) 14%, transparent); color: var(--cat-copper); }
+.tag-spiritual { background: color-mix(in srgb, var(--cat-gold) 14%, transparent); color: var(--cat-gold); }
+.tag-battle { background: color-mix(in srgb, var(--cat-clay) 14%, transparent); color: var(--cat-clay); }
+.tag-explore { background: color-mix(in srgb, var(--cat-umber) 14%, transparent); color: var(--cat-umber); }
 .story-arrow {
   font-size: 1.4rem; color: var(--gold); opacity: 0.3;
   transition: opacity 0.3s, transform 0.3s;
@@ -147,7 +151,7 @@
   padding: 0 0 16px;
 }
 .lesson-card-body p {
-  font-size: calc(0.85rem * var(--reader-scale)); color: #b8b5ad;
+  font-size: calc(0.9rem * var(--reader-scale)); color: var(--text);
   line-height: 1.8; margin: 0 0 8px;
 }
 [data-theme="light"] .lesson-card-body p { color: #5a5550; }

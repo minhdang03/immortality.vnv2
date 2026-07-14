@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase'
 import SunIcon from '../../components/shared/SunIcon'
+import PageHero from '../../components/shared/PageHero'
 
 export default function ContactPage({ t }) {
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
@@ -38,7 +39,7 @@ export default function ContactPage({ t }) {
 
   return (
     <section className="section">
-      <h2 className="section-title fade-up"><SunIcon size={20} /> {t.contactTitle}</h2>
+      <PageHero icon={<SunIcon size={40} />} title={t.contactTitle} />
       {status === 'sent' && <div className="contact-thanks fade-up">{t.contactThanks}</div>}
       {status === 'error' && <div className="contact-thanks fade-up" style={{ color: '#c0392b' }}>Tin nhắn không hợp lệ — kiểm tra lại email và nội dung.</div>}
       <form className="contact-form fade-up fade-up-d1" onSubmit={handleSubmit}>

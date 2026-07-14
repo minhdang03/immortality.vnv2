@@ -1,12 +1,24 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import SunIcon from '../shared/SunIcon'
-import { DEFAULT_NAV_ITEMS } from '../../config/pages'
-
-// Items that go in the right actions group instead of main nav
-const ACTION_IDS = ['contact']
+import { DEFAULT_NAV_ITEMS, PRIMARY_NAV_IDS } from '../../config/pages'
 
 export default function Header({ t, lang, dark, page, menuOpen, navigate, toggleTheme, setLang, setMenuOpen, user, navItems }) {
   const allItems = (navItems || DEFAULT_NAV_ITEMS).filter(i => i.visible)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreRef = useRef(null)
+
+  // Dropdown "Thêm": đóng khi click ra ngoài hoặc Escape
+  useEffect(() => {
+    if (!moreOpen) return
+    const onDown = e => { if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false) }
+    const onKey = e => { if (e.key === 'Escape') setMoreOpen(false) }
+    document.addEventListener('pointerdown', onDown)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [moreOpen])
 
   // Menu mở: Escape để đóng + khoá scroll nền
   useEffect(() => {
@@ -20,8 +32,10 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
       document.body.style.overflow = prevOverflow
     }
   }, [menuOpen, setMenuOpen])
-  const mainNav = allItems.filter(i => !ACTION_IDS.includes(i.id))
-  const actionNav = allItems.filter(i => ACTION_IDS.includes(i.id))
+  // 5 primary destinations; phần còn lại gom vào "Thêm" (audit: header quá nhiều mục)
+  const mainNav = allItems.filter(i => PRIMARY_NAV_IDS.includes(i.id))
+  const moreNav = allItems.filter(i => !PRIMARY_NAV_IDS.includes(i.id))
+  const goMore = (id) => { setMoreOpen(false); navigate(id) }
 
   return (
     <>
@@ -37,25 +51,28 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
                 {lang === 'vi' ? item.labelVi : item.labelEn}
               </button>
             ))}
+            {moreNav.length > 0 && (
+              <div className="nav-more" ref={moreRef}>
+                <button
+                  className={moreNav.some(i => i.id === page) ? 'active' : ''}
+                  onClick={() => setMoreOpen(o => !o)}
+                  aria-haspopup="menu" aria-expanded={moreOpen}
+                >
+                  {lang === 'vi' ? 'Thêm' : 'More'} <span className="nav-more-caret" aria-hidden="true">▾</span>
+                </button>
+                {moreOpen && (
+                  <div className="nav-more-menu" role="menu">
+                    {moreNav.map(item => (
+                      <button key={item.id} role="menuitem" className={page === item.id ? 'active' : ''} onClick={() => goMore(item.id)}>
+                        {lang === 'vi' ? item.labelVi : item.labelEn}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="header-actions">
-            {actionNav.map(item => (
-              <button key={item.id} className={`header-action-nav ${page === item.id ? 'active' : ''}`} onClick={() => navigate(item.id)}>
-                {lang === 'vi' ? item.labelVi : item.labelEn}
-              </button>
-            ))}
-            <button
-              className={`login-btn ${page === 'admin' ? 'active' : ''}`}
-              onClick={() => navigate('admin')}
-              title={user ? 'Admin' : (lang === 'vi' ? 'Đăng nhập' : 'Sign in')}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {user
-                  ? <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>
-                  : <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>
-                }
-              </svg>
-            </button>
             <button className="theme-btn" onClick={toggleTheme} title={dark ? t.lightMode : t.darkMode}>
               {dark ? '☀' : '☾'}
             </button>

@@ -4,6 +4,7 @@ import WisdomQuotes from '../../components/shared/WisdomQuotes'
 import { HomeSkeleton } from '../../components/shared/Skeleton'
 import NewsletterBand from '../../components/shared/NewsletterBand'
 import AppBanner from '../../components/shared/AppBanner'
+import HomeEnergyHero from '../../components/home/HomeEnergyHero'
 import { formatLocaleDate } from '../../utils/date'
 import { articleSlug, humanizeSlug } from '../../utils/slug'
 import { cdnImage } from '../../utils/image-cdn'
@@ -72,18 +73,6 @@ function HeroTitle({ text }) {
   return (<>{m[1]}{m[2]}<br /><em>{m[3].trim()}</em></>)
 }
 
-// Daily-rotating hero background — picks deterministically by date so no flash on SWR revalidate.
-function pickHeroBg(articles, customImages) {
-  const pool = customImages?.length
-    ? customImages
-    : articles.filter(a => a.image).slice(0, 8).map(a => a.image)
-  if (!pool.length) return null
-  const dayKey = new Date().toISOString().slice(0, 10)
-  let seed = 0
-  for (let i = 0; i < dayKey.length; i++) seed = (seed * 31 + dayKey.charCodeAt(i)) >>> 0
-  return pool[seed % pool.length]
-}
-
 export default function HomePage({ t, lang, topics, articles, stories, loading, navigate, siteSettings }) {
   const homeCards = (siteSettings?.homeCards || []).filter(c => c.visible !== false)
   const hero = siteSettings?.hero || {}
@@ -108,9 +97,6 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
       || articles[0]
   }, [articles, lang])
 
-  // Hero background — daily-rotated decoration, decoupled from `featured`.
-  const heroBg = useMemo(() => pickHeroBg(articles, hero.images), [articles, hero.images])
-
   if (loading) return <HomeSkeleton />
 
   const featuredTopicLabel = featured ? articleTopicLabel(featured, topics, lang) : null
@@ -130,43 +116,19 @@ export default function HomePage({ t, lang, topics, articles, stories, loading, 
 
   return (
     <>
-      {/* HERO — Cinematic, brand-level, decoupled from any article */}
-      <section className={`hero-cinematic${heroBg ? ' has-bg' : ''}`}>
-        {heroBg && (
-          <div
-            className="hero-bg"
-            style={{ backgroundImage: `url(${cdnImage(heroBg, { w: 1800 })})` }}
-            aria-hidden="true"
-          />
-        )}
-        <div className="hero-bg-overlay" aria-hidden="true" />
-        <div className="hero-cinematic-inner fade-up">
-          <div className="hero-eyebrow">{lang === 'vi' ? 'Bất Tử Đạo' : 'Path of Immortality'}</div>
-          {hero.showTitle !== false && (
-            <h1><HeroTitle text={t.heroTitle} /></h1>
-          )}
-          {hero.showSubtitle !== false && (
-            <p className="hero-deck">{t.heroSub}</p>
-          )}
-          {(hero.showCtaPrimary !== false || hero.showCtaSecondary !== false) && (
-            <div className="hero-cta">
-              {hero.showCtaPrimary !== false && (
-                <button className="btn btn-primary" onClick={() => navigate(hero.ctaPrimaryLink || 'articles')}>
-                  {ctaPrimaryLabel} →
-                </button>
-              )}
-              {hero.showCtaSecondary !== false && (
-                <button className="btn btn-ghost-light" onClick={() => navigate(hero.ctaSecondaryLink || 'about')}>
-                  {ctaSecondaryLabel}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="hero-scroll-hint" aria-hidden="true">
-          <span></span>
-        </div>
-      </section>
+      <HomeEnergyHero
+        eyebrow={lang === 'vi' ? 'Bất Tử Đạo' : 'Path of Immortality'}
+        title={<HeroTitle text={t.heroTitle} />}
+        subtitle={t.heroSub}
+        showTitle={hero.showTitle !== false}
+        showSubtitle={hero.showSubtitle !== false}
+        primaryLabel={ctaPrimaryLabel}
+        secondaryLabel={ctaSecondaryLabel}
+        showPrimary={hero.showCtaPrimary !== false}
+        showSecondary={hero.showCtaSecondary !== false}
+        onPrimary={() => navigate(hero.ctaPrimaryLink || 'articles')}
+        onSecondary={() => navigate(hero.ctaSecondaryLink || 'about')}
+      />
 
       {/* WISDOM QUOTES — signature element */}
       <WisdomQuotes stories={stories} lang={lang} navigate={navigate} />

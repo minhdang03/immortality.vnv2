@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import SunIcon from '../../components/shared/SunIcon'
 import ArticleCard from '../../components/shared/ArticleCard'
+import PageHero from '../../components/shared/PageHero'
 
 const PAGE_SIZE = 12
 
@@ -28,10 +29,11 @@ export default function ArticlesPage({ t, lang, articles, topics, navigate }) {
 
   return (
     <section className="section">
-      <h2 className="section-title fade-up">
-        <SunIcon size={20} />
-        {lang === 'vi' ? 'Tất Cả Bài Viết' : 'All Articles'}
-      </h2>
+      <PageHero
+        icon={<SunIcon size={40} />}
+        eyebrow={lang === 'vi' ? 'Thư Viện' : 'Library'}
+        title={lang === 'vi' ? 'Tất Cả Bài Viết' : 'All Articles'}
+      />
 
       {/* Filter by topic */}
       {topics.length > 0 && (

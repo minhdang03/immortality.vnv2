@@ -18,7 +18,7 @@ const PAGES = [
     titleVi: 'Bài Viết', titleEn: 'Articles',
     descVi: 'Tất cả bài viết về tâm linh, sức khỏe và bất tử.', descEn: 'All articles on spirituality, health and immortality.',
     icon: '📝',
-    navDefault: { visible: false, showInBottom: false },
+    navDefault: { visible: true, showInBottom: false },
     adminTab: { vi: 'Bài viết', en: 'Articles' },
   },
   {
@@ -156,6 +156,9 @@ export const NAV_ICONS = Object.fromEntries(
 export const DEFAULT_NAV_ITEMS = PAGES
   .filter(p => p.navDefault)
   .map(p => ({ id: p.id, labelVi: p.labelVi, labelEn: p.labelEn, ...p.navDefault }))
+
+// Header desktop: 5 primary destinations; mọi item visible khác gom vào menu "Thêm"
+export const PRIMARY_NAV_IDS = ['home', 'articles', 'khaitri', 'stories', 'nang-luong']
 
 // Default home cards
 export const DEFAULT_HOME_CARDS = PAGES

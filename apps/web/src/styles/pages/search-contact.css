@@ -10,11 +10,18 @@
 .no-results { text-align: center; color: var(--text-dim); padding: 40px 0; font-size: 0.9rem; }
 
 /* ─── CONTACT ─── */
-.contact-form { display: flex; flex-direction: column; gap: 16px; }
+.contact-form {
+  display: flex; flex-direction: column; gap: 16px;
+  /* Editorial surface: form nằm trong card thay vì trôi trên nền trống */
+  max-width: 560px; margin: 0 auto;
+  padding: 24px; background: var(--card);
+  border: 1px solid var(--rule); border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
 .contact-form input, .contact-form textarea {
   width: 100%; padding: 14px 18px; border-radius: 12px;
-  background: var(--card); border: 1px solid rgba(201,168,108,0.15);
-  color: var(--white); font-size: 0.88rem; font-family: var(--font-body);
+  background: var(--surface-2); border: 1px solid var(--rule);
+  color: var(--white); font-size: var(--fs-ui); font-family: var(--font-body);
   outline: none; transition: border-color 0.3s;
 }
 .contact-form input:focus, .contact-form textarea:focus { border-color: var(--gold); }

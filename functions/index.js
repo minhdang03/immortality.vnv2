@@ -6,10 +6,14 @@ const path = require('path')
 admin.initializeApp()
 const db = admin.firestore()
 
-const SITE = 'https://battudao.com'
-const SITE_NAME = 'Bất Tử Đạo - Immortality'
-const DEFAULT_IMAGE = `${SITE}/og-image.png`
-const DEFAULT_DESC = 'Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời.'
+const { LOCALES, PAGE_OG } = require('./og-locales')
+
+// Domain decides OG language: immortality.vn → en, battudao.com (default) → vi.
+// Behind Firebase Hosting the original domain arrives via x-forwarded-host.
+function localeForRequest(req) {
+  const host = req.headers['x-forwarded-host'] || req.hostname || ''
+  return host.includes('immortality.vn') ? LOCALES.en : LOCALES.vi
+}
 
 // Vietnamese diacritic → ASCII for slug matching
 const VI_MAP = 'àáạảãâầấậẩẫăằắặẳẵ→a,èéẹẻẽêềếệểễ→e,ìíịỉĩ→i,òóọỏõôồốộổỗơờớợởỡ→o,ùúụủũưừứựửữ→u,ỳýỵỷỹ→y,đ→d'
@@ -33,13 +37,13 @@ function escHtml(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-function renderOgHtml({ title, description, url, image, type = 'website' }) {
+function renderOgHtml({ title, description, url, image, type = 'website', loc = LOCALES.vi }) {
   const t = escHtml(title)
   const d = escHtml(description)
   const u = escHtml(url)
-  const img = escHtml(image || DEFAULT_IMAGE)
+  const img = escHtml(image || `${loc.site}/og-image.png`)
   return `<!DOCTYPE html>
-<html lang="vi">
+<html lang="${loc.lang}">
 <head>
 <meta charset="UTF-8" />
 <title>${t}</title>
@@ -49,9 +53,9 @@ function renderOgHtml({ title, description, url, image, type = 'website' }) {
 <meta property="og:description" content="${d}" />
 <meta property="og:url" content="${u}" />
 <meta property="og:image" content="${img}" />
-<meta property="og:site_name" content="${escHtml(SITE_NAME)}" />
-<meta property="og:locale" content="vi_VN" />
-<meta property="og:locale:alternate" content="en_US" />
+<meta property="og:site_name" content="${escHtml(loc.siteName)}" />
+<meta property="og:locale" content="${loc.ogLocale}" />
+<meta property="og:locale:alternate" content="${loc.ogLocaleAlt}" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${t}" />
 <meta name="twitter:description" content="${d}" />
@@ -61,7 +65,7 @@ function renderOgHtml({ title, description, url, image, type = 'website' }) {
 <body>
 <h1>${t}</h1>
 <p>${d}</p>
-<a href="${u}">Đọc tiếp tại ${escHtml(SITE_NAME)}</a>
+<a href="${u}">${loc.readMore} ${escHtml(loc.siteName)}</a>
 </body>
 </html>`
 }
@@ -79,20 +83,10 @@ function getSpaHtml() {
   return spaHtml
 }
 
-// Page config for static pages OG
-const PAGE_OG = {
-  stories: { title: '37 Câu Chuyện | ' + SITE_NAME, desc: 'Những câu chuyện thật về hành trình chữa lành và giác ngộ tâm linh.' },
-  khaitri: { title: 'Khai Trí | ' + SITE_NAME, desc: 'Hỏi đáp trí tuệ — giải đáp những câu hỏi về tâm linh, sức khỏe và bất tử.' },
-  about: { title: 'Giới Thiệu | ' + SITE_NAME, desc: 'Tìm hiểu về Bất Tử Đạo và phương pháp năng lượng Mặt Trời.' },
-  practice: { title: 'Thái Dương Quyền | ' + SITE_NAME, desc: 'Học Thái Dương Quyền — bài tập năng lượng mặt trời cho sức khỏe và trí tuệ.' },
-  articles: { title: 'Bài Viết | ' + SITE_NAME, desc: 'Tất cả bài viết về tâm linh, sức khỏe và bất tử.' },
-  contact: { title: 'Liên Hệ | ' + SITE_NAME, desc: 'Liên hệ với chúng tôi để được hỗ trợ và tư vấn.' },
-  search: { title: 'Tìm Kiếm | ' + SITE_NAME, desc: 'Tìm kiếm bài viết, câu chuyện và nội dung trên Bất Tử Đạo.' },
-}
-
 exports.ogRenderer = onRequest({ region: 'asia-southeast1' }, async (req, res) => {
   const ua = req.headers['user-agent'] || ''
   const reqPath = req.path || '/'
+  const loc = localeForRequest(req)
 
   // Not a crawler → serve the SPA HTML so the React app handles routing
   if (!CRAWLERS.test(ua)) {
@@ -101,7 +95,7 @@ exports.ogRenderer = onRequest({ region: 'asia-southeast1' }, async (req, res) =
       res.status(200).set('Content-Type', 'text/html').send(spa)
     } else {
       // Fallback: redirect to root SPA when spa.html unavailable
-      res.redirect(302, SITE)
+      res.redirect(302, loc.site)
     }
     return
   }
@@ -127,13 +121,14 @@ exports.ogRenderer = onRequest({ region: 'asia-southeast1' }, async (req, res) =
       }
 
       if (article) {
-        const d = article.vi || article.en || {}
+        const d = (loc.lang === 'en' ? article.en || article.vi : article.vi || article.en) || {}
         res.status(200).send(renderOgHtml({
-          title: `${d.title} | ${SITE_NAME}`,
-          description: d.summary || d.question || DEFAULT_DESC,
-          url: `${SITE}/article/${slug}`,
+          title: `${d.title} | ${loc.siteName}`,
+          description: d.summary || d.question || loc.desc,
+          url: `${loc.site}/article/${slug}`,
           image: article.image || undefined,
           type: 'article',
+          loc,
         }))
         return
       }
@@ -169,13 +164,14 @@ exports.ogRenderer = onRequest({ region: 'asia-southeast1' }, async (req, res) =
       }
 
       if (item) {
-        const d = item.vi || item.en || {}
+        const d = (loc.lang === 'en' ? item.en || item.vi : item.vi || item.en) || {}
         res.status(200).send(renderOgHtml({
-          title: `${d.title} | ${SITE_NAME}`,
-          description: d.summary || d.question || DEFAULT_DESC,
-          url: `${SITE}/khaitri/${slug}`,
+          title: `${d.title} | ${loc.siteName}`,
+          description: d.summary || d.question || loc.desc,
+          url: `${loc.site}/khaitri/${slug}`,
           image: item.image || undefined,
           type: 'article',
+          loc,
         }))
         return
       }
@@ -187,11 +183,13 @@ exports.ogRenderer = onRequest({ region: 'asia-southeast1' }, async (req, res) =
       const topicDoc = await db.collection('topics').doc(topicId).get()
       if (topicDoc.exists) {
         const data = topicDoc.data()
-        const name = data.vi || data.en || topicId
+        const name = (loc.lang === 'en' ? data.en || data.vi : data.vi || data.en) || topicId
+        const desc = loc.lang === 'en' ? data.descEn || data.descVi : data.descVi || data.descEn
         res.status(200).send(renderOgHtml({
-          title: `${name} | ${SITE_NAME}`,
-          description: data.descVi || data.descEn || DEFAULT_DESC,
-          url: `${SITE}/topic/${topicId}`,
+          title: `${name} | ${loc.siteName}`,
+          description: desc || loc.desc,
+          url: `${loc.site}/topic/${topicId}`,
+          loc,
         }))
         return
       }
@@ -199,28 +197,31 @@ exports.ogRenderer = onRequest({ region: 'asia-southeast1' }, async (req, res) =
 
     // Static pages
     const pageId = reqPath.replace(/^\//, '').replace(/\/$/, '') || 'home'
-    const pageOg = PAGE_OG[pageId]
+    const pageOg = PAGE_OG[pageId]?.[loc.lang]
     if (pageOg) {
       res.status(200).send(renderOgHtml({
-        title: pageOg.title,
+        title: `${pageOg.title} | ${loc.siteName}`,
         description: pageOg.desc,
-        url: `${SITE}/${pageId}`,
+        url: `${loc.site}/${pageId}`,
+        loc,
       }))
       return
     }
 
     // Homepage or fallback
     res.status(200).send(renderOgHtml({
-      title: SITE_NAME,
-      description: DEFAULT_DESC,
-      url: SITE,
+      title: loc.fullTitle,
+      description: loc.desc,
+      url: loc.site,
+      loc,
     }))
   } catch (err) {
     console.error('OG render error:', err)
     res.status(200).send(renderOgHtml({
-      title: SITE_NAME,
-      description: DEFAULT_DESC,
-      url: SITE,
+      title: loc.fullTitle,
+      description: loc.desc,
+      url: loc.site,
+      loc,
     }))
   }
 })

@@ -1,5 +1,6 @@
 import NewsletterBand from '../../components/shared/NewsletterBand'
 import AppBanner from '../../components/shared/AppBanner'
+import PageHero from '../../components/shared/PageHero'
 
 const COPY = {
   vi: {
@@ -52,13 +53,7 @@ export default function CongDongPage({ lang = 'vi', navigate }) {
   const t = COPY[lang] || COPY.vi
   return (
     <section className="section page-cong-dong">
-      <header className="page-header" style={{ textAlign: 'center', padding: '40px 0 32px' }}>
-        <div className="page-eyebrow" style={{ marginBottom: 16 }}>{t.eyebrow}</div>
-        <h1 className="page-title" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.4rem,5vw,4rem)', fontWeight: 600, color: 'var(--ink)', letterSpacing: '-1px', lineHeight: 1.05, marginBottom: 20 }}>
-          {t.title} <em style={{ fontStyle: 'italic', color: 'var(--gold-deep)' }}>{t.titleEm}</em>
-        </h1>
-        <p className="page-deck" style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontStyle: 'italic', color: 'var(--ink-soft)', maxWidth: 540, margin: '0 auto' }}>{t.deck}</p>
-      </header>
+      <PageHero eyebrow={t.eyebrow} title={t.title} titleEm={t.titleEm} subtitle={t.deck} />
 
       <NewsletterBand lang={lang} source="community" />
 

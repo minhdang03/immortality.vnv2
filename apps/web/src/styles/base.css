@@ -11,10 +11,11 @@ a { color: inherit; text-decoration: none; }
 
 /* ─── EDITORIAL SACRED — Design Tokens ─── */
 :root, [data-theme="dark"] {
-  /* Surface */
+  /* Surface (layered: bg < surface/card < surface-2) */
   --bg: #14110d;
   --card: #1d1814;
   --surface: #1d1814;
+  --surface-2: #262019;
   /* Ink (text scale) — kept legacy aliases (--text, --text-dim, --white) */
   --ink: #f5ede0;
   --ink-soft: #d6cdbc;
@@ -28,6 +29,13 @@ a { color: inherit; text-decoration: none; }
   --gold-soft: #e9d9b4;
   --gold-tint: rgba(212,167,106,0.10);
   --gold-bright: #e4c78a;          /* legacy alias */
+  /* Category tonal palette — họ vàng/đất, saturation thấp (thay rainbow tags).
+     Nền tag/chip: color-mix(in srgb, var(--cat-*) 14%, transparent) */
+  --cat-gold:   #d4a76a;
+  --cat-clay:   #c98a6b;
+  --cat-olive:  #b5aa6e;
+  --cat-umber:  #bd9d7e;
+  --cat-copper: #cf9457;
   /* Rules / dividers */
   --rule: rgba(245,237,224,0.10);
   --rule-strong: rgba(245,237,224,0.20);
@@ -39,12 +47,15 @@ a { color: inherit; text-decoration: none; }
      Windows (Segoe UI / Times New Roman) and Android (Roboto / Noto). */
   --font-display: 'Cormorant Garamond', 'Times New Roman', 'Noto Serif', Georgia, serif;
   --font-body: 'Be Vietnam Pro', 'Segoe UI', 'Roboto', 'Noto Sans', system-ui, -apple-system, sans-serif;
-  /* Fluid type scale */
+  /* Fluid type scale — floor: label 12 / meta 14 / UI 16 / reading 18-20 (độc giả 50+) */
   --fs-display-1: clamp(2.4rem, 5.4vw, 5.4rem);
   --fs-display-2: clamp(1.8rem, 3.6vw, 2.6rem);
   --fs-h2:        clamp(1.5rem, 2.5vw, 2rem);
   --fs-body:      1.05rem;
-  --fs-reading:   clamp(1.05rem, 1.4vw, 1.25rem);
+  --fs-reading:   clamp(1.125rem, 1.4vw, 1.25rem);
+  --fs-label:     0.75rem;
+  --fs-meta:      0.875rem;
+  --fs-ui:        1rem;
   /* Spacing scale (4-base) */
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
   --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
@@ -64,6 +75,7 @@ a { color: inherit; text-decoration: none; }
   --bg: #f8f3ea;
   --card: #ffffff;
   --surface: #ffffff;
+  --surface-2: #efe7d8;
   --ink: #161310;
   --ink-soft: #3d3833;
   --ink-muted: #756d60;            /* 4.62:1 trên #f8f3ea — đạt WCAA AA text nhỏ (cũ #8a8273 chỉ 3.44:1) */
@@ -75,8 +87,13 @@ a { color: inherit; text-decoration: none; }
   --gold-soft: #e9d9b4;
   --gold-tint: rgba(176,134,66,0.08);
   --gold-bright: #7a5a28;          /* legacy alias maps to gold-deep on light */
-  --rule: rgba(22,19,16,0.08);
-  --rule-strong: rgba(22,19,16,0.16);
+  --rule: rgba(22,19,16,0.12);      /* beige-on-beige: border phải thấy được */
+  --rule-strong: rgba(22,19,16,0.24);
+  --cat-gold:   #8a672f;
+  --cat-clay:   #96543a;
+  --cat-olive:  #6d6630;
+  --cat-umber:  #75593d;
+  --cat-copper: #8c5a26;
   --header-bg: rgba(248,243,234,0.82);
   --overlay-bg: rgba(248,243,234,0.98);
   --bottom-bg: rgba(248,243,234,0.92);

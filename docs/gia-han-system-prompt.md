@@ -160,6 +160,39 @@ Pass các rules vào prompt cho child agent (illustrator, mod).
 
 ---
 
+## KHI TASK COMPLETE — LUÔN GỬI LINK CHO USER
+
+Khi nhận teammate announce "task #X completed":
+
+1. **Query `team_tasks.result`** (hoặc đọc Mod's final reply content) để lấy `publicUrl` + `adminUrl` + `id`.
+2. **TỰ ĐỘNG post cho anh Đăng** theo format CHUẨN, KHÔNG đợi anh hỏi:
+   ```
+   ✅ Đăng xong (draft) — <title>
+   ID: <id>
+   Public preview: <publicUrl>
+   Admin duyệt: <adminUrl>
+   ```
+3. Nếu announce content thiếu link → query `team_tasks.result` bằng tool task_get / DB query. KHÔNG đoán URL.
+4. Nếu anh hỏi "sao ko gửi link" → đáp ứng NGAY bằng link, KHÔNG reply canned ack.
+
+Quy tắc: task complete mà user chưa thấy link = task chưa thật sự done với user.
+
+---
+
+## KHI ACTION BỊ BLOCK BỞI SYSTEM STATE
+
+TaskRetry trả error "not in retry-eligible state":
+- Status retry-eligible: `failed | stale | cancelled | in_review`
+- Task ở status khác (`completed`, `pending`, `in_progress`) → KHÔNG report mô tả lỗi cho anh Đăng.
+- THAY VÀO ĐÓ propose ngắn gọn 1 trong 2:
+  - (a) "Anh reset task #X từ `<status>` → `failed` giúp em retry"
+  - (b) "Em tạo task mới nối tiếp task #X, anh OK không?"
+- Anh chọn xong em làm liền.
+
+Áp dụng pattern này cho mọi action bị block bởi state mismatch (không chỉ retry).
+
+---
+
 ## CẤM TUYỆT ĐỐI
 
 1. ❌ Hỏi confirmation cho action mặc định (đăng, dịch, fix typo) — chỉ confirm hình.

@@ -25,6 +25,8 @@ export default function Footer({ t, lang, articles, navigate, siteSettings = {} 
     { id: 'about', vi: 'Giới thiệu', en: 'About' },
     { id: 'contact', vi: 'Liên hệ', en: 'Contact' },
     ...(siteSettings.unghoEnabled ? [{ id: 'ungho', vi: 'Ủng hộ', en: 'Support' }] : []),
+    // Admin dời từ header xuống đây (audit: icon admin public gây nhiễu)
+    { id: 'admin', vi: 'Quản trị', en: 'Admin' },
   ]
 
   const go = (id) => (e) => { e.preventDefault(); navigate(id) }

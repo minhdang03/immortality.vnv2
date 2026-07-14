@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import SunIcon from '../../components/shared/SunIcon'
+import PageHero from '../../components/shared/PageHero'
 
 const DEFAULT_SECTIONS = [
   {
@@ -137,17 +138,14 @@ export default function AboutPage({ t, lang, teachings }) {
 
   return (
     <section className="about-page fade-up">
-      <div className="about-header">
-        <div className="about-sun"><SunIcon size={60} /></div>
-        <h1 className="about-main-title">
-          {lang === 'vi' ? 'Giới Thiệu — Đô Tỷ Pháp' : 'About — Đô Tỷ Pháp'}
-        </h1>
-        <p className="about-subtitle">
-          {lang === 'vi'
-            ? 'Lý thuyết nền tảng — Bất Tử Đạo'
-            : 'Foundation Theory — The Way of Immortality'}
-        </p>
-      </div>
+      <PageHero
+        icon={<SunIcon size={60} />}
+        eyebrow={lang === 'vi' ? 'Giới Thiệu' : 'About'}
+        title="Đô Tỷ Pháp"
+        subtitle={lang === 'vi'
+          ? 'Lý thuyết nền tảng — Bất Tử Đạo'
+          : 'Foundation Theory — The Way of Immortality'}
+      />
 
       {sections.map((sec, i) => {
         const title = lang === 'vi' ? sec.titleVi : sec.titleEn

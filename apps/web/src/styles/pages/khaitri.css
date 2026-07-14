@@ -13,15 +13,15 @@
 /* Search */
 .khaitri-search { margin-bottom: 12px; }
 .khaitri-search-input {
-  width: 100%; padding: 12px 16px; font-size: 0.92rem;
-  background: rgba(201,168,108,0.04); border: 1px solid rgba(201,168,108,0.15);
+  width: 100%; padding: 12px 16px; font-size: var(--fs-ui);
+  background: var(--card); border: 1px solid var(--rule-strong);
   border-radius: 12px; color: var(--text); outline: none;
   transition: border-color 0.3s;
 }
 .khaitri-search-input:focus {
   border-color: var(--gold);
 }
-.khaitri-search-input::placeholder { color: var(--text-dim); opacity: 0.6; }
+.khaitri-search-input::placeholder { color: var(--text-dim); }
 
 /* Tag filters */
 .khaitri-filters {
@@ -47,8 +47,9 @@
 .khaitri-item {
   display: flex; align-items: center; gap: 14px;
   padding: 14px 16px; cursor: pointer;
-  background: rgba(201,168,108,0.03); border: 1px solid rgba(201,168,108,0.08);
+  background: var(--card); border: 1px solid var(--rule);
   border-radius: 12px; transition: all 0.25s;
+  box-shadow: var(--shadow-sm);
 }
 .khaitri-item:hover {
   background: rgba(201,168,108,0.08); border-color: rgba(201,168,108,0.2);
@@ -64,10 +65,10 @@
   text-transform: uppercase; letter-spacing: 0.5px;
 }
 .khaitri-item-title {
-  font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.4;
+  font-size: var(--fs-ui); font-weight: 600; color: var(--text); line-height: 1.4;
 }
 .khaitri-snippet {
-  font-size: 0.78rem; color: var(--text-dim); line-height: 1.4; opacity: 0.7;
+  font-size: var(--fs-meta); color: var(--text-dim); line-height: 1.4;
 }
 .khaitri-arrow {
   font-size: 1.2rem; color: var(--gold); opacity: 0.4;
@@ -134,7 +135,7 @@
   text-align: center;
 }
 .khaitri-detail-body p {
-  font-size: calc(0.92rem * var(--reader-scale)); line-height: 1.9; color: var(--text-dim);
+  font-size: calc(0.95rem * var(--reader-scale)); line-height: 1.9; color: var(--text);
   margin-bottom: 14px;
 }
 .khaitri-detail-body p:last-child { margin-bottom: 0; }
@@ -170,8 +171,8 @@
   border-left: 2px solid rgba(201,168,108,0.22);
 }
 .qa-answer p {
-  color: var(--text-dim);
-  font-size: calc(0.92rem * var(--reader-scale));
+  color: var(--text);
+  font-size: calc(0.95rem * var(--reader-scale));
   margin: 0 0 1em;
   line-height: 1.9;
 }
