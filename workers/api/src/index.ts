@@ -17,6 +17,7 @@
  *   POST  /api/votes
  *
  *   -- Agent write plane (btd_ key auth, service_role → Supabase) --
+ *   GET   /v1/content          list/search (filters: id, source_ref, type, slug, q=title)
  *   POST  /v1/content          upsert content (idempotent via source_ref)
  *   PATCH /v1/content/:id      partial update by id
  */
@@ -32,6 +33,7 @@ import { profilesRouter } from "./routes/profiles-route-handler.js";
 import { questionsRouter } from "./routes/questions-route-handler.js";
 import { votesRouter } from "./routes/votes-route-handler.js";
 import { contentWriteRouter } from "./routes/content-write-route-handler.js";
+import { contentReadRouter } from "./routes/content-read-route-handler.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -69,13 +71,17 @@ app.route("/api/profiles", profilesRouter);
 app.route("/api/questions", questionsRouter);
 app.route("/api/votes", votesRouter);
 
-// ── Agent write plane (/v1 — btd_ key auth, Supabase service_role) ────────────
+// ── Agent plane (/v1 — btd_ key auth, Supabase service_role) ──────────────────
 //
-// Middleware applied at the sub-app level so every /v1/content route requires
-// content:write scope. Mount BEFORE notFound handler.
+// Scope is method-aware: GET needs content:read, everything else content:write.
+// Mount BEFORE notFound handler.
 
-app.use("/v1/content/*", requireApiKeyScope("content:write"));
-app.use("/v1/content", requireApiKeyScope("content:write"));
+const contentScopeGuard = (c: Parameters<ReturnType<typeof requireApiKeyScope>>[0], next: () => Promise<void>) =>
+  requireApiKeyScope(c.req.method === "GET" ? "content:read" : "content:write")(c, next);
+
+app.use("/v1/content/*", contentScopeGuard);
+app.use("/v1/content", contentScopeGuard);
+app.route("/v1/content", contentReadRouter);
 app.route("/v1/content", contentWriteRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
