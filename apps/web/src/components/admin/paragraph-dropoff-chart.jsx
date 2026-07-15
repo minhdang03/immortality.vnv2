@@ -7,6 +7,8 @@
  *
  * No external chart library — CSS bars only, keeps bundle lean.
  */
+import { formatDwell } from './format-dwell'
+
 export default function ParagraphDropoffChart({ rows, lang }) {
   if (!rows || rows.length === 0) {
     return (
@@ -27,10 +29,10 @@ export default function ParagraphDropoffChart({ rows, lang }) {
               {lang === 'vi' ? 'Đoạn' : 'Para'}
             </th>
             <th style={{ padding: '4px 8px', width: '100%' }}>
-              {lang === 'vi' ? '% phiên đọc tới đây' : '% sessions reached'}
+              {lang === 'vi' ? '% lượt đọc tới đoạn này' : '% of reads reaching here'}
             </th>
             <th style={{ padding: '4px 8px', whiteSpace: 'nowrap', textAlign: 'right' }}>
-              {lang === 'vi' ? 'Dừng lại (ms)' : 'Dwell (ms)'}
+              {lang === 'vi' ? 'Thời gian dừng' : 'Time on paragraph'}
             </th>
           </tr>
         </thead>
@@ -42,7 +44,7 @@ export default function ParagraphDropoffChart({ rows, lang }) {
             return (
               <tr key={row.para_index} style={{ borderTop: '1px solid var(--border, #eee)' }}>
                 <td style={{ padding: '4px 8px', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                  #{row.para_index}
+                  {row.para_index + 1}
                 </td>
                 <td style={{ padding: '4px 8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -62,7 +64,7 @@ export default function ParagraphDropoffChart({ rows, lang }) {
                   </div>
                 </td>
                 <td style={{ padding: '4px 8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                  {row.median_dwell_ms != null ? `${Math.round(row.median_dwell_ms)}` : '—'}
+                  {formatDwell(row.median_dwell_ms, lang)}
                 </td>
               </tr>
             )

@@ -7,13 +7,31 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase-client'
 import ParagraphDropoffChart from './paragraph-dropoff-chart'
+import { formatDwell } from './format-dwell'
 
 const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
 
-async function fetchTopArticles() {
+// The RPC only knows content_id; titles live in `content`, so resolve them in a
+// second query rather than widening the function signature.
+async function fetchTopArticles(lang) {
   const { data, error } = await supabase.rpc('top_articles_by_completion', { p_limit: 20 })
   if (error) throw error
-  return data ?? []
+
+  const rows = data ?? []
+  if (rows.length === 0) return rows
+
+  const { data: titles, error: titleError } = await supabase
+    .from('content')
+    .select('id, vi_title, en_title')
+    .in('id', rows.map(r => r.content_id))
+  if (titleError) throw titleError
+
+  const byId = new Map((titles ?? []).map(c => [c.id, c]))
+  return rows.map(row => {
+    const match = byId.get(row.content_id)
+    const title = lang === 'vi' ? match?.vi_title : match?.en_title
+    return { ...row, title: title || match?.vi_title || match?.en_title || null }
+  })
 }
 
 async function fetchParaStats(contentId) {
@@ -40,15 +58,15 @@ export default function ContentAnalyticsTab({ lang }) {
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState('')
 
-  // Load cross-article comparison on mount
+  // Load cross-article comparison on mount, and re-resolve titles when lang flips
   useEffect(() => {
     if (!USE_SUPABASE || !supabase) return
     setTopLoading(true)
-    fetchTopArticles()
+    fetchTopArticles(lang)
       .then(setTopArticles)
       .catch(e => setTopError(e.message))
       .finally(() => setTopLoading(false))
-  }, [])
+  }, [lang])
 
   // Load per-article detail when article selected
   useEffect(() => {
@@ -96,8 +114,8 @@ export default function ContentAnalyticsTab({ lang }) {
             <thead>
               <tr style={{ color: 'var(--text-dim)', textAlign: 'left' }}>
                 <th style={{ padding: '4px 8px' }}>{lang === 'vi' ? 'Bài viết' : 'Article'}</th>
-                <th style={{ padding: '4px 8px', textAlign: 'right' }}>{lang === 'vi' ? 'Phiên' : 'Sessions'}</th>
-                <th style={{ padding: '4px 8px', textAlign: 'right' }}>{lang === 'vi' ? 'Hoàn thành' : 'Completion'}</th>
+                <th style={{ padding: '4px 8px', textAlign: 'right' }}>{lang === 'vi' ? 'Lượt đọc' : 'Reads'}</th>
+                <th style={{ padding: '4px 8px', textAlign: 'right' }}>{lang === 'vi' ? 'Đọc hết' : 'Finished'}</th>
                 <th style={{ padding: '4px 8px' }} />
               </tr>
             </thead>
@@ -112,8 +130,16 @@ export default function ContentAnalyticsTab({ lang }) {
                   }}
                   onClick={() => setSelectedId(row.content_id)}
                 >
-                  <td style={{ padding: '5px 8px', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {row.content_id}
+                  <td
+                    style={{ padding: '5px 8px', maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    title={row.content_id}
+                  >
+                    {row.title || (
+                      <span style={{ color: 'var(--text-dim)', fontStyle: 'italic' }}>
+                        {lang === 'vi' ? '(không rõ tên) ' : '(untitled) '}
+                        {row.content_id}
+                      </span>
+                    )}
                   </td>
                   <td style={{ padding: '5px 8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                     {row.total_sessions}
@@ -138,7 +164,9 @@ export default function ContentAnalyticsTab({ lang }) {
         <div>
           <h3 style={{ margin: '0 0 8px', fontSize: '1rem' }}>
             {lang === 'vi' ? 'Chi tiết: ' : 'Detail: '}
-            <span style={{ fontWeight: 400, fontSize: '0.9rem', wordBreak: 'break-all' }}>{selectedId}</span>
+            <span style={{ fontWeight: 400, fontSize: '0.9rem' }}>
+              {topArticles.find(r => r.content_id === selectedId)?.title || selectedId}
+            </span>
           </h3>
 
           {detailError && <div className="admin-error" style={{ marginBottom: 8 }}>{detailError}</div>}
@@ -151,15 +179,20 @@ export default function ContentAnalyticsTab({ lang }) {
             <>
               {summary && (
                 <div style={{ display: 'flex', gap: 24, marginBottom: 16, flexWrap: 'wrap' }}>
-                  <Stat label={lang === 'vi' ? 'Tổng phiên' : 'Total sessions'} value={summary.total_sessions ?? 0} />
-                  <Stat label={lang === 'vi' ? 'Đọc hết' : 'Completed'} value={summary.completed_sessions ?? 0} />
-                  <Stat label={lang === 'vi' ? 'Tỷ lệ hoàn thành' : 'Completion %'} value={`${summary.completion_pct ?? 0}%`} />
+                  <Stat label={lang === 'vi' ? 'Lượt đọc' : 'Reads'} value={summary.total_sessions ?? 0} />
+                  <Stat label={lang === 'vi' ? 'Đọc hết' : 'Finished'} value={summary.completed_sessions ?? 0} />
+                  <Stat label={lang === 'vi' ? 'Tỷ lệ đọc hết' : 'Finish rate'} value={`${summary.completion_pct ?? 0}%`} />
                   <Stat
-                    label={lang === 'vi' ? 'Dừng lại trung vị (ms)' : 'Median dwell (ms)'}
-                    value={summary.median_dwell_ms != null ? Math.round(summary.median_dwell_ms) : '—'}
+                    label={lang === 'vi' ? 'Thời gian đọc trung vị' : 'Median read time'}
+                    value={formatDwell(summary.median_dwell_ms, lang)}
                   />
                 </div>
               )}
+              <div style={{ color: 'var(--text-dim)', fontSize: '0.78rem', marginBottom: 6 }}>
+                {lang === 'vi'
+                  ? 'Mỗi dòng là một đoạn văn, theo thứ tự trong bài. Cột % cho biết bao nhiêu lượt đọc cuộn được tới đoạn đó — tụt mạnh ở đoạn nào tức là người đọc bỏ ngang ở đó.'
+                  : 'One row per paragraph, in article order. The % column is how many reads scrolled that far — a sharp drop marks where readers leave.'}
+              </div>
               <ParagraphDropoffChart rows={paraRows} lang={lang} />
             </>
           )}
