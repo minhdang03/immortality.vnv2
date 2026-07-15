@@ -18,8 +18,7 @@
 // content stays separated from other projects sharing the same bucket.
 
 import { promises as dns } from 'node:dns'
-import { requireAgent, jsonError, applyCors } from './_lib/auth.js'
-import { db, FieldValue } from './_lib/db.js'
+import { requireAgent, jsonError, applyCors, logAgentAction } from './_lib/auth.js'
 import {
   MAX_BYTES, ALLOWED_CT, ALLOWED_INTENTS, uploadToR2,
 } from './_lib/r2.js'
@@ -159,25 +158,13 @@ export default async function handler(req, res) {
     return jsonError(res, 500, 'upload_failed', e.message)
   }
 
-  try {
-    await db().collection('agent_log').add({
-      action: 'upload.image',
-      params: {
-        source: 'upload-from-url',
-        intent,
-        key: uploaded.key,
-        contentType: uploaded.contentType,
-        size: uploaded.bytes,
-        sourceUrl: url.slice(0, 200),
-        backend: 'r2',
-      },
-      status: 'success',
-      actor: auth.email,
-      timestamp: FieldValue.serverTimestamp(),
-    })
-  } catch (e) {
-    console.warn('agent_log write failed', e.message)
-  }
+  await logAgentAction({
+    keyId: auth.keyId,
+    agent: auth.agent,
+    action: 'media.upload',
+    statusCode: 200,
+    detail: `upload-from-url intent=${intent} key=${uploaded.key} size=${uploaded.bytes}`,
+  })
 
   res.setHeader('Content-Type', 'application/json')
   return res.status(200).send(JSON.stringify({ ok: true, ...uploaded }))

@@ -23,8 +23,7 @@
 // The platform still enforces its own request size limit (4.5 MB Hobby,
 // configurable on Pro). If your image exceeds that, downscale before posting.
 
-import { requireAgent, jsonError, applyCors } from './_lib/auth.js'
-import { db, FieldValue } from './_lib/db.js'
+import { requireAgent, jsonError, applyCors, logAgentAction } from './_lib/auth.js'
 import {
   MAX_BYTES, ALLOWED_CT, ALLOWED_INTENTS, uploadToR2,
 } from './_lib/r2.js'
@@ -84,24 +83,13 @@ export default async function handler(req, res) {
     return jsonError(res, 500, 'upload_failed', e.message)
   }
 
-  try {
-    await db().collection('agent_log').add({
-      action: 'upload.image',
-      params: {
-        source: 'upload-file',
-        intent,
-        key: uploaded.key,
-        contentType: uploaded.contentType,
-        size: uploaded.bytes,
-        backend: 'r2',
-      },
-      status: 'success',
-      actor: auth.email,
-      timestamp: FieldValue.serverTimestamp(),
-    })
-  } catch (e) {
-    console.warn('agent_log write failed', e.message)
-  }
+  await logAgentAction({
+    keyId: auth.keyId,
+    agent: auth.agent,
+    action: 'media.upload',
+    statusCode: 200,
+    detail: `upload-file intent=${intent} key=${uploaded.key} size=${uploaded.bytes}`,
+  })
 
   res.setHeader('Content-Type', 'application/json')
   return res.status(200).send(JSON.stringify({ ok: true, ...uploaded }))

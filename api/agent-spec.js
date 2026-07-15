@@ -1,55 +1,63 @@
 // GET /api/agent-spec — single source of truth for agents.
 // Agents fetch this BEFORE every task to discover schemas + endpoints.
-// When schemas/*.js change, this auto-reflects → no manual doc updates needed.
+//
+// 2026-07-15: Firestore CRUD endpoints retired. Content writes go to the
+// Cloudflare Worker (/v1/content, flat bilingual columns, btd_ key auth).
+// Only media upload stays on Vercel (R2 credentials live here).
 
-import * as KhaiTri from '../schemas/khaitri.js'
-import * as Articles from '../schemas/articles.js'
+const WORKER_BASE = 'https://btd-api.mr-dang1305.workers.dev/v1'
+
+const CONTENT_SCHEMA = {
+  description: 'Flat bilingual row in Supabase public.content. At least one of id/source_ref required. source_ref is the idempotency key: re-POST with same source_ref updates instead of duplicating.',
+  fields: {
+    type: "required — 'article' | 'story' | 'khaitri' | 'teaching' | 'practice'",
+    status: "'draft' | 'published' | 'archived' (default 'draft'; policy 2026-07-13: agent posts go straight to 'published')",
+    source_ref: 'idempotency key, e.g. article-2026-07-15-slug or khaitri-2026-07-15-slug',
+    vi_title: 'string', en_title: 'string',
+    vi_summary: 'string', en_summary: 'string',
+    vi_body: 'string — plain paragraphs; khaitri uses Hỏi:/Đáp: blocks',
+    en_body: 'string — plain paragraphs; khaitri uses Question:/Answer: blocks',
+    vi_slug: 'kebab-case, no diacritics', en_slug: 'kebab-case',
+    vi_question: 'khaitri only', en_question: 'khaitri only',
+    order_index: 'khaitri only — integer, max(existing)+1, NEVER timestamps',
+    content_date: 'ISO 8601 datetime — articles sort by this desc',
+    thumbnail_url: 'public R2 URL from upload endpoints below',
+    tags: "string array, e.g. ['Tâm Linh', 'Spiritual']",
+    created_by: 'agent name for provenance',
+    allow_duplicate: 'boolean — set true ONLY for a deliberate repost; otherwise identical title+body under a new source_ref is rejected 409 DUPLICATE_CONTENT',
+  },
+}
 
 const EXAMPLES = {
-  khaitri_create: {
-    method: 'POST', path: '/api/khaitri',
+  content_create: {
+    method: 'POST', path: `${WORKER_BASE}/content`,
     body: {
-      sourceRef: 'khaitri-2026-05-03-example-slug',
-      order: 6,
-      date: '2026-05-03',
-      tag: { vi: 'Khai Trí', en: 'Enlightenment' },
-      vi: {
-        title: 'Tiêu đề ngắn', question: 'Câu hỏi của người hỏi',
-        summary: 'Tóm tắt 1-2 câu',
-        body: 'Hỏi:\nThưa Thầy, ...\n\nĐáp:\nKhi con ...'
-      },
-      en: {
-        title: 'Short title', question: 'The question asked',
-        summary: '1-2 sentence summary',
-        body: 'Question:\nMaster, ...\n\nAnswer:\nWhen you ...'
-      },
-      status: 'draft',
+      type: 'article',
+      status: 'published',
+      source_ref: 'article-2026-07-15-example-slug',
+      content_date: '2026-07-15T00:00:00Z',
+      vi_title: 'Tiêu đề', en_title: 'Title',
+      vi_summary: 'Tóm tắt 1-2 câu', en_summary: 'Short summary',
+      vi_body: 'Đoạn 1...\n\nĐoạn 2...', en_body: 'Paragraph 1...\n\nParagraph 2...',
+      vi_slug: 'tieu-de', en_slug: 'title',
+      tags: ['Tâm Linh', 'Spiritual'],
+      created_by: 'goclaw-publisher-v1',
     },
+    response_example: { ok: true, id: '<uuid>', type: 'article', status: 'published' },
   },
 
-  article_create: {
-    method: 'POST', path: '/api/articles',
-    body: {
-      sourceRef: 'phi-thuyen-mat-ngu-2026-05-06',
-      topic: 'tam-linh',
-      date: '2026-05-06',
-      image: 'https://pub-xxx.r2.dev/immortality-vn/articles/foo-1730000000000.jpg',
-      tag: { vi: 'Mất Ngủ', en: 'Insomnia' },
-      vi: {
-        title: 'Phương pháp Phi Thuyền chữa mất ngủ',
-        summary: 'Tóm tắt ngắn',
-        body: 'Đoạn 1...\n\nĐoạn 2...',
-      },
-      en: {
-        title: 'Phi Thuyen method for insomnia',
-        summary: 'Short summary',
-        body: 'Paragraph 1...\n\nParagraph 2...',
-      },
-      status: 'draft',
-    },
+  content_search_by_title: {
+    method: 'GET', path: `${WORKER_BASE}/content?q=cứu giúp bản thân&type=eq.article&limit=5`,
+    purpose: 'Resolve a row id from a human-known title — no id needed up front.',
+    response_example: { ok: true, count: 1, rows: [{ id: '<uuid>', source_ref: '...', vi_title: '...', thumbnail_url: null }] },
   },
 
-  upload_image: {
+  attach_hero: {
+    method: 'PATCH', path: `${WORKER_BASE}/content/<id>`,
+    body: { thumbnail_url: 'https://pub-xxx.r2.dev/immortality-vn/articles/slug-1730000000000.png' },
+  },
+
+  upload_image_from_url: {
     method: 'POST', path: '/api/upload-from-url',
     body: { url: 'https://api.telegram.org/file/bot.../photos/x.jpg', intent: 'article', slug: 'phi-thuyen-mat-ngu' },
     response_example: {
@@ -59,104 +67,36 @@ const EXAMPLES = {
       bytes: 234567, contentType: 'image/jpeg',
     },
   },
+
+  upload_image_local_bytes: {
+    method: 'POST', path: '/api/upload-file',
+    headers: { 'Content-Type': 'image/png', 'X-Intent': 'article', 'X-Slug': 'phi-thuyen-mat-ngu' },
+    body: '<raw image bytes>',
+    purpose: 'For locally generated images (create_image output) — no public URL needed.',
+  },
 }
 
 const ENDPOINTS = [
   { method: 'GET', path: '/api/agent-spec', auth: 'none', purpose: 'Fetch this spec.' },
 
-  // Khai Trí
-  { method: 'GET', path: '/api/khaitri', auth: 'bearer', purpose: 'List all khaitri docs.' },
-  { method: 'POST', path: '/api/khaitri', auth: 'bearer', purpose: 'Create khaitri (sourceRef must not exist; 409 if dup).' },
-  { method: 'GET', path: '/api/khaitri/:id', auth: 'bearer', purpose: 'Fetch single khaitri.' },
-  { method: 'PUT', path: '/api/khaitri/:id', auth: 'bearer', purpose: 'Full update by id.' },
-  { method: 'PATCH', path: '/api/khaitri/:id', auth: 'bearer', purpose: 'Partial update by id.' },
-  { method: 'DELETE', path: '/api/khaitri/:id', auth: 'bearer', purpose: 'Delete by id.' },
-  { method: 'POST', path: '/api/khaitri/validate', auth: 'bearer', purpose: 'Dry-run validation.' },
+  // Content — Cloudflare Worker, Supabase-backed. Same btd_ Bearer key.
+  { method: 'GET', path: `${WORKER_BASE}/content`, auth: 'bearer btd_ (content:read)', purpose: 'List/search. Filters: id, source_ref, type, status, vi_slug, en_slug (PostgREST eq. style), q=<title text>, limit, order.' },
+  { method: 'POST', path: `${WORKER_BASE}/content`, auth: 'bearer btd_ (content:write)', purpose: 'Create/upsert by source_ref. 409 DUPLICATE_CONTENT if same title+body exists under another source_ref.' },
+  { method: 'PATCH', path: `${WORKER_BASE}/content/:id`, auth: 'bearer btd_ (content:write)', purpose: 'Partial update by id (status, thumbnail_url, slugs, bodies…).' },
 
-  // Articles
-  { method: 'GET', path: '/api/articles', auth: 'bearer', purpose: 'List all articles (date desc).' },
-  { method: 'POST', path: '/api/articles', auth: 'bearer', purpose: 'Create article (sourceRef must not exist; 409 if dup).' },
-  { method: 'GET', path: '/api/articles/:id', auth: 'bearer', purpose: 'Fetch single article.' },
-  { method: 'PUT', path: '/api/articles/:id', auth: 'bearer', purpose: 'Full update by id.' },
-  { method: 'PATCH', path: '/api/articles/:id', auth: 'bearer', purpose: 'Partial update by id.' },
-  { method: 'DELETE', path: '/api/articles/:id', auth: 'bearer', purpose: 'Delete by id.' },
-
-  // Upload
-  { method: 'POST', path: '/api/upload-from-url', auth: 'bearer', purpose: 'Fetch source URL → upload to R2 → return permanent URL.' },
+  // Media — Vercel (R2 credentials live here)
+  { method: 'POST', path: '/api/upload-from-url', auth: 'bearer btd_ (media:write)', purpose: 'Fetch a public http(s) URL and store in R2. Returns permanent public URL.' },
+  { method: 'POST', path: '/api/upload-file', auth: 'bearer btd_ (media:write)', purpose: 'Upload raw image bytes (Content-Type + X-Intent + X-Slug headers).' },
 ]
 
 export default function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ ok: false, error: 'method_not_allowed', allow: ['GET'] })
-  }
   res.setHeader('Content-Type', 'application/json')
-  res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
-  res.status(200).send(JSON.stringify({
-    ok: true,
-    domain: 'immortality.vn / battudao.com',
-
-    collections: {
-      khaitri: {
-        schema_version: KhaiTri.SCHEMA_VERSION,
-        schema: KhaiTri.KHAITRI_SCHEMA,
-        rules: KhaiTri.RULES,
-        tag_map_vi_en: KhaiTri.TAG_MAP_VI_TO_EN,
-      },
-      articles: {
-        schema_version: Articles.SCHEMA_VERSION,
-        schema: Articles.ARTICLE_SCHEMA,
-        rules: Articles.RULES,
-        tag_map_vi_en: Articles.TAG_MAP_VI_TO_EN,
-      },
-    },
-
+  res.setHeader('Cache-Control', 'public, max-age=300')
+  return res.status(200).send(JSON.stringify({
+    version: '2026-07-15',
+    auth: 'All write endpoints: Authorization: Bearer btd_<32hex>. Keys are per-agent, scoped (content:read, content:write, media:write). Firebase auth is RETIRED.',
+    content_schema: CONTENT_SCHEMA,
     endpoints: ENDPOINTS,
     examples: EXAMPLES,
-
-    classification: {
-      purpose: 'Decide collection (articles vs khaitri) WITHOUT asking the user. Pick automatically from content shape.',
-      decide_article_when: [
-        'Long-form essay / explanatory writing (multiple paragraphs of prose).',
-        'Content title is a noun phrase / topic ("Linh thai — vệ tinh tâm linh", "Phương pháp chữa mất ngủ").',
-        'No explicit Hỏi/Đáp (or Question/Answer) markers in the body.',
-        'Body discusses a method, concept, or teaching in narrative form.',
-        'Default fallback when uncertain.',
-      ],
-      decide_khaitri_when: [
-        'Body contains explicit "Hỏi:" / "Đáp:" markers (or English "Question:" / "Answer:").',
-        'Title is phrased as a question ("Vì sao ngồi thiền...?", "Cốt sống thư lỏng là gì?").',
-        'Single Q paired with one or more A paragraphs (transcript-style).',
-      ],
-      tie_breaker: 'If both signals present: count Q/A markers. Two or more pairs ⇒ khaitri. Otherwise ⇒ article.',
-      do_not_ask_user: 'Auto-classify and proceed. Only confirm with user if classification confidence is genuinely <70%.',
-    },
-
-    storage: {
-      backend: 'cloudflare-r2',
-      bucket: 'shared (project-prefixed)',
-      key_prefix: 'immortality-vn/',
-      upload_endpoint: '/api/upload-from-url',
-      intents: ['article', 'khaitri'],
-    },
-
-    auth: {
-      type: 'firebase-id-token',
-      header: 'Authorization: Bearer <ID_TOKEN>',
-      how_to_get_token: 'POST identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=<API_KEY> with { email, password, returnSecureToken: true }',
-      token_ttl_seconds: 3600,
-      refresh: 'POST securetoken.googleapis.com/v1/token?key=<API_KEY> body grant_type=refresh_token&refresh_token=<rt>',
-      allowlist: 'Token email must be in AGENT_ALLOWLIST_EMAILS env var (default: agent@battudao.com).',
-    },
-
-    suggested_pipeline: [
-      '1. signInWithPassword → idToken (cache 55 min)',
-      '2. GET /api/agent-spec → discover schemas, examples, validation rules, CLASSIFICATION rules',
-      '3. Receive content from user → CLASSIFY (article vs khaitri) using classification rules — DO NOT ASK USER',
-      '4. Generate / translate content as needed (Vi+En both required)',
-      '5. (Optional) Generate image → temporary URL',
-      '6. POST /api/upload-from-url { url, intent, slug } → permanent R2 URL',
-      '7. POST /api/articles OR /api/khaitri (per classification) { ..., image, sourceRef }',
-      '8. Reply to user with: classification chosen, sourceRef, doc id, public URL',
-    ],
   }, null, 2))
 }

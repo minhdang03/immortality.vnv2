@@ -1,43 +1,88 @@
-// api/_lib/auth.js — Verify Firebase ID token from Authorization header.
-// Agent obtains token by signing in with email/password (same flow as publisher skill).
+// api/_lib/auth.js — Agent auth via btd_ API key (Bearer), validated against
+// Supabase public.api_keys. Firebase ID-token flow is retired (2026-07-15):
+// agents hold btd_ keys only — same auth plane as the Worker /v1/content API.
+//
+// Env vars required on Vercel:
+//   SUPABASE_URL           — e.g. https://<project>.supabase.co
+//   SUPABASE_SERVICE_ROLE  — sb_secret_... key (service role; bypasses RLS)
 
-import { initializeApp, cert, getApps } from 'firebase-admin/app'
-import { getAuth } from 'firebase-admin/auth'
+import { createHash } from 'node:crypto'
 
-let initialized = false
-function ensureAdmin() {
-  if (initialized) return
-  if (getApps().length) { initialized = true; return }
-  // Vercel: service account JSON in env var (base64) OR file at ./src/*-firebase-adminsdk-*.json (local).
-  const saB64 = process.env.FIREBASE_ADMIN_SA_B64
-  if (saB64) {
-    const sa = JSON.parse(Buffer.from(saB64, 'base64').toString('utf8'))
-    initializeApp({ credential: cert(sa) })
-  } else {
-    // Fallback: application default credentials (Vercel + GCP)
-    initializeApp()
-  }
-  initialized = true
+const KEY_SHAPE = /^btd_[0-9a-f]{32}$/
+
+// VITE_SUPABASE_URL fallback: same public project URL, already set on Vercel.
+function supabaseUrl() {
+  return process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 }
 
-// Allowlist of UIDs / emails permitted to write via API. Add more agent accounts as needed.
-const AGENT_ALLOWLIST_EMAILS = (process.env.AGENT_ALLOWLIST_EMAILS || 'agent@battudao.com').split(',').map(s => s.trim()).filter(Boolean)
+function supabaseHeaders() {
+  const key = process.env.SUPABASE_SERVICE_ROLE
+  return {
+    'apikey': key,
+    'Authorization': `Bearer ${key}`,
+    'Content-Type': 'application/json',
+  }
+}
 
-export async function requireAgent(req) {
-  ensureAdmin()
+/**
+ * Validate Authorization: Bearer btd_<32hex> against public.api_keys.
+ * requiredScope: e.g. "media:write" — must be present in the key's scopes CSV.
+ * Returns { ok, agent, keyId } or { ok: false, status, error, detail }.
+ */
+export async function requireAgent(req, requiredScope = 'media:write') {
+  if (!supabaseUrl() || !process.env.SUPABASE_SERVICE_ROLE) {
+    return { ok: false, status: 500, error: 'auth_not_configured', detail: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE missing' }
+  }
   const auth = req.headers.authorization || ''
   const m = auth.match(/^Bearer\s+(.+)$/i)
   if (!m) return { ok: false, status: 401, error: 'missing_bearer_token' }
+  const raw = m[1].trim()
+  if (!KEY_SHAPE.test(raw)) return { ok: false, status: 401, error: 'invalid_key_format' }
+
+  const hash = createHash('sha256').update(raw).digest('hex')
+  const params = new URLSearchParams({
+    key_hash: `eq.${hash}`,
+    revoked_at: 'is.null',
+    select: 'id,agent_name,scopes',
+  })
+  let rows
   try {
-    // checkRevoked=true → instant revoke via revokeRefreshTokens(uid).
-    // Costs 1 extra RPC per request but enables key compromise containment.
-    const decoded = await getAuth().verifyIdToken(m[1], true)
-    if (!AGENT_ALLOWLIST_EMAILS.includes(decoded.email)) {
-      return { ok: false, status: 403, error: 'forbidden', detail: `email ${decoded.email} not in agent allowlist` }
-    }
-    return { ok: true, uid: decoded.uid, email: decoded.email }
+    const r = await fetch(`${supabaseUrl()}/rest/v1/api_keys?${params}`, { headers: supabaseHeaders() })
+    if (!r.ok) return { ok: false, status: 500, error: 'key_lookup_failed', detail: `supabase ${r.status}` }
+    rows = await r.json()
   } catch (e) {
-    return { ok: false, status: 401, error: 'invalid_token', detail: e.message }
+    return { ok: false, status: 500, error: 'key_lookup_failed', detail: e.message }
+  }
+  if (!rows.length) return { ok: false, status: 401, error: 'key_not_found_or_revoked' }
+
+  const key = rows[0]
+  const scopes = String(key.scopes || '').split(',').map(s => s.trim())
+  if (!scopes.includes(requiredScope)) {
+    return { ok: false, status: 403, error: 'scope_not_granted', detail: requiredScope }
+  }
+  return { ok: true, agent: key.agent_name, keyId: key.id }
+}
+
+/**
+ * Fire-and-forget audit row into public.agent_audit_log (same table the
+ * Worker writes). Never throws — audit failure must not fail the upload.
+ */
+export async function logAgentAction({ keyId, agent, action, contentId = null, statusCode, detail }) {
+  try {
+    await fetch(`${supabaseUrl()}/rest/v1/agent_audit_log`, {
+      method: 'POST',
+      headers: supabaseHeaders(),
+      body: JSON.stringify({
+        key_id: keyId ?? null,
+        agent_name: agent ?? null,
+        action,
+        content_id: contentId,
+        status_code: statusCode,
+        detail: detail ? String(detail).slice(0, 500) : null,
+      }),
+    })
+  } catch (e) {
+    console.warn('agent_audit_log write failed', e.message)
   }
 }
 
