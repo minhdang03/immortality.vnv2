@@ -1,0 +1,7 @@
+# XcodeGen sinh lại từ project.yml — không commit
+NODIE.xcodeproj/
+build/
+DerivedData/
+*.xcuserstate
+.DS_Store
+Config/Secrets.xcconfig

@@ -58,3 +58,11 @@ secrets/
 *firebase-admin-sa*.json
 scripts/migrate/.dump/
 .firebase/
+
+# Khoá riêng — APNs auth key (.p8), cert, keystore. Apple KHÔNG cho tải lại .p8:
+# lộ = phải revoke + tạo khoá mới + cập nhật server.
+*.p8
+*.pem
+*.mobileprovision
+*.jks
+*.keystore

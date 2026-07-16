@@ -1,0 +1,177 @@
+import XCTest
+
+/// Test auth chạy với Supabase THẬT (không mock) — chậm hơn nhưng chứng minh
+/// đúng đường mà user đi: signIn → RLS self-read profiles → signOut.
+///
+/// Tài khoản lấy từ biến môi trường `NODIE_TEST_EMAIL` / `NODIE_TEST_PASSWORD`
+/// (scheme → Config/Secrets.xcconfig → .env gốc monorepo). KHÔNG hardcode trong
+/// source: đây cũng là tài khoản admin battudao.com.
+/// Thiếu biến → skip êm, không fail: máy chưa chạy generate-secrets-xcconfig.sh
+/// thì test auth không chạy được, nhưng đó không phải lỗi của code.
+final class AuthUITests: XCTestCase {
+    private var app: XCUIApplication!
+
+    override func setUp() {
+        continueAfterFailure = false
+        app = XCUIApplication()
+    }
+
+    /// Thiếu credential → XCTSkip.
+    private func credentials() throws -> NodieTestAuth.Account { try NodieTestAuth.credentials() }
+
+    /// Mở app với session đã xoá, DỪNG ở màn Login — cho test soi trạng thái chưa đăng nhập.
+    private func launchSignedOut() {
+        app.launchArguments.append("--uitest-reset-auth")
+        app.launchVietnamese()
+    }
+
+    /// Vào app ở trạng thái đã đăng nhập, KHÔNG qua bàn phím — dùng cho các test soi thứ
+    /// NẰM SAU đăng nhập (hồ sơ, đăng xuất, vuốt back). Đường gõ tay được `testSignInFormLetsUserIn`
+    /// giữ riêng: gõ mật khẩu xong là iOS bật lớp AutoFill nuốt hết chạm, nên test nào còn phải
+    /// bấm tiếp thì không đi đường đó được. Xem `AuthStore.autoLoginForUITestsIfRequested`.
+    @discardableResult
+    private func signIn() throws -> NodieTestAuth.Account { try NodieTestAuth.signIn(app) }
+
+    /// Đăng nhập xong app dừng ở Hỏi đáp (tab mặc định). Avatar chỉ có ở Bạn bè và Bảng tin,
+    /// mà Bảng tin đang rút khỏi tab bar (`NodieTab.visibleTabs`) → phải sang Bạn bè mới bấm được.
+    @discardableResult
+    private func openProfileFromFriends() -> XCUIElement {
+        let friendsTab = app.buttons["Bạn bè"]
+        XCTAssertTrue(friendsTab.waitForExistence(timeout: 20), "Phải thấy tab Bạn bè")
+        friendsTab.tap()
+
+        let avatar = app.buttons["profileAvatar"]
+        XCTAssertTrue(avatar.waitForExistence(timeout: 10), "Tab Bạn bè phải có avatar để vào Cá Nhân")
+        avatar.tap()
+        return friendsTab
+    }
+
+    /// Chưa đăng nhập → thấy Login, KHÔNG vào được app.
+    func testSignedOutShowsLoginAndBlocksApp() {
+        launchSignedOut()
+
+        XCTAssertTrue(app.textFields["Email"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Bạn bè"].exists, "Chưa đăng nhập thì không được thấy tab bar")
+    }
+
+    /// Sai mật khẩu → báo lỗi tiếng Việt, không crash, không vào app.
+    func testWrongPasswordShowsVietnameseError() throws {
+        let account = try credentials()
+        launchSignedOut()
+
+        let emailField = app.textFields["Email"]
+        XCTAssertTrue(emailField.waitForExistence(timeout: 10))
+        emailField.tap()
+        emailField.typeText(account.email)
+
+        let passwordField = app.secureTextFields["Mật khẩu"]
+        passwordField.tap()
+        passwordField.typeText("saibetmatkhau")
+
+        app.buttons["Đăng nhập"].tap()
+
+        let error = app.staticTexts["authError"]
+        XCTAssertTrue(error.waitForExistence(timeout: 15), "Phải hiện lỗi")
+        XCTAssertEqual(error.label, "Email hoặc mật khẩu không đúng.")
+        XCTAssertFalse(app.buttons["Bạn bè"].exists, "Sai mật khẩu thì không được vào app")
+    }
+
+    /// Đường HẠNH PHÚC gõ tay: nhập đúng email/mật khẩu vào form → vào được app.
+    /// Test duy nhất còn đi qua bàn phím ở nhánh đăng nhập thành công, nên nó là thứ duy nhất
+    /// chứng minh form Login thật sự hoạt động. Cố tình KHÔNG bấm gì thêm sau khi vào:
+    /// lớp AutoFill của iOS nổi lên ngay sau đó và nuốt mọi chạm.
+    func testSignInFormLetsUserIn() throws {
+        let account = try credentials()
+        launchSignedOut()
+
+        let emailField = app.textFields["Email"]
+        XCTAssertTrue(emailField.waitForExistence(timeout: 10), "Phải thấy màn Login khi chưa đăng nhập")
+        emailField.tap()
+        emailField.typeText(account.email)
+
+        let passwordField = app.secureTextFields["Mật khẩu"]
+        passwordField.tap()
+        passwordField.typeText(account.password)
+        app.buttons["Đăng nhập"].tap()
+
+        XCTAssertTrue(app.buttons["Hỏi đáp"].waitForExistence(timeout: 25),
+                      "Gõ đúng email/mật khẩu rồi bấm Đăng nhập phải vào được app")
+        XCTAssertFalse(app.textFields["Email"].exists, "Vào app rồi thì màn Login phải biến mất")
+    }
+
+    /// Đăng nhập thật → vào app → avatar → Cá Nhân hiện hồ sơ THẬT từ Supabase.
+    func testSignInThenOpenProfileShowsRealData() throws {
+        let account = try signIn()
+
+        openProfileFromFriends()
+
+        let name = app.staticTexts["profileName"]
+        XCTAssertTrue(name.waitForExistence(timeout: 15), "Cá Nhân phải hiện tên")
+        // Trigger handle_new_user đặt display_name = phần trước @ của email → suy ra từ
+        // account đang test, không viết cứng (đổi tài khoản test là test vẫn đúng).
+        let expectedName = String(account.email.prefix(while: { $0 != "@" }))
+        XCTAssertEqual(name.label, expectedName, "Tên phải đến từ profiles thật, không hardcode")
+        XCTAssertTrue(app.staticTexts["Quản trị viên"].exists, "role='admin' trong DB phải hiện đúng nhãn")
+
+        // Đính ảnh màn Cá Nhân với dữ liệu THẬT để review thiết kế.
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "profile-real-data"
+        shot.lifetime = .keepAlways
+        add(shot)
+    }
+
+    /// Vuốt cạnh trái ở Cá Nhân → về Bạn bè (gesture phase 03a vẫn chạy ở màn mới),
+    /// VÀ tab bar phải ẩn khi đang ở Cá Nhân — quy tắc chung: push detail thì ẩn tab bar.
+    /// Bug này từng lọt (feedPath không được khai trong `showsTabBar`), chỉ lộ khi nhìn ảnh.
+    func testSwipeBackFromProfileAndTabBarHides() throws {
+        try signIn()
+
+        let friendsTab = openProfileFromFriends()
+        XCTAssertTrue(app.buttons["signOutButton"].waitForExistence(timeout: 15))
+        XCTAssertFalse(friendsTab.exists, "Tab bar phải ẩn ở màn Cá Nhân, như mọi màn detail khác")
+
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.5))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: end)
+
+        XCTAssertTrue(friendsTab.waitForExistence(timeout: 5), "Vuốt back phải về Bạn bè, tab bar hiện lại")
+    }
+
+    /// Đăng xuất → về Login, session xoá sạch.
+    func testSignOutReturnsToLogin() throws {
+        try signIn()
+        openProfileFromFriends()
+
+        // Màn Cá nhân dài hơn màn hình (thẻ danh tính + thống kê + đóng góp + cài đặt) nên
+        // nút Đăng xuất nằm dưới mép: `tap()` bấm vào TÂM phần tử, tâm ở ngoài màn thì cú
+        // chạm rơi vào hư không và dialog không bao giờ mở. Cuộn tới nơi rồi hẵng bấm.
+        let signOut = app.buttons["signOutButton"]
+        XCTAssertTrue(signOut.waitForExistence(timeout: 15))
+        app.scrollViews.firstMatch.swipeUp()
+        signOut.tap()
+
+        // Bám vào dialog thay vì `buttons["Đăng xuất"].firstMatch`: nhãn này trùng với chính
+        // nút vừa bấm, firstMatch dễ tóm nhầm nút dưới nền và test sẽ xanh/đỏ tuỳ thứ tự cây.
+        let confirm = app.sheets.buttons["Đăng xuất"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Bấm Đăng xuất phải mở dialog xác nhận")
+        confirm.tap()
+
+        XCTAssertTrue(app.textFields["Email"].waitForExistence(timeout: 15), "Đăng xuất phải về màn Login")
+        XCTAssertFalse(app.buttons["Bạn bè"].exists)
+    }
+
+    /// Session phải sống sót qua lần mở app kế tiếp (Keychain) — user không phải login lại.
+    func testSessionPersistsAcrossRelaunch() throws {
+        try signIn()
+        XCTAssertTrue(app.buttons["Bạn bè"].waitForExistence(timeout: 20))
+
+        app.terminate()
+
+        // Lần này KHÔNG reset auth → phải tự vào thẳng app
+        let relaunched = XCUIApplication()
+        relaunched.launchVietnamese()
+
+        XCTAssertTrue(relaunched.buttons["Bạn bè"].waitForExistence(timeout: 20),
+                      "Mở lại app phải vẫn đăng nhập, không hiện Login")
+    }
+}

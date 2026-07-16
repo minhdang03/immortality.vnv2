@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2F855F"/>
+      <stop offset="1" stop-color="#22624A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.38" r="0.75">
+      <stop offset="0" stop-color="#3C9A72" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#3C9A72" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Full-bleed background; iOS applies the rounded mask -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <!-- Monogram N, cream -->
+  <g fill="#FAF7F0">
+    <rect x="300" y="300" width="92" height="424" rx="14"/>
+    <rect x="632" y="300" width="92" height="424" rx="14"/>
+    <path d="M300 314 L392 300 L724 710 L632 724 Z"/>
+  </g>
+  <!-- Gold accent underline (brand gold) -->
+  <rect x="300" y="762" width="424" height="26" rx="13" fill="#CBB98A"/>
+</svg>

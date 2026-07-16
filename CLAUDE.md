@@ -230,7 +230,7 @@ App có SW precache. Khi đổi assets có thể cần bump cache name. Conventi
 **Anti-patterns rejected:**
 - No Buddhist metaphor in UI (tone is peer-to-peer)
 - No tier segregation visible (paid features don't demote free)
-- No engagement metrics on people (no like counts, no follow scores)
+- ~~No engagement metrics on people~~ **Đảo 16/07/2026 (NODIE, theo design_handoff_nodie_v4):** hồ sơ thành viên hiện đủ thống kê — người theo dõi, % AI đánh giá, lần chiếu sáng, số bài. Vẫn không xếp hạng/leaderboard giữa người với người.
 - Đăng = peer, not authority figure
 
 ---
