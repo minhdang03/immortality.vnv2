@@ -1,8 +1,47 @@
 # Phase 04 — Wire Hội thoại (chat thật + Realtime + unread + block/report)
 
-**Status:** ⬜ chưa bắt đầu · P1 · ~4h
-**Chặn bởi:** phase 01 (bảng chat phải tồn tại + có kênh seed). **Chặn:** 04b (push cần message insert thật).
-**Trigger:** UI 6 màn đã dựng; `AppState` còn đọc `MockData` cho hội thoại (dòng 82/105/126/168).
+**Status:** 🏗️ **ĐANG LÀM** — tầng dữ liệu XONG + đã kiểm chứng; **còn lại: wire view**
+**Chặn bởi:** ~~phase 01~~ (xong 260716). **Chặn:** 04b.
+**Trigger:** UI 6 màn đã dựng; `AppState` còn đọc `MockData` cho hội thoại.
+
+## Đã xong (2026-07-17) — commit `4dc4b82`, `a6ec0b2`
+
+| Việc | Kiểm chứng THẬT (không tin suông) |
+|---|---|
+| `0023` bật Realtime | publication rỗng → giờ có `public.messages`; chạy 2 lần không lỗi |
+| `0024` + bucket `chat-media` (private, 25MB, ảnh+audio) | 5/5: upload thư mục mình `200` · giả danh người khác `403` · kênh không phải thành viên chặn · **anon chặn** · thành viên ký URL được |
+| `0025` emoji/màu kênh | seed `naobo` 🧠 `#ECE7FB`/`#5B43D8` (đúng prototype), `thongbao` 📢; constraint chặn hex sai (thử `#ZZZZZZ` → từ chối) |
+| `ConversationModels.swift` | DTO khớp DB + `MessageMedia`/`MessageMetadata` trên cột `metadata` jsonb (có sẵn từ 0017) |
+| `ConversationStore.swift` | loadChannels/loadMessages(keyset)/send(lạc quan)/sendMedia/markRead/mute/leave/join |
+| `ConversationStoreRealtime.swift` | subscribe/unsubscribe theo kênh, khử trùng theo id, lọc blocked |
+| Query `loadChannels` | 2 kênh, `channel_members` nhúng lọc đúng **1 hàng của mình** |
+| Đếm chưa đọc | **3** — khớp seed |
+| **`is_broadcast` RLS** | thành viên thường → kênh thường `201`, → **kênh phát `403`** ✓ (thứ plan.md cảnh báo) |
+
+### Quyết định trong lúc làm
+
+1. **Realtime = tiếng chuông, KHÔNG phải dữ liệu.** Payload `postgres_changes` chỉ có dòng `messages` thô, không chạy join → decode thẳng thì mọi tin đến hiện "Ẩn danh". Nhận sự kiện xong gọi PostgREST nạp đuôi. Giá: thêm 1 round-trip/tin — chấp nhận ở v1. (Bonus: khỏi tự chế decoder ngày tháng, vì `JSONDecoder.supabase()` của SDK là `package`.)
+2. **Media = Supabase Storage, KHÔNG phải R2** (Đăng hỏi ngược, em chốt). Lý do: R2 không cho app upload thẳng (key không được nằm trong app) → phải thêm Edge Function ký URL + cần 3 key R2 đang nằm ở Vercel. Storage thì dùng JWT sẵn + policy cùng khuôn RLS. Lợi thế egress-miễn-phí của R2 chỉ phát huy với traffic công khai lớn (ca của web), còn media chat là riêng tư vài người đọc. → **web dùng R2, NODIE chat dùng Storage** là phân vai, không phải mâu thuẫn.
+3. **Upload TRƯỚC rồi mới ghi tin.** Ngược lại (ghi tin trước) mà upload hỏng thì để lại tin trỏ vào file không tồn tại, vĩnh viễn; còn thứ tự này chỉ để lại file mồ côi không ai thấy, dọn được.
+4. **Đường dẫn `{channel_id}/{user_id}/{uuid}.{ext}` mang thông tin phân quyền** — policy đọc channel_id/user_id ngay từ path vì lúc upload thì tin nhắn CHƯA tồn tại, không có gì tra ngược.
+5. **Màu/emoji kênh vào DB** — không suy được từ `kind` (naobo vs vutru cùng KÊNH khác màu). DM để null → chữ cái đầu + màu hash từ uid.
+
+## CÒN LẠI — wire view (khối lớn, nên làm với context sạch)
+
+**Vướng chính:** `AppState` (415 dòng) dùng `chatId: String` kiểu `"naobo"`, store dùng `UUID`. `ChatDetailView` (384 dòng) bám chặt AppState: `drafts`, `senderLabel`, `member(inChat:)`, `canPost`, `recording`, `attachOpen`, `send`, `sendMedia`, `startRec`, `sendVoice`, `cancelRec`.
+
+**Hướng đã chọn (Đăng chốt): AppState thành ADAPTER** — `messages(for:)`/`send` gọi xuống `ConversationStore`, map `MessageRow` → `ChatMessage` và `ChannelRow` → `Conversation`. Giữ nguyên `ChatDetailView` để không phá việc Đăng đang dựng.
+
+Việc cụ thể:
+- [ ] `ChannelRow` → `Conversation`: emoji/avatar_hex/badge_hex từ DB (0025); DM → chữ cái đầu + màu hash uid
+- [ ] `MessageRow` → `ChatMessage`: `media`/`voice` từ `metadata`; `isMine` = `userId == currentUserId`
+- [ ] Đổi `chatId` sang UUID (hoặc map slug↔uuid ở AppState)
+- [ ] `sendMedia`/`sendVoice` thật: PhotosPicker + AVAudioRecorder (**quyền mic — cần `NSMicrophoneUsageDescription` trong Info.plist**) → `store.sendMedia`
+- [ ] Hiện ảnh/thoại: signed URL (`ChatMediaStorage.signedURL`) + player
+- [ ] Menu Báo cáo/Chặn ở header ChatDetail (nút `ellipsis` dòng 83 hiện chết)
+- [ ] Tạo DM thật: insert `channels(kind='dm')` + 2 `channel_members` (RLS `channels_insert_dm` cho phép)
+- [ ] Gỡ mock khỏi AppState
+- [ ] UI test wire + đối chiếu psql
 
 ## Context links
 
