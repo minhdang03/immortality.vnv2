@@ -171,6 +171,14 @@ final class AppState {
         conversations.first { $0.id == id }
     }
 
+    /// Tổng tin chưa đọc cho badge trên tab Chat. Kênh đã tắt thông báo không tính —
+    /// user đã nói "đừng réo tôi về chỗ này" thì badge cũng phải im.
+    var totalUnread: Int {
+        conversations
+            .filter { !mutedChannels.contains($0.id) }
+            .reduce(0) { $0 + $1.unread }
+    }
+
     func question(id: String) -> Question {
         MockData.questions.first { $0.id == id } ?? MockData.questions[0]
     }

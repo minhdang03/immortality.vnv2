@@ -74,7 +74,7 @@ struct RootTabView: View {
             .padding(.bottom, state.showsTabBar ? 74 : 0)
 
             if state.showsTabBar {
-                NodieTabBar(selection: state.tab) {
+                NodieTabBar(selection: state.tab, unreadCount: state.totalUnread) {
                     NodieHaptics.tap()
                     state.selectTab($0)
                 }

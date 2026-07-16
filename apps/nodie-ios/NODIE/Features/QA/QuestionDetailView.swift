@@ -77,6 +77,11 @@ struct QuestionDetailView: View {
                     .padding(.top, NodieSpacing.lg)
                     .padding(.bottom, NodieSpacing.xl)
                 }
+                // `.task` chỉ nạp thread MỘT lần — không kéo tay thì câu trả lời
+                // người khác viết sau khi mình mở màn không bao giờ về.
+                .refreshable {
+                    if let uuid { await qa.loadThread(for: uuid) }
+                }
             } else if isResolving {
                 Spacer()
                 ProgressView().tint(NodieColors.accent)

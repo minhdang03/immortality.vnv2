@@ -34,6 +34,8 @@ enum NodieTab: String, CaseIterable, Identifiable {
 /// Tab bar nổi dạng viên thuốc tối, cách mép dưới một khoảng.
 struct NodieTabBar: View {
     let selection: NodieTab
+    /// Tổng tin chưa đọc — chấm đếm trên tab Chat (chuẩn FB/IG/Zalo). 0 = không vẽ gì.
+    var unreadCount: Int = 0
     let onSelect: (NodieTab) -> Void
 
     var body: some View {
@@ -43,7 +45,15 @@ struct NodieTabBar: View {
                     onSelect(tab)
                 } label: {
                     VStack(spacing: 1) {
-                        Text(verbatim: tab.glyph).font(NodieTypography.tabIcon)
+                        Text(verbatim: tab.glyph)
+                            .font(NodieTypography.tabIcon)
+                            .overlay(alignment: .topTrailing) {
+                                if tab == .conversations, unreadCount > 0 {
+                                    UnreadBadge(count: unreadCount)
+                                        .scaleEffect(0.72)   // viên của row 20pt — trên glyph tab thì thu lại
+                                        .offset(x: 14, y: -5)
+                                }
+                            }
                         Text(tab.title).font(NodieTypography.tabLabel)
                     }
                     .foregroundStyle(selection == tab ? NodieColors.cream : NodieColors.tabDim)
@@ -52,6 +62,8 @@ struct NodieTabBar: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(tab.title))
+                .accessibilityValue(tab == .conversations && unreadCount > 0
+                                    ? Text("\(unreadCount) tin chưa đọc") : Text(verbatim: ""))
                 .accessibilityAddTraits(selection == tab ? [.isSelected, .isButton] : .isButton)
             }
         }

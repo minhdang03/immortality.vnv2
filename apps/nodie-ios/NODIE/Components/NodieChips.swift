@@ -129,12 +129,13 @@ struct TopicTagView: View {
     }
 }
 
-/// Viên đếm tin chưa đọc.
+/// Viên đếm tin chưa đọc. Trần "99+" như FB/Zalo — số 3 chữ số làm viên nở đè lên
+/// glyph tab (offset của badge trên tab bar là cố định).
 struct UnreadBadge: View {
     let count: Int
 
     var body: some View {
-        Text("\(count)")
+        Text(count > 99 ? "99+" : "\(count)")
             .font(NodieTypography.unread)
             .foregroundStyle(.white)
             .padding(.horizontal, 6)

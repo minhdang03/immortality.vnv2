@@ -17,6 +17,7 @@ struct ConversationListView: View {
         VStack(alignment: .leading, spacing: 0) {
             header
 
+            ScrollViewReader { proxy in
             List {
                 ForEach(visible) { conversation in
                     ConversationRowView(
@@ -64,11 +65,39 @@ struct ConversationListView: View {
             .scrollContentBackground(.hidden)
             .background(NodieColors.bg)
             .refreshable { await state.refresh() }
+            // Overlay thay vì if/else quanh List: giữ nguyên pull-to-refresh khi rỗng.
+            // allowsHitTesting(false): chữ empty-state không được nuốt cú kéo refresh.
+            .overlay { if visible.isEmpty { emptyState.allowsHitTesting(false) } }
+            // Chạm lại tab khi đã ở root → cuộn lên đầu — cùng hành vi với QA/Bạn bè.
+            // Neo vào dòng đầu (row đã có id từ ForEach Identifiable), không cần .id("top").
+            .onChange(of: state.rootScrollTick) {
+                if let first = visible.first {
+                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(first.id, anchor: .top) }
+                }
+            }
+            }
         }
         .background(NodieColors.bg)
         // sheet được (khác màn Chiếu câu hỏi dùng fullScreenCover): chọn người là thao tác
         // một chạm, vuốt xuống đóng nhầm cũng không mất gì đang gõ dở.
         .sheet(isPresented: $showNewMessage) { NewMessageView(state: state) }
+    }
+
+    /// Xoá/rời hết, hoặc bộ lọc không khớp cuộc nào — màn trống trơn thì user
+    /// không phân biệt được "không có gì" với "đang tải".
+    private var emptyState: some View {
+        VStack(spacing: NodieSpacing.sm) {
+            Image(systemName: "bubble.left.and.bubble.right")
+                .font(.system(size: 30))
+                .foregroundStyle(NodieColors.inkFaint)
+            (filter == .all ? Text("Chưa có cuộc trò chuyện nào.")
+                            : Text("Không có cuộc nào trong mục này."))
+                .font(NodieTypography.body)
+                .foregroundStyle(NodieColors.inkMuted)
+            Text("Bấm ✎ góc trên để bắt đầu.")
+                .font(NodieTypography.metaSm)
+                .foregroundStyle(NodieColors.inkFaint)
+        }
     }
 
     /// Preview = tin cuối, gắn tiền tố "Bạn: " hoặc tên rút gọn của người gửi.
