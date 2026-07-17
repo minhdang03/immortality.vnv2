@@ -22,6 +22,7 @@ struct AskQuestionView: View {
     /// Lĩnh vực user tự chọn — chỉ có nghĩa khi `tagManual`.
     @State private var pickedTag: String?
     @State private var sending = false
+    @State private var showDiscardConfirm = false
 
     /// 5 lĩnh vực của app, thứ tự này cũng là thứ tự ưu tiên khi câu hỏi khớp nhiều luật.
     private static let fieldRules: [(name: String, pattern: String)] = [
@@ -54,12 +55,28 @@ struct AskQuestionView: View {
         title.trimmingCharacters(in: .whitespacesAndNewlines).count > 6 && !sending
     }
 
+    /// Đã gõ mà tiêu đề chưa đủ dài. Ô trống KHÔNG tính — lúc đó người ta chưa làm gì sai,
+    /// mắng ngay khi màn vừa mở là mắng oan. Bám đúng ngưỡng của `canAsk` (> 6) để hai chỗ
+    /// không lệch nhau: nút sáng lên đúng lúc lời nhắc tắt đi.
+    private var titleTooShort: Bool {
+        let t = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !t.isEmpty && t.count <= 6
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     titleField
+                    // Chỉ dẫn, không phải lỗi → không tô đỏ báo động.
+                    if titleTooShort {
+                        Text("Tiêu đề cần dài hơn 6 ký tự để mọi người hiểu bạn đang hỏi gì.")
+                            .font(NodieTypography.metaSm)
+                            .foregroundStyle(NodieColors.inkMuted)
+                            .padding(.top, 6)
+                            .padding(.horizontal, NodieSpacing.sm)
+                    }
                     contextField.padding(.top, 10)
                     fieldSection.padding(.top, 18)
                     hint.padding(.top, NodieSpacing.lg)
@@ -69,13 +86,20 @@ struct AskQuestionView: View {
             }
         }
         .background(NodieColors.bg)
+        .confirmationDialog("Bỏ câu hỏi đang viết?", isPresented: $showDiscardConfirm,
+                            titleVisibility: .visible) {
+            Button("Bỏ", role: .destructive) { dismiss() }
+            Button("Tiếp tục viết", role: .cancel) {}
+        }
     }
 
     // MARK: - Header
 
     private var header: some View {
         HStack(spacing: NodieSpacing.md) {
-            Button { dismiss() } label: {
+            // fullScreenCover đã chặn vuốt-nhầm-mất-bài rồi; nút Huỷ mà bỏ nháp không hỏi
+            // thì cửa sau khoá còn cửa trước mở toang. Ô trống thì đừng hỏi — không có gì để mất.
+            Button { if hasText { showDiscardConfirm = true } else { dismiss() } } label: {
                 Text("Huỷ")
                     .font(NodieTypography.cta)
                     .foregroundStyle(NodieColors.inkSoft)
@@ -103,6 +127,11 @@ struct AskQuestionView: View {
             }
             .buttonStyle(.plain)
             .disabled(!canAsk)
+            // VoiceOver không thấy được dòng chữ đặt cạnh ô tiêu đề — phải nói lại ở đây.
+            // Bám `titleTooShort` chứ KHÔNG bám `!canAsk`: `canAsk` còn tắt khi đang gửi và
+            // khi ô trống → sẽ mắng "tiêu đề ngắn quá" lúc tiêu đề đã đủ dài, và mắng ngay
+            // khi màn vừa mở. Gương phải soi đúng cái nó đang soi (dòng hint ở titleField).
+            .accessibilityHint(titleTooShort ? Text("Tiêu đề cần dài hơn 6 ký tự.") : Text(""))
         }
         .padding(.horizontal, NodieSpacing.screenH)
         .padding(.top, NodieSpacing.screenTop)

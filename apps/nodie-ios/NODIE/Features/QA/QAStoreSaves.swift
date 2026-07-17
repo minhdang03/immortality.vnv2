@@ -65,7 +65,10 @@ extension QAStore {
     /// Nhúng `question:questions(...)` thay vì lấy id rồi query lần hai: một round-trip,
     /// và thứ tự "mới lưu nhất" nằm ở `question_saves.created_at` chứ không phải ở câu hỏi.
     /// Nội dung của người đã chặn lọc luôn tại đây — cùng luật với danh sách Hỏi đáp.
-    func savedQuestions() async -> [QuestionRow] {
+    /// `nil` = hỏng (mạng/chưa đăng nhập), `[]` = thật sự chưa lưu câu nào. Gộp hai thứ này
+    /// làm một thì màn kéo-làm-mới lúc rớt mạng sẽ thay danh sách bằng "chưa lưu câu hỏi nào" —
+    /// app nói dối người ta ngay cạnh cái alert báo lỗi.
+    func savedQuestions() async -> [QuestionRow]? {
         struct Row: Decodable { let question: QuestionRow? }
         do {
             let rows: [Row] = try await client.from("question_saves")
@@ -82,13 +85,15 @@ extension QAStore {
             return questions
         } catch {
             errorMessage = ErrorText.localized(error)
-            return []
+            return nil
         }
     }
 
-    /// Câu hỏi mình đã đặt, mới nhất trước.
-    func myQuestions() async -> [QuestionRow] {
-        guard let uid = currentUserId else { return [] }
+    /// Câu hỏi mình đã đặt, mới nhất trước. `nil` = hỏng — xem ghi chú ở `savedQuestions`.
+    func myQuestions() async -> [QuestionRow]? {
+        // Chưa đăng nhập cũng là hỏng, không phải "chưa hỏi câu nào". Trả `[]` ở đây là
+        // xoá trắng danh sách mà không một lời báo — im lặng còn tệ hơn báo lỗi.
+        guard let uid = currentUserId else { return nil }
         do {
             let rows: [QuestionRow] = try await client.from("questions")
                 .select(Self.questionSelect)
@@ -99,7 +104,7 @@ extension QAStore {
             return rows
         } catch {
             errorMessage = ErrorText.localized(error)
-            return []
+            return nil
         }
     }
 
@@ -107,8 +112,9 @@ extension QAStore {
     ///
     /// Câu trả lời là của mình nên không cần lọc tác giả CỦA NÓ — nhưng CÂU HỎI thì của người
     /// khác: chặn ai rồi thì tiêu đề của họ cũng không được hiện ở đây.
-    func myAnswers() async -> [MyAnswerRow] {
-        guard let uid = currentUserId else { return [] }
+    /// `nil` = hỏng — xem ghi chú ở `savedQuestions`.
+    func myAnswers() async -> [MyAnswerRow]? {
+        guard let uid = currentUserId else { return nil }
         do {
             let rows: [MyAnswerRow] = try await client.from("answers")
                 .select("id, body, created_at, lit_count, is_best, question_id, question:questions(title,author_id)")
@@ -118,7 +124,7 @@ extension QAStore {
             return rows.filter { !isBlocked($0.question?.authorId) }
         } catch {
             errorMessage = ErrorText.localized(error)
-            return []
+            return nil
         }
     }
 }

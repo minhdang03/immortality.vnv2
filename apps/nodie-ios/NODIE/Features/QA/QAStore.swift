@@ -6,20 +6,24 @@ import Supabase
 /// Tách khỏi `AppState` (còn chạy prototype cho Bảng tin/Hành trình) để wire độc lập.
 @Observable
 final class QAStore {
-    private(set) var questions: [QuestionRow] = []
+    /// Không `private(set)`: QAStoreOwnContent.swift (sửa/xoá nội dung của mình, file khác)
+    /// phải viết/xoá thẳng vào cache khi lưu thành công — cùng lý do với `savedQuestionIds`.
+    var questions: [QuestionRow] = []
     private(set) var isLoading = false
     /// Không `private(set)` như mấy cái dưới: `private` trong Swift bó theo FILE, mà
     /// QAStoreModeration.swift (report/block ở file khác) cũng phải báo lỗi qua đây.
     /// Cùng lý do với `blockedUserIds`. View chỉ đọc + gọi `clearError()`.
     var errorMessage: String?
 
-    private(set) var answersByQuestion: [UUID: [AnswerRow]] = [:]
-    private(set) var repliesByAnswer: [UUID: [ReplyRow]] = [:]
+    /// Không `private(set)` — cùng lý do với `questions`: QAStoreOwnContent.swift cần gỡ/thay
+    /// hàng sau khi sửa/xoá thành công, không đợi round-trip refetch.
+    var answersByQuestion: [UUID: [AnswerRow]] = [:]
+    var repliesByAnswer: [UUID: [ReplyRow]] = [:]
 
     /// Mọi câu hỏi ĐÃ THẤY, khoá theo id — kể cả câu không nằm trong `questions`.
     /// Màn Đã lưu / Câu hỏi của tôi mở được câu cũ hơn 50 câu mới nhất, mà nhét chúng vào
     /// `questions` thì danh sách Hỏi đáp mọc thêm bài không thuộc về nó. Chi tiết đọc ở đây.
-    private(set) var questionsById: [UUID: QuestionRow] = [:]
+    var questionsById: [UUID: QuestionRow] = [:]
 
     /// Câu hỏi MÌNH đã lưu. Đổi trong QAStoreSaves (file khác) nên không `private(set)` —
     /// cùng lý do với `blockedUserIds`.
@@ -38,13 +42,18 @@ final class QAStore {
     /// Nạp cùng loadQuestions; đổi trong QAStoreModeration (block/unblock).
     var blockedUserIds: Set<UUID> = []
 
+    /// Lần xoá vừa rồi, còn hoàn tác được. Ghi ở QAStoreOwnContent, đọc ở QAStoreUndo,
+    /// hiện ra bằng banner gắn ở RootTabView (gốc cây — xoá câu hỏi xong là màn chi tiết
+    /// bị pop, banner đặt trong màn đó sẽ chết theo trước khi ai kịp đọc).
+    var pendingUndo: PendingUndo?
+
     let client = SupabaseClientProvider.shared
 
     /// Không `private`: QAStoreSaves.swift (file khác) dựng cùng shape QuestionRow —
     /// `private` bó theo FILE nên nó sẽ không thấy. Hai bản select lệch nhau là decode nổ.
-    static let questionSelect = "id,title,body,topic,answer_count,created_at,author_id,author:profiles(display_name)"
-    private static let answerSelect   = "id,body,created_at,vote_count,lit_count,is_best,author_id,author:profiles(display_name)"
-    private static let replySelect    = "id,answer_id,parent_id,body,lit_count,created_at,author_id,author:profiles(display_name)"
+    static let questionSelect = "id,title,body,topic,answer_count,created_at,author_id,author:public_profiles(display_name),edited_at"
+    private static let answerSelect   = "id,body,created_at,vote_count,lit_count,is_best,author_id,author:public_profiles(display_name),edited_at"
+    private static let replySelect    = "id,answer_id,parent_id,body,lit_count,created_at,author_id,author:public_profiles(display_name),edited_at"
 
     private var uid: UUID? { client.auth.currentUser?.id }
     /// User hiện tại — view dùng để biết có được chọn "Hay nhất" (tác giả câu hỏi) không.
@@ -145,6 +154,12 @@ final class QAStore {
         authorId.map(blockedUserIds.contains) ?? false
     }
 
+    /// Tác giả có phải chính mình không — dùng ở ModerationMenu (Sửa/Xoá vs Báo cáo/Chặn)
+    /// và QAStoreOwnContent để một luật không lặp lại ở nhiều nơi.
+    func isMine(_ authorId: UUID?) -> Bool {
+        authorId != nil && authorId == currentUserId
+    }
+
     /// QAStoreModeration gọi sau khi chặn — `questions` là private(set) nên việc xoá
     /// khỏi cache hiển thị phải đi qua đây.
     func removeQuestions(by authorId: UUID) {
@@ -186,29 +201,36 @@ final class QAStore {
         } catch { errorMessage = ErrorText.localized(error); return nil }
     }
 
-    func createAnswer(questionId: UUID, body: String) async {
-        guard let uid else { errorMessage = String(localized: "Cần đăng nhập."); return }
+    /// Trả `true` khi server đã nhận. Caller cần biết để quyết định có xoá ô soạn hay không —
+    /// nuốt chữ của người ta rồi mới báo lỗi là cú lừa. Giống `createQuestion` trả `QuestionRow?`.
+    @discardableResult
+    func createAnswer(questionId: UUID, body: String) async -> Bool {
+        guard let uid else { errorMessage = String(localized: "Cần đăng nhập."); return false }
         let clean = body.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !clean.isEmpty else { return }
+        guard !clean.isEmpty else { return false }
         do {
             let row: AnswerRow = try await client.from("answers")
                 .insert(NewAnswer(questionId: questionId, authorId: uid, body: clean))
                 .select(Self.answerSelect).single().execute().value
             answersByQuestion[questionId, default: []].append(row)
             bumpAnswerCount(questionId, by: 1)
-        } catch { errorMessage = ErrorText.localized(error) }
+            return true
+        } catch { errorMessage = ErrorText.localized(error); return false }
     }
 
-    func createReply(answerId: UUID, parentId: UUID?, body: String) async {
-        guard let uid else { errorMessage = String(localized: "Cần đăng nhập."); return }
+    /// Trả `true` khi server đã nhận — xem ghi chú ở `createAnswer`.
+    @discardableResult
+    func createReply(answerId: UUID, parentId: UUID?, body: String) async -> Bool {
+        guard let uid else { errorMessage = String(localized: "Cần đăng nhập."); return false }
         let clean = body.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !clean.isEmpty else { return }
+        guard !clean.isEmpty else { return false }
         do {
             let row: ReplyRow = try await client.from("answer_replies")
                 .insert(NewReply(answerId: answerId, parentId: parentId, authorId: uid, body: clean))
                 .select(Self.replySelect).single().execute().value
             repliesByAnswer[answerId, default: []].append(row)
-        } catch { errorMessage = ErrorText.localized(error) }
+            return true
+        } catch { errorMessage = ErrorText.localized(error); return false }
     }
 
     // MARK: - Reaction ▲ vote / ☀ lit
@@ -280,11 +302,14 @@ final class QAStore {
 
     /// Đếm sống ở hai chỗ (danh sách + cache theo id) nên phải nhích cả hai:
     /// trả lời xong quay ra danh sách mà số không đổi thì trông như mất bài.
-    private func bumpAnswerCount(_ questionId: UUID, by delta: Int) {
+    ///
+    /// Không `private`: QAStoreOwnContent.swift gọi khi xoá mềm một câu trả lời để số hiện
+    /// đúng ngay (không đợi migration đếm lại phía server — xem ghi chú ở đó).
+    func bumpAnswerCount(_ questionId: UUID, by delta: Int) {
         func bumped(_ q: QuestionRow) -> QuestionRow {
             QuestionRow(id: q.id, title: q.title, body: q.body, topic: q.topic,
                         answerCount: max(q.answerCount + delta, 0), createdAt: q.createdAt,
-                        authorId: q.authorId, author: q.author)
+                        authorId: q.authorId, author: q.author, editedAt: q.editedAt)
         }
         if let i = questions.firstIndex(where: { $0.id == questionId }) {
             questions[i] = bumped(questions[i])
@@ -301,22 +326,22 @@ final class QAStore {
 private extension AnswerRow {
     func withVote(_ d: Int) -> AnswerRow {
         AnswerRow(id: id, body: body, createdAt: createdAt, voteCount: max(voteCount + d, 0),
-                  litCount: litCount, isBest: isBest, authorId: authorId, author: author)
+                  litCount: litCount, isBest: isBest, authorId: authorId, author: author, editedAt: editedAt)
     }
     func withLit(_ d: Int) -> AnswerRow {
         AnswerRow(id: id, body: body, createdAt: createdAt, voteCount: voteCount,
-                  litCount: max(litCount + d, 0), isBest: isBest, authorId: authorId, author: author)
+                  litCount: max(litCount + d, 0), isBest: isBest, authorId: authorId, author: author, editedAt: editedAt)
     }
     func settingBest(_ v: Bool) -> AnswerRow {
         AnswerRow(id: id, body: body, createdAt: createdAt, voteCount: voteCount,
-                  litCount: litCount, isBest: v, authorId: authorId, author: author)
+                  litCount: litCount, isBest: v, authorId: authorId, author: author, editedAt: editedAt)
     }
 }
 
 private extension ReplyRow {
     func withLit(_ d: Int) -> ReplyRow {
         ReplyRow(id: id, answerId: answerId, parentId: parentId, body: body,
-                 litCount: max(litCount + d, 0), createdAt: createdAt, authorId: authorId, author: author)
+                 litCount: max(litCount + d, 0), createdAt: createdAt, authorId: authorId, author: author, editedAt: editedAt)
     }
 }
 
@@ -335,7 +360,7 @@ extension QAStore {
         body: "Phối hợp thế này hiệu quả với mình: active recall để tự kiểm tra, rồi spaced repetition giãn khoảng ôn theo đường quên. Cái nào sai thì đẩy lịch ôn gần lại.",
         createdAt: Date().addingTimeInterval(-1800),
         voteCount: 4, litCount: 2, isBest: true,
-        authorId: UUID(), author: AuthorRef(displayName: "Hà")
+        authorId: UUID(), author: AuthorRef(displayName: "Hà"), editedAt: nil
     )
 
     /// Store đã seed cho preview.
@@ -347,13 +372,13 @@ extension QAStore {
             body: "Mình đang tự học và thấy hai kỹ thuật này hay bị nhắc chung. Thực tế nên kết hợp ra sao cho đỡ tốn thời gian?",
             topic: "Não bộ", answerCount: 2,
             createdAt: Date().addingTimeInterval(-7200),
-            authorId: UUID(), author: AuthorRef(displayName: "Minh")
+            authorId: UUID(), author: AuthorRef(displayName: "Minh"), editedAt: nil
         )
         let q2 = QuestionRow(
             id: UUID(), title: "Làm sao giữ thói quen đọc mỗi ngày?",
             body: nil, topic: "Thói quen", answerCount: 0,
             createdAt: Date().addingTimeInterval(-3600),
-            authorId: UUID(), author: AuthorRef(displayName: "Lan")
+            authorId: UUID(), author: AuthorRef(displayName: "Lan"), editedAt: nil
         )
         s.questions = [q1, q2]
 
@@ -361,14 +386,14 @@ extension QAStore {
             id: UUID(), body: "Theo mình cứ recall trước khi mở tài liệu, sai chỗ nào ôn chỗ đó dày hơn.",
             createdAt: Date().addingTimeInterval(-900),
             voteCount: 1, litCount: 0, isBest: false,
-            authorId: UUID(), author: AuthorRef(displayName: "Tú")
+            authorId: UUID(), author: AuthorRef(displayName: "Tú"), editedAt: nil
         )
         s.answersByQuestion[previewQuestionId] = [previewAnswer, a2]
         s.repliesByAnswer[previewAnswer.id] = [
             ReplyRow(id: UUID(), answerId: previewAnswer.id, parentId: nil,
                      body: "Cảm ơn, phần đường quên rất rõ!", litCount: 1,
                      createdAt: Date().addingTimeInterval(-600),
-                     authorId: UUID(), author: AuthorRef(displayName: "Minh"))
+                     authorId: UUID(), author: AuthorRef(displayName: "Minh"), editedAt: nil)
         ]
         return s
     }

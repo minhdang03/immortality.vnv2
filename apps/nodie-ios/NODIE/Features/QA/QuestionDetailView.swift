@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit   // UIPasteboard — SwiftUI không re-export
 
 /// Chi tiết câu hỏi — thân bài + danh sách trả lời (phẳng, không vote/best). Chiếm trọn màn.
 struct QuestionDetailView: View {
@@ -11,6 +12,12 @@ struct QuestionDetailView: View {
     /// Đang đi tìm câu hỏi. Tách khỏi `question == nil` vì hai thứ khác nhau: chưa biết
     /// (quay vòng) và biết là không có (báo hẳn). Gộp lại là quay vòng vĩnh viễn.
     @State private var isResolving = true
+
+    /// Sửa câu hỏi CỦA MÌNH — sheet vì có cả tiêu đề LẪN thân, alert một ô không đủ chỗ.
+    @State private var showEditQuestion = false
+    @State private var editTitle = ""
+    @State private var editBody = ""
+    @State private var editSending = false
 
     private var uuid: UUID? { UUID(uuidString: questionId) }
     /// Đọc từ cache theo id chứ không lọc `qa.questions`: màn này còn mở từ "Đã lưu" /
@@ -42,10 +49,19 @@ struct QuestionDetailView: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(.top, 10)
 
-                        Text(verbatim: "\(question.authorName) · \(question.relativeTime)")
-                            .font(NodieTypography.meta)
-                            .foregroundStyle(NodieColors.inkMuted)
-                            .padding(.top, NodieSpacing.md)
+                        HStack(spacing: 6) {
+                            NodieRelativeTimeText {
+                                Text(verbatim: "\(question.authorName) · \(question.relativeTime)")
+                                    .font(NodieTypography.meta)
+                                    .foregroundStyle(NodieColors.inkMuted)
+                            }
+                            if question.isEdited {
+                                Text("(đã sửa)")
+                                    .font(NodieTypography.meta)
+                                    .foregroundStyle(NodieColors.inkFaint)
+                            }
+                        }
+                        .padding(.top, NodieSpacing.md)
 
                         if let body = question.body, !body.isEmpty {
                             Text(body)
@@ -54,6 +70,15 @@ struct QuestionDetailView: View {
                                 .lineSpacing(5)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, NodieSpacing.md)
+                                // Câu trả lời copy được từ lâu, riêng thân câu hỏi thì không —
+                                // cùng một app không thể chỗ giữ được chỗ không.
+                                .contextMenu {
+                                    Button {
+                                        UIPasteboard.general.string = body
+                                    } label: {
+                                        Label("Sao chép", systemImage: "doc.on.doc")
+                                    }
+                                }
                         }
 
                         Divider().background(NodieColors.rule).padding(.top, NodieSpacing.lg)
@@ -103,6 +128,48 @@ struct QuestionDetailView: View {
             await qa.loadSaves()
             if qa.answers(for: uuid).isEmpty { await qa.loadThread(for: uuid) }
         }
+        .sheet(isPresented: $showEditQuestion) { editQuestionSheet }
+    }
+
+    /// Sheet sửa tiêu đề + thân. Gửi fail thì KHÔNG tự đóng — sheet ở nguyên với chữ đang
+    /// gõ, cùng luật "giữ nguyên chữ" với ô trả lời/nháp câu hỏi.
+    private var editQuestionSheet: some View {
+        NavigationStack {
+            Form {
+                TextField("Câu hỏi của bạn là gì?", text: $editTitle, axis: .vertical)
+                TextField("Thêm bối cảnh… (không bắt buộc)", text: $editBody, axis: .vertical)
+            }
+            .navigationTitle(Text("Sửa"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Huỷ") { showEditQuestion = false }.disabled(editSending)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        Task { await saveQuestionEdit() }
+                    } label: {
+                        if editSending { ProgressView() } else { Text("Lưu") }
+                    }
+                    .disabled(editSending || editTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func saveQuestionEdit() async {
+        guard let uuid else { return }
+        editSending = true
+        let ok = await qa.editQuestion(id: uuid, title: editTitle, body: editBody)
+        editSending = false
+        guard ok else { return }
+        showEditQuestion = false
+    }
+
+    /// Xoá xong `dismiss()`: đứng lại màn của bài vừa xoá là một màn ma, không dẫn đi đâu nữa.
+    private func deleteQuestion(_ id: UUID) async {
+        if await qa.deleteQuestion(id: id) { dismiss() }
     }
 
     /// Câu hỏi đã xoá, hoặc của người mình đã chặn, hoặc mạng hỏng lúc mở từ "Đã lưu".
@@ -133,10 +200,20 @@ struct QuestionDetailView: View {
             Spacer()
             if let question {
                 saveButton(question.id)
+                // Khai kiểu RÕ RÀNG và tách khỏi lời gọi — `isMine ? { … } : nil` viết thẳng
+                // trong tham số thì Swift không suy ra nổi `(() -> Void)?` (xem ChatDetailView).
+                let onEdit: (() -> Void)? = qa.isMine(question.authorId) ? {
+                    editTitle = question.title
+                    editBody = question.body ?? ""
+                    showEditQuestion = true
+                } : nil
+                let onDelete: (() -> Void)? = qa.isMine(question.authorId) ? {
+                    Task { await deleteQuestion(question.id) }
+                } : nil
                 ModerationMenu(
                     target: .init(kind: .question, id: question.id,
                                   authorId: question.authorId, authorName: question.authorName),
-                    qa: qa
+                    qa: qa, onEdit: onEdit, onDelete: onDelete
                 )
             }
         }
@@ -201,9 +278,12 @@ struct QuestionDetailView: View {
     private func send() async {
         guard let uuid, canSend else { return }
         sending = true
-        await qa.createAnswer(questionId: uuid, body: draft)
-        draft = ""
+        let ok = await qa.createAnswer(questionId: uuid, body: draft)
         sending = false
+        // Xoá ô trước khi biết server nhận chưa = mất trắng đoạn người ta vừa nghĩ. Rớt mạng
+        // giữa chừng thì alert lỗi hiện lên còn chữ thì bay — giữ lại để bấm gửi lần nữa là xong.
+        guard ok else { return }
+        draft = ""
     }
 }
 

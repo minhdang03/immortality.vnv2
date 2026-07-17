@@ -4,7 +4,10 @@ import Foundation
 /// Engagement (▲ vote, ☀ lit, "Hay nhất", reply lồng) là ĐƯỢC muốn — Đăng chốt handoff v4 (2026-07-16).
 /// Metric ở đây trên NỘI DUNG (câu trả lời/reply), khác "no metrics on people" (hồ sơ).
 
-/// Tác giả nhúng qua `author:profiles(display_name)`.
+/// Tác giả nhúng qua `author:public_profiles(display_name)` — KHÔNG phải `profiles`.
+/// RLS của `profiles` là self-only: join thẳng vào nó trả `author: null` cho MỌI người
+/// khác mình, và view hiện "Ẩn danh". View `public_profiles` (0027) chở đúng cột công
+/// khai và cho mọi user đã đăng nhập đọc.
 struct AuthorRef: Codable, Hashable {
     let displayName: String?
     enum CodingKeys: String, CodingKey { case displayName = "display_name" }
@@ -22,6 +25,8 @@ struct QuestionRow: Codable, Identifiable, Hashable {
     let createdAt: Date
     let authorId: UUID?
     let author: AuthorRef?
+    /// Có giá trị = đã sửa sau khi đăng (cột có sẵn từ 0017, không phải migration mới).
+    let editedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id, title, body, topic
@@ -29,11 +34,13 @@ struct QuestionRow: Codable, Identifiable, Hashable {
         case createdAt = "created_at"
         case authorId = "author_id"
         case author
+        case editedAt = "edited_at"
     }
 
     var authorName: String { author?.name ?? String(localized: "Ẩn danh") }
     var relativeTime: String { RelativeTime.format(createdAt) }
     var answerMeta: String { String(localized: "\(answerCount) câu trả lời") }
+    var isEdited: Bool { editedAt != nil }
 
     /// Hàng giả cho khung xương lúc đang nạp. `.redacted` vẽ thanh xám theo ĐỘ DÀI chữ thật,
     /// nên tiêu đề phải dài ngắn khác nhau — sáu dòng bằng chằn chặn trông như mã vạch,
@@ -52,7 +59,7 @@ struct QuestionRow: Codable, Identifiable, Hashable {
         ]
         return QuestionRow(
             id: UUID(), title: titles[seed % titles.count], body: nil, topic: "———",
-            answerCount: 0, createdAt: Date(), authorId: nil, author: nil
+            answerCount: 0, createdAt: Date(), authorId: nil, author: nil, editedAt: nil
         )
     }
 }
@@ -68,6 +75,8 @@ struct AnswerRow: Codable, Identifiable, Hashable {
     let isBest: Bool
     let authorId: UUID?
     let author: AuthorRef?
+    /// Có giá trị = đã sửa sau khi đăng (cột có sẵn từ 0017, không phải migration mới).
+    let editedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id, body
@@ -77,11 +86,13 @@ struct AnswerRow: Codable, Identifiable, Hashable {
         case isBest = "is_best"
         case authorId = "author_id"
         case author
+        case editedAt = "edited_at"
     }
 
     var authorName: String { author?.name ?? String(localized: "Ẩn danh") }
     var relativeTime: String { RelativeTime.format(createdAt) }
     var authorInitial: String { authorName.first.map { String($0).uppercased() } ?? "?" }
+    var isEdited: Bool { editedAt != nil }
 }
 
 /// Một dòng `answer_replies` — reply lồng nhiều lớp; `parentId == nil` = trả lời thẳng câu trả lời.
@@ -94,6 +105,8 @@ struct ReplyRow: Codable, Identifiable, Hashable {
     let createdAt: Date
     let authorId: UUID?
     let author: AuthorRef?
+    /// Có giá trị = đã sửa sau khi đăng (cột có sẵn từ 0017, không phải migration mới).
+    let editedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -104,11 +117,13 @@ struct ReplyRow: Codable, Identifiable, Hashable {
         case createdAt = "created_at"
         case authorId = "author_id"
         case author
+        case editedAt = "edited_at"
     }
 
     var authorName: String { author?.name ?? String(localized: "Ẩn danh") }
     var relativeTime: String { RelativeTime.format(createdAt) }
     var authorInitial: String { authorName.first.map { String($0).uppercased() } ?? "?" }
+    var isEdited: Bool { editedAt != nil }
 }
 
 /// Câu trả lời của MÌNH kèm tiêu đề câu hỏi gốc — màn "Trả lời của tôi".
@@ -188,6 +203,34 @@ struct NewReply: Encodable {
         case authorId = "author_id"
         case body
     }
+}
+
+/// Payload sửa câu hỏi — QAStoreOwnContent.swift. `body` cho phép rỗng (câu hỏi không
+/// bắt buộc có thân), title thì luôn có (guard rỗng ở nơi gọi).
+struct EditQuestion: Encodable {
+    let title: String
+    let body: String?
+    let editedAt: Date
+    enum CodingKeys: String, CodingKey {
+        case title, body
+        case editedAt = "edited_at"
+    }
+}
+
+/// Payload sửa câu trả lời/reply — cả hai chỉ có một cột `body` để đổi.
+struct EditBody: Encodable {
+    let body: String
+    let editedAt: Date
+    enum CodingKeys: String, CodingKey {
+        case body
+        case editedAt = "edited_at"
+    }
+}
+
+/// Payload xoá mềm — dùng chung cho questions/answers/answer_replies.
+struct SoftDelete: Encodable {
+    let deletedAt: Date
+    enum CodingKeys: String, CodingKey { case deletedAt = "deleted_at" }
 }
 
 /// Payload toggle reaction (▲ vote / ☀ lit) trên answer hoặc reply.
