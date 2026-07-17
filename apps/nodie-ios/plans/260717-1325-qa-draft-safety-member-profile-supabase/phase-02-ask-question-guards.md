@@ -50,12 +50,12 @@
 
 ## Todo
 
-- [ ] `showDiscardConfirm` + nút Huỷ rẽ nhánh theo `hasText`
-- [ ] `.confirmationDialog` bỏ nháp
-- [ ] `titleTooShort` + hint dưới titleField
-- [ ] `.accessibilityHint` nút Chiếu sáng
-- [ ] 4 key × 9 ngôn ngữ
-- [ ] Build xanh
+- [x] `showDiscardConfirm` + nút Huỷ rẽ nhánh theo `hasText`
+- [x] `.confirmationDialog` bỏ nháp
+- [x] `titleTooShort` + hint dưới titleField
+- [x] `.accessibilityHint` nút Chiếu sáng
+- [x] 4 key × 9 ngôn ngữ
+- [ ] Build xanh — **chặn bởi lỗi ngoài phạm vi** (xem phase-01), `AskQuestionView.swift` tự nó sạch lỗi.
 
 ## Success criteria
 
@@ -73,5 +73,3 @@
 | Hint nhảy layout khi hiện/ẩn | Chấp nhận — hint chỉ hiện lúc đang gõ dở, không phải trạng thái thường trực. Nếu giật quá thì `.animation(.easeOut, value: titleTooShort)`. |
 
 **Rollback:** 1 commit độc lập, client-only, revert thẳng.
-</content>
-</invoke>

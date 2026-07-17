@@ -1,8 +1,26 @@
 # Phase 01 — Deep link `nodie://` (#16) + Quên mật khẩu (#14)
 
 **Ưu tiên:** P0 (#14 là lỗi nặng nhất: quên mật khẩu = mất tài khoản vĩnh viễn).
-**Status:** chưa bắt đầu.
+**Status:** ✅ **CODE XONG 17/07 14:1x** — build xanh, AuthUITests 9/9. **Chờ Đăng nghiệm thu bằng hộp thư thật** (xem §Việc của Đăng — thiếu whitelist là #14 chết).
+Commit: `5201a8b` (bị session khác `git add -A` nuốt vào commit APNs của họ) + `c31f6e8` (vá sau review).
 **Gộp #16 vào đây** vì #14 không chạy được nếu không có đường quay lại app.
+
+## Đã kiểm chứng (đo thật, không tin suông)
+
+| Việc | Bằng chứng |
+|---|---|
+| `nodie://` vào bundle | `plutil -extract CFBundleURLTypes` trên **bundle đã build** (không phải file nguồn) → `["nodie"]` |
+| iOS route được scheme, **app tắt hẳn** | `simctl openurl` sau `terminate` → iOS hiện hộp thoại **"Open in NODIE?"** (chỉ hiện khi có app đăng ký scheme) |
+| Build | BUILD SUCCEEDED, iPhone 17 (máy KHÔNG có iPhone 16) |
+| Test | AuthUITests **9/9** kể cả 2 test mới |
+| **CHƯA kiểm** | đầu-cuối từ mail thật: bấm link → đặt mật khẩu mới → đăng nhập lại bằng mật khẩu mới. `simctl openurl` KHÔNG chứng minh được phần này (link rỗng `code` → `session(from:)` ném lỗi đồng bộ, cờ true→false trong vài micro giây, không phân biệt được cover chạy hay cover rơi) |
+
+## Lệch so với kế hoạch (đã sửa sau code review)
+
+1. **`viMessage` bắt chữ "invalid" là quá rộng** — kế hoạch bảo nhét câu "link hết hạn" vào translator chung. Làm thế thì email sai định dạng lúc đăng ký, refresh token hỏng… đều bị gán nhầm thành lỗi link. → tách `linkMessage(for:)`, chỉ dùng trong `handleOpenURL`.
+2. **Sheet "Quên mật khẩu" CÒN MỞ lúc link quay về** — kế hoạch không tính: user gửi xong là sang Mail luôn, chẳng ai bấm "Xong". Sheet còn đó thì (a) lỗi link không có chỗ hiện, (b) `.fullScreenCover` ở RootView bị chặn vì một host chỉ trình bày một modal. → `.onChange(isRecoveringPassword)` đóng sheet + thêm ô lỗi vào `sentState` + `clearSendState()` không xoá `errorMessage` nữa.
+3. **Thiếu khoá lúc đang đổi code** — nút "Lưu mật khẩu" ăn được trước khi có session của chủ link → mở link của B lúc đang đăng nhập bằng A là đổi nhầm mật khẩu A. → thêm `isExchangingCode`.
+4. **#19 dark mode hoá ra CHƯA xong** (đề bài tưởng xong): `INFOPLIST_KEY_UIUserInterfaceStyle` ở tầng settings là **config chết** — key đó chỉ được đọc khi `GENERATE_INFOPLIST_FILE=YES`, mà target khai `INFOPLIST_FILE=NODIE/Info.plist`. → chuyển `UIUserInterfaceStyle: Light` vào `info.properties`, verify trong bundle đã build.
 
 ## Context
 

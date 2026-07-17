@@ -61,14 +61,14 @@
 
 ## Todo
 
-- [ ] `QAStore.createAnswer` → `@discardableResult ... -> Bool`
-- [ ] `QAStore.createReply` → `@discardableResult ... -> Bool`
-- [ ] `QuestionDetailView.send()` guard ok
-- [ ] `AnswerCardView.sendReply()` guard ok + `@State replySending`
-- [ ] `InlineReplyField` + `isSending` + `onCancel` + nút ✕
-- [ ] Key `"Huỷ trả lời"` × 9 ngôn ngữ
-- [ ] Build xanh
-- [ ] UITest `QAWireUITests` còn xanh
+- [x] `QAStore.createAnswer` → `@discardableResult ... -> Bool`
+- [x] `QAStore.createReply` → `@discardableResult ... -> Bool`
+- [x] `QuestionDetailView.send()` guard ok
+- [x] `AnswerCardView.sendReply()` guard ok + `@State replySending`
+- [x] `InlineReplyField` + `isSending` + `onCancel` + nút ✕
+- [x] Key `"Huỷ trả lời"` × 9 ngôn ngữ
+- [ ] Build xanh — **chặn bởi lỗi ngoài phạm vi** (`Features/Conversations/*` đang giữa chừng refactor của session chính, cấm sửa). File của phase 01 tự nó sạch lỗi (`grep error: | grep -v Conversations/` rỗng).
+- [ ] UITest `QAWireUITests` còn xanh — không chạy được vì build tổng thể đỏ (lý do như trên)
 
 ## Success criteria
 
@@ -86,5 +86,3 @@
 | `InlineReplyField` đổi signature | Chỉ 1 call site. Tham số mới có default → an toàn. |
 
 **Rollback:** 1 commit độc lập, revert thẳng. Không đụng DB, không đổi schema, không migration.
-</content>
-</invoke>

@@ -65,12 +65,12 @@
 
 ## Todo
 
-- [ ] `MyContentScaffold` + `onRefresh` + đổi cấu trúc ScrollView (rỗng kéo được)
-- [ ] 3 call site truyền `onRefresh`, không đụng `isLoading`
-- [ ] `reload()` helper dùng chung với `.task`
-- [ ] Dòng mồ côi: `.opacity(0.55)` + nhãn + `.accessibilityHint`
-- [ ] Key `"Câu hỏi gốc đã xoá"` × 9 ngôn ngữ
-- [ ] Build xanh · `ProfileContentUITests` còn xanh
+- [x] `MyContentScaffold` + `onRefresh` + đổi cấu trúc ScrollView (rỗng kéo được)
+- [x] 3 call site truyền `onRefresh`, không đụng `isLoading`
+- [x] `reload()` helper dùng chung với `.task`
+- [x] Dòng mồ côi: `.opacity(0.55)` + nhãn + `.accessibilityHint`
+- [x] Key `"Câu hỏi gốc đã xoá"` × 9 ngôn ngữ
+- [ ] Build xanh · `ProfileContentUITests` còn xanh — **chặn bởi lỗi ngoài phạm vi** (xem phase-01), `MyContentViews.swift` tự nó sạch lỗi.
 
 ## Success criteria
 
@@ -88,5 +88,3 @@
 | `.opacity` làm chữ không đủ tương phản (a11y) | 0.55 trên `inkBody` vẫn đạt; kiểm bằng Accessibility Inspector. Nếu trượt → dùng `NodieColors.inkFaint` cho chữ thay vì opacity cả khối. |
 
 **Rollback:** 1 commit, client-only, revert thẳng.
-</content>
-</invoke>

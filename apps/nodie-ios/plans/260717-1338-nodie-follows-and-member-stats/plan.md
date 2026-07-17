@@ -24,10 +24,20 @@ lẫn hồ sơ người khác. Không nhân đôi đường đọc.
 
 | # | Việc | File | Trạng thái |
 |---|---|---|---|
-| 01 | `created_at` vào view `public_profiles` | `supabase/migrations/0027_*.sql` (sửa tại chỗ — CHƯA apply prod) | chờ |
-| 02 | Bảng `follows` + RLS + index | `supabase/migrations/0028_nodie_follows.sql` (mới) | chờ |
-| 03 | `ProfileStatsStore(uid:)` + đếm người theo dõi | `NODIE/Features/Profile/ProfileStatsGrid.swift` | chờ |
-| 04 | `FollowStore` — theo dõi/bỏ theo dõi/gợi ý | `NODIE/Features/Friends/FollowStore.swift` (mới) | chờ |
+| 01 | `created_at` vào view `public_profiles` | `supabase/migrations/0027_*.sql` (sửa tại chỗ — CHƯA apply prod) | ✅ xong |
+| 02 | Bảng `follows` + RLS + index + trigger cắt follow khi chặn | `supabase/migrations/0028_nodie_follows.sql` (mới) | ✅ xong |
+| 03 | `ProfileStatsStore(uid:)` + đếm người theo dõi | `NODIE/Features/Profile/ProfileStatsGrid.swift` | ✅ xong |
+| 04 | `FollowStore` — theo dõi/bỏ theo dõi/gợi ý/**tìm ILIKE** | `NODIE/Features/Friends/FollowStore.swift` (mới) | ✅ xong |
+
+## Đã verify trên DB thật (transaction + rollback, prod không đổi)
+
+- `view_cols: id,display_name,bio,created_at`
+- Trigger cắt hai chiều: `follows trước khi chặn: 2` → `sau khi A chặn B: 0`
+- `follows_no_self` chặn tự theo dõi mình
+- Trigram index dùng được: `Bitmap Index Scan on idx_profiles_display_name_trgm`
+  (query thường vẫn Seq Scan ở 3000 dòng — planner chọn đúng, bảng nhỏ quét thẳng rẻ hơn)
+- Build: `** BUILD SUCCEEDED **`
+- `profiles` prod vẫn = 1 dòng sau mọi bài test
 
 **Ngoài phạm vi:** wiring view (FriendsView/MemberProfileView) — của Opus. Em giao bảng + store.
 
@@ -37,6 +47,29 @@ lẫn hồ sơ người khác. Không nhân đôi đường đọc.
 - [ ] Người đã chặn không theo dõi được (check `blocks` trong policy insert)
 - [ ] `ProfileStatsStore(uid: <người khác>)` trả đủ 4 số + số người theo dõi
 - [ ] Build sạch; hồ sơ của MÌNH không đổi hành vi (không regression)
+
+## Code review — 1 critical, đã vá và verify lại
+
+`code-reviewer` bắt được lỗ hổng thật mà test đầu của em BỎ SÓT (em chạy test bằng quyền
+superuser — RLS không áp lên superuser, nên policy trông như chạy đúng):
+
+- **CRITICAL — `follows_insert` nhánh "họ chặn tôi" là code chết.** Subquery trong policy chạy
+  bằng quyền người gọi → `blocks` bị `blocks_self` lọc → người BỊ chặn đọc ra 0 dòng →
+  `not exists` luôn true → **A bị B chặn vẫn follow được B**. Chiều duy nhất cần bảo vệ nạn nhân
+  chính là chiều hỏng. Vá bằng `is_blocked_pair()` security definer (cùng lối `is_channel_member`).
+  Verify đóng vai A thật: `ERROR: new row violates row-level security policy` ✅
+- **#3 `alter publication` không idempotent** → chạy lại là abort cả transaction. Bọc guard như 0023. ✅
+- **#7 chặn bằng UPDATE lách trigger** → `after insert or update`. Verify: follows 2 → 0. ✅
+- **#2 double-tap → nút kẹt 409 vĩnh viễn** → `upsert(ignoreDuplicates)` + `inFlight` guard.
+- **#5 một lần mất mạng = "—" vĩnh viễn** → chỉ bật `didLoadOnce` khi không phải cả năm cùng nil.
+- **#11 kết quả tìm về trễ đè kết quả mới** → token đơn điệu.
+- **#12 header 0027 vẫn ghi "0026"** → sửa. Đổi tên file mà quên header là đúng loại lỗi làm
+  người sau tin nhầm migration nào đã chạy.
+- **#4 header hứa vá "Ẩn danh" nhưng QAStore vẫn embed `profiles`** → ghi cảnh báo vào file.
+
+Chưa làm (có lý do): #6 realtime DELETE lộ `(message_id,user_id,kind)` — cần chốt phạm vi
+subscribe trước; #9 `.task(id:)` — thuộc lúc wire MemberProfile; #8 TOCTOU mili-giây; #13
+tìm 1–2 ký tự.
 
 ## Rủi ro
 

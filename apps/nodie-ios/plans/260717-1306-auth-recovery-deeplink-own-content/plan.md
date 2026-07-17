@@ -1,6 +1,7 @@
 # Plan: Quên mật khẩu (#14) · Deep link `nodie://` (#16) · Sửa/xoá nội dung của mình (#15) · Khôi phục tab (#20) + hàng Thông báo (#17)
 
-**Status:** chưa bắt đầu (17/07 13:06).
+**Status:** phase 01 ✅ XONG (17/07 14:1x) — build xanh, AuthUITests 9/9, `nodie://` chứng minh route được lúc app tắt hẳn. Chờ Đăng whitelist URL + nghiệm thu hộp thư thật. **Tiếp: 02 hoặc 03.**
+**Ngoài kế hoạch, đã sửa luôn:** #19 dark mode — hoá ra CHƯA xong (`INFOPLIST_KEY_*` là config chết khi target khai `INFOPLIST_FILE`); đã ghim `UIUserInterfaceStyle: Light` vào `info.properties` và verify trong bundle build.
 **Branch:** claude/immortality-mobile-hybrid
 **Chốt phạm vi (Đăng 17/07):** #14 · #16 = custom scheme `nodie://` (KHÔNG universal links) · #15 = soft delete + cho sửa · #17 + #20.
 **Ngoài phạm vi:** #18 banner offline · #19 dark mode (đã xong).
@@ -30,9 +31,9 @@ Session kia **commit `ac3a9db` lúc ~13:05** (giải phóng gần hết danh sá
 
 | # | File | Nội dung | File sở hữu | Rủi ro đụng (ảnh chụp 13:1x) | Status |
 |---|---|---|---|---|---|
-| 01 | [phase-01-deep-link-password-reset.md](phase-01-deep-link-password-reset.md) | `nodie://` + Quên mật khẩu (#16 + #14) | Auth/* · +PasswordRecoveryViews.swift · NodieApp.swift · **project.yml** | **TRUNG** — `project.yml` họ vừa đụng lại; `CFBundleURLTypes` là bắt buộc, không né được → edit đúng-chuỗi, hoặc đợi họ commit | chưa |
+| 01 | [phase-01-deep-link-password-reset.md](phase-01-deep-link-password-reset.md) | `nodie://` + Quên mật khẩu (#16 + #14) | Auth/* · +PasswordRecoveryViews.swift · +AuthFieldStyle.swift · NodieApp.swift · project.yml | — | ✅ **XONG** `5201a8b`+`c31f6e8` · chờ Đăng whitelist URL |
 | 02 | [phase-02-own-content-edit-delete.md](phase-02-own-content-edit-delete.md) | Sửa/xoá câu hỏi·trả lời·reply của mình (#15) | +QAStoreOwnContent.swift · QAStore · ModerationMenu · AnswerCardView · AnswerReplyRow · QuestionDetailView · MyContentViews · +migration 0027 | **CAO** — `QAModels.swift` + `QuestionListView.swift` đang trong tay họ, mà phase này phải thêm `editedAt` vào QAModels → **đợi họ commit rồi mới mở** | chưa |
-| 03 | [phase-03-tab-restore-notifications-row.md](phase-03-tab-restore-notifications-row.md) | Khôi phục tab (#20) + hàng Thông báo thật (#17) | RootTabView.swift · ProfileSections.swift | **THẤP** — 2 file này họ chưa từng đụng; `AppState` của họ thì KHÔNG sửa (chỉ đọc/ghi `state.tab`) | chưa |
+| 03 | [phase-03-tab-restore-notifications-row.md](phase-03-tab-restore-notifications-row.md) | Khôi phục tab (#20) + hàng Thông báo thật (#17) | +TabRestoration.swift · ProfileSections.swift · RootTabView.swift (1 dòng) | — | ✅ **XONG** `f304793` · #20 chờ nghiệm thu tay |
 | 04 | [phase-04-push-optout-blocked.md](phase-04-push-optout-blocked.md) | Tắt push thật (xoá `device_tokens`) | ProfileSections · PushManager · project.yml | — | **CHẶN** — chờ Đăng làm Apple Developer portal, không phải vì file |
 
 **Thứ tự nên chạy: 03 → 01 → 02** (ngược số hiệu). Số hiệu theo mức độ quan trọng (#14 P0), nhưng 03 là phase duy nhất **hoàn toàn không đụng file họ đang giữ** ⇒ làm ngay được. 01 cần `project.yml`, 02 cần `QAModels.swift` — cả hai đang bẩn. Nếu họ commit trước khi bắt đầu thì cứ 01 → 02 → 03 như số. Ba phase độc lập nhau, đổi thứ tự không gãy gì.

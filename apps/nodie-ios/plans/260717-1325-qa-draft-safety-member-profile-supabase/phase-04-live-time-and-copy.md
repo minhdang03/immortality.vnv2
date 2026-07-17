@@ -62,12 +62,12 @@
 
 ## Todo
 
-- [ ] `NodieRelativeTimeText.swift` mới
-- [ ] `xcodegen generate` (chờ `project.yml` sạch)
-- [ ] Bọc 4 chỗ hiện thời gian (hẹp, không bọc cả card)
-- [ ] `import UIKit` + `.contextMenu` cho thân câu hỏi
-- [ ] Grep xác nhận `"Sao chép"` đã có key
-- [ ] Build xanh
+- [x] `NodieRelativeTimeText.swift` mới (`NODIE/Components/`)
+- [x] `xcodegen generate` (file đã lên target — build không báo thiếu module)
+- [x] Bọc 4 chỗ hiện thời gian (hẹp, không bọc cả card)
+- [x] `import UIKit` + `.contextMenu` cho thân câu hỏi
+- [x] Grep xác nhận `"Sao chép"` đã có key
+- [ ] Build xanh — **chặn bởi lỗi ngoài phạm vi** (xem phase-01), 4 file của phase 04 tự chúng sạch lỗi.
 - [ ] Ghi nợ: `QuestionListView:162` chưa xử
 
 ## Success criteria
@@ -87,5 +87,3 @@
 | Chồng file với phase 01/03 | **Chạy sau cùng.** Rebase nếu 01/03 đã commit. |
 
 **Rollback:** 1 commit, client-only. Revert = xoá file component + gỡ 4 chỗ bọc.
-</content>
-</invoke>

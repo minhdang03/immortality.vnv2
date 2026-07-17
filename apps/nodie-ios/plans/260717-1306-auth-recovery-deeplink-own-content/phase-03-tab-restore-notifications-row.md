@@ -1,6 +1,16 @@
 # Phase 03 — Khôi phục tab (#20) + hàng "Thông báo" nói thật (#17)
 
-**Ưu tiên:** P2. **Status:** chưa bắt đầu. Hai việc nhỏ, không dính nhau, gộp cho gọn một lượt build/test.
+**Ưu tiên:** P2. **Status:** ✅ **XONG 17/07 18:4x** — commit `f304793`. Build xanh; AuthUITests 9/9 + ProfileContentUITests 4/4 xanh. #20 chờ Đăng nghiệm thu tay (xem §Lệch).
+
+## Lệch so với kế hoạch (thực tế lúc thi công)
+
+1. **`RootTabView` KHÔNG còn sạch** — kế hoạch ghi SẠCH, nhưng session kia đã wire chat thật + push vào đó. Xử: logic #20 để hết trong file mới `Shell/TabRestoration.swift`, `RootTabView` chỉ nhận **1 dòng** `.nodieRestoresTab(state: state)` → giảm tối đa nguy cơ bị đè. `AppState.swift` giữ đúng cam kết: **không sửa một dòng nào**.
+2. **Chỗ đặt modifier ban đầu SAI** — đặt trước `.id(dynamicTypeSize)` thì mỗi lần user đổi cỡ chữ, cây dựng lại → `.task` chạy lại → kéo user về tab đã lưu (đang ở Chat, chỉnh cỡ chữ, bị ném về Hỏi đáp). Đã chuyển xuống **sau** `.id`.
+3. **Thêm chặn tab đã ẩn** — máy cài bản cũ có thể còn lưu `Bảng tin`/`Hành trình`, hai tab đã rút khỏi `visibleTabs` vì còn chạy nội dung giả. Khôi phục mù = mở app thẳng vào màn đang cố ý giấu, tab bar không có nút nào sáng để chỉ đường ra. → `guard NodieTab.visibleTabs.contains(tab)`.
+4. **`.nodieRestoresTab` KHÔNG commit kèm** — dòng gọi nằm trong `RootTabView.swift`, file đang giữ việc push chưa commit của session kia. Modifier đã commit; dòng gọi sẽ theo commit của họ.
+5. **2 key i18n (`Đang bật`/`Đang tắt`) chưa commit** — `Localizable.xcstrings` đang mang 25 key + một lượt sắp xếp lại của session kia (diff 9.215 dòng). Không nuốt việc của họ vào commit của mình; key sẽ theo commit của họ.
+
+⚠️ **`TouchTargetUITests` 2 test đỏ — KHÔNG phải do phase này**: `testChatControlsHitTargetsAndVietnameseLabels` + `testRowsAreRealButtons` đều tap `"Lab trường thọ #3"` = kênh **MockData**, mà session kia vừa wire chat sang Supabase thật (kênh thật: `naobo`/`thongbao`). Test của họ cũ so với chính việc họ đang làm. Cả 2 không chạm dòng nào của phase này.
 
 ## Context
 
