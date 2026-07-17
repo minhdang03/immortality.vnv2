@@ -137,6 +137,41 @@ struct MessageMedia: Codable, Hashable {
     let path: String
     /// Giây — chỉ có ở thoại.
     let duration: Double?
+    /// Cỡ ảnh SAU khi thu nhỏ. Có nó thì bong bóng chừa đúng khung ngay từ đầu và ảnh tải
+    /// xong không đẩy cả danh sách nhảy một cái — thứ người đang đọc ghét nhất.
+    /// Tin cũ (trước khi có field này) trả nil → rơi về khung vuông mặc định.
+    let width: Int?
+    let height: Int?
+    /// Byte — chỉ có ở tệp, để hiện "2,4 MB" cạnh tên.
+    let size: Int?
+    /// Tên gốc người gửi thấy khi chọn. Đường dẫn trong bucket là UUID (bắt buộc, xem
+    /// `ChatMediaStorage`), nên không giữ tên ở đây thì bên nhận chỉ thấy một chuỗi hex.
+    let name: String?
+    /// ~50 mẫu biên độ chuẩn hoá 0–1 — chỉ có ở thoại (phase 02). Vẽ được waveform ngay khi
+    /// bong bóng hiện ra, không phải tải hết tệp âm thanh về mới biết nó hình thù ra sao.
+    let waveform: [Float]?
+
+    /// Tin cũ chỉ có `kind`/`path`/`duration`; mọi field thêm sau đều optional để chúng vẫn
+    /// đọc được. Khởi tạo có giá trị mặc định để chỗ gọi chỉ khai thứ nó thật sự có.
+    init(
+        kind: Kind,
+        path: String,
+        duration: Double? = nil,
+        width: Int? = nil,
+        height: Int? = nil,
+        size: Int? = nil,
+        name: String? = nil,
+        waveform: [Float]? = nil
+    ) {
+        self.kind = kind
+        self.path = path
+        self.duration = duration
+        self.width = width
+        self.height = height
+        self.size = size
+        self.name = name
+        self.waveform = waveform
+    }
 
     enum Kind: String, Codable, Hashable {
         case photo, file, voice
@@ -147,6 +182,25 @@ struct MessageMedia: Codable, Hashable {
         guard let duration else { return nil }
         let total = Int(duration.rounded())
         return String(format: "%d:%02d", total / 60, total % 60)
+    }
+
+    /// Tỉ lệ khung để chừa chỗ trước. Chặn trong [0.5, 1.9]: ảnh panorama hoặc ảnh chụp màn
+    /// hình rất dài mà giữ đúng tỉ lệ thì một bong bóng chiếm trọn màn hình.
+    var aspectRatio: CGFloat? {
+        guard let width, let height, width > 0, height > 0 else { return nil }
+        return min(max(CGFloat(width) / CGFloat(height), 0.5), 1.9)
+    }
+
+    /// "2,4 MB" — theo locale, dùng đơn vị hệ thống thay vì tự chia 1024.
+    var sizeLabel: String? {
+        guard let size else { return nil }
+        return ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
+    }
+
+    /// Điền đường dẫn sau khi upload xong — metadata dựng lúc chọn ảnh chưa thể biết path.
+    func replacingPath(_ path: String) -> MessageMedia {
+        MessageMedia(kind: kind, path: path, duration: duration, width: width, height: height,
+                     size: size, name: name, waveform: waveform)
     }
 }
 
@@ -217,6 +271,15 @@ struct MessageRow: Codable, Identifiable, Hashable {
         MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
                    body: body, createdAt: createdAt, editedAt: editedAt,
                    author: author, metadata: metadata, reactions: rows)
+    }
+
+    /// Gắn đính kèm đã có đường dẫn thật vào bản lạc quan, sau khi upload xong.
+    /// Bản lạc quan sinh ra lúc chưa upload nên `path` còn rỗng — thay tại chỗ để bong bóng
+    /// chuyển từ ảnh trong máy sang ảnh tải từ bucket mà không phải dựng lại cả dòng tin.
+    func replacingMedia(_ media: MessageMedia) -> MessageRow {
+        MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
+                   body: body, createdAt: createdAt, editedAt: editedAt,
+                   author: author, metadata: MessageMetadata(media: media), reactions: reactions)
     }
 
     var authorName: String { author?.name ?? String(localized: "Ẩn danh") }

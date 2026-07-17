@@ -1,5 +1,6 @@
 import Foundation
 import Supabase
+import UIKit   // UIImage — ảnh xem trước của đính kèm đang gửi (xem `PendingMedia.preview`)
 
 /// Nguồn dữ liệu Hội thoại — đọc/ghi Supabase qua RLS (0017), Realtime bật ở 0023.
 /// Cùng khuôn `QAStore`: @Observable, DTO snake_case, mutate lạc quan, `ErrorText.localized`.
@@ -7,9 +8,44 @@ import Supabase
 final class ConversationStore {
     private(set) var channels: [ChannelRow] = []
     private(set) var isLoading = false
-    /// Đang đưa ảnh/thoại lên — view khoá nút gửi và hiện tiến trình.
-    private(set) var isUploading = false
     var errorMessage: String?
+
+    /// Đính kèm chưa lên tới nơi, khoá theo id của tin.
+    ///
+    /// Đây là thứ cho phép bong bóng hiện trước khi upload xong: `MessageRow` trong
+    /// `messagesByChannel` chỉ có metadata (path rỗng), còn bytes thật nằm ở đây. View tra
+    /// vào đây để biết vẽ ảnh trong máy hay tải từ bucket, và để biết tin đang lên hay đã hỏng.
+    private(set) var pendingMedia: [UUID: PendingMedia] = [:]
+
+    /// Đang upload dở, khoá theo id tin. Không suy từ `PendingMedia.phase` được: `phase` là
+    /// thứ VIEW đọc để vẽ, còn đây là khoá chống chạy chồng. Bấm "Gửi lại" hai lần trong một
+    /// khung hình sẽ đẻ ra hai lượt upload cùng một tin → hai tệp, một INSERT trùng khoá,
+    /// và bong bóng kẹt "hỏng" vĩnh viễn cho một tin ĐÃ gửi được.
+    private var uploadsInFlight: Set<UUID> = []
+
+    struct PendingMedia {
+        enum Phase { case uploading, failed }
+        var phase: Phase
+        /// Bytes gốc — giữ để "Gửi lại" không bắt chọn ảnh lần nữa. Chỉ sống trong bộ nhớ:
+        /// đóng app lúc đang gửi thì mất, và mất là đúng — chưa có tin nào trên server cả.
+        let data: Data
+        /// Ảnh đã giải mã sẵn (nil với tệp/thoại).
+        ///
+        /// Giải mã MỘT LẦN lúc xếp hàng, không phải mỗi lần vẽ: `UIImage(data:)` trên ảnh
+        /// 2048px tốn ~30ms, mà thân view chạy lại mỗi khi có tin mới / thả cảm xúc / Realtime
+        /// ho một tiếng. Sáu ảnh đang gửi × mỗi lần vẽ = giật main thread thấy rõ.
+        let preview: UIImage?
+        let ext: String
+        let contentType: String
+        /// Metadata đã dựng sẵn, chỉ thiếu `path` (điền sau khi upload xong).
+        let media: MessageMedia
+        let channelId: UUID
+        let caption: String
+        let parentId: UUID?
+        /// Chính bong bóng lạc quan. Giữ ở đây để dựng lại được sau khi `loadMessages` quét
+        /// sạch mảng tin (nó thay bằng dữ liệu server, mà tin này chưa lên server).
+        let row: MessageRow
+    }
 
     /// Không `private(set)`: `private` trong Swift bó theo FILE, mà ConversationStoreRealtime.swift
     /// (extension ở file khác) phải append tin mới vào đây. Cùng lý do với `errorMessage` ở QAStore.
@@ -103,6 +139,9 @@ final class ConversationStore {
             let older = page.reversed().filter { !isBlocked($0.userId) }
             if before == nil {
                 messagesByChannel[channelId] = older
+                // Trang đầu THAY cả mảng → nuốt luôn bong bóng đang upload. Trả chúng về.
+                // Trang cũ hơn (`before != nil`) chỉ chèn vào đầu nên không đụng tới.
+                reattachPendingRows(in: channelId)
             } else {
                 messagesByChannel[channelId] = older + (messagesByChannel[channelId] ?? [])
             }
@@ -140,8 +179,8 @@ final class ConversationStore {
         let payload = NewMessage(id: UUID(), channelId: channelId, userId: uid,
                                  body: text, parentId: parentId)
         // Tác giả của bản lạc quan là CHÍNH MÌNH, nhưng để `author: nil` — view tự biết tin
-        // của mình (so `userId` với `currentUserId`) nên không cần tên, và fetchAfterSend/
-        // Realtime sẽ thay bằng bản server có tên đầy đủ.
+        // của mình (so `userId` với `currentUserId`) nên không cần tên. Lần mở màn sau sẽ
+        // nạp bản server có tên đầy đủ.
         let optimistic = MessageRow(id: payload.id, channelId: channelId, userId: uid,
                                     parentId: parentId, body: text, createdAt: Date(),
                                     editedAt: nil, author: nil, metadata: nil, reactions: [])
@@ -159,14 +198,21 @@ final class ConversationStore {
         }
     }
 
-    /// Gửi ảnh/tệp/thoại: upload lên Storage TRƯỚC, có đường dẫn rồi mới ghi tin.
+    /// Gửi ảnh/tệp/thoại — bong bóng hiện NGAY từ dữ liệu trong máy, upload chạy nền.
     ///
-    /// Thứ tự này quan trọng — ghi tin trước rồi upload thì upload hỏng sẽ để lại một tin
-    /// trỏ vào file không tồn tại, và nó nằm đó vĩnh viễn. Ngược lại (upload xong mà ghi tin
-    /// hỏng) chỉ để lại một file mồ côi, không ai thấy, dọn được sau.
+    /// Vẫn giữ thứ tự upload-rồi-mới-ghi-tin ở tầng mạng: ghi tin trước rồi upload hỏng sẽ để
+    /// lại một tin trỏ vào file không tồn tại, nằm đó vĩnh viễn. Ngược lại (upload xong mà ghi
+    /// tin hỏng) chỉ để lại một file mồ côi, không ai thấy, dọn được sau.
     ///
-    /// Không mutate lạc quan như tin chữ: upload mất vài giây, hiện bong bóng trước rồi
-    /// gỡ ra khi hỏng thì nhấp nháy khó chịu hơn là chờ. `isUploading` cho view hiện tiến trình.
+    /// Điều ĐỔI so với bản trước: không bắt người gửi ngồi nhìn spinner vài giây rồi mới thấy
+    /// bong bóng. Ảnh xuất hiện tức thì (vẽ từ `Data` local), upload chạy sau lưng — đúng cách
+    /// IG/WhatsApp làm. Hỏng thì bong bóng Ở LẠI với trạng thái lỗi + nút Gửi lại, chứ không
+    /// biến mất: bản trước gỡ luôn tin ra và người dùng mất cả ảnh vừa chọn.
+    ///
+    /// KHÔNG `async`: hàm này chỉ xếp hàng rồi trả về ngay, upload chạy trong Task nền. Nếu
+    /// nó `await` cho tới lúc upload xong thì chỗ gọi phải chờ vài giây mới biết có nên xoá
+    /// băng "Đang trả lời" hay không — mà bong bóng thì đã hiện từ mili-giây đầu. Trả về
+    /// `false` = KHÔNG có bong bóng nào được tạo (chưa đăng nhập / quá cỡ), không phải "upload hỏng".
     @discardableResult
     func sendMedia(
         channelId: UUID,
@@ -174,51 +220,141 @@ final class ConversationStore {
         kind: MessageMedia.Kind,
         ext: String,
         contentType: String,
+        preview: UIImage? = nil,
         duration: Double? = nil,
+        width: Int? = nil,
+        height: Int? = nil,
+        size: Int? = nil,
+        name: String? = nil,
+        waveform: [Float]? = nil,
         caption: String = "",
         parentId: UUID? = nil
-    ) async -> Bool {
+    ) -> Bool {
         guard let uid else { errorMessage = String(localized: "Cần đăng nhập."); return false }
-        isUploading = true
-        defer { isUploading = false }
+
+        // Chặn quá cỡ TRƯỚC khi dựng bong bóng: hiện một tin rồi báo nó hỏng vì lý do biết
+        // trước từ đầu là dắt người dùng đi một vòng vô ích.
+        guard data.count <= ChatMediaStorage.maxBytes else {
+            errorMessage = ChatMediaStorage.UploadError.tooLarge(data.count).localizedDescription
+            return false
+        }
+
+        let id = UUID()
+        // `path` rỗng: chưa upload nên chưa có. View biết tin này còn ở trong `pendingMedia`
+        // thì vẽ từ `Data` local, không đụng tới path.
+        let draft = MessageMedia(kind: kind, path: "", duration: duration, width: width,
+                                 height: height, size: size, name: name, waveform: waveform)
+        let optimistic = MessageRow(id: id, channelId: channelId, userId: uid,
+                                    parentId: parentId, body: caption, createdAt: Date(),
+                                    editedAt: nil, author: nil,
+                                    metadata: MessageMetadata(media: draft), reactions: [])
+        messagesByChannel[channelId, default: []].append(optimistic)
+        pendingMedia[id] = PendingMedia(phase: .uploading, data: data, preview: preview, ext: ext,
+                                        contentType: contentType, media: draft,
+                                        channelId: channelId, caption: caption,
+                                        parentId: parentId, row: optimistic)
+        Task { await uploadPending(messageId: id) }
+        return true
+    }
+
+    /// Trả lại những bong bóng đang gửi mà `loadMessages` vừa quét mất.
+    ///
+    /// `loadMessages` thay CẢ mảng bằng dữ liệu server (đúng — nó là nguồn sự thật), nhưng tin
+    /// đang upload thì theo định nghĩa CHƯA có trên server. Không trả lại thì: mở chat → gửi
+    /// ảnh → thoát ra → vào lại, bong bóng biến mất trong khi `pendingMedia` vẫn giữ bytes.
+    /// Upload xong thì `firstIndex` không thấy dòng nào để gắn path; upload hỏng thì không còn
+    /// bong bóng nào để bấm "Gửi lại" — ảnh mất im lặng và bytes kẹt lại tới khi thoát app.
+    private func reattachPendingRows(in channelId: UUID) {
+        let existing = Set((messagesByChannel[channelId] ?? []).map(\.id))
+        let orphans = pendingMedia.values
+            .filter { $0.channelId == channelId && !existing.contains($0.row.id) }
+            .map(\.row)
+            .sorted { $0.createdAt < $1.createdAt }
+        guard !orphans.isEmpty else { return }
+        messagesByChannel[channelId, default: []] += orphans
+    }
+
+    /// Đưa một `PendingMedia` lên: upload → INSERT → gắn path thật vào bong bóng.
+    /// Dùng chung cho lần gửi đầu và cho "Gửi lại", nên retry đi đúng một đường với gửi mới.
+    ///
+    /// `@MainActor` là BẮT BUỘC, không phải cho gọn: chọn 6 ảnh là 6 Task chạy song song, và
+    /// vì `ConversationStore` không gắn actor nào nên chúng rơi xuống executor chung. Sáu
+    /// luồng cùng ghi `messagesByChannel` (mảng, copy-on-write) và `pendingMedia` (từ điển)
+    /// trong khi main thread đang đọc để vẽ = hỏng bộ nhớ thật sự, không phải "hơi race".
+    /// Ghim phần THAY ĐỔI TRẠNG THÁI vào main; phần chờ mạng (`await`) vẫn nhả main như thường.
+    @MainActor
+    @discardableResult
+    private func uploadPending(messageId: UUID) async -> Bool {
+        guard let uid, let pending = pendingMedia[messageId] else { return false }
+        guard !uploadsInFlight.contains(messageId) else { return false }
+        uploadsInFlight.insert(messageId)
+        defer { uploadsInFlight.remove(messageId) }
+
+        var working = pending
+        working.phase = .uploading
+        pendingMedia[messageId] = working
 
         do {
             let path = try await ChatMediaStorage.upload(
-                data, channelId: channelId, userId: uid,
-                ext: ext, contentType: contentType, client: client
+                pending.data, channelId: pending.channelId, userId: uid,
+                ext: pending.ext, contentType: pending.contentType, client: client
             )
-            let media = MessageMedia(kind: kind, path: path, duration: duration)
-            let payload = NewMessage(id: UUID(), channelId: channelId, userId: uid,
-                                     body: caption, parentId: parentId,
+            let media = pending.media.replacingPath(path)
+            let payload = NewMessage(id: messageId, channelId: pending.channelId, userId: uid,
+                                     body: pending.caption, parentId: pending.parentId,
                                      metadata: MessageMetadata(media: media))
-            try await client.from("messages").insert(payload).execute()
+            do {
+                try await client.from("messages").insert(payload).execute()
+            } catch {
+                // Trùng khoá chính = tin NÀY đã nằm trên server rồi: lần trước INSERT xong
+                // nhưng phản hồi lạc mất giữa đường, nên ta tưởng hỏng. Báo hỏng lần nữa là
+                // dồn người dùng vào ngõ cụt — bấm Gửi lại bao nhiêu lần cũng trùng khoá,
+                // bong bóng kẹt "hỏng" mãi cho một tin người kia ĐÃ nhận được.
+                // `id` do client sinh nên trùng khoá chỉ có đúng một nghĩa đó.
+                guard Self.isDuplicateKey(error) else { throw error }
+            }
 
-            // Không tự append: Realtime sẽ đẩy tin này về kèm tên tác giả đầy đủ.
-            // Tự append rồi Realtime đẩy nữa là hai bong bóng cho một tin.
-            await fetchAfterSend(channelId: channelId)
+            // Gắn path thật vào chính bong bóng đang hiện, rồi mới bỏ khỏi `pendingMedia`:
+            // làm ngược lại thì có một khoảnh khắc view không còn `Data` local mà cũng chưa
+            // có path — bong bóng chớp thành khung trống.
+            if let i = messagesByChannel[pending.channelId]?.firstIndex(where: { $0.id == messageId }) {
+                messagesByChannel[pending.channelId]![i] =
+                    messagesByChannel[pending.channelId]![i].replacingMedia(media)
+            }
+            pendingMedia[messageId] = nil
             return true
         } catch {
-            errorMessage = ErrorText.localized(error)
+            // KHÔNG gỡ tin ra và KHÔNG bắn `errorMessage`: lỗi thuộc về đúng một bong bóng,
+            // nó tự hiện trạng thái hỏng + nút Gửi lại. Alert ở gốc màn cho một ảnh lỗi là
+            // đúng thứ audit gọi là error UX tệ.
+            working.phase = .failed
+            pendingMedia[messageId] = working
             return false
         }
     }
 
-    /// Nạp ngay phần đuôi sau khi gửi — không đợi Realtime, để bong bóng hiện tức thì
-    /// kể cả khi subscription chưa kịp mở hoặc mạng chậm.
-    private func fetchAfterSend(channelId: UUID) async {
-        let after = messagesByChannel[channelId]?.last?.createdAt
-        do {
-            var query = client.from("messages")
-                .select(Self.messageSelect)
-                .eq("channel_id", value: channelId)
-                .is("deleted_at", value: nil)
-            if let after { query = query.gt("created_at", value: after) }
-            let rows: [MessageRow] = try await query
-                .order("created_at", ascending: true).limit(20).execute().value
-            let existing = Set((messagesByChannel[channelId] ?? []).map(\.id))
-            messagesByChannel[channelId, default: []] += rows.filter { !existing.contains($0.id) }
-        } catch { /* Realtime sẽ bù; không bắn lỗi vì tin đã gửi thành công rồi */ }
+    /// 23505 = unique_violation của Postgres. Khớp cả mã lẫn lời vì supabase-swift gói lỗi
+    /// PostgREST vào nhiều kiểu và không lộ mã ổn định cho mọi đường.
+    private static func isDuplicateKey(_ error: Error) -> Bool {
+        let raw = "\(error)".lowercased()
+        return raw.contains("23505") || raw.contains("duplicate key")
     }
+
+    /// Gửi lại một đính kèm hỏng — `Data` gốc còn nằm trong `pendingMedia` nên không phải
+    /// chọn ảnh lần nữa.
+    func retryMedia(messageId: UUID) async {
+        await uploadPending(messageId: messageId)
+    }
+
+    /// Bỏ hẳn một đính kèm hỏng: gỡ bong bóng + quên `Data`.
+    func discardMedia(messageId: UUID) {
+        guard let pending = pendingMedia[messageId] else { return }
+        messagesByChannel[pending.channelId]?.removeAll { $0.id == messageId }
+        pendingMedia[messageId] = nil
+    }
+
+    /// Ảnh/thoại đang gửi được vẽ từ đây, không phải từ bucket.
+    func pending(for messageId: UUID) -> PendingMedia? { pendingMedia[messageId] }
 
     /// Thả/gỡ một loại trên tin (`message_reactions`, 0027). Bật-tắt: đang có thì gỡ.
     ///
@@ -355,6 +491,10 @@ final class ConversationStore {
             channels.removeAll { $0.id == channelId }
             messagesByChannel[channelId] = nil
             unreadByChannel[channelId] = nil
+            // Bỏ luôn đính kèm đang gửi của kênh vừa rời: policy Storage đòi còn là thành viên,
+            // nên upload của chúng chắc chắn hỏng từ đây. Không dọn thì chúng nằm lại giữ
+            // `Data` (tới 25MB/tệp) mà không còn màn nào hiện ra để bấm bỏ.
+            pendingMedia = pendingMedia.filter { $0.value.channelId != channelId }
         } catch { errorMessage = ErrorText.localized(error) }
     }
 

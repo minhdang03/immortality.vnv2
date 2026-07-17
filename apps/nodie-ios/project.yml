@@ -76,6 +76,12 @@ targets:
         # INFOPLIST_FILE=NODIE/Info.plist → đặt trên settings là config chết, im lặng không chạy.
         UIUserInterfaceStyle: Light
         ITSAppUsesNonExemptEncryption: false
+        # Quyền máy ảnh — hỏi lúc bấm "Máy ảnh" trong khay đính kèm, không hỏi lúc mở app.
+        # CÙNG BẪY với UIUserInterfaceStyle ở trên: phải nằm trong info.properties, KHÔNG
+        # phải settings `INFOPLIST_KEY_NSCameraUsageDescription` — target khai INFOPLIST_FILE
+        # nên key đó là config chết. Thiếu chuỗi này thì iOS giết app ngay khi mở máy ảnh,
+        # và chỉ lộ khi chạy thật (build vẫn xanh).
+        NSCameraUsageDescription: Cho phép NODIE dùng máy ảnh để bạn chụp và gửi ảnh trong trò chuyện.
         # Supabase gọi lại app qua scheme này sau khi user bấm link trong mail (đặt lại
         # mật khẩu / xác nhận đăng ký). Custom scheme chứ không Universal Links: khỏi phải
         # dựng apple-app-site-association trên battudao.com — đổi lại iOS chen một nhịp

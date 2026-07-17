@@ -162,6 +162,16 @@ final class AuthStore {
         await run {
             try await self.client.auth.signOut()
         }
+        // Quên mọi thứ đã ký/tải của phiên vừa thoát.
+        //
+        // Hôm nay chưa rò rỉ được sang tài khoản khác (RootTabView và ConversationStore bị
+        // dựng lại khi đăng xuất, còn cache thì khoá theo đường dẫn bucket mà RLS mới quyết
+        // ai đọc được). Nhưng URL đã ký LÀ chứng chỉ vào tệp, còn hạn tới một giờ, và tệp
+        // tải về nằm nguyên trên đĩa — giữ chúng sau khi người dùng bấm "đăng xuất" là sai
+        // về nguyên tắc, và chỉ cần một đường code mới tin vào cache là thành lỗ thật.
+        await SignedURLCache.shared.clear()
+        ChatImageCache.clear()
+        ChatFileDownloader.clear()
     }
 
     // MARK: - Đặt lại mật khẩu

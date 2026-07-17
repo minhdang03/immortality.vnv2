@@ -1,5 +1,7 @@
+import PhotosUI          // PhotosPicker + PhotosPickerItem
 import SwiftUI
-import UIKit   // UIPasteboard — SwiftUI không re-export
+import UIKit             // UIPasteboard — SwiftUI không re-export
+import UniformTypeIdentifiers   // UTType.item cho fileImporter
 
 /// Xem trước ngắn cho một `MessageRow` — dùng ở băng "Đang trả lời …", trích dẫn trong
 /// bong bóng, và chính bong bóng tin thoại (chưa phát được thì nó chỉ là một dòng chữ).
@@ -39,6 +41,23 @@ struct ChatDetailView: View {
     /// lại nguyên băng "Đang trả lời" cho một thao tác hiếm dùng.
     @State private var editingMessage: MessageRow?
     @State private var editText = ""
+
+    // MARK: - Đính kèm
+
+    /// Ảnh đang chọn từ thư viện. `PhotosPicker` trả `PhotosPickerItem` (mã tham chiếu), phải
+    /// `loadTransferable` mới ra bytes — xem `sendPickedPhotos`.
+    @State private var photoItems: [PhotosPickerItem] = []
+    @State private var photosPresented = false
+    @State private var cameraPresented = false
+    @State private var filePresented = false
+    /// Quyền máy ảnh đã bị từ chối — mở sheet chỉ đường ra Cài đặt.
+    @State private var cameraDenied = false
+    /// Ảnh đang xem toàn màn.
+    @State private var viewingPhoto: ChatPhotoSource?
+    /// Tệp đã tải về thư mục tạm, sẵn sàng cho QuickLook.
+    @State private var previewingFile: URL?
+    /// Đang tải tệp về để mở — chặn chạm hai lần vào cùng một bong bóng.
+    @State private var openingFile = false
 
     /// Mốc đáy để cuộn tới. Cuộn vào MỐC chứ không vào tin cuối: tin cuối có thể cao
     /// (ảnh, trích dẫn, hàng cảm xúc) và `anchor: .bottom` của nó vẫn hụt mất phần đệm dưới.
@@ -99,6 +118,7 @@ struct ChatDetailView: View {
                                 replyTargetIsMine: target?.userId == store.currentUserId,
                                 myReactions: message.myReactions(uid: store.currentUserId),
                                 reduceMotion: reduceMotion,
+                                pending: store.pending(for: message.id),
                                 onReply: { state.startReply(to: message.id, in: channelId) },
                                 onReact: { kind in
                                     Task { await store.toggleReaction(messageId: message.id, channelId: channelId, kind: kind) }
@@ -107,7 +127,10 @@ struct ChatDetailView: View {
                                     withAnimation(motion) { proxy.scrollTo(parentId, anchor: .center) }
                                 },
                                 onEdit: onEdit,
-                                onDelete: onDelete
+                                onDelete: onDelete,
+                                onRetryMedia: { Task { await store.retryMedia(messageId: message.id) } },
+                                onDiscardMedia: { store.discardMedia(messageId: message.id) },
+                                onOpenMedia: { media in open(media, of: message) }
                             )
                             .padding(.top, index > 0 ? 10 : 0)
                             .id(message.id)
@@ -177,6 +200,23 @@ struct ChatDetailView: View {
                 }
             }
         }
+        .modifier(ChatMediaFlows(
+            photoItems: $photoItems,
+            photosPresented: $photosPresented,
+            cameraPresented: $cameraPresented,
+            filePresented: $filePresented,
+            cameraDenied: $cameraDenied,
+            viewingPhoto: $viewingPhoto,
+            previewingFile: $previewingFile,
+            onPickedPhotos: { items in await sendPickedPhotos(items) },
+            onCaptured: { image in
+                guard let encoded = await Task.detached(priority: .userInitiated, operation: {
+                    ChatImageProcessor.encode(image)
+                }).value else { return }
+                sendPhoto(encoded)
+            },
+            onPickedFile: { result in await sendPickedFile(result) }
+        ))
     }
 
     /// Tin mà `message` đang trả lời — nil nếu không trả lời ai, hoặc tin gốc đã trôi khỏi
@@ -431,10 +471,7 @@ struct ChatDetailView: View {
         HStack(spacing: 10) {
             ForEach(MediaKind.allCases) { kind in
                 Button {
-                    // CHƯA nối thật: chưa có PhotosPicker/DocumentPicker để lấy `Data` thật
-                    // cho `store.sendMedia`. Gọi nó với dữ liệu giả là bịa dữ liệu — đóng khay
-                    // thay vì giả vờ gửi thành công. Xem report để nối picker thật.
-                    state.toggleAttach()
+                    Task { await tapAttach(kind) }
                 } label: {
                     VStack(spacing: 6) {
                         Text(kind.glyph).font(.system(size: 20))
@@ -448,9 +485,106 @@ struct ChatDetailView: View {
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(NodieColors.rule, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("attach-\(kind.rawValue)")
             }
         }
         .padding(.horizontal, 2)
+    }
+
+    /// Khay đính kèm: đóng khay rồi mới mở picker. Để khay mở dưới sheet thì lúc đóng sheet
+    /// nó còn nằm đó chắn mất ô nhập.
+    private func tapAttach(_ kind: MediaKind) async {
+        state.attachOpen = false
+        switch kind {
+        case .photo:
+            photosPresented = true
+        case .camera:
+            // Hỏi quyền NGAY LÚC BẤM — không hỏi lúc mở app. Đã từ chối thì iOS không hiện
+            // hộp thoại nào nữa, nên phải tự nói và chỉ đường ra Cài đặt.
+            switch await CameraPermission.request() {
+            case .granted: cameraPresented = true
+            case .denied: cameraDenied = true
+            }
+        case .file:
+            filePresented = true
+        }
+    }
+
+    /// Ảnh từ thư viện: lấy bytes → thu nhỏ → gửi. Mỗi ảnh một tin, như IG/WhatsApp.
+    ///
+    /// Thu nhỏ chạy ngoài main thread (`Task.detached`): sáu ảnh 4000px vẽ lại trên main
+    /// thread là màn hình đứng hình mấy giây.
+    private func sendPickedPhotos(_ items: [PhotosPickerItem]) async {
+        for item in items {
+            guard let raw = try? await item.loadTransferable(type: Data.self) else { continue }
+            guard let encoded = await Task.detached(priority: .userInitiated, operation: {
+                ChatImageProcessor.encode(data: raw)
+            }).value else { continue }
+            sendPhoto(encoded)
+        }
+    }
+
+    private func sendPhoto(_ encoded: ChatImageProcessor.Encoded) {
+        let queued = store.sendMedia(
+            channelId: channelId, data: encoded.data, kind: .photo,
+            ext: "jpg", contentType: "image/jpeg", preview: encoded.image,
+            width: encoded.width, height: encoded.height, size: encoded.data.count,
+            parentId: state.replyingTo[channelId]
+        )
+        // Bong bóng đã hiện và đã mang `parentId` — băng "Đang trả lời" xong việc, gỡ ngay
+        // chứ không đợi upload. Upload hỏng thì "Gửi lại" dùng lại `parentId` trong pending,
+        // không cần băng còn trên màn.
+        if queued { state.replyingTo[channelId] = nil }
+    }
+
+    /// Tệp từ Files. `fileImporter` trả URL có bảo vệ phạm vi — phải xin quyền đọc rồi trả lại,
+    /// không thì đọc ra rỗng.
+    private func sendPickedFile(_ result: Result<URL, any Error>) async {
+        guard case .success(let url) = result else { return }
+        guard url.startAccessingSecurityScopedResource() else {
+            store.errorMessage = String(localized: "Không đọc được tệp này.")
+            return
+        }
+        defer { url.stopAccessingSecurityScopedResource() }
+
+        guard let data = try? Data(contentsOf: url) else {
+            store.errorMessage = String(localized: "Không đọc được tệp này.")
+            return
+        }
+        let queued = store.sendMedia(
+            channelId: channelId, data: data, kind: .file,
+            ext: url.pathExtension.isEmpty ? "dat" : url.pathExtension,
+            contentType: UTType(filenameExtension: url.pathExtension)?.preferredMIMEType
+                ?? "application/octet-stream",
+            size: data.count, name: url.lastPathComponent,
+            parentId: state.replyingTo[channelId]
+        )
+        if queued { state.replyingTo[channelId] = nil }
+    }
+
+    /// Chạm vào bong bóng: ảnh → xem toàn màn; tệp → tải về rồi mở QuickLook.
+    private func open(_ media: MessageMedia, of message: MessageRow) {
+        switch media.kind {
+        case .photo:
+            // Ảnh đang gửi vẫn xem được — bytes nằm sẵn trong máy, không phải chờ upload.
+            if let pending = store.pending(for: message.id) {
+                viewingPhoto = .local(pending.data)
+            } else {
+                viewingPhoto = .remote(path: media.path)
+            }
+        case .file:
+            guard !openingFile else { return }
+            openingFile = true
+            Task {
+                previewingFile = await ChatFileDownloader.localURL(for: media.path, name: media.name)
+                if previewingFile == nil {
+                    store.errorMessage = String(localized: "Không mở được tệp này.")
+                }
+                openingFile = false
+            }
+        case .voice:
+            break
+        }
     }
 
     private var recordingBar: some View {
@@ -544,6 +678,9 @@ struct MessageBubbleView: View {
     let replyTargetIsMine: Bool
     let myReactions: Set<ReactionKind>
     let reduceMotion: Bool
+    /// Đính kèm chưa lên xong — nil nghĩa là tin đã nằm trên server (hoặc không có đính kèm).
+    /// Non-nil thì bong bóng vẽ từ bytes trong máy và hiện trạng thái đang-lên / đã-hỏng.
+    let pending: ConversationStore.PendingMedia?
     let onReply: () -> Void
     let onReact: (ReactionKind) -> Void
     let onTapReplyQuote: (UUID) -> Void
@@ -551,6 +688,10 @@ struct MessageBubbleView: View {
     let onEdit: (() -> Void)?
     /// nil = không phải tin của mình — ẩn hẳn mục "Xoá" khỏi menu.
     let onDelete: (() -> Void)?
+    let onRetryMedia: () -> Void
+    let onDiscardMedia: () -> Void
+    /// Mở ảnh toàn màn / mở tệp bằng QuickLook — caller giữ state sheet.
+    let onOpenMedia: (MessageMedia) -> Void
 
     /// Bong bóng trượt theo ngón khi vuốt trả lời. Thuần hiệu ứng — thả tay là về 0.
     @State private var dragX: CGFloat = 0
@@ -783,21 +924,153 @@ struct MessageBubbleView: View {
         }
     }
 
-    /// Ảnh/tệp: hộp gradient thay bong bóng chữ — nội dung thật sẽ là thumbnail từ R2.
+    /// Ảnh/tệp. Ba trạng thái: đang lên (ảnh trong máy + mờ), hỏng (ảnh trong máy + nút gửi
+    /// lại), đã lên (tải từ bucket qua URL ký).
+    @ViewBuilder
     private func mediaBubble(_ media: MessageMedia) -> some View {
-        let glyph = media.kind == .photo ? "▣" : "▤"
-        let label = media.kind == .photo ? String(localized: "Ảnh") : String(localized: "Tệp đính kèm")
-        return RoundedRectangle(cornerRadius: 16)
-            .fill(LinearGradient(colors: [Color(hex: 0xE4D9BF), Color(hex: 0xB8A67E)],
-                                 startPoint: .topLeading, endPoint: .bottomTrailing))
-            .frame(width: 170, height: 116)
-            .overlay(alignment: .bottomLeading) {
-                Text("\(glyph) \(label)")
-                    .font(NodieTypography.tag)
-                    .foregroundStyle(.white)
-                    .padding(10)
+        switch media.kind {
+        case .photo: photoBubble(media)
+        case .file: fileBubble(media)
+        case .voice: EmptyView()   // thoại đi đường `textBubble`/player riêng
+        }
+    }
+
+    /// Bề ngang cố định kiểu IG; chiều cao suy từ tỉ lệ trong metadata nên khung đã đúng
+    /// TRƯỚC khi ảnh về — không có cú nhảy layout lúc tải xong.
+    private static let photoWidth: CGFloat = 232
+
+    private func photoBubble(_ media: MessageMedia) -> some View {
+        let ratio = media.aspectRatio ?? 1
+        let height = Self.photoWidth / ratio
+
+        return Group {
+            // `pending.preview` đã giải mã sẵn từ lúc chọn ảnh — không `UIImage(data:)` ở đây,
+            // chỗ này chạy lại mỗi lần thân view được tính lại.
+            if let image = pending?.preview {
+                Image(uiImage: image).resizable().aspectRatio(contentMode: .fill)
+            } else {
+                ChatRemoteImage(path: media.path)
             }
-            .accessibilityLabel(label)
+        }
+        .frame(width: Self.photoWidth, height: height)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(NodieColors.rule, lineWidth: 1))
+        .overlay { uploadOverlay }
+        .contentShape(RoundedRectangle(cornerRadius: 16))
+        .onTapGesture { if pending?.phase != .failed { onOpenMedia(media) } }
+        .accessibilityLabel(photoLabel)
+        .accessibilityIdentifier("mediaBubble")
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private var photoLabel: Text {
+        switch pending?.phase {
+        case .uploading: return Text("Ảnh, đang gửi")
+        case .failed: return Text("Ảnh, gửi không thành công")
+        case nil: return Text("Ảnh, chạm để xem")
+        }
+    }
+
+    /// Lớp phủ lúc đang lên / lên hỏng. Spinner KHÔNG có phần trăm: Supabase Storage không
+    /// báo tiến trình từng phần, và bịa ra một con số chạy là nói dối người dùng.
+    @ViewBuilder
+    private var uploadOverlay: some View {
+        switch pending?.phase {
+        case .uploading:
+            ZStack {
+                Color.black.opacity(0.28)
+                ProgressView().tint(.white)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        case .failed:
+            ZStack {
+                Color.black.opacity(0.45)
+                VStack(spacing: 8) {
+                    Button(action: onRetryMedia) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.clockwise")
+                            Text("Gửi lại")
+                        }
+                        .font(NodieTypography.tag.weight(.semibold))
+                        .foregroundStyle(NodieColors.ink)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(NodieColors.cream))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("retryMedia")
+
+                    Button("Bỏ", action: onDiscardMedia)
+                        .font(NodieTypography.tag)
+                        .foregroundStyle(.white)
+                        .buttonStyle(.plain)
+                        .expandedHitArea(visual: 44)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        case nil:
+            EmptyView()
+        }
+    }
+
+    /// Tệp: hàng tên + cỡ, chạm mở QuickLook. Giữ TÊN GỐC — đường dẫn trong bucket là UUID,
+    /// hiện nó ra thì người nhận không biết mình vừa nhận cái gì.
+    private func fileBubble(_ media: MessageMedia) -> some View {
+        HStack(spacing: 10) {
+            // `verbatim:` — glyph không phải chữ để dịch. Không có nó thì trình biên dịch
+            // trích "▤" thành một key trong catalog và bắt dịch nó ra 8 thứ tiếng.
+            Text(verbatim: "▤")
+                .font(.system(size: 20))
+                .foregroundStyle(NodieColors.accent)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(media.name ?? String(localized: "Tệp đính kèm"))
+                    .font(NodieTypography.bodySm.weight(.medium))
+                    .foregroundStyle(NodieColors.ink)
+                    .lineLimit(2)
+                if let sizeLabel = media.sizeLabel {
+                    Text(sizeLabel)
+                        .font(NodieTypography.timestampXs)
+                        .foregroundStyle(NodieColors.inkMuted)
+                }
+            }
+
+            if pending?.phase == .uploading {
+                ProgressView().tint(NodieColors.inkMuted)
+            } else if pending?.phase == .failed {
+                // Gửi lại VÀ Bỏ — như bong bóng ảnh. Chỉ có mỗi nút gửi lại thì một tệp cứ
+                // hỏng mãi sẽ nằm lì trên màn cả phiên, không có đường gỡ.
+                Button(action: onRetryMedia) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(NodieColors.rec)
+                        .expandedHitArea(visual: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Gửi lại tệp")
+                .accessibilityIdentifier("retryMedia")
+
+                Button(action: onDiscardMedia) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(NodieColors.inkMuted)
+                        .expandedHitArea(visual: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Bỏ tệp")
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: 250, alignment: .leading)
+        .background(bubbleShape.fill(NodieColors.surface))
+        .overlay(bubbleShape.stroke(NodieColors.rule, lineWidth: 1))
+        .contentShape(bubbleShape)
+        .onTapGesture { if pending == nil { onOpenMedia(media) } }
+        .accessibilityLabel(Text("Tệp \(media.name ?? ""), chạm để mở"))
+        .accessibilityIdentifier("fileBubble")
+        .accessibilityAddTraits(.isButton)
     }
 
     /// Góc nhọn ở phía người gửi — quy ước bong bóng chat quen thuộc.
