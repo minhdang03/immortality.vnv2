@@ -25,6 +25,10 @@ export default function Footer({ t, lang, articles, navigate, siteSettings = {} 
     { id: 'about', vi: 'Giới thiệu', en: 'About' },
     { id: 'contact', vi: 'Liên hệ', en: 'Contact' },
     ...(siteSettings.unghoEnabled ? [{ id: 'ungho', vi: 'Ủng hộ', en: 'Support' }] : []),
+    // Trang pháp lý phải với tới được từ UI, không chỉ qua URL trực tiếp
+    // (App Store Connect trỏ về /privacy — reviewer có thể bấm quanh site).
+    { id: 'privacy', vi: 'Quyền riêng tư', en: 'Privacy' },
+    { id: 'terms', vi: 'Điều khoản', en: 'Terms' },
     // Admin dời từ header xuống đây (audit: icon admin public gây nhiễu)
     { id: 'admin', vi: 'Quản trị', en: 'Admin' },
   ]
