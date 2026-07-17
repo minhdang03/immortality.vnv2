@@ -66,3 +66,6 @@ scripts/migrate/.dump/
 *.mobileprovision
 *.jks
 *.keystore
+
+# Trạng thái tạm của Supabase CLI (project ref đã link) — máy nào của máy nấy, không chia sẻ.
+supabase/.temp/

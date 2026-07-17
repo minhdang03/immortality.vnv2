@@ -33,6 +33,10 @@ final class AuthStore {
     /// Đã gửi xong mail đặt lại — để sheet đổi sang trạng thái "kiểm tra hộp thư".
     private(set) var didSendResetEmail = false
 
+    /// Đang đổi `code` trong link lấy session. Nút "Lưu mật khẩu" phải tắt trong lúc này:
+    /// xem ghi chú trong `handleOpenURL`.
+    private(set) var isExchangingCode = false
+
     /// Supabase phải whitelist đúng 2 URL này ở Dashboard → Auth → URL Configuration,
     /// nếu không nó từ chối `redirect_to` và mail không có đường về app.
     private static let resetURL = URL(string: "nodie://password-reset")!
@@ -184,14 +188,31 @@ final class AuthStore {
         let isReset = url.host == "password-reset" || url.path == "password-reset"
         if isReset { isRecoveringPassword = true }
 
+        // Chưa đổi xong code thì CHƯA có session của chủ link. Không khoá lại thì nút
+        // "Lưu mật khẩu" ăn được ngay, và `update(user:)` sẽ ghi bằng session ĐANG có —
+        // mở link của B trong lúc đang đăng nhập bằng A là đổi nhầm mật khẩu của A.
+        isExchangingCode = true
+        errorMessage = nil
         do {
             _ = try await client.auth.session(from: url)
         } catch {
             // Ca thật hay gặp: xin reset ở máy A, mở link ở máy B → máy B không có
             // code_verifier của PKCE → exchange fail. Không vá được, chỉ nói cho rõ.
-            errorMessage = Self.viMessage(for: error)
+            errorMessage = Self.linkMessage(for: error)
             isRecoveringPassword = false
         }
+        isExchangingCode = false
+    }
+
+    /// Lỗi khi đổi code từ link trong mail.
+    ///
+    /// Tách khỏi `viMessage` có chủ đích: câu "link hết hạn" CHỈ đúng ở đây. Nhét nó vào
+    /// translator dùng chung (bắt theo chữ "invalid") thì mọi lỗi khác có chữ đó — email
+    /// sai định dạng lúc đăng ký, refresh token hỏng — đều bị gán nhầm thành lỗi link.
+    private static func linkMessage(for error: Error) -> String {
+        // Mất mạng thì nói mất mạng, đừng đổ cho cái link.
+        if (error as NSError).domain == NSURLErrorDomain { return viMessage(for: error) }
+        return String(localized: "Link đã hết hạn hoặc mở trên máy khác. Gửi lại giúp mình nhé.")
     }
 
     func updatePassword(_ newPassword: String) async {
@@ -208,9 +229,13 @@ final class AuthStore {
         errorMessage = nil
     }
 
-    func resetSendState() {
+    /// Đóng sheet "Quên mật khẩu": quên trạng thái đã-gửi để lần mở sau thấy lại form.
+    ///
+    /// CỐ Ý không xoá `errorMessage`: lỗi từ link trong mail (`handleOpenURL`) tới đúng lúc
+    /// sheet đang đóng — xoá ở đây là nuốt mất thông báo, user bấm link hỏng rồi thấy im lặng.
+    /// Lỗi cũ được dọn ở `clearError()` lúc mở sheet.
+    func clearSendState() {
         didSendResetEmail = false
-        errorMessage = nil
     }
 
     /// Xoá tài khoản (App Store 5.1.1(v)) — RPC `delete_account` (migration 0021) chạy
@@ -293,13 +318,14 @@ final class AuthStore {
             if raw.contains("email not confirmed") { return String(localized: "Email chưa được xác nhận. Kiểm tra hộp thư giúp mình nhé.") }
             if raw.contains("already registered") || raw.contains("already been registered") { return String(localized: "Email này đã có tài khoản.") }
             if raw.contains("password") && raw.contains("6") { return String(localized: "Mật khẩu phải từ 6 ký tự trở lên.") }
-            if raw.contains("rate limit") || raw.contains("too many") { return String(localized: "Thử lại sau ít phút giúp mình.") }
-            // Link trong mail dùng một lần và gắn với máy đã bấm "Quên mật khẩu" (PKCE giữ
-            // code_verifier dưới máy đó). Bấm lại lần hai, hoặc mở ở máy khác, đều rơi vào đây.
-            if raw.contains("expired") || raw.contains("invalid") || raw.contains("code verifier")
-                || raw.contains("pkce") {
-                return String(localized: "Link đã hết hạn hoặc mở trên máy khác. Gửi lại giúp mình nhé.")
+            // GoTrue chặn gửi lại quá nhanh bằng câu "For security purposes, you can only
+            // request this after N seconds" — không chứa "rate limit"/"too many", nên phải
+            // bắt riêng, không thì user thấy nguyên tiếng Anh.
+            if raw.contains("rate limit") || raw.contains("too many")
+                || raw.contains("for security purposes") || raw.contains("only request this after") {
+                return String(localized: "Thử lại sau ít phút giúp mình.")
             }
+            if raw.contains("auth session missing") { return String(localized: "Phiên đăng nhập đã hết. Đăng nhập lại giúp mình nhé.") }
             return authError.message
         }
         if (error as NSError).domain == NSURLErrorDomain {

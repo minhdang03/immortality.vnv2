@@ -30,7 +30,6 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.battudao.nodie
         TARGETED_DEVICE_FAMILY: "1"
-        # Light-only: bảng màu kem/mực là bản sắc thương hiệu, dark mode sẽ phá tương phản badge.
         DEVELOPMENT_TEAM: X6L54S9V87
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_ENTITLEMENTS: NODIE/NODIE.entitlements

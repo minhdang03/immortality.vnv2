@@ -158,6 +158,13 @@ struct LoginView: View {
             .padding(.top, NodieSpacing.sm)
             .sheet(isPresented: $showTerms) { TermsOfUseView() }
             .sheet(isPresented: $showForgotPassword) { ForgotPasswordSheet(auth: auth) }
+            // Link trong mail quay về lúc sheet "kiểm tra hộp thư" CÒN MỞ (đường thật của
+            // user: gửi xong là sang Mail luôn, chẳng ai bấm "Xong"). Một host chỉ trình bày
+            // được một modal — sheet này còn đó thì `.fullScreenCover` đặt ở RootView bị
+            // chặn và màn đặt mật khẩu mới rơi mất, để lại cờ kẹt ở true.
+            .onChange(of: auth.isRecoveringPassword) { _, isRecovering in
+                if isRecovering { showForgotPassword = false }
+            }
 
             Spacer(minLength: 0)
         }

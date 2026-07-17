@@ -23,7 +23,8 @@ struct ForgotPasswordSheet: View {
                 form
             }
         }
-        .onDisappear { auth.resetSendState() }
+        .onAppear { auth.clearError() }
+        .onDisappear { auth.clearSendState() }
     }
 
     private var form: some View {
@@ -110,6 +111,19 @@ struct ForgotPasswordSheet: View {
                 .multilineTextAlignment(.center)
                 .padding(.top, NodieSpacing.sm)
 
+            // Đường thật của user: gửi xong → sang Mail → bấm link → app quay lại lúc sheet
+            // NÀY vẫn đang mở. Link hỏng thì lỗi phải hiện ở đây; không có ô này thì user
+            // bấm link chết và nhận lại sự im lặng.
+            if let error = auth.errorMessage {
+                Text(error)
+                    .font(NodieTypography.meta)
+                    .foregroundStyle(Color(hex: 0xB3261E))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, NodieSpacing.md)
+                    .accessibilityIdentifier("authError")
+            }
+
             Button { dismiss() } label: {
                 Text("Xong")
                     .font(NodieTypography.ctaLg)
@@ -138,7 +152,9 @@ struct NewPasswordSheet: View {
     @State private var password = ""
     @FocusState private var focused: Bool
 
-    private var canSave: Bool { password.count >= 6 && !auth.isBusy }
+    // `isExchangingCode`: chưa đổi xong code thì session còn là của người đang đăng nhập
+    // (hoặc chưa có) — cho bấm Lưu lúc này là ghi mật khẩu nhầm tài khoản. Xem AuthStore.
+    private var canSave: Bool { password.count >= 6 && !auth.isBusy && !auth.isExchangingCode }
 
     var body: some View {
         ZStack {
