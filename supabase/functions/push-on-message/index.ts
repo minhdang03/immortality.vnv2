@@ -150,9 +150,32 @@ Deno.serve(async (req) => {
       if (res.status === 410) {
         await db.from('device_tokens').delete().eq('token', t.token)
       }
-      return { status: res.status, env: t.apns_env, reason: res.ok ? null : (await res.json()).reason }
+      return {
+        status: res.status,
+        env: t.apns_env,
+        userId: t.user_id as string,
+        reason: res.ok ? null : (await res.json()).reason,
+      }
     }),
   )
+
+  // Push hỏng phải ĐỂ LẠI DẤU VẾT (bảng 0036) — trước đây results tính xong rồi vứt,
+  // push chết cả tuần không ai hay. Ghi sổ hỏng thì cũng KHÔNG được làm push hỏng:
+  // nuốt lỗi, cùng bất biến với 0031.
+  const failures = results.filter((r) => r.status !== 200)
+  if (failures.length) {
+    const { error } = await db.from('push_failures').insert(
+      failures.map((r) => ({
+        message_id: msg.id,
+        channel_id: msg.channel_id,
+        user_id: r.userId,
+        apns_env: r.env,
+        status: r.status,
+        reason: r.reason ?? `http_${r.status}`,
+      })),
+    )
+    if (error) console.error('push_failures ghi sổ hỏng:', error.message)
+  }
 
   const sent = results.filter((r) => r.status === 200).length
   return Response.json({ sent, failed: results.length - sent, results })
