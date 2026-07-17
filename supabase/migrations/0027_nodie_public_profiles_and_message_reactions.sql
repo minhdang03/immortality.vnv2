@@ -1,4 +1,4 @@
--- 0026_nodie_public_profiles_and_message_reactions.sql
+-- 0027_nodie_public_profiles_and_message_reactions.sql
 --
 -- Hai việc, cùng một gốc: người này phải nhìn thấy người kia.
 --
@@ -14,6 +14,13 @@
 -- Vì sao chưa ai thấy (kiểm trên prod 2026-07-17 trước khi viết file này):
 --   auth.users=1, profiles=1, admins=1 — user duy nhất CHÍNH LÀ admin, nên nhánh
 --   `or is_admin()` cho qua tất. Bug nổ đúng lúc người thứ hai đăng ký.
+--
+-- ⚠️ FILE NÀY MỘT MÌNH KHÔNG VÁ ĐƯỢC BUG. Nó mới dựng cái view. Ba select string của
+-- QAStore.swift (questionSelect/answerSelect/replySelect) VẪN đang embed `profiles` —
+-- apply xong mà không đổi chúng thì "Ẩn danh" còn nguyên. Đổi phải làm SAU khi apply,
+-- không thì PGRST200 vì view chưa tồn tại. Khi đổi, kiểm lại bằng request thật:
+-- PostgREST suy quan hệ view từ FK của bảng gốc (`questions_author_id_fkey` → `profiles.id`,
+-- mà view có chở `id`) — đúng chỗ 0020 đã ngã một lần, đừng tin, hãy thử.
 --
 -- Vì sao VIEW chứ không nới policy của bảng: `profiles` có cột `role`
 -- (user/mod/admin). Nới `for select using (auth.uid() is not null)` là phơi luôn
@@ -97,7 +104,22 @@ create policy message_reactions_delete on public.message_reactions
 
 -- Realtime: 0023 đã bật cho `messages`; reaction đến sau tin nên phải thêm riêng,
 -- không thì thả ☀ chỉ mình người thả thấy cho tới lần mở lại app.
-alter publication supabase_realtime add table public.message_reactions;
+--
+-- Bọc guard y như 0023: `alter publication ... add table` trần sẽ ném 42710 ở lần chạy
+-- thứ hai và kéo đổ CẢ transaction — mọi câu khác trong file này đều replay được
+-- (`create or replace`, `if not exists`, `drop ... if exists`), một câu không replay được
+-- là đủ để một lần deploy lặp lại biến thành sự cố.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'message_reactions'
+  ) then
+    alter publication supabase_realtime add table public.message_reactions;
+  end if;
+end $$;
 
 -- Đổi FK/thêm bảng xong PostgREST phải nạp lại sơ đồ, không thì vẫn PGRST200 (bài học 0020).
 notify pgrst, 'reload schema';

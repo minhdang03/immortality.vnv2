@@ -31,17 +31,42 @@ drop policy if exists follows_read on public.follows;
 create policy follows_read on public.follows
   for select using ((select auth.uid()) is not null);
 
+-- Cặp này có ai chặn ai không — HAI CHIỀU.
+--
+-- PHẢI là security definer, và đây là lý do (đã dựng lại trên DB thật trước khi viết):
+-- subquery trong policy chạy bằng QUYỀN NGƯỜI GỌI, nên `blocks` cũng bị RLS của nó lọc.
+-- `blocks_self` (0017:263) là `for all using (blocker_id = auth.uid())` → người BỊ chặn
+-- không nhìn thấy dòng chặn mình. Viết `not exists (select 1 from blocks ...)` thẳng trong
+-- policy thì nhánh "họ chặn tôi" là CODE CHẾT: A bị B chặn, A đọc blocks ra 0 dòng,
+-- `not exists` luôn đúng, A follow B ngon lành. Chiều duy nhất cần bảo vệ nạn nhân lại
+-- chính là chiều hỏng.
+--
+-- Hàm định-nghĩa-sẵn chạy bằng quyền chủ sở hữu → nhìn được cả hai chiều, đúng như
+-- `is_channel_member`/`is_admin` đã làm cho chính bài toán này.
+--
+-- KHÔNG sửa bằng cách nới `blocks_self` thành `blocked_id = auth.uid()`: làm thế là tiết lộ
+-- cho người ta biết ai đã chặn mình — chặn im lặng mới là điểm của tính năng chặn.
+--
+-- Trả boolean, không trả danh sách: người gọi chỉ biết "có/không" cho đúng cặp họ đã hỏi,
+-- không dò được ai chặn ai.
+create or replace function public.is_blocked_pair(a uuid, b uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.blocks
+    where (blocker_id = a and blocked_id = b)
+       or (blocker_id = b and blocked_id = a)
+  );
+$$;
+revoke execute on function public.is_blocked_pair(uuid, uuid) from public, anon;
+grant execute on function public.is_blocked_pair(uuid, uuid) to authenticated;
+
 -- Theo dõi: chỉ nhân danh chính mình, và không theo dõi được người dính chặn (hai chiều —
--- mình chặn họ, hoặc họ chặn mình). Thiếu vế thứ hai thì kẻ bị chặn vẫn bám theo nạn nhân.
+-- mình chặn họ, hoặc họ chặn mình).
 drop policy if exists follows_insert on public.follows;
 create policy follows_insert on public.follows
   for insert with check (
     follower_id = (select auth.uid())
-    and not exists (
-      select 1 from public.blocks b
-      where (b.blocker_id = follower_id and b.blocked_id = followee_id)
-         or (b.blocker_id = followee_id and b.blocked_id = follower_id)
-    )
+    and not public.is_blocked_pair(follower_id, followee_id)
   );
 
 -- Bỏ theo dõi: chỉ hàng của mình.
@@ -67,8 +92,12 @@ begin
   return null;
 end; $$;
 
+-- `insert or update`, không chỉ insert: `blocks_self` là `for all` nên UPDATE được phép.
+-- Chỉ bắt insert thì A chặn C rồi PATCH dòng đó thành B — `blocker_id` không đổi nên cả
+-- `using` lẫn `with check` đều lọt, trigger không nổ, và follow A↔B sống sót một cú chặn.
+-- Giao diện hiện không làm thế, nhưng anon key thì làm được.
 drop trigger if exists trg_block_removes_follows on public.blocks;
-create trigger trg_block_removes_follows after insert on public.blocks
+create trigger trg_block_removes_follows after insert or update on public.blocks
   for each row execute function public.tg_block_removes_follows();
 
 -- Bỏ chặn KHÔNG tự nối lại theo dõi: quan hệ đó đã bị cắt thật, muốn lại thì bấm lại.
