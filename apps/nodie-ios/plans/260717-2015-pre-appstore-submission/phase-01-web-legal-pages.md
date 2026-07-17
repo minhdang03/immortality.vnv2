@@ -1,6 +1,16 @@
 # Phase 01 — Web: privacy + terms + trang nhúng captcha
 
-**Mục:** A-02 (P0) · hạ tầng cho C-04 · **Đợt A** · Ước lượng **0.5 ngày** · Status: ⬜
+**Mục:** A-02 (P0) · hạ tầng cho C-04 · **Đợt A** · Ước lượng **0.5 ngày** · Status: ✅ 18/07 08:5x
+
+## Kết quả (Opus, 18/07)
+
+- ✅ `battudao.com/privacy` + `/terms` + `/turnstile-embed.html` — cả 3 trả 200 trên PROD (curl sau deploy, không chỉ local).
+- ✅ Terms khớp `TermsOfUseView.swift` **từng chữ** — đối chiếu bằng script (6/6 mục + ngày), không phải mắt.
+- ✅ Sitekey lọc `[A-Za-z0-9_-]{8,64}` — chặn 6/6 vector tiêm thử (XSS, attribute-break, traversal).
+- ✅ Khung `LegalDoc.jsx` dùng chung (phase 06 thêm trang Nội quy sẽ tái dùng, DRY).
+- ✅ Thêm ngoài spec: link Quyền riêng tư + Điều khoản ở footer (trang pháp lý phải với tới từ UI).
+- Thân văn bản pháp lý giữ TIẾNG VIỆT kể cả UI tiếng Anh — nhất quán quyết định trong `TermsOfUseView.swift`; chrome trang thì song ngữ.
+- ⏳ Còn của Đăng: bước 8 — whitelist `battudao.com` trong Turnstile dashboard (trước khi phase 05 chạy).
 **Model:** Opus (fast) — trang tĩnh + deploy Vercel, nội dung tái dùng từ `TermsOfUseView`; spec rõ, verify bằng HTTP 200.
 
 ## Context links
