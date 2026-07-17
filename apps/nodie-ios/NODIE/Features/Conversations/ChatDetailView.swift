@@ -322,11 +322,22 @@ struct ChatDetailView: View {
     /// Menu ⋯ — hồ sơ/thông tin, tắt thông báo, xoá.
     private var chatMenu: some View {
         Menu {
-            // "Xem hồ sơ": `ChannelRow` chỉ mang membership CỦA MÌNH (RLS `channel_members`
-            // lọc theo chính mình), không có API lộ UUID người kia. `MemberProfileView` cũng
-            // còn dùng `memberId: String` (Mock) — phase member-profile-real đang đổi việc đó
-            // song song. Chặn tạm ở đây, KHÔNG tự đổi kiểu MemberProfileView (ngoài phạm vi).
-            Button(channel?.kind == "dm" ? "Xem hồ sơ" : "Thông tin nhóm") {}.disabled(true)
+            if channel?.kind == "dm" {
+                // Tìm người kia qua `members(of:)` (RLS `members_read` cho thành viên thấy
+                // nhau) rồi push hồ sơ — back quay về đúng khung chat này.
+                Button("Xem hồ sơ") {
+                    Task {
+                        let members = await store.members(of: channelId)
+                        guard let peer = members.first(where: { $0.id != store.currentUserId })
+                        else { return }
+                        state.chatsPath.append(ChatRoute.member(peer.id))
+                    }
+                }
+            } else {
+                Button("Thông tin nhóm") {
+                    state.chatsPath.append(ChatRoute.groupInfo(channelId))
+                }
+            }
             Button(channel?.isMuted == true ? String(localized: "Bật thông báo") : String(localized: "Tắt thông báo")) {
                 Task { await store.setMuted(channelId: channelId, until: channel?.isMuted == true ? nil : Self.muteHorizon) }
             }

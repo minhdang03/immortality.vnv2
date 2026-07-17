@@ -61,6 +61,9 @@ struct RootTabView: View {
                                 case .member(let id):
                                     MemberProfileView(state: state, follow: follow, conversations: chat, memberId: id)
                                         .nodieDetailScreen()
+                                case .groupInfo(let channelId):
+                                    GroupInfoView(state: state, store: chat, channelId: channelId)
+                                        .nodieDetailScreen()
                                 }
                             }
                     }
@@ -153,6 +156,17 @@ struct RootTabView: View {
         // Chỉ có `.onChange` là hỏng đúng đường vào phổ biến nhất của push.
         .task { consumePendingPush() }
         .onChange(of: push.pendingChannelId) { consumePendingPush() }
+        // Cho PushManager biết chat nào đang HIỂN THỊ để willPresent nuốt banner của đúng
+        // kênh đó (chuẩn WhatsApp — không réo hội thoại đang mở). `weak state`: push sống
+        // đời app (AppDelegate giữ), state chết theo phiên đăng nhập — giữ mạnh là state cũ
+        // không bao giờ được thả sau khi đăng xuất.
+        .onAppear {
+            push.visibleChannel = { [weak state] in
+                guard let state, state.tab == .conversations,
+                      case .chat(let id)? = state.chatsPath.last else { return nil }
+                return id
+            }
+        }
     }
 
     /// Đọc RỒI xoá: không xoá thì quay lại tab Chat lần nào cũng bị ném vào kênh cũ,

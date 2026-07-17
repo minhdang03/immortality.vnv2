@@ -156,6 +156,43 @@ final class ConversationStore {
     }
 
     func channel(id: UUID) -> ChannelRow? { channels.first { $0.id == id } }
+
+    /// Một thành viên của kênh, kèm tên hiển thị — cho "Xem hồ sơ" (DM) và Thông tin nhóm.
+    struct ChannelMember: Identifiable, Hashable {
+        let id: UUID
+        let displayName: String
+    }
+
+    /// Thành viên của kênh. RLS `members_read` cho mọi thành viên thấy nhau trong kênh
+    /// của mình. Embed qua `channel_members_user_id_fkey` — FK phải trỏ `profiles` (0039),
+    /// trỏ `auth.users` là PostgREST không lần được sang view `public_profiles`.
+    func members(of channelId: UUID) async -> [ChannelMember] {
+        struct Row: Decodable {
+            let userId: UUID
+            let member: Name?
+            struct Name: Decodable {
+                let displayName: String?
+                enum CodingKeys: String, CodingKey { case displayName = "display_name" }
+            }
+            enum CodingKeys: String, CodingKey {
+                case member
+                case userId = "user_id"
+            }
+        }
+        do {
+            let rows: [Row] = try await client.from("channel_members")
+                .select("user_id,member:public_profiles!channel_members_user_id_fkey(display_name)")
+                .eq("channel_id", value: channelId)
+                .execute().value
+            return rows.map {
+                ChannelMember(id: $0.userId,
+                              displayName: $0.member?.displayName ?? String(localized: "Ẩn danh"))
+            }
+        } catch {
+            errorMessage = String(localized: "Không tải được danh sách thành viên.")
+            return []
+        }
+    }
     func unread(for channelId: UUID) -> Int { unreadByChannel[channelId] ?? 0 }
 
     /// Tổng chưa đọc cho badge tab Chat. Kênh đã tắt thông báo KHÔNG tính — user đã nói

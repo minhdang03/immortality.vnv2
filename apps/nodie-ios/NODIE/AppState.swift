@@ -30,6 +30,8 @@ enum FriendsRoute: Hashable {
 enum ChatRoute: Hashable {
     case chat(UUID)
     case member(UUID)
+    /// Thông tin nhóm/kênh — danh sách thành viên, mỗi hàng mở tiếp `.member`.
+    case groupInfo(UUID)
 }
 
 @Observable

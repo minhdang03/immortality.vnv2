@@ -21,6 +21,10 @@ final class PushManager: NSObject {
     /// và cú bấm rơi mất. Biến này nằm đó đợi tới khi có người đọc.
     var pendingChannelId: UUID?
 
+    /// Kênh chat đang HIỂN THỊ trên màn (tab Trò chuyện + đứng trong khung chat) —
+    /// RootTabView cung cấp. `willPresent` dùng để không réo hội thoại đang mở.
+    var visibleChannel: (@MainActor () -> UUID?)?
+
     private let client = SupabaseClientProvider.shared
     /// Token Apple cấp cho lần chạy này; giữ lại để lúc user đăng nhập xong còn ghi được.
     private var pendingToken: String?
@@ -123,13 +127,18 @@ final class PushManager: NSObject {
 }
 
 extension PushManager: UNUserNotificationCenterDelegate {
-    /// Đang mở app vẫn hiện banner — trừ tin của chính hội thoại đang xem thì không cần,
-    /// nhưng lọc đó cần biết màn hiện tại nên để phase sau khi có điều hướng từ push.
+    /// Đang mở app vẫn hiện banner — TRỪ tin của chính hội thoại đang xem: tin đó Realtime
+    /// đã vẽ lên màn rồi, banner chồng lên là réo người ta hai lần (chuẩn WhatsApp/Zalo).
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        [.banner, .sound, .badge]
+        if let raw = notification.request.content.userInfo["channel_id"] as? String,
+           let id = UUID(uuidString: raw),
+           await MainActor.run(body: { [weak self] in self?.visibleChannel?() }) == id {
+            return []
+        }
+        return [.banner, .sound, .badge]
     }
 
     /// User bấm vào push → ghi lại kênh cần mở. `RootTabView` lo phần điều hướng.
