@@ -146,7 +146,7 @@ Services: **Firestore** (with IndexedDB persistent cache), **Auth** (Email/Passw
 
 SPA routing tự code bằng History API trong `src/App.jsx`. Page registry: `src/config/pages.js` (single source of truth — thêm page mới chỉ cần thêm 1 entry).
 
-Pages hiện có: `home`, `articles`, `article/:slug`, `stories`, `khaitri`, `topic/:id`, `about`, `practice`, `contact`, `ungho`, `search`, `admin`.
+Pages hiện có: `home`, `articles`, `article/:slug`, `stories`, `khaitri`, `topic/:id`, `about`, `practice`, `contact`, `ungho`, `search`, `admin`, `privacy`, `terms` (2 trang pháp lý cho App Store — thêm 18/07, Terms phải khớp từng chữ `TermsOfUseView.swift` trong NODIE).
 
 ### OG meta (Cloud Function `ogRenderer`)
 
@@ -240,9 +240,9 @@ App có SW precache. Khi đổi assets có thể cần bump cache name. Conventi
 
 ### Layer 1 — UX
 - **Web:** Vite + React SPA (PWA v3, manifest, FCM web push), lazy-loaded pages
-- **Mobile:** Expo RN Router, WebView for articles/teachings (content reuse), native tabs
-- **Shared:** UI tokens (colors, typography, spacing), Firebase config, utils
-- **No custom Swift/Kotlin** — WebView eliminates platform-specific rich-text rendering
+- **Mobile:** SwiftUI **native** (NODIE, `apps/nodie-ios`) — KHÔNG WebView, KHÔNG RN.
+  (Ba dòng cũ ở đây tả Expo RN + WebView + `packages/` shared — stack đã GỠ HẲN 17/07/2026,
+  xem mục "Nền tảng" đầu file. Đừng thi công theo tài liệu tả stack đó.)
 
 ### Layer 2 — Content & Services
 **Free tier (all platforms):**
