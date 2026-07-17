@@ -15,6 +15,7 @@ struct LoginView: View {
     @State private var password = ""
     @State private var displayName = ""
     @State private var showTerms = false
+    @State private var showForgotPassword = false
     @FocusState private var focus: Field?
 
     private enum Field { case name, email, password }
@@ -85,6 +86,20 @@ struct LoginView: View {
                 .textContentType(isSignUp ? .newPassword : .password)
                 .padding(.top, NodieSpacing.md)
 
+            // Chỉ ở nhánh đăng nhập: đang tạo tài khoản mới thì chưa có mật khẩu để quên.
+            if !isSignUp {
+                Button { showForgotPassword = true } label: {
+                    Text("Quên mật khẩu?")
+                        .font(NodieTypography.metaSm)
+                        .foregroundStyle(NodieColors.inkSoft)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("Quên mật khẩu?")
+                .padding(.top, NodieSpacing.sm)
+                .padding(.horizontal, NodieSpacing.lg)
+            }
+
             if let error = auth.errorMessage {
                 Text(error)
                     .font(NodieTypography.meta)
@@ -142,6 +157,7 @@ struct LoginView: View {
             .buttonStyle(.plain)
             .padding(.top, NodieSpacing.sm)
             .sheet(isPresented: $showTerms) { TermsOfUseView() }
+            .sheet(isPresented: $showForgotPassword) { ForgotPasswordSheet(auth: auth) }
 
             Spacer(minLength: 0)
         }
@@ -161,13 +177,8 @@ struct LoginView: View {
                 TextField(placeholder, text: text)
             }
         }
-        .font(NodieTypography.body)
-        .foregroundStyle(NodieColors.ink)
         .focused($focus, equals: focused)
-        .padding(.horizontal, NodieSpacing.lg)
-        .padding(.vertical, 14)
-        .background(Capsule().fill(NodieColors.surface))
-        .overlay(Capsule().stroke(focus == focused ? NodieColors.accent : NodieColors.chipBorder, lineWidth: 1))
+        .nodieAuthField(isFocused: focus == focused)
         .accessibilityIdentifier(id)
     }
 }

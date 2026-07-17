@@ -31,7 +31,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.battudao.nodie
         TARGETED_DEVICE_FAMILY: "1"
         # Light-only: bảng màu kem/mực là bản sắc thương hiệu, dark mode sẽ phá tương phản badge.
-        INFOPLIST_KEY_UIUserInterfaceStyle: Light
         DEVELOPMENT_TEAM: X6L54S9V87
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_ENTITLEMENTS: NODIE/NODIE.entitlements
@@ -70,7 +69,21 @@ targets:
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # Bảng màu NodieColors là hex cứng tông kem — không có biến thể tối. Không ghim ở đây
+        # thì máy để dark mode sẽ ra app kem + alert/menu/sheet/bàn phím đen, lệch tông.
+        #
+        # PHẢI nằm trong info.properties, KHÔNG phải settings `INFOPLIST_KEY_UIUserInterfaceStyle`:
+        # key đó chỉ được đọc khi GENERATE_INFOPLIST_FILE=YES, mà target này khai
+        # INFOPLIST_FILE=NODIE/Info.plist → đặt trên settings là config chết, im lặng không chạy.
+        UIUserInterfaceStyle: Light
         ITSAppUsesNonExemptEncryption: false
+        # Supabase gọi lại app qua scheme này sau khi user bấm link trong mail (đặt lại
+        # mật khẩu / xác nhận đăng ký). Custom scheme chứ không Universal Links: khỏi phải
+        # dựng apple-app-site-association trên battudao.com — đổi lại iOS chen một nhịp
+        # hỏi "Mở trong NODIE?".
+        CFBundleURLTypes:
+          - CFBundleURLName: com.battudao.nodie
+            CFBundleURLSchemes: [nodie]
         # Giá trị đến từ Config/Secrets.xcconfig (gitignored, sinh bằng scripts/generate-secrets-xcconfig.sh).
         # Anon key không phải secret về mặt kỹ thuật (RLS mới bảo vệ dữ liệu, và key này đã
         # public trong bundle web) — nhưng vẫn giữ ngoài git để không tạo tiền lệ xấu.

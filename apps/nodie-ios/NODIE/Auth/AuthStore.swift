@@ -22,6 +22,22 @@ final class AuthStore {
     private(set) var errorMessage: String?
     private(set) var isBusy = false
 
+    /// Đang ở giữa luồng đặt lại mật khẩu (mở từ link trong mail).
+    ///
+    /// Vì sao là cờ tự quản chứ không nghe `.passwordRecovery`: SDK CHỈ phát event đó trong
+    /// nhánh `handleImplicitGrantFlow`, mà app chạy PKCE (`Defaults.defaultFlowType = .pkce`)
+    /// → link recovery đi đường `exchangeCodeForSession`, chỉ phát `.signedIn`.
+    /// Nghe event = chờ một thứ không bao giờ tới.
+    private(set) var isRecoveringPassword = false
+
+    /// Đã gửi xong mail đặt lại — để sheet đổi sang trạng thái "kiểm tra hộp thư".
+    private(set) var didSendResetEmail = false
+
+    /// Supabase phải whitelist đúng 2 URL này ở Dashboard → Auth → URL Configuration,
+    /// nếu không nó từ chối `redirect_to` và mail không có đường về app.
+    private static let resetURL = URL(string: "nodie://password-reset")!
+    private static let confirmURL = URL(string: "nodie://email-confirmed")!
+
     private let client = SupabaseClientProvider.shared
     private var authTask: Task<Void, Never>?
 
@@ -127,7 +143,8 @@ final class AuthStore {
             let response = try await self.client.auth.signUp(
                 email: email,
                 password: password,
-                data: ["display_name": .string(displayName.trimmingCharacters(in: .whitespacesAndNewlines))]
+                data: ["display_name": .string(displayName.trimmingCharacters(in: .whitespacesAndNewlines))],
+                redirectTo: Self.confirmURL
             )
             // Supabase bật xác nhận email → chưa có session. Phải báo user đi check mail,
             // KHÔNG được để họ tưởng đã vào được.
@@ -141,6 +158,59 @@ final class AuthStore {
         await run {
             try await self.client.auth.signOut()
         }
+    }
+
+    // MARK: - Đặt lại mật khẩu
+
+    /// Gửi mail chứa link `nodie://password-reset`.
+    ///
+    /// Supabase cố tình KHÔNG báo email có tồn tại hay không (chống dò tài khoản), nên
+    /// gọi xong là coi như đã gửi — không có gì để kiểm chứng phía client.
+    func sendPasswordReset(email: String) async {
+        await run {
+            try await self.client.auth.resetPasswordForEmail(
+                email.trimmingCharacters(in: .whitespacesAndNewlines),
+                redirectTo: Self.resetURL
+            )
+            self.didSendResetEmail = true
+        }
+    }
+
+    /// iOS mở app bằng link trong mail.
+    func handleOpenURL(_ url: URL) async {
+        // Đặt cờ TRƯỚC khi đổi code: exchange xong là `authStateChanges` bắn `.signedIn`
+        // ngay, phase nhảy sang .signedIn và cây view đổi — set sau là trễ mất một nhịp
+        // render, user thấy nháy vào thẳng app rồi mới hiện màn đặt mật khẩu.
+        let isReset = url.host == "password-reset" || url.path == "password-reset"
+        if isReset { isRecoveringPassword = true }
+
+        do {
+            _ = try await client.auth.session(from: url)
+        } catch {
+            // Ca thật hay gặp: xin reset ở máy A, mở link ở máy B → máy B không có
+            // code_verifier của PKCE → exchange fail. Không vá được, chỉ nói cho rõ.
+            errorMessage = Self.viMessage(for: error)
+            isRecoveringPassword = false
+        }
+    }
+
+    func updatePassword(_ newPassword: String) async {
+        await run {
+            _ = try await self.client.auth.update(user: UserAttributes(password: newPassword))
+            self.isRecoveringPassword = false
+        }
+    }
+
+    /// Huỷ giữa chừng. KHÔNG signOut: link recovery đã tạo session hợp lệ rồi — để họ ở
+    /// trong app như vừa đăng nhập, đúng mô hình của Supabase. Mật khẩu cũ vẫn dùng được.
+    func cancelPasswordRecovery() {
+        isRecoveringPassword = false
+        errorMessage = nil
+    }
+
+    func resetSendState() {
+        didSendResetEmail = false
+        errorMessage = nil
     }
 
     /// Xoá tài khoản (App Store 5.1.1(v)) — RPC `delete_account` (migration 0021) chạy
@@ -224,6 +294,12 @@ final class AuthStore {
             if raw.contains("already registered") || raw.contains("already been registered") { return String(localized: "Email này đã có tài khoản.") }
             if raw.contains("password") && raw.contains("6") { return String(localized: "Mật khẩu phải từ 6 ký tự trở lên.") }
             if raw.contains("rate limit") || raw.contains("too many") { return String(localized: "Thử lại sau ít phút giúp mình.") }
+            // Link trong mail dùng một lần và gắn với máy đã bấm "Quên mật khẩu" (PKCE giữ
+            // code_verifier dưới máy đó). Bấm lại lần hai, hoặc mở ở máy khác, đều rơi vào đây.
+            if raw.contains("expired") || raw.contains("invalid") || raw.contains("code verifier")
+                || raw.contains("pkce") {
+                return String(localized: "Link đã hết hạn hoặc mở trên máy khác. Gửi lại giúp mình nhé.")
+            }
             return authError.message
         }
         if (error as NSError).domain == NSURLErrorDomain {

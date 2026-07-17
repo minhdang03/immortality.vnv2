@@ -54,6 +54,38 @@ final class AuthUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Bạn bè"].exists, "Chưa đăng nhập thì không được thấy tab bar")
     }
 
+    /// Quên mật khẩu: có lối vào, sheet mở được, và nút gửi tắt khi email chưa hợp lệ.
+    ///
+    /// CỐ Ý không test đầu-cuối (bấm link trong mail → đặt mật khẩu mới): cần hộp thư thật
+    /// nên sẽ thành test rung rinh. Phần đó nghiệm thu bằng tay — xem phase-01 §Test.
+    func testForgotPasswordSheetOpensAndGuardsEmptyEmail() {
+        launchSignedOut()
+
+        let forgot = app.buttons["Quên mật khẩu?"]
+        XCTAssertTrue(forgot.waitForExistence(timeout: 10), "Màn Login phải có lối đặt lại mật khẩu")
+        forgot.tap()
+
+        let send = app.buttons["Gửi link đặt lại"]
+        XCTAssertTrue(send.waitForExistence(timeout: 5), "Phải mở được sheet đặt lại mật khẩu")
+        XCTAssertFalse(send.isEnabled, "Email rỗng thì không cho gửi")
+
+        app.textFields["Email đặt lại"].tap()
+        app.typeText("khong-phai-email")
+        XCTAssertFalse(send.isEnabled, "Chuỗi không có @ thì vẫn không cho gửi")
+    }
+
+    /// Đang ở nhánh Đăng ký thì không có mật khẩu nào để quên → không được hiện nút.
+    func testForgotPasswordHiddenOnSignUp() {
+        launchSignedOut()
+
+        let toSignUp = app.buttons["Chưa có tài khoản? Đăng ký"]
+        XCTAssertTrue(toSignUp.waitForExistence(timeout: 10))
+        toSignUp.tap()
+
+        XCTAssertFalse(app.buttons["Quên mật khẩu?"].exists,
+                       "Nhánh Đăng ký không được có 'Quên mật khẩu?'")
+    }
+
     /// Sai mật khẩu → báo lỗi tiếng Việt, không crash, không vào app.
     func testWrongPasswordShowsVietnameseError() throws {
         let account = try credentials()

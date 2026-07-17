@@ -56,6 +56,27 @@ final class PushManager: NSObject {
         if let token = pendingToken { await saveToken(token) }
     }
 
+    /// Token này thuộc APNs sandbox hay production.
+    ///
+    /// Đọc từ `aps-environment` trong embedded.mobileprovision chứ KHÔNG đoán bằng `#if DEBUG`:
+    /// môi trường do PROFILE lúc ký quyết định, không phải do cấu hình biên dịch. Build Release
+    /// ký bằng profile development là chuyện có thật (và ngược lại) — lúc đó `#if DEBUG` nói dối.
+    ///
+    /// Không có file (chạy trên Simulator) → sandbox: Simulator không bao giờ ký bằng profile
+    /// phân phối.
+    private var apnsEnvironment: String {
+        guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+              let raw = try? Data(contentsOf: url),
+              // File là CMS/DER bọc ngoài một plist; không parse cả cấu trúc làm gì —
+              // chỉ cần đọc chữ. Trong đó chuỗi "production" chỉ xuất hiện ở aps-environment.
+              let text = String(data: raw, encoding: .isoLatin1)
+        else { return "sandbox" }
+        return text.contains("<key>aps-environment</key>")
+            && text.range(of: "aps-environment</key>[^<]*<string>production",
+                          options: .regularExpression) != nil
+            ? "production" : "sandbox"
+    }
+
     /// `token` là khoá chính (0017): cùng một máy đổi tay người dùng thì hàng cũ bị ghi đè,
     /// không để lại token trỏ về người đã đăng xuất — nếu không, người mới sẽ nhận push
     /// của người cũ trên chính máy đó.
@@ -65,14 +86,17 @@ final class PushManager: NSObject {
             let token: String
             let userId: UUID
             let platform: String
+            let apnsEnv: String
             enum CodingKeys: String, CodingKey {
                 case token, platform
                 case userId = "user_id"
+                case apnsEnv = "apns_env"
             }
         }
         do {
             try await client.from("device_tokens")
-                .upsert(DeviceToken(token: token, userId: uid, platform: "ios"),
+                .upsert(DeviceToken(token: token, userId: uid, platform: "ios",
+                                    apnsEnv: apnsEnvironment),
                         onConflict: "token")
                 .execute()
         } catch {

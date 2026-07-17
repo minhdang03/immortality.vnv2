@@ -28,14 +28,14 @@ Session kia **commit `ac3a9db` lúc ~13:05** (giải phóng gần hết danh sá
 
 ## Phases
 
-| # | File | Nội dung | File sở hữu | Rủi ro đụng | Status |
+| # | File | Nội dung | File sở hữu | Rủi ro đụng (ảnh chụp 13:1x) | Status |
 |---|---|---|---|---|---|
-| 01 | [phase-01-deep-link-password-reset.md](phase-01-deep-link-password-reset.md) | `nodie://` + Quên mật khẩu (#16 + #14) | project.yml · NodieApp.swift · Auth/* · +PasswordRecoveryViews.swift | THẤP | chưa |
-| 02 | [phase-02-own-content-edit-delete.md](phase-02-own-content-edit-delete.md) | Sửa/xoá câu hỏi·trả lời·reply của mình (#15) | +QAStoreOwnContent.swift · ModerationMenu · AnswerCardView · AnswerReplyRow · QuestionDetailView · MyContentViews · +migration 0027 | THẤP | chưa |
-| 03 | [phase-03-tab-restore-notifications-row.md](phase-03-tab-restore-notifications-row.md) | Khôi phục tab (#20) + hàng Thông báo thật (#17) | RootTabView.swift · ProfileSections.swift | TRUNG (AppState là của họ — KHÔNG đụng) | chưa |
-| 04 | [phase-04-push-optout-blocked.md](phase-04-push-optout-blocked.md) | Tắt push thật (xoá `device_tokens`) | ProfileSections · PushManager · project.yml | — | **CHẶN** — chờ Đăng làm Apple Developer portal |
+| 01 | [phase-01-deep-link-password-reset.md](phase-01-deep-link-password-reset.md) | `nodie://` + Quên mật khẩu (#16 + #14) | Auth/* · +PasswordRecoveryViews.swift · NodieApp.swift · **project.yml** | **TRUNG** — `project.yml` họ vừa đụng lại; `CFBundleURLTypes` là bắt buộc, không né được → edit đúng-chuỗi, hoặc đợi họ commit | chưa |
+| 02 | [phase-02-own-content-edit-delete.md](phase-02-own-content-edit-delete.md) | Sửa/xoá câu hỏi·trả lời·reply của mình (#15) | +QAStoreOwnContent.swift · QAStore · ModerationMenu · AnswerCardView · AnswerReplyRow · QuestionDetailView · MyContentViews · +migration 0027 | **CAO** — `QAModels.swift` + `QuestionListView.swift` đang trong tay họ, mà phase này phải thêm `editedAt` vào QAModels → **đợi họ commit rồi mới mở** | chưa |
+| 03 | [phase-03-tab-restore-notifications-row.md](phase-03-tab-restore-notifications-row.md) | Khôi phục tab (#20) + hàng Thông báo thật (#17) | RootTabView.swift · ProfileSections.swift | **THẤP** — 2 file này họ chưa từng đụng; `AppState` của họ thì KHÔNG sửa (chỉ đọc/ghi `state.tab`) | chưa |
+| 04 | [phase-04-push-optout-blocked.md](phase-04-push-optout-blocked.md) | Tắt push thật (xoá `device_tokens`) | ProfileSections · PushManager · project.yml | — | **CHẶN** — chờ Đăng làm Apple Developer portal, không phải vì file |
 
-Phase 01→02→03 độc lập nhau, chạy tuần tự cho gọn. 04 chặn cứng, không phải vì file.
+**Thứ tự nên chạy: 03 → 01 → 02** (ngược số hiệu). Số hiệu theo mức độ quan trọng (#14 P0), nhưng 03 là phase duy nhất **hoàn toàn không đụng file họ đang giữ** ⇒ làm ngay được. 01 cần `project.yml`, 02 cần `QAModels.swift` — cả hai đang bẩn. Nếu họ commit trước khi bắt đầu thì cứ 01 → 02 → 03 như số. Ba phase độc lập nhau, đổi thứ tự không gãy gì.
 
 ## Sự thật đã đo (ngược với đề bài — đọc trước khi code)
 

@@ -11,9 +11,14 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const APNS_HOST = Deno.env.get('APNS_ENVIRONMENT') === 'sandbox'
-  ? 'https://api.sandbox.push.apple.com'
-  : 'https://api.push.apple.com'
+/// Host chọn theo TỪNG token (`device_tokens.apns_env`, migration 0027), không phải một
+/// biến chung: máy dev và máy TestFlight sống song song, mà token của môi trường này gõ cửa
+/// môi trường kia thì APNs trả `BadDeviceToken` cho một token hoàn toàn hợp lệ — trông y hệt
+/// token hỏng nên cực khó lần ra.
+const APNS_HOST: Record<string, string> = {
+  sandbox: 'https://api.sandbox.push.apple.com',
+  production: 'https://api.push.apple.com',
+}
 
 const TEAM_ID = Deno.env.get('APNS_TEAM_ID')!
 const KEY_ID = Deno.env.get('APNS_KEY_ID')!
@@ -103,7 +108,7 @@ Deno.serve(async (req) => {
   if (targets.length === 0) return new Response('tất cả đã chặn người gửi', { status: 200 })
 
   const [{ data: tokens }, { data: sender }, { data: channel }] = await Promise.all([
-    db.from('device_tokens').select('token, user_id').in('user_id', targets),
+    db.from('device_tokens').select('token, user_id, apns_env').in('user_id', targets),
     db.from('profiles').select('display_name').eq('id', msg.user_id).single(),
     db.from('channels').select('title, kind').eq('id', msg.channel_id).single(),
   ])
@@ -123,7 +128,8 @@ Deno.serve(async (req) => {
   const jwt = await apnsJWT()
   const results = await Promise.all(
     tokens.map(async (t) => {
-      const res = await fetch(`${APNS_HOST}/3/device/${t.token}`, {
+      const host = APNS_HOST[t.apns_env] ?? APNS_HOST.production
+      const res = await fetch(`${host}/3/device/${t.token}`, {
         method: 'POST',
         headers: {
           authorization: `bearer ${jwt}`,
@@ -144,7 +150,7 @@ Deno.serve(async (req) => {
       if (res.status === 410) {
         await db.from('device_tokens').delete().eq('token', t.token)
       }
-      return { status: res.status, reason: res.ok ? null : (await res.json()).reason }
+      return { status: res.status, env: t.apns_env, reason: res.ok ? null : (await res.json()).reason }
     }),
   )
 

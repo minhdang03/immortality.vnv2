@@ -52,6 +52,20 @@ struct RootView: View {
             }
         }
         .animation(.easeOut(duration: 0.2), value: auth.phase)
+        // Bắt link ở ĐÂY chứ không ở LoginView: lúc iOS mở app từ link trong mail mà app
+        // đang tắt hẳn, phase còn là .restoring → LoginView chưa có trong cây → handler
+        // gắn ở đó không kịp đăng ký và URL rơi mất. RootView là thứ duy nhất luôn sống.
+        .onOpenURL { url in
+            Task { await auth.handleOpenURL(url) }
+        }
+        // Cover cũng ở RootView: đổi code xong phase nhảy .signedIn ngay (PKCE chỉ phát
+        // event đó) → LoginView bị gỡ, cover đặt ở đó sẽ biến mất cùng chủ.
+        .fullScreenCover(isPresented: Binding(
+            get: { auth.isRecoveringPassword },
+            set: { if !$0 { auth.cancelPasswordRecovery() } }
+        )) {
+            NewPasswordSheet(auth: auth)
+        }
         // Xin quyền push SAU khi đã đăng nhập, không phải lúc mở app: device_tokens gắn với
         // user_id, và hộp thoại quyền của iOS chỉ hiện MỘT lần trong đời cài đặt — tiêu nó
         // lúc user còn đang ở màn Login là mất luôn cơ hội.

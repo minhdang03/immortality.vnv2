@@ -19,15 +19,20 @@
 -- (user/mod/admin). Nới `for select using (auth.uid() is not null)` là phơi luôn
 -- ai-là-admin cho mọi người đã đăng nhập. Còn giấu `role` bằng column grant thì
 -- gãy AuthStore — nó đọc role của chính mình (UserProfile.role).
---   → Bảng giữ nguyên self-only (AuthStore không đổi một dòng), view chở đúng ba
+--   → Bảng giữ nguyên self-only (AuthStore không đổi một dòng), view chở đúng những
 --     cột công khai. Thêm cột nhạy cảm vào `profiles` sau này KHÔNG tự lọt ra.
 --
 -- security_invoker = false là MẶC ĐỊNH của PG15+, viết ra cho rõ ý: view chạy
 -- bằng quyền chủ sở hữu → bỏ qua RLS của `profiles`. Đó chính là thứ ta cần
 -- (danh bạ công khai), và grant bên dưới mới là hàng rào thật.
+--
+-- `created_at` có mặt vì hồ sơ hiện "N ngày tham gia" (ProfileStatsGrid.fetchDaysJoined).
+-- Thiếu nó thì thống kê hồ sơ NGƯỜI KHÁC hỏng còn hồ sơ mình vẫn chạy (self-read qua
+-- bảng) — đúng kiểu lỗi chỉ lộ khi có người thứ hai, y hệt bug "Ẩn danh" file này đang vá.
+-- Ngày tạo tài khoản không phải bí mật: nó vốn đã hiện công khai trên hồ sơ.
 create or replace view public.public_profiles
   with (security_invoker = false) as
-  select id, display_name, bio from public.profiles;
+  select id, display_name, bio, created_at from public.profiles;
 
 -- anon KHÔNG đọc được: 0019 đã chốt "authed only" cho toàn bộ NODIE, danh bạ
 -- người dùng không được lỏng hơn nội dung họ đăng.
