@@ -1,7 +1,7 @@
 ---
 title: "QA draft safety (#21,#22,#23,#27,#28,#29,#30,#31) + Hồ sơ thành viên thật (#25)"
 description: "Vá 8 lỗi UX Hỏi đáp client-only, rồi nối MemberProfileView vào Supabase thật + bảng follows."
-status: in-progress
+status: completed
 priority: P2
 effort: ~7h
 branch: claude/immortality-mobile-hybrid
@@ -11,7 +11,14 @@ created: 2026-07-17
 
 # Plan: 9 lỗi UX — draft safety Hỏi đáp + Hồ sơ thành viên thật
 
-**Status:** Nhóm A (01–04) **XONG 17/07 14:30** — build+test xanh. Nhóm B (05–06) chờ Đăng apply prod. **Chốt phạm vi (Đăng):** #21·#22·#23·#25·#27·#28·#29·#30·#31.
+**Status: XONG HẲN (đóng 17/07 21:0x).** Nhóm A (01–04) xong 14:30 — build+test xanh. Nhóm B (05–06) cũng xong, **không phải do plan này làm**:
+
+- **05 xong** — `0027` + `0028` ĐÃ apply prod. Đo bằng psql thật lúc đóng plan (không tin số thứ tự file):
+  `to_regclass('public.public_profiles')`, `public.follows`, `public.message_reactions` đều trả non-null.
+- **06 xong** — `MemberProfileView` đã chạy `public_profiles` thật + `FollowStore`/`ProfileStatsStore`
+  (session khác giao qua plan `260717-1338` và `260717-1404` phase 04, đúng như phase 06 dặn: *dùng store họ viết, KHÔNG tự viết MemberStore*).
+
+**Chốt phạm vi (Đăng):** #21·#22·#23·#25·#27·#28·#29·#30·#31.
 
 ## ĐỀ BÀI ĐÃ LỆCH THỰC TẾ — đọc trước khi code (đo 13:38 → 13:45)
 
@@ -30,8 +37,8 @@ created: 2026-07-17
 | 02 | [#23+#27 Huỷ hỏi lại + nói lý do disabled](phase-02-ask-question-guards.md) | AskQuestionView | THẤP — không ai đụng | ✅ **xong** — build+test xanh (verify cô lập) |
 | 03 | [#28+#29 refreshable + dòng mồ côi](phase-03-my-content-refresh-orphan.md) | MyContentViews | **TRUNG** — 260717-1306 phase-02 cũng nhận | ✅ **xong** — build+test xanh (verify cô lập) |
 | 04 | [#30+#31 giờ tự trôi + copy thân câu hỏi](phase-04-live-time-and-copy.md) | +NodieRelativeTimeText.swift · QuestionDetailView · AnswerCardView · AnswerReplyRow · MyContentViews | **TRUNG** — chồng file với 01+03 ⇒ chạy SAU cả hai | ✅ **xong** — build+test xanh (verify cô lập) |
-| 05 | [Đăng apply 0027 + 0028 lên prod (KHÔNG viết SQL)](phase-05-apply-migrations-prod.md) | — (không file nào) | — **việc của Đăng, không phải code** | ⛔ **chờ Đăng** |
-| 06 | [#25 Hồ sơ thành viên thật + follows](phase-06-member-profile-real.md) | MemberProfileView · FriendsView · RootTabView (**dùng `FollowStore`+`ProfileStatsStore` session kia đã viết — KHÔNG tự viết MemberStore**) | **CAO** — `RootTabView` là của 260717-1306 phase-03; **chặn bởi 0027+0028 apply prod** | ⛔ chặn bởi 05 |
+| 05 | [Đăng apply 0027 + 0028 lên prod (KHÔNG viết SQL)](phase-05-apply-migrations-prod.md) | — (không file nào) | — **việc của Đăng, không phải code** | ✅ **xong** — verify prod bằng psql, cả 2 migration đã có mặt |
+| 06 | [#25 Hồ sơ thành viên thật + follows](phase-06-member-profile-real.md) | MemberProfileView · FriendsView · RootTabView (**dùng `FollowStore`+`ProfileStatsStore` session kia đã viết — KHÔNG tự viết MemberStore**) | **CAO** — `RootTabView` là của 260717-1306 phase-03; **chặn bởi 0027+0028 apply prod** | ✅ **xong** — giao bởi plan `260717-1338` + `260717-1404` phase 04, không phải plan này |
 
 ## Nhóm A XONG (17/07 14:30) — kết quả đo được
 

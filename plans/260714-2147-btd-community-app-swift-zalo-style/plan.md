@@ -1,6 +1,16 @@
 # NODIE — BTD Community App, Native Swift, Zalo-style
 
-**Status:** in-progress — phase 00/01/02/02b/03/03a XONG (260716). Schema đã lên prod, Hỏi đáp chạy dữ liệu thật, 27/27 UI test pass. **Tiếp theo: phase 04 (Hội thoại)** — mảnh cuối của v1 còn chạy MockData.
+**Status:** in-progress — phase 00/01/02/02b/03/03a XONG (260716). Schema đã lên prod, Hỏi đáp chạy dữ liệu thật, 27/27 UI test pass.
+
+> **Plan mẹ — không còn việc riêng để làm (đo 17/07 21:0x).** Phase 04 (Hội thoại) **đã xong**, nhưng do
+> plan `260717-1404` phase 02 giao chứ không phải plan này. Mọi việc còn lại của NODIE đã tách sang các
+> plan con, đừng thi công từ file này:
+> - `apps/nodie-ios/plans/260717-1404-ship-1.0-blockers` — nợ 11 UITests
+> - `apps/nodie-ios/plans/260717-1933-production-readiness-superapp-standard` — media/voice/a11y/Friends/trust
+> - `apps/nodie-ios/plans/260717-2015-pre-appstore-submission` — 14 gap ngoài UX
+>
+> Phase 06 (Bảng tin) + 07 (Hành trình) vẫn nằm ngoài v1 — hai tab đã rút khỏi tab bar, còn chạy MockData.
+> **Đóng plan này khi 1404 hết nợ test.**
 **Quyết định gốc (Đăng):** app như Zalo cho cộng đồng riêng; làm CẢ 3: chat cộng đồng + DM 1-1 + feed chia sẻ trải nghiệm. UI viết lại từ đầu bằng Swift/SwiftUI (không dùng Expo RN hiện có).
 
 ## Quyết định chốt 2026-07-14 (Đăng trả lời 5 câu treo)
@@ -98,7 +108,7 @@ RLS: member đọc kênh mình tham gia; public channel ai cũng đọc; sửa/x
 | 02b | ✅ **XONG 260715** — [Xử lý review ngoài](phase-02b-external-review-remediation.md): gỡ credential khỏi test (→ `.env`/xcconfig/scheme, skip êm khi thiếu), Dynamic Type, draft riêng từng chat + tự cuộn, touch target 44pt + VoiceOver, ghi xoá-tài-khoản vào phase 05 | review ngoài: 4/6 P0 đúng, #6 reviewer đọc nhầm. 20/20 UI test pass; ảnh cỡ mặc định lệch 0 pixel. Còn mở: test auth flaky sẵn có (xem Unresolved #3 của phase) |
 | 03a | ✅ **XONG 260715** — [Thao tác vuốt iOS](phase-03a-ios-swipe-gestures.md): NavigationStack refactor, vuốt-cạnh-back, swipe action dòng hội thoại, pull-to-refresh | 8/8 UI test pass |
 | 03 | ✅ **XONG 260716** — Wire **Hỏi đáp** chạy dữ liệu thật: list + detail + vote/lit/Hay nhất + reply lồng + tên tác giả nhúng. Kiểm chứng bằng `QAWireUITests` (3/3). | phải vá `0020` mới sống |
-| 04 | 🔜 **TIẾP THEO** — [Wire **Hội thoại**](phase-04-conversations-wire.md): `ConversationStore` (khuôn QAStore) thay MockData (AppState 82/105/126/168), list + chat keyset + Realtime + unread (`last_read_at`) + `is_broadcast` RLS + block/report. **01 đã mở khoá.** | UI xong; phần nặng nhất. FK messages→profiles đã vá sẵn ở 0020 |
+| 04 | ✅ **XONG — giao bởi plan khác, không phải plan này.** [Wire **Hội thoại**](phase-04-conversations-wire.md) đã thành `260717-1404` phase 02; `ConversationStore` + `ConversationListView`/`ChatDetailView` đang chạy Supabase thật (đo 17/07 21:0x: không còn MockData trong luồng chat). Media ảnh/tệp thêm sau bởi `260717-1933` phase 01. | **Nợ còn lại KHÔNG thuộc plan này:** 11 UITests đỏ vì assert trên MockData đã gỡ → theo dõi ở `260717-1933` phase 04 |
 | 04b | ⬜ [APNs push](phase-04b-apns-push.md): entitlement `aps-environment`, đăng ký `device_tokens`, Edge Function ký JWT ES256 (`.p8`) → APNs HTTP/2, webhook trên messages INSERT. Không push tin của mình, tôn trọng block+mute. **Chặn bởi 04.** Cần Đăng cấp `.p8`/Key ID. | server = Supabase Edge Function |
 | 05 | 🏗️ **ĐANG LÀM (Đăng)** — [App Store readiness](phase-05-app-store-readiness.md): **xoá tài khoản XONG + kiểm chứng thật** — không dùng Edge Function mà RPC `delete_account()` SECURITY DEFINER (`0021`, đã áp): user tự xoá → auth.users mất, profiles cascade, nội dung ở lại `author_id=NULL`, anon bị 42501. Moderation (report/block/BlockedUsersView) + Điều khoản + localize đang dựng. Còn: quên mật khẩu, privacy labels, TestFlight. | ⚠️ khuôn Reddit/HN — ĐẢO quyết định 'hard-delete + grace 30 ngày' trong phase-05 |
 | — | *— ranh giới v1 —* | |
