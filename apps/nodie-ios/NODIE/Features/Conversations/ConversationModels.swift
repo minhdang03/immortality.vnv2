@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 /// DTO khớp bảng `channels` / `channel_members` / `messages` (migration 0017).
 ///
@@ -19,6 +19,12 @@ struct ChannelRow: Codable, Identifiable, Hashable {
     let isBroadcast: Bool
     let lastMessageAt: Date?
 
+    /// Mặt mũi kênh (0025). Cả ba nil với DM — avatar DM suy từ tên/uid người kia, không ai
+    /// đi chọn emoji cho từng cuộc 1-1.
+    let emoji: String?
+    let avatarHex: String?
+    let badgeHex: String?
+
     /// Hàng `channel_members` của mình — nil nghĩa là CHƯA tham gia (kênh public đọc được
     /// nhưng chưa join). Quyết định được cả unread lẫn quyền đăng.
     let membership: [Membership]
@@ -36,9 +42,11 @@ struct ChannelRow: Codable, Identifiable, Hashable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, slug, title, kind
+        case id, slug, title, kind, emoji
         case isBroadcast = "is_broadcast"
         case lastMessageAt = "last_message_at"
+        case avatarHex = "avatar_hex"
+        case badgeHex = "badge_hex"
         case membership = "channel_members"
     }
 
@@ -66,6 +74,56 @@ struct ChannelRow: Codable, Identifiable, Hashable {
 
     var displayTitle: String { title ?? slug ?? String(localized: "Hội thoại") }
     var relativeTime: String { lastMessageAt.map(RelativeTime.format) ?? "" }
+
+    // MARK: - Trang trí (0025 chở dữ liệu, chỗ này chỉ dịch sang kiểu của SwiftUI)
+
+    /// DM bo tròn hoàn toàn, kênh/nhóm bo 14 — tín hiệu thị giác phân biệt NGƯỜI với KHÔNG GIAN.
+    var isRound: Bool { kind == "dm" }
+
+    /// Chữ trong avatar. Kênh/nhóm dùng emoji của người tạo; DM không có emoji nên lấy chữ
+    /// cái đầu của tên, giống khuôn avatar mặc định của Slack/Google.
+    var avatarGlyph: String {
+        if let emoji, !emoji.isEmpty { return emoji }
+        return displayTitle.first.map { String($0).uppercased() } ?? "?"
+    }
+
+    /// Nền avatar. DM không có `avatar_hex` → suy từ `id` để mỗi người một màu ổn định
+    /// (cùng người, cùng màu, mọi lần mở app).
+    var avatarBg: Color {
+        Color(hexString: avatarHex) ?? Self.derivedPalette[abs(id.hashValue) % Self.derivedPalette.count]
+    }
+
+    /// Nền badge KÊNH/NHÓM. Nil với DM — DM không có badge.
+    var badgeBg: Color? {
+        guard kindLabel != nil else { return nil }
+        return Color(hexString: badgeHex) ?? NodieColors.inkMuted
+    }
+
+    /// Bảng màu dự phòng cho avatar DM. Lấy từ token có sẵn — không đẻ màu mới ngoài hệ thống.
+    private static let derivedPalette: [Color] = [
+        NodieColors.expertBg, NodieColors.tagBg, NodieColors.bestBg, NodieColors.recBorder,
+    ]
+}
+
+/// Không có chip "1-1": DM đã nằm sẵn trong "Tất cả", và lọc riêng ra thì được một danh sách
+/// gần như không đổi — chip tốn chỗ hơn phần nó lọc được.
+///
+/// Lọc theo `channels.kind` (dữ liệu) chứ không theo nhãn hiển thị: nhãn là chuỗi đã dịch,
+/// so sánh với "KÊNH" thì đổi sang tiếng Anh là bộ lọc câm lặng không khớp gì nữa.
+enum ConversationFilter: String, CaseIterable, Identifiable {
+    case all = "Tất cả"
+    case channels = "Kênh"
+    case groups = "Nhóm"
+
+    var id: String { rawValue }
+
+    func matches(_ c: ChannelRow) -> Bool {
+        switch self {
+        case .all: return true
+        case .channels: return c.kind == "public"
+        case .groups: return c.kind == "group"
+        }
+    }
 }
 
 /// Ảnh/tệp/thoại đính kèm một tin — nằm trong cột `messages.metadata` (jsonb, có từ 0017).
@@ -103,20 +161,63 @@ struct MessageRow: Codable, Identifiable, Hashable {
     let id: UUID
     let channelId: UUID
     let userId: UUID?
+    /// Tin này trả lời tin nào (`messages.parent_id`, có từ 0017). Giữ ID chứ không chụp lại
+    /// nội dung: sửa/xoá tin gốc thì trích dẫn theo kịp.
+    let parentId: UUID?
     let body: String?
     let createdAt: Date
+    /// Non-nil = đã sửa. View hiện nhãn "đã sửa" để người đọc biết bản họ thấy không phải bản gốc.
+    let editedAt: Date?
     let author: AuthorRef?
     let metadata: MessageMetadata?
+    /// Mọi thả của MỌI người trên tin này (`message_reactions`, 0027). Nhúng cả `user_id`
+    /// để suy ra được "mình đã thả chưa" mà không cần query thứ hai.
+    let reactions: [ReactionRow]?
+
+    struct ReactionRow: Codable, Hashable {
+        let kind: String
+        let userId: UUID
+        enum CodingKeys: String, CodingKey {
+            case kind
+            case userId = "user_id"
+        }
+    }
 
     enum CodingKeys: String, CodingKey {
-        case id, body, metadata
+        case id, body, metadata, author, reactions
         case channelId = "channel_id"
         case userId = "user_id"
+        case parentId = "parent_id"
         case createdAt = "created_at"
-        case author
+        case editedAt = "edited_at"
     }
 
     var media: MessageMedia? { metadata?.media }
+    var isEdited: Bool { editedAt != nil }
+
+    /// Đếm theo loại, gồm cả của mình — khớp `count(*)` trên `message_reactions`.
+    var reactionCounts: [ReactionKind: Int] {
+        (reactions ?? []).reduce(into: [:]) { acc, row in
+            guard let kind = ReactionKind(rawValue: row.kind) else { return }
+            acc[kind, default: 0] += 1
+        }
+    }
+
+    /// Loại MÌNH đã thả — tách khỏi `reactionCounts` vì hiển thị khác: đếm để hiện số,
+    /// cái này để tô đậm.
+    func myReactions(uid: UUID?) -> Set<ReactionKind> {
+        guard let uid else { return [] }
+        return Set((reactions ?? []).filter { $0.userId == uid }.compactMap { ReactionKind(rawValue: $0.kind) })
+    }
+
+    /// Bản sao với danh sách thả khác — cho mutate lạc quan lúc bật/tắt reaction.
+    /// Mọi field là `let` nên phải dựng lại; đổi sang `var` thì bất kỳ chỗ nào cũng sửa
+    /// được một dòng DB đang nằm trong cache, đó mới là thứ khó lần.
+    func replacingReactions(_ rows: [ReactionRow]) -> MessageRow {
+        MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
+                   body: body, createdAt: createdAt, editedAt: editedAt,
+                   author: author, metadata: metadata, reactions: rows)
+    }
 
     var authorName: String { author?.name ?? String(localized: "Ẩn danh") }
 
@@ -137,11 +238,13 @@ struct NewMessage: Encodable {
     let channelId: UUID
     let userId: UUID
     let body: String
+    var parentId: UUID?
     var metadata: MessageMetadata?
 
     enum CodingKeys: String, CodingKey {
         case id, body, metadata
         case channelId = "channel_id"
         case userId = "user_id"
+        case parentId = "parent_id"
     }
 }

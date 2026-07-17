@@ -71,4 +71,15 @@ extension Color {
             opacity: 1
         )
     }
+
+    /// Khởi tạo từ chuỗi "#RRGGBB" — dạng `channels.avatar_hex`/`badge_hex` lưu ở DB (0025).
+    /// Trả nil khi chuỗi sai để chỗ gọi tự chọn màu dự phòng: ép về đen câm lặng là kiểu
+    /// hỏng không ai thấy cho tới lúc nhìn vào kênh (chính lý do 0025 có CHECK định dạng).
+    init?(hexString: String?) {
+        guard let raw = hexString?.trimmingCharacters(in: .whitespaces),
+              raw.hasPrefix("#"), raw.count == 7,
+              let value = UInt32(raw.dropFirst(), radix: 16)
+        else { return nil }
+        self.init(hex: value)
+    }
 }

@@ -1,9 +1,13 @@
 import SwiftUI
 
 /// Một dòng hội thoại — avatar + badge loại, tên, preview, giờ, số chưa đọc.
+///
+/// Nhận `ChannelRow` (dòng DB thật) chứ không `Conversation` (DTO prototype): trang trí
+/// giờ đến từ `channels.emoji/avatar_hex/badge_hex` (0025), không phải hằng số trong MockData.
 struct ConversationRowView: View {
-    let conversation: Conversation
+    let channel: ChannelRow
     let preview: String
+    var unread: Int = 0
     var isMuted: Bool = false
     let onTap: () -> Void
 
@@ -19,11 +23,11 @@ struct ConversationRowView: View {
 
     private var content: some View {
         HStack(spacing: NodieSpacing.md) {
-            ConversationAvatar(conversation: conversation, size: 47, fontSize: 20, showsBadge: true)
+            ConversationAvatar(channel: channel, size: 47, fontSize: 20, showsBadge: true)
 
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 5) {
-                    Text(conversation.name)
+                    Text(channel.displayTitle)
                         .font(NodieTypography.rowTitle)
                         .foregroundStyle(NodieColors.ink)
                         .lineLimit(1)
@@ -42,11 +46,11 @@ struct ConversationRowView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(alignment: .trailing, spacing: 5) {
-                Text(conversation.time)
+                Text(channel.relativeTime)
                     .font(NodieTypography.timestamp)
                     .foregroundStyle(NodieColors.inkFaint)
-                if conversation.unread > 0 {
-                    UnreadBadge(count: conversation.unread)
+                if unread > 0 {
+                    UnreadBadge(count: unread)
                 }
             }
         }
@@ -58,19 +62,19 @@ struct ConversationRowView: View {
 /// Avatar hội thoại dùng chung cho list và header chat.
 /// Kênh/nhóm bo góc vuông; DM bo tròn — tín hiệu thị giác phân biệt người vs không gian.
 struct ConversationAvatar: View {
-    let conversation: Conversation
+    let channel: ChannelRow
     let size: CGFloat
     let fontSize: CGFloat
     var showsBadge: Bool = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            RoundedRectangle(cornerRadius: conversation.isRound ? size / 2 : 14, style: .continuous)
-                .fill(conversation.avatarBg)
+            RoundedRectangle(cornerRadius: channel.isRound ? size / 2 : 14, style: .continuous)
+                .fill(channel.avatarBg)
                 .frame(width: size, height: size)
-                .overlay(Text(conversation.emoji).font(.system(size: fontSize)))
+                .overlay(Text(channel.avatarGlyph).font(.system(size: fontSize)))
 
-            if showsBadge, let label = conversation.kindLabel, let bg = conversation.kindBg {
+            if showsBadge, let label = channel.kindLabel, let bg = channel.badgeBg {
                 Text(label)
                     .font(NodieTypography.kindBadge)
                     .foregroundStyle(.white)
@@ -82,23 +86,4 @@ struct ConversationAvatar: View {
         }
         .frame(width: size, height: size)
     }
-}
-
-#Preview {
-    VStack(spacing: 0) {
-        ForEach(MockData.conversations) { c in
-            ConversationRowView(conversation: c, preview: "Xem trước tin nhắn cuối cùng ở đây") {}
-            Divider().background(NodieColors.ruleLight)
-        }
-    }
-    .padding(.horizontal, NodieSpacing.screenH)
-    .background(NodieColors.bg)
-}
-
-#Preview("Đã tắt thông báo") {
-    ConversationRowView(conversation: MockData.conversations[0],
-                        preview: "Kênh này đang tắt thông báo",
-                        isMuted: true) {}
-        .padding(.horizontal, NodieSpacing.screenH)
-        .background(NodieColors.bg)
 }

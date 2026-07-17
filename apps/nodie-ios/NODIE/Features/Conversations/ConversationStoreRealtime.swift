@@ -4,7 +4,7 @@ import Supabase
 /// Tin mới của người khác tự hiện ra, không cần kéo refresh.
 ///
 /// **Sự kiện chỉ là TIẾNG CHUÔNG, không phải dữ liệu.** Payload `postgres_changes` chỉ chứa
-/// dòng `messages` thô — không có `author:profiles(display_name)` vì Realtime không chạy join.
+/// dòng `messages` thô — không có tác giả nhúng vì Realtime không chạy join.
 /// Decode thẳng payload thì mọi tin đến đều hiện "Ẩn danh". Nên nhận tín hiệu xong là gọi
 /// PostgREST nạp phần đuôi: có tên tác giả, đúng RLS, và khỏi tự chế decoder ngày tháng
 /// (`JSONDecoder.supabase()` của SDK là `package`, app không với tới).
@@ -58,7 +58,7 @@ extension ConversationStore {
         let after = messagesByChannel[channelId]?.last?.createdAt
         do {
             var query = client.from("messages")
-                .select("id,channel_id,user_id,body,created_at,author:profiles(display_name)")
+                .select(ConversationStore.messageSelect)
                 .eq("channel_id", value: channelId)
                 .is("deleted_at", value: nil)
             if let after { query = query.gt("created_at", value: after) }

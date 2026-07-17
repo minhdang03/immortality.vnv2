@@ -1,90 +1,144 @@
 import SwiftUI
+import Supabase
 
-/// Hồ sơ một thành viên khác — header tối, thống kê, lĩnh vực, hoạt động gần đây.
+/// Hồ sơ một thành viên khác — header tối, thống kê, hoạt động.
 ///
 /// Khác `ProfileView` (hồ sơ của chính mình): ở đây không sửa được gì, đổi lại có
 /// Theo dõi + Nhắn tin. Hai màn cố nhập làm một sẽ thành một mớ `if isMe`.
+///
+/// Chạy Supabase thật (view `public_profiles`, 0027) — không còn `Member`/`MockData`.
+/// `emoji`/`gradient`/`verified`/`level`/`fields`/`posts` của mock KHÔNG có cột nào
+/// tương ứng trong DB và không có nguồn nào sinh ra được thật, nên bỏ hẳn thay vì bịa —
+/// xem `InitialAvatar` (đã dùng khắp Q&A/chat cho user thật) thay avatar màu mè.
 struct MemberProfileView: View {
     @Bindable var state: AppState
-    let memberId: String
+    @Bindable var follow: FollowStore
+    let conversations: ConversationStore
+    let memberId: UUID
 
     @Environment(\.dismiss) private var dismiss
 
-    private var member: Member? { state.member(id: memberId) }
-    private var isFollowing: Bool { state.isFollowing(memberId) }
+    @State private var loadState: LoadState = .loading
+    @State private var stats: ProfileStatsStore
+    @State private var isOpeningChat = false
+
+    private enum LoadState {
+        case loading
+        /// Dùng lại `PublicProfile` (FollowStore) — cùng 3 cột `id/display_name/bio` của
+        /// view `public_profiles`, không cần khai riêng một struct trùng lặp.
+        case loaded(PublicProfile)
+        /// Cờ RIÊNG, không suy từ "loaded == nil": id sai/đã xoá và "mạng đang chờ" là
+        /// hai trạng thái khác nhau, gộp lại thì màn hình đứng chờ mãi không biết đâu mà lần
+        /// (cùng bài với `isResolving` ở `QuestionDetailView`).
+        case notFound
+    }
+
+    init(state: AppState, follow: FollowStore, conversations: ConversationStore, memberId: UUID) {
+        self.state = state
+        self.follow = follow
+        self.conversations = conversations
+        self.memberId = memberId
+        _stats = State(initialValue: ProfileStatsStore(uid: memberId))
+    }
+
+    private var isFollowing: Bool { follow.isFollowing(memberId) }
 
     var body: some View {
         ScrollView {
-            if let member {
+            switch loadState {
+            case .loading:
+                ProgressView()
+                    .padding(.top, 120)
+                    .frame(maxWidth: .infinity)
+            case .loaded(let profile):
                 VStack(alignment: .leading, spacing: 0) {
-                    header(member)
-                    statsGrid(member)
-                    fields(member)
-                    activity(member)
+                    header(profile)
+                    ProfileStatsGrid(stats: stats)
+                        .padding(.horizontal, NodieSpacing.screenH)
+                        .padding(.top, 18)
+                        .padding(.bottom, NodieSpacing.xxl)
                 }
+            case .notFound:
+                notFoundState
             }
         }
         .background(NodieColors.bg)
+        .task {
+            // Đứng ở đây phòng khi vào thẳng hồ sơ (vd sau này từ chat) mà chưa qua tab
+            // Bạn bè — không có bước đó thì `follow.isFollowing` luôn trả false sai.
+            if !follow.didLoadOnce { await follow.load() }
+            await load()
+        }
+    }
+
+    private func load() async {
+        do {
+            let profile: PublicProfile = try await SupabaseClientProvider.shared
+                .from("public_profiles")
+                .select("id,display_name,bio")
+                .eq("id", value: memberId)
+                .single()
+                .execute().value
+            loadState = .loaded(profile)
+        } catch {
+            // `.single()` ném lỗi cả khi 0 dòng (id sai/đã xoá) lẫn khi mạng hỏng — không
+            // phân biệt được hai ca từ đây, và với người dùng thì cả hai đều là "mở không
+            // được", đúng như yêu cầu #3.
+            loadState = .notFound
+        }
+    }
+
+    // MARK: - Không tìm thấy
+
+    private var notFoundState: some View {
+        VStack(spacing: NodieSpacing.sm) {
+            Spacer(minLength: 80)
+            Image(systemName: "eye.slash")
+                .font(.system(size: 30))
+                .foregroundStyle(NodieColors.inkFaint)
+            // Nói ĐÚNG chuyện đang xảy ra: id này không có ai. "Có lỗi xảy ra, thử lại"
+            // là lời khuyên sai — thử lại bao nhiêu lần cũng vẫn không có người đó.
+            Text("Không tìm thấy người này.")
+                .font(NodieTypography.body)
+                .foregroundStyle(NodieColors.inkMuted)
+                .multilineTextAlignment(.center)
+            Text("Có thể tài khoản đã bị xoá.")
+                .font(NodieTypography.metaSm)
+                .foregroundStyle(NodieColors.inkFaint)
+                .multilineTextAlignment(.center)
+            Spacer(minLength: 80)
+        }
+        .padding(.horizontal, NodieSpacing.xxl)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Header tối
 
-    private func header(_ member: Member) -> some View {
+    private func header(_ profile: PublicProfile) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             CircleIconButton(systemName: "arrow.left", onDark: true) { dismiss() }
 
             HStack(spacing: 15) {
-                Text(member.emoji)
-                    .font(.system(size: 32))
-                    .frame(width: 72, height: 72)
-                    .background(
-                        Circle().fill(
-                            LinearGradient(colors: member.gradient,
-                                           startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
-                    )
+                InitialAvatar(initial: String(profile.name.prefix(1)).uppercased(), size: 72)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 7) {
-                        Text(member.name)
-                            .font(NodieTypography.memberName)
-                            .foregroundStyle(NodieColors.cream)
-                        if member.verified {
-                            Text("✦")
-                                .font(.system(size: 15))
-                                .foregroundStyle(NodieColors.accentLight)
-                                .accessibilityLabel("Đã xác minh")
-                        }
-                    }
-                    Text(member.level)
-                        .font(NodieTypography.meta.weight(.semibold))
-                        .foregroundStyle(NodieColors.goldOnDark)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(profile.name)
+                    .font(NodieTypography.memberName)
+                    .foregroundStyle(NodieColors.cream)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.top, NodieSpacing.lg)
 
-            Text(member.join)
-                .font(NodieTypography.meta)
-                .foregroundStyle(NodieColors.cream.opacity(0.55))
-                .padding(.top, NodieSpacing.md)
-
-            Text(member.bio)
-                .font(NodieTypography.bodySm)
-                .lineSpacing(5)
-                .foregroundStyle(NodieColors.onDarkStrong)
-                .padding(.top, 10)
+            if let bio = profile.bio, !bio.isEmpty {
+                Text(bio)
+                    .font(NodieTypography.bodySm)
+                    .lineSpacing(5)
+                    .foregroundStyle(NodieColors.onDarkStrong)
+                    .padding(.top, NodieSpacing.md)
+            }
 
             HStack(spacing: 10) {
                 followButton
-                Button {
-                    state.openOrCreateDM(with: memberId)
-                } label: {
-                    darkPill("Nhắn tin")
-                        .background(Capsule().fill(NodieColors.onDarkFill))
-                        .overlay(Capsule().stroke(NodieColors.onDarkBorder, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
+                messageButton
             }
             .padding(.top, NodieSpacing.lg)
         }
@@ -104,15 +158,39 @@ struct MemberProfileView: View {
     }
 
     /// Đang theo dõi thì dùng hệ nền-tối như nút "Nhắn tin" cạnh nó.
-    /// Prototype để `transparent` + chữ #6d5f45 cho trạng thái này — nâu sẫm trên nền gần đen,
-    /// đọc không ra; đó là style của nút follow bên màn Bạn bè (nền sáng) bị bê nhầm sang đây.
     private var followButton: some View {
-        Button { state.toggleFollow(memberId) } label: {
+        Button {
+            Task { await follow.toggle(memberId) }
+        } label: {
             darkPill(isFollowing ? "✓ Đang theo dõi" : "＋ Theo dõi")
                 .background(Capsule().fill(isFollowing ? NodieColors.onDarkFill : NodieColors.accent))
                 .overlay(Capsule().stroke(isFollowing ? NodieColors.onDarkBorder : NodieColors.accent, lineWidth: 1))
         }
         .buttonStyle(.plain)
+    }
+
+    /// `conversations` được RootTabView bơm xuống — CÙNG store với ConversationListView/
+    /// ChatDetailView, không tự `ConversationStore()` tại chỗ. Store cục bộ sẽ không thấy
+    /// cache/realtime của phần còn lại của app: mở DM xong quay lại danh sách hội thoại sẽ
+    /// không thấy kênh vừa tạo cho tới khi app tự nạp lại lần khác.
+    private var messageButton: some View {
+        Button {
+            guard !isOpeningChat else { return }
+            isOpeningChat = true
+            Task {
+                defer { isOpeningChat = false }
+                if let channelId = await conversations.openOrCreateDM(with: memberId) {
+                    state.openChat(channelId)
+                }
+            }
+        } label: {
+            darkPill("Nhắn tin")
+                .background(Capsule().fill(NodieColors.onDarkFill))
+                .overlay(Capsule().stroke(NodieColors.onDarkBorder, lineWidth: 1))
+                .opacity(isOpeningChat ? 0.6 : 1)
+        }
+        .buttonStyle(.plain)
+        .disabled(isOpeningChat)
     }
 
     private func darkPill(_ label: LocalizedStringKey) -> some View {
@@ -122,85 +200,9 @@ struct MemberProfileView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 11)
     }
-
-    // MARK: - Thống kê
-
-    private func statsGrid(_ member: Member) -> some View {
-        NodieStatGrid(items: member.stats.map { .init(value: $0.value, label: $0.label) })
-            .padding(.horizontal, NodieSpacing.screenH)
-            .padding(.top, 18)
-    }
-
-    // MARK: - Lĩnh vực
-
-    private func fields(_ member: Member) -> some View {
-        VStack(alignment: .leading, spacing: NodieSpacing.sm) {
-            EyebrowLabel(text: "Lĩnh vực đang theo")
-            FlowRow(spacing: NodieSpacing.sm) {
-                ForEach(member.fields) { field in
-                    Text(field.label)
-                        .font(NodieTypography.chip)
-                        .foregroundStyle(field.fg)
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 6)
-                        .background(Capsule().fill(field.bg))
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, NodieSpacing.screenH)
-        .padding(.top, NodieSpacing.lg)
-    }
-
-    // MARK: - Hoạt động gần đây
-
-    private func activity(_ member: Member) -> some View {
-        VStack(alignment: .leading, spacing: NodieSpacing.sm) {
-            EyebrowLabel(text: "Hoạt động gần đây")
-            ForEach(member.posts) { post in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(post.title)
-                        .font(NodieTypography.postTitle)
-                        .foregroundStyle(NodieColors.ink)
-                        .lineSpacing(2)
-                        .multilineTextAlignment(.leading)
-                    MemberPostMeta(meta: post.meta)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 15)
-                .padding(.vertical, 13)
-                .background(RoundedRectangle(cornerRadius: 14).fill(NodieColors.surface))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(NodieColors.rule, lineWidth: 1))
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, NodieSpacing.screenH)
-        .padding(.top, 18)
-        .padding(.bottom, NodieSpacing.xxl)
-    }
-}
-
-/// Meta của bài: "214 ☀ · 2 giờ trước". ☀ phải vàng nắng — nó là hạt ánh sáng,
-/// và đây là chỗ duy nhất trong chuỗi cần tô khác phần còn lại.
-struct MemberPostMeta: View {
-    let meta: String
-
-    var body: some View {
-        buildText()
-            .font(NodieTypography.metaSm)
-            .foregroundStyle(NodieColors.inkMuted)
-    }
-
-    private func buildText() -> Text {
-        meta.split(separator: " ", omittingEmptySubsequences: false)
-            .map { $0 == "☀" ? Text("☀").foregroundColor(NodieColors.sun) : Text(String($0)) }
-            .enumerated()
-            .reduce(Text("")) { acc, item in
-                item.offset == 0 ? item.element : acc + Text(" ") + item.element
-            }
-    }
 }
 
 #Preview {
-    MemberProfileView(state: AppState(), memberId: "huong")
+    MemberProfileView(state: AppState(), follow: FollowStore(), conversations: ConversationStore(),
+                       memberId: UUID())
 }

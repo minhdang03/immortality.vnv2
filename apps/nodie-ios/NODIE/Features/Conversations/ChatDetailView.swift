@@ -1,11 +1,30 @@
 import SwiftUI
 import UIKit   // UIPasteboard — SwiftUI không re-export
 
+/// Xem trước ngắn cho một `MessageRow` — dùng ở băng "Đang trả lời …", trích dẫn trong
+/// bong bóng, và chính bong bóng tin thoại (chưa phát được thì nó chỉ là một dòng chữ).
+///
+/// Extension ở ĐÂY chứ không trong ConversationModels.swift: file đó chỉ biết những gì DB
+/// có (xem chú thích đầu file đó), còn "tóm tắt để hiện" là quyết định của tầng view.
+extension MessageRow {
+    var previewText: String {
+        guard let media else { return body ?? "" }
+        switch media.kind {
+        case .photo: return "▣ " + String(localized: "Ảnh")
+        case .file: return "▤ " + String(localized: "Tệp đính kèm")
+        case .voice:
+            let duration = media.durationLabel.map { " · \($0)" } ?? ""
+            return "▶ " + String(localized: "Tin nhắn thoại") + duration
+        }
+    }
+}
+
 /// Chat chi tiết — bong bóng tin nhắn + ô nhập, hoặc khoá nếu là kênh phát một chiều.
 /// Thoát bằng nút back tròn HOẶC vuốt cạnh trái (NavigationStack lo).
 struct ChatDetailView: View {
     @Bindable var state: AppState
-    let chatId: String
+    let store: ConversationStore
+    let channelId: UUID
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -16,26 +35,33 @@ struct ChatDetailView: View {
     @State private var atBottom = true
     /// Số tin đến trong lúc đang đọc ngược lên. 0 = không hiện nút.
     @State private var unseen = 0
+    /// Tin đang sửa (nợ plan 1306 #15) — non-nil mở hộp thoại sửa. Alert đơn giản hơn dựng
+    /// lại nguyên băng "Đang trả lời" cho một thao tác hiếm dùng.
+    @State private var editingMessage: MessageRow?
+    @State private var editText = ""
 
     /// Mốc đáy để cuộn tới. Cuộn vào MỐC chứ không vào tin cuối: tin cuối có thể cao
     /// (ảnh, trích dẫn, hàng cảm xúc) và `anchor: .bottom` của nó vẫn hụt mất phần đệm dưới.
     private static let bottomAnchor = "bottomAnchor"
+    /// "Tắt thông báo" không có màn chọn thời hạn — chọn một mốc xa, đồng bộ với
+    /// ConversationListView (mỗi file giữ hằng số riêng, tránh kéo thêm phụ thuộc chéo).
+    private static var muteHorizon: Date { Date(timeIntervalSinceNow: 60 * 60 * 24 * 365 * 10) }
 
-    private var conversation: Conversation? { state.conversation(id: chatId) }
-    private var messages: [ChatMessage] { state.messages(for: chatId) }
+    private var channel: ChannelRow? { store.channel(id: channelId) }
+    private var messages: [MessageRow] { store.messages(for: channelId) }
     private var hasDraft: Bool {
-        !state.draft(in: chatId).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !state.draft(in: channelId).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     /// Tôn trọng Giảm chuyển động: `withAnimation(nil)` là nhảy thẳng, không phải đứng im.
     private var motion: Animation? { reduceMotion ? nil : .easeOut(duration: 0.2) }
 
-    /// Draft của riêng chat này. Viết tay vì `$state.drafts[chatId]` cho Binding<String?>,
+    /// Draft của riêng chat này. Viết tay vì `$state.drafts[channelId]` cho Binding<String?>,
     /// còn TextField cần Binding<String>.
     private var draft: Binding<String> {
         Binding(
-            get: { state.draft(in: chatId) },
-            set: { state.drafts[chatId] = $0 }
+            get: { state.draft(in: channelId) },
+            set: { state.drafts[channelId] = $0 }
         )
     }
 
@@ -47,16 +73,41 @@ struct ChatDetailView: View {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                            let isMine = message.userId == store.currentUserId
+                            let target = replyTarget(of: message)
+                            // Sửa/xoá chỉ có ý nghĩa với tin CỦA MÌNH — nil ẩn hẳn mục khỏi
+                            // menu thay vì hiện rồi disable.
+                            //
+                            // Khai kiểu RÕ RÀNG và tách khỏi lời gọi: `isMine ? { … } : nil`
+                            // viết thẳng trong tham số thì Swift không suy ra nổi
+                            // `(() -> Void)?` từ (closure literal, nil) — nó bỏ cuộc và đổ
+                            // lỗi "ambiguous use of 'init'" lên tận `ScrollView` ở trên,
+                            // cách chỗ sai 40 dòng.
+                            let onEdit: (() -> Void)? = isMine ? {
+                                editText = message.body ?? ""
+                                editingMessage = message
+                            } : nil
+                            let onDelete: (() -> Void)? = isMine ? {
+                                Task { await store.deleteMessage(messageId: message.id, channelId: channelId) }
+                            } : nil
+
                             MessageBubbleView(
                                 message: message,
-                                senderLabel: state.senderLabel(at: index, in: messages),
-                                replyTarget: replyTarget(of: message),
+                                isMine: isMine,
+                                senderLabel: senderLabel(at: index),
+                                replyTarget: target,
+                                replyTargetIsMine: target?.userId == store.currentUserId,
+                                myReactions: message.myReactions(uid: store.currentUserId),
                                 reduceMotion: reduceMotion,
-                                onReply: { state.startReply(to: message.id, in: chatId) },
-                                onReact: { state.toggleReaction($0, on: message.id, in: chatId) },
+                                onReply: { state.startReply(to: message.id, in: channelId) },
+                                onReact: { kind in
+                                    Task { await store.toggleReaction(messageId: message.id, channelId: channelId, kind: kind) }
+                                },
                                 onTapReplyQuote: { parentId in
                                     withAnimation(motion) { proxy.scrollTo(parentId, anchor: .center) }
-                                }
+                                },
+                                onEdit: onEdit,
+                                onDelete: onDelete
                             )
                             .padding(.top, index > 0 ? 10 : 0)
                             .id(message.id)
@@ -82,7 +133,7 @@ struct ChatDetailView: View {
                     // Đang ở đáy → theo tin mới. Đang đọc ngược lên → ĐỨNG YÊN, chỉ đếm.
                     // Giật màn hình của người đang đọc là cách nhanh nhất làm họ mất chỗ.
                     // Ngoại lệ: tin của CHÍNH MÌNH luôn kéo xuống — bấm gửi là đã tỏ ý muốn thấy nó.
-                    if atBottom || last.isMine {
+                    if atBottom || last.userId == store.currentUserId {
                         withAnimation(motion) { proxy.scrollTo(Self.bottomAnchor, anchor: .bottom) }
                     } else if new > old {
                         withAnimation(motion) { unseen += new - old }
@@ -99,14 +150,50 @@ struct ChatDetailView: View {
             inputBar
         }
         .background(NodieColors.bg)
+        // Nạp tin, mở Realtime, đánh dấu đã đọc — theo đúng thứ tự: có tin rồi mới nghe tin
+        // mới, đọc tin rồi mới báo đã đọc.
+        .task {
+            await store.loadMessages(channelId: channelId)
+            await store.subscribe(to: channelId)
+            await store.markRead(channelId: channelId)
+        }
+        // Đóng kênh Realtime khi rời màn — không đóng thì rò subscription (xem
+        // ConversationStoreRealtime.swift).
+        .onDisappear {
+            Task { await store.unsubscribe(from: channelId) }
+        }
+        .alert("Sửa tin nhắn", isPresented: Binding(
+            get: { editingMessage != nil },
+            set: { if !$0 { editingMessage = nil } }
+        )) {
+            TextField("Nhắn tin…", text: $editText)
+            Button("Huỷ", role: .cancel) { editingMessage = nil }
+            Button("Lưu") {
+                guard let target = editingMessage else { return }
+                let channelId = channelId
+                Task {
+                    await store.edit(messageId: target.id, channelId: channelId, body: editText)
+                    editingMessage = nil
+                }
+            }
+        }
     }
 
     /// Tin mà `message` đang trả lời — nil nếu không trả lời ai, hoặc tin gốc đã trôi khỏi
     /// khoảng đã nạp (nạp 50 tin/lượt). Trôi mất thì bong bóng chỉ mất phần trích dẫn,
     /// không phải hiện một ô rỗng khó hiểu.
-    private func replyTarget(of message: ChatMessage) -> ChatMessage? {
-        guard let parentId = message.replyTo else { return nil }
+    private func replyTarget(of message: MessageRow) -> MessageRow? {
+        guard let parentId = message.parentId else { return nil }
         return messages.first { $0.id == parentId }
+    }
+
+    /// Nhãn tên người gửi phía trên bong bóng — chỉ hiện ở tin ĐẦU của một chuỗi cùng người,
+    /// và không hiện cho tin của chính mình (đã đủ biết là mình qua căn lề phải).
+    private func senderLabel(at index: Int) -> String? {
+        let message = messages[index]
+        guard message.userId != store.currentUserId else { return nil }
+        if index > 0, messages[index - 1].userId == message.userId { return nil }
+        return message.authorName
     }
 
     /// "↓ N tin mới" — hợp đồng đổi lại việc KHÔNG giật màn hình: không kéo người đọc đi,
@@ -144,17 +231,20 @@ struct ChatDetailView: View {
         HStack(spacing: NodieSpacing.md) {
             CircleIconButton(systemName: "arrow.left") { dismiss() }
 
-            if let c = conversation {
-                ConversationAvatar(conversation: c, size: 40, fontSize: 18)
+            if let channel {
+                ConversationAvatar(channel: channel, size: 40, fontSize: 18)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(c.name)
+                    Text(channel.displayTitle)
                         .font(NodieTypography.chatName)
                         .foregroundStyle(NodieColors.ink)
                         .lineLimit(1)
-                    Text(c.sub)
-                        .font(NodieTypography.metaSm)
-                        .foregroundStyle(NodieColors.inkMuted)
-                        .lineLimit(1)
+                    // DM không có nhãn (đã đủ biết "là ai" qua tên) — chỉ kênh/nhóm mới hiện.
+                    if let kindLabel = channel.kindLabel {
+                        Text(kindLabel)
+                            .font(NodieTypography.metaSm)
+                            .foregroundStyle(NodieColors.inkMuted)
+                            .lineLimit(1)
+                    }
                 }
             }
 
@@ -172,18 +262,19 @@ struct ChatDetailView: View {
     /// Menu ⋯ — hồ sơ/thông tin, tắt thông báo, xoá.
     private var chatMenu: some View {
         Menu {
-            if let memberId = state.member(inChat: chatId) {
-                Button("Xem hồ sơ") { state.chatsPath.append(.member(memberId)) }
-            } else {
-                // Kênh/nhóm chưa có màn thông tin riêng — prototype cũng chỉ đóng menu.
-                Button("Thông tin nhóm") {}.disabled(true)
-            }
-            Button(state.isMuted(chatId) ? String(localized: "Bật thông báo") : String(localized: "Tắt thông báo")) {
-                state.toggleMute(chatId)
+            // "Xem hồ sơ": `ChannelRow` chỉ mang membership CỦA MÌNH (RLS `channel_members`
+            // lọc theo chính mình), không có API lộ UUID người kia. `MemberProfileView` cũng
+            // còn dùng `memberId: String` (Mock) — phase member-profile-real đang đổi việc đó
+            // song song. Chặn tạm ở đây, KHÔNG tự đổi kiểu MemberProfileView (ngoài phạm vi).
+            Button(channel?.kind == "dm" ? "Xem hồ sơ" : "Thông tin nhóm") {}.disabled(true)
+            Button(channel?.isMuted == true ? String(localized: "Bật thông báo") : String(localized: "Tắt thông báo")) {
+                Task { await store.setMuted(channelId: channelId, until: channel?.isMuted == true ? nil : Self.muteHorizon) }
             }
             Button("Xoá cuộc trò chuyện", role: .destructive) {
-                state.leave(chatId)
-                dismiss()
+                Task {
+                    await store.leave(channelId: channelId)
+                    dismiss()
+                }
             }
         } label: {
             Image(systemName: "ellipsis")
@@ -197,11 +288,12 @@ struct ChatDetailView: View {
     @ViewBuilder
     private var inputBar: some View {
         VStack(spacing: 0) {
-            if state.canPost(in: chatId) {
+            if channel?.canPost == true {
                 if state.recording {
                     recordingBar
                 } else {
-                    if let target = state.replyTarget(in: chatId) {
+                    if let targetId = state.replyingTo[channelId],
+                       let target = messages.first(where: { $0.id == targetId }) {
                         replyBanner(target).padding(.bottom, NodieSpacing.sm)
                     }
                     if state.attachOpen { attachTray.padding(.bottom, NodieSpacing.md) }
@@ -228,15 +320,16 @@ struct ChatDetailView: View {
 
     /// Băng "Đang trả lời …" trên ô nhập — cùng chỗ, cùng hình với Zalo/Messenger/WhatsApp.
     /// Vạch dọc bên trái là thứ nối nó về trích dẫn trong bong bóng sau khi gửi.
-    private func replyBanner(_ target: ChatMessage) -> some View {
-        HStack(spacing: 10) {
+    private func replyBanner(_ target: MessageRow) -> some View {
+        let targetIsMine = target.userId == store.currentUserId
+        return HStack(spacing: 10) {
             RoundedRectangle(cornerRadius: 1.5)
                 .fill(NodieColors.accent)
                 .frame(width: 3)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(target.isMine ? String(localized: "Đang trả lời chính mình")
-                                   : String(localized: "Đang trả lời \(target.who ?? String(localized: "tin nhắn"))"))
+                Text(targetIsMine ? String(localized: "Đang trả lời chính mình")
+                                  : String(localized: "Đang trả lời \(target.authorName)"))
                     .font(NodieTypography.tag.weight(.semibold))
                     .foregroundStyle(NodieColors.accent)
                 Text(target.previewText)
@@ -246,7 +339,7 @@ struct ChatDetailView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button { state.cancelReply(in: chatId) } label: {
+            Button { state.cancelReply(in: channelId) } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(NodieColors.inkFaint)
@@ -262,6 +355,20 @@ struct ChatDetailView: View {
         .frame(height: 46)
         .background(RoundedRectangle(cornerRadius: 12).fill(NodieColors.surface))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(NodieColors.rule, lineWidth: 1))
+    }
+
+    /// Gửi draft hiện tại. Chỉ xoá chữ + huỷ trích dẫn KHI server xác nhận — gửi fail phải
+    /// giữ nguyên cả hai để user thử lại, cùng luật draft-safety với màn Hỏi đáp.
+    private func sendDraft() {
+        let text = draft.wrappedValue
+        let parentId = state.replyingTo[channelId]
+        Task {
+            let ok = await store.send(channelId: channelId, body: text, parentId: parentId)
+            if ok {
+                state.drafts[channelId] = ""
+                state.replyingTo[channelId] = nil
+            }
+        }
     }
 
     private var composeRow: some View {
@@ -282,7 +389,7 @@ struct ChatDetailView: View {
                 .foregroundStyle(NodieColors.ink)
                 .focused($inputFocused)
                 .submitLabel(.send)
-                .onSubmit { state.send(in: chatId) }
+                .onSubmit { sendDraft() }
                 .padding(.horizontal, NodieSpacing.lg)
                 .padding(.vertical, 12)
                 .background(Capsule().fill(NodieColors.surface))
@@ -290,7 +397,7 @@ struct ChatDetailView: View {
 
             // Có chữ thì gửi, chưa gõ gì thì ghi âm — cùng một chỗ, như FB/IG/Zalo.
             if hasDraft {
-                Button { state.send(in: chatId) } label: {
+                Button { sendDraft() } label: {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
@@ -323,7 +430,12 @@ struct ChatDetailView: View {
     private var attachTray: some View {
         HStack(spacing: 10) {
             ForEach(MediaKind.allCases) { kind in
-                Button { state.sendMedia(kind, in: chatId) } label: {
+                Button {
+                    // CHƯA nối thật: chưa có PhotosPicker/DocumentPicker để lấy `Data` thật
+                    // cho `store.sendMedia`. Gọi nó với dữ liệu giả là bịa dữ liệu — đóng khay
+                    // thay vì giả vờ gửi thành công. Xem report để nối picker thật.
+                    state.toggleAttach()
+                } label: {
                     VStack(spacing: 6) {
                         Text(kind.glyph).font(.system(size: 20))
                         Text(kind.trayLabel)
@@ -362,7 +474,11 @@ struct ChatDetailView: View {
                 .foregroundStyle(NodieColors.inkFaint)
                 .buttonStyle(.plain)
 
-            Button { state.sendVoice(in: chatId) } label: {
+            Button {
+                // CHƯA nối thật: chưa có AVAudioRecorder thu âm thanh thật nên không có `Data`
+                // để gọi `store.sendMedia`. Huỷ ghi âm thay vì giả vờ gửi thành công — xem report.
+                state.cancelRec()
+            } label: {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
@@ -416,14 +532,25 @@ struct WaveformStripe: View {
 
 /// Bong bóng tin — của mình: nền mực, lệch phải, góc dưới-phải vuông. Của người: nền trắng, lệch trái.
 struct MessageBubbleView: View {
-    let message: ChatMessage
+    let message: MessageRow
+    /// Tin của CHÍNH MÌNH — so `message.userId` với `store.currentUserId` ở caller
+    /// (view này không cầm store để so trực tiếp).
+    let isMine: Bool
     let senderLabel: String?
     /// Tin đang được trả lời — nil nếu tin này không trả lời ai (hoặc tin gốc đã trôi).
-    let replyTarget: ChatMessage?
+    let replyTarget: MessageRow?
+    /// Tin đang trả lời có phải CỦA MÌNH không — khác `isMine` (đó là tin `message`, không
+    /// phải tin `replyTarget`). Quyết định nhãn "Bạn" trong trích dẫn.
+    let replyTargetIsMine: Bool
+    let myReactions: Set<ReactionKind>
     let reduceMotion: Bool
     let onReply: () -> Void
     let onReact: (ReactionKind) -> Void
     let onTapReplyQuote: (UUID) -> Void
+    /// nil = không phải tin của mình — ẩn hẳn mục "Sửa" khỏi menu.
+    let onEdit: (() -> Void)?
+    /// nil = không phải tin của mình — ẩn hẳn mục "Xoá" khỏi menu.
+    let onDelete: (() -> Void)?
 
     /// Bong bóng trượt theo ngón khi vuốt trả lời. Thuần hiệu ứng — thả tay là về 0.
     @State private var dragX: CGFloat = 0
@@ -438,7 +565,7 @@ struct MessageBubbleView: View {
     private static let linkDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
 
     var body: some View {
-        VStack(alignment: message.isMine ? .trailing : .leading, spacing: 3) {
+        VStack(alignment: isMine ? .trailing : .leading, spacing: 3) {
             if let senderLabel {
                 Text(senderLabel)
                     .font(NodieTypography.timestamp.weight(.semibold))
@@ -462,12 +589,21 @@ struct MessageBubbleView: View {
 
             reactionRow
 
-            Text(message.time)
-                .font(NodieTypography.timestampXs)
-                .foregroundStyle(NodieColors.inkFaint)
-                .padding(.horizontal, NodieSpacing.xs)
+            HStack(spacing: 4) {
+                // Non-nil "Sửa"/"Xoá"/"(đã sửa)" CHƯA có trong Localizable.xcstrings (9 ngôn
+                // ngữ) — xem report để thêm key.
+                if message.isEdited {
+                    Text("(đã sửa)")
+                        .font(NodieTypography.timestampXs)
+                        .foregroundStyle(NodieColors.inkFaint)
+                }
+                Text(message.timeLabel)
+                    .font(NodieTypography.timestampXs)
+                    .foregroundStyle(NodieColors.inkFaint)
+            }
+            .padding(.horizontal, NodieSpacing.xs)
         }
-        .frame(maxWidth: .infinity, alignment: message.isMine ? .trailing : .leading)
+        .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
         // Vuốt là cử chỉ không nhìn thấy được. VoiceOver phải có đường khác tới cùng việc đó —
         // menu giữ-bong-bóng cũng có Trả lời, nhưng action ở đây mới là thứ VoiceOver đọc ra.
         .accessibilityAction(named: Text("Trả lời")) { onReply() }
@@ -480,33 +616,48 @@ struct MessageBubbleView: View {
 
     @ViewBuilder
     private var bubble: some View {
-        switch message.kind {
-        case .media(let kind): mediaBubble(kind)
-        case .voice, .text:    textBubble
+        // Ảnh/tệp có ô riêng; thoại (chưa phát được thì) và tin chữ dùng chung bong bóng chữ.
+        if let media = message.media, media.kind != .voice {
+            mediaBubble(media)
+        } else {
+            textBubble
         }
     }
 
     /// Menu giữ-bong-bóng. Cảm xúc lên trước — đó là thứ được dùng nhiều nhất.
-    /// "Sao chép" chỉ cho tin CHỮ: gắn cho tin thoại thì chỉ copy được dòng
-    /// "▶ Tin nhắn thoại · 0:07", vô nghĩa.
+    /// "Sao chép" chỉ cho tin CHỮ: gắn cho tin ảnh/thoại thì chỉ copy được caption rỗng,
+    /// vô nghĩa. "Sửa"/"Xoá" chỉ hiện khi `onEdit`/`onDelete` non-nil (tin của mình).
     @ViewBuilder
     private var bubbleMenu: some View {
         ForEach(ReactionKind.allCases) { kind in
             Button {
                 onReact(kind)
             } label: {
-                Label(kind.label, systemImage: message.myReactions.contains(kind) ? "checkmark" : "plus")
+                Label(kind.label, systemImage: myReactions.contains(kind) ? "checkmark" : "plus")
             }
         }
         Divider()
         Button { onReply() } label: {
             Label("Trả lời", systemImage: "arrowshape.turn.up.left")
         }
-        if case .text = message.kind {
+        if message.media == nil {
             Button {
-                UIPasteboard.general.string = message.text
+                UIPasteboard.general.string = message.body
             } label: {
                 Label("Sao chép", systemImage: "doc.on.doc")
+            }
+        }
+        if onEdit != nil || onDelete != nil {
+            Divider()
+            if let onEdit {
+                Button(action: onEdit) {
+                    Label("Sửa", systemImage: "pencil")
+                }
+            }
+            if let onDelete {
+                Button(role: .destructive, action: onDelete) {
+                    Label("Xoá", systemImage: "trash")
+                }
             }
         }
     }
@@ -538,12 +689,13 @@ struct MessageBubbleView: View {
     /// loại với số 0 là bày ra hai nút chết.
     @ViewBuilder
     private var reactionRow: some View {
-        let kinds = ReactionKind.allCases.filter { (message.reactions[$0] ?? 0) > 0 }
+        let counts = message.reactionCounts
+        let kinds = ReactionKind.allCases.filter { (counts[$0] ?? 0) > 0 }
         if !kinds.isEmpty {
             HStack(spacing: 4) {
                 ForEach(kinds) { kind in
-                    let count = message.reactions[kind] ?? 0
-                    let mine = message.myReactions.contains(kind)
+                    let count = counts[kind] ?? 0
+                    let mine = myReactions.contains(kind)
                     Button { onReact(kind) } label: {
                         HStack(spacing: 3) {
                             Text(kind.glyph).font(.system(size: 10))
@@ -568,10 +720,7 @@ struct MessageBubbleView: View {
     }
 
     /// Tin thoại dùng chung bong bóng chữ — chưa phát được thì nó đúng là một dòng chữ.
-    private var bubbleText: String {
-        if case .voice = message.kind { return message.previewText }
-        return message.text
-    }
+    private var bubbleText: String { message.previewText }
 
     /// URL trong tin thành link bấm được. Không gạch chân: SwiftUI đã tô link bằng `.tint`,
     /// thêm gạch chân nữa là hai tín hiệu cho một việc (iMessage/WhatsApp cũng chỉ tô màu).
@@ -592,18 +741,18 @@ struct MessageBubbleView: View {
             replyQuote
             Text(attributedBody)
                 .font(NodieTypography.body)
-                .foregroundStyle(message.isMine ? NodieColors.cream : NodieColors.ink)
+                .foregroundStyle(isMine ? NodieColors.cream : NodieColors.ink)
                 .lineSpacing(3)
                 // Link trên nền mực phải là kem, không phải xanh mặc định — xanh trên mực
                 // là cặp màu không đọc nổi.
-                .tint(message.isMine ? NodieColors.cream : NodieColors.purple)
-                .frame(maxWidth: .infinity, alignment: message.isMine ? .trailing : .leading)
+                .tint(isMine ? NodieColors.cream : NodieColors.purple)
+                .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(bubbleShape.fill(message.isMine ? NodieColors.ink : NodieColors.surface))
-        .overlay(bubbleShape.stroke(message.isMine ? NodieColors.ink : NodieColors.rule, lineWidth: 1))
-        .frame(maxWidth: 260, alignment: message.isMine ? .trailing : .leading)
+        .background(bubbleShape.fill(isMine ? NodieColors.ink : NodieColors.surface))
+        .overlay(bubbleShape.stroke(isMine ? NodieColors.ink : NodieColors.rule, lineWidth: 1))
+        .frame(maxWidth: 260, alignment: isMine ? .trailing : .leading)
     }
 
     /// Trích dẫn trong bong bóng — bấm vào là nhảy về tin gốc, như mọi messenger.
@@ -613,16 +762,15 @@ struct MessageBubbleView: View {
             Button { onTapReplyQuote(replyTarget.id) } label: {
                 HStack(spacing: 7) {
                     RoundedRectangle(cornerRadius: 1.5)
-                        .fill(message.isMine ? NodieColors.cream.opacity(0.5) : NodieColors.accent)
+                        .fill(isMine ? NodieColors.cream.opacity(0.5) : NodieColors.accent)
                         .frame(width: 2.5)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(replyTarget.isMine ? String(localized: "Bạn")
-                                                : (replyTarget.who ?? String(localized: "Tin nhắn")))
+                        Text(replyTargetIsMine ? String(localized: "Bạn") : replyTarget.authorName)
                             .font(NodieTypography.timestampXs.weight(.bold))
-                            .foregroundStyle(message.isMine ? NodieColors.cream.opacity(0.75) : NodieColors.accent)
+                            .foregroundStyle(isMine ? NodieColors.cream.opacity(0.75) : NodieColors.accent)
                         Text(replyTarget.previewText)
                             .font(NodieTypography.timestampXs)
-                            .foregroundStyle(message.isMine ? NodieColors.cream.opacity(0.6) : NodieColors.inkMuted)
+                            .foregroundStyle(isMine ? NodieColors.cream.opacity(0.6) : NodieColors.inkMuted)
                             .lineLimit(1)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -636,31 +784,33 @@ struct MessageBubbleView: View {
     }
 
     /// Ảnh/tệp: hộp gradient thay bong bóng chữ — nội dung thật sẽ là thumbnail từ R2.
-    private func mediaBubble(_ kind: MediaKind) -> some View {
-        RoundedRectangle(cornerRadius: 16)
+    private func mediaBubble(_ media: MessageMedia) -> some View {
+        let glyph = media.kind == .photo ? "▣" : "▤"
+        let label = media.kind == .photo ? String(localized: "Ảnh") : String(localized: "Tệp đính kèm")
+        return RoundedRectangle(cornerRadius: 16)
             .fill(LinearGradient(colors: [Color(hex: 0xE4D9BF), Color(hex: 0xB8A67E)],
                                  startPoint: .topLeading, endPoint: .bottomTrailing))
             .frame(width: 170, height: 116)
             .overlay(alignment: .bottomLeading) {
-                Text("\(kind.glyph) \(kind.bubbleLabel)")
+                Text("\(glyph) \(label)")
                     .font(NodieTypography.tag)
                     .foregroundStyle(.white)
                     .padding(10)
             }
-            .accessibilityLabel(kind.bubbleLabel)
+            .accessibilityLabel(label)
     }
 
     /// Góc nhọn ở phía người gửi — quy ước bong bóng chat quen thuộc.
     private var bubbleShape: UnevenRoundedRectangle {
         UnevenRoundedRectangle(
             topLeadingRadius: 18,
-            bottomLeadingRadius: message.isMine ? 18 : 4,
-            bottomTrailingRadius: message.isMine ? 4 : 18,
+            bottomLeadingRadius: isMine ? 18 : 4,
+            bottomTrailingRadius: isMine ? 4 : 18,
             topTrailingRadius: 18
         )
     }
 }
 
 #Preview {
-    ChatDetailView(state: AppState(), chatId: "lab")
+    ChatDetailView(state: AppState(), store: ConversationStore(), channelId: UUID())
 }

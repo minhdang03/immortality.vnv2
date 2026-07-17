@@ -1,7 +1,11 @@
 import SwiftUI
 import Supabase
 
-/// Bốn con số của chính mình — đọc thẳng Supabase, KHÔNG có số mock.
+/// Mấy con số của một hồ sơ — đọc thẳng Supabase, KHÔNG có số mock.
+///
+/// Dùng cho CẢ hồ sơ mình lẫn hồ sơ người khác: `init()` là mình, `init(uid:)` là người
+/// khác. Một store chứ không hai — cùng bốn con số, cùng cách đếm; tách ra là hai đường
+/// đọc phải nuôi song song rồi lệch nhau.
 ///
 /// Metric trên NGƯỜI được phép từ 16/07/2026 (handoff v4): hồ sơ hiện đủ đóng góp.
 /// Vẫn không xếp hạng giữa người với người — đây là gương soi, không phải bảng đấu.
@@ -18,6 +22,9 @@ final class ProfileStatsStore {
     private(set) var questionCount: Int?
     private(set) var answerCount: Int?
     private(set) var litReceived: Int?
+    /// Số người theo dõi hồ sơ này. Đếm thẳng `follows` chứ không đọc cột denorm —
+    /// 0028 cố ý không denormalize, xem chú thích trong migration đó.
+    private(set) var followerCount: Int?
     private(set) var isLoading = false
 
     /// Đã chạy xong ít nhất một lượt. Cờ RIÊNG chứ không suy ra từ `daysJoined != nil`:
@@ -26,7 +33,16 @@ final class ProfileStatsStore {
     private(set) var didLoadOnce = false
 
     private let client = SupabaseClientProvider.shared
-    private var uid: UUID? { client.auth.currentUser?.id }
+
+    /// Hồ sơ đang xem. `nil` = chính mình.
+    ///
+    /// Giữ nil chứ không chụp `currentUser?.id` lúc khởi tạo: store có thể được dựng trước
+    /// khi phiên đăng nhập sẵn sàng, chụp sớm là ghim luôn một nil rồi không bao giờ nạp.
+    private let targetId: UUID?
+
+    init(uid: UUID? = nil) { self.targetId = uid }
+
+    private var uid: UUID? { targetId ?? client.auth.currentUser?.id }
 
     var isLoaded: Bool { didLoadOnce }
 
@@ -40,8 +56,9 @@ final class ProfileStatsStore {
         async let questions = fetchCount(from: "questions", uid: uid)
         async let answers = fetchCount(from: "answers", uid: uid)
         async let lit = fetchLitReceived(uid)
+        async let followers = fetchFollowerCount(uid)
 
-        let results = await (days, questions, answers, lit)
+        let results = await (days, questions, answers, lit, followers)
 
         // Màn đóng giữa chừng (user bấm sang màn khác) → request bị huỷ → cả bốn về nil.
         // Ghi đè bằng nil rồi bật `didLoadOnce` sẽ đóng băng "—" vĩnh viễn; bỏ qua để lượt
@@ -52,18 +69,31 @@ final class ProfileStatsStore {
         questionCount = results.1
         answerCount = results.2
         litReceived = results.3
-        didLoadOnce = true
+        followerCount = results.4
+        // CẢ NĂM cùng nil = không nạp được gì (mất mạng đúng lúc màn hiện ra), không phải
+        // "một người chưa đóng góp gì". Bật didLoadOnce lúc đó là khoá vĩnh viễn: guard đầu
+        // hàm biến load() thành no-op, redacted tắt, và bốn ô "—" đứng đó cho tới khi user
+        // thoát hẳn màn rồi vào lại. Để nguyên cờ thì `.task` lượt sau nạp lại được.
+        // Một phần nil vẫn tính là xong — ba số đúng còn hơn bắt chờ vì số thứ tư hỏng.
+        let allFailed = results.0 == nil && results.1 == nil && results.2 == nil
+            && results.3 == nil && results.4 == nil
+        didLoadOnce = !allFailed
         isLoading = false
     }
 
-    /// Số ngày kể từ `profiles.created_at`.
+    /// Số ngày kể từ `public_profiles.created_at`.
+    ///
+    /// Đọc VIEW chứ không bảng `profiles`: RLS của bảng là self-only (`profiles_self_read`,
+    /// 0007), nên hồ sơ NGƯỜI KHÁC trả về rỗng và ô "ngày tham gia" hoá "—" — lỗi chỉ lộ khi
+    /// có người thứ hai. View `public_profiles` (0027) chở đúng cột công khai và cho mọi
+    /// người đã đăng nhập đọc, nên một đường dùng được cho cả mình lẫn người khác.
     ///
     /// Đọc thẳng ở đây thay vì thêm `createdAt` vào `UserProfile`: store này đã nói chuyện
     /// với Supabase rồi, mà `Auth/` đang có người sửa dở — không đụng vào cho khỏi đụng độ.
     private func fetchDaysJoined(_ uid: UUID) async -> Int? {
         struct Row: Decodable { let created_at: Date }
         do {
-            let row: Row = try await client.from("profiles")
+            let row: Row = try await client.from("public_profiles")
                 .select("created_at").eq("id", value: uid).single()
                 .execute().value
             // Theo NGÀY LỊCH, không phải 86400 giây: tham gia tối qua thì sáng nay là
@@ -105,6 +135,20 @@ final class ProfileStatsStore {
                 .select("lit_count").eq("author_id", value: uid)
                 .is("deleted_at", value: nil).execute().value
             return try await (answers + replies).reduce(0) { $0 + $1.lit_count }
+        } catch { return nil }
+    }
+
+    /// Bao nhiêu người theo dõi hồ sơ này.
+    ///
+    /// `head: true` — chỉ xin con số, không kéo hàng nào về. Quét theo `followee_id`,
+    /// đúng chiều mà `idx_follows_followee` (0028) phục vụ.
+    private func fetchFollowerCount(_ uid: UUID) async -> Int? {
+        do {
+            let response = try await client.from("follows")
+                .select("*", head: true, count: .exact)
+                .eq("followee_id", value: uid)
+                .execute()
+            return response.count
         } catch { return nil }
     }
 }

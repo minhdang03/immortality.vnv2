@@ -118,24 +118,6 @@ struct Conversation: Identifiable, Hashable {
     let unread: Int
 }
 
-/// Không có chip "1-1": DM đã nằm sẵn trong "Tất cả", và lọc riêng ra thì được một danh sách
-/// gần như không đổi — chip tốn chỗ hơn phần nó lọc được.
-enum ConversationFilter: String, CaseIterable, Identifiable {
-    case all = "Tất cả"
-    case channels = "Kênh"
-    case groups = "Nhóm"
-
-    var id: String { rawValue }
-
-    func matches(_ c: Conversation) -> Bool {
-        switch self {
-        case .all: return true
-        case .channels: return c.kindLabel == "KÊNH"
-        case .groups: return c.kindLabel == "NHÓM"
-        }
-    }
-}
-
 /// Một mục trong dòng thời gian "Hoạt động gần đây" (màn Hành trình).
 struct Projection: Identifiable, Hashable {
     let id = UUID()

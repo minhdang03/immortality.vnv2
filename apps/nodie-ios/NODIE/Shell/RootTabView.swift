@@ -4,9 +4,19 @@ import SwiftUI
 /// tab bar nổi đè lên trên và ẩn khi push vào detail.
 struct RootTabView: View {
     @Bindable var auth: AuthStore
+    /// Nguồn của "user vừa bấm push để vào kênh nào" — xem `.onChange` ở cuối body.
+    let push: PushManager
     @State private var state = AppState()
     /// Hỏi đáp wire dữ liệu thật (Supabase) — store riêng, không kéo prototype ở AppState.
     @State private var qa = QAStore()
+    /// Chat cũng vậy. Ở ĐÂY chứ không trong ConversationListView: tab bar cần `totalUnread`
+    /// kể cả khi đang đứng ở tab khác, mà store của một màn thì chết theo màn đó.
+    @State private var chat = ConversationStore()
+    /// Theo dõi + hồ sơ thành viên. Ở ĐÂY vì cả FriendsView (tab Bạn bè) lẫn
+    /// MemberProfileView (push từ tab Bạn bè LẪN từ trong Chat) đều cần cùng một trạng thái
+    /// "đang theo ai" — hai instance riêng sẽ lệch nhau ngay khi follow ở màn này rồi mở
+    /// màn kia.
+    @State private var follow = FollowStore()
 
     /// Cỡ chữ hệ thống. Đọc ở đây để cả cây view dựng lại khi user đổi cỡ chữ —
     /// font trong NodieTypography là giá trị đã tính sẵn, không tự biết mình cũ.
@@ -41,15 +51,16 @@ struct RootTabView: View {
                     }
                 case .conversations:
                     NavigationStack(path: $state.chatsPath) {
-                        ConversationListView(state: state)
+                        ConversationListView(state: state, store: chat, follow: follow)
                             .nodieRootScreen()
                             .navigationDestination(for: ChatRoute.self) { route in
                                 switch route {
-                                case .chat(let chatId):
-                                    ChatDetailView(state: state, chatId: chatId)
+                                case .chat(let channelId):
+                                    ChatDetailView(state: state, store: chat, channelId: channelId)
                                         .nodieDetailScreen()
                                 case .member(let id):
-                                    MemberProfileView(state: state, memberId: id).nodieDetailScreen()
+                                    MemberProfileView(state: state, follow: follow, conversations: chat, memberId: id)
+                                        .nodieDetailScreen()
                                 }
                             }
                     }
@@ -57,14 +68,15 @@ struct RootTabView: View {
                     JourneyView(state: state)
                 case .friends:
                     NavigationStack(path: $state.friendsPath) {
-                        FriendsView(state: state, profileInitial: auth.profile?.initial ?? "?")
+                        FriendsView(state: state, follow: follow, profileInitial: auth.profile?.initial ?? "?")
                             .nodieRootScreen()
                             .navigationDestination(for: FriendsRoute.self) { route in
                                 switch route {
                                 case .profile:
                                     ProfileView(auth: auth, qa: qa).nodieDetailScreen()
                                 case .member(let id):
-                                    MemberProfileView(state: state, memberId: id).nodieDetailScreen()
+                                    MemberProfileView(state: state, follow: follow, conversations: chat, memberId: id)
+                                        .nodieDetailScreen()
                                 }
                             }
                     }
@@ -74,7 +86,7 @@ struct RootTabView: View {
             .padding(.bottom, state.showsTabBar ? 74 : 0)
 
             if state.showsTabBar {
-                NodieTabBar(selection: state.tab, unreadCount: state.totalUnread) {
+                NodieTabBar(selection: state.tab, unreadCount: chat.totalUnread) {
                     NodieHaptics.tap()
                     state.selectTab($0)
                 }
@@ -98,13 +110,47 @@ struct RootTabView: View {
         )) {
             Button("OK") { qa.clearError() }
         } message: { Text(qa.errorMessage ?? "") }
+        // Lỗi FollowStore — cùng khuôn với alert qa ở trên, cùng lý do (gốc cây luôn sống,
+        // binding hai chiều thật chứ không `.constant`). Alert riêng chứ không gộp chung
+        // biến với `qa.errorMessage`: hai store độc lập, gộp lỗi sẽ phải bịa ra một enum
+        // "lỗi của ai" chỉ để tách lại ngay sau đó.
+        .alert("Lỗi", isPresented: Binding(
+            get: { follow.errorMessage != nil },
+            set: { if !$0 { follow.clearError() } }
+        )) {
+            Button("OK") { follow.clearError() }
+        } message: { Text(follow.errorMessage ?? "") }
+        // "Đã xoá — Hoàn tác". Ở gốc cây, cùng lý do với alert ngay trên: xoá câu hỏi xong là
+        // màn chi tiết bị pop, banner đặt trong màn đó chết theo trước khi ai kịp đọc.
+        .nodieUndoBanner(qa: qa)
         // Đổi cỡ chữ → đổi identity → dựng lại toàn bộ cây với font mới.
         // `state` là @State của RootTabView nên nằm NGOÀI id: draft và path điều hướng
         // không mất khi user chỉnh cỡ chữ.
         .id(dynamicTypeSize)
+        // Nhớ tab qua lần giết app (#20). Đặt SAU `.id(dynamicTypeSize)`: nằm trước thì mỗi
+        // lần đổi cỡ chữ cây bị dựng lại, `.task` của modifier chạy lại và kéo user về tab
+        // đã lưu — đang đứng ở Chat mà chỉnh cỡ chữ lại bị ném về Hỏi đáp.
+        .nodieRestoresTab(state: state)
+        // Bấm push → mở đúng kênh.
+        //
+        // Phải có CẢ HAI, không bỏ cái nào:
+        // `.task` cho lúc app đang TẮT HẲN — iOS giao cú bấm xong xuôi từ trước khi màn này
+        // tồn tại, nên giá trị đã nằm sẵn ở đó và `.onChange` sẽ không bao giờ bắn.
+        // `.onChange` cho lúc app đang chạy/nền — màn này đã sống, giá trị đổi sau.
+        // Chỉ có `.onChange` là hỏng đúng đường vào phổ biến nhất của push.
+        .task { consumePendingPush() }
+        .onChange(of: push.pendingChannelId) { consumePendingPush() }
+    }
+
+    /// Đọc RỒI xoá: không xoá thì quay lại tab Chat lần nào cũng bị ném vào kênh cũ,
+    /// và cú bấm push từ tuần trước sống mãi.
+    private func consumePendingPush() {
+        guard let id = push.pendingChannelId else { return }
+        push.pendingChannelId = nil
+        state.openChat(id)
     }
 }
 
 #Preview {
-    RootTabView(auth: AuthStore())
+    RootTabView(auth: AuthStore(), push: PushManager())
 }

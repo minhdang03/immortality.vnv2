@@ -13,16 +13,23 @@ enum FeedRoute: Hashable {
 
 /// Đích push được từ tab Bạn bè. Enum vì tab này push hai thứ khác nhau:
 /// hồ sơ người khác và hồ sơ của chính mình (avatar góc header).
+///
+/// `UUID` chứ không `String`: từ phase "Bạn bè + hồ sơ thành viên" (17/07), người trong
+/// danh sách là `PublicProfile` (FollowStore, khoá `profiles.id` thật), không còn slug
+/// Mock kiểu "huong". Khớp `ChatRoute.member(UUID)` bên dưới.
 enum FriendsRoute: Hashable {
     case profile
-    case member(String)
+    case member(UUID)
 }
 
 /// Đích push được từ tab Chat. Enum vì từ trong khung chat còn mở được hồ sơ người đang
 /// nhắn (menu ⋯ → "Xem hồ sơ") — và back phải quay về đúng khung chat đó, không nhảy tab.
+///
+/// `UUID` chứ không `String`: hai id này giờ là khoá chính thật của `channels` / `profiles`
+/// bên Supabase, không còn là chuỗi tự đặt kiểu "naobo" của prototype.
 enum ChatRoute: Hashable {
-    case chat(String)
-    case member(String)
+    case chat(UUID)
+    case member(UUID)
 }
 
 @Observable
@@ -42,9 +49,12 @@ final class AppState {
     var friendsPath = NavigationPath()
 
     // Soạn thảo
-    /// Draft RIÊNG từng hội thoại, khoá theo chatId. Dùng chung một biến thì gõ dở ở
+    /// Draft RIÊNG từng hội thoại, khoá theo channelId. Dùng chung một biến thì gõ dở ở
     /// chat A rồi mở chat B sẽ thấy chữ của A — mỗi khung chat phải giữ chữ của nó.
-    var drafts: [String: String] = [:]
+    ///
+    /// Draft ở ĐÂY chứ không trong ChatDetailView: view bị dựng lại mỗi lần đổi cỡ chữ
+    /// (`.id(dynamicTypeSize)` ở RootTabView) và bị huỷ khi pop — `@State` sẽ mất chữ.
+    var drafts: [UUID: String] = [:]
     var projectionDraft = ""
     var projectionText = ""
     var hasProjected = false
@@ -84,17 +94,18 @@ final class AppState {
     // Màn "Chiếu câu hỏi" giữ draft trong chính `AskQuestionView` và ghi thẳng Supabase
     // qua `QAStore` — không có state ở đây.
 
-    var messages: [String: [ChatMessage]] = MockData.messages
+    // Nội dung hội thoại KHÔNG còn ở đây — `ConversationStore` giữ, đọc thẳng Supabase.
+    // Trước kia `messages`/`conversations`/`unreadOverrides`/`mutedChannels`/`leftChannels`
+    // là mock client-side; giờ chúng là `messages` / `channels` / `channel_members.last_read_at`
+    // / `.muted_until` thật. AppState chỉ còn giữ thứ THUỘC VỀ MÀN HÌNH: điều hướng, draft,
+    // khay đính kèm, trạng thái ghi âm.
 
     // MARK: - Bạn bè
-
-    /// Người đang theo dõi. Seed 2 người cho khớp `sub` của họ ("Theo dõi lẫn nhau").
-    /// Mock — server sẽ là bảng `follows` (follower_id, followee_id).
-    var follows: Set<String> = ["hachi", "quan"]
-
-    /// DM tạo tại chỗ khi bấm "Nhắn tin" với người chưa có hội thoại.
-    /// Mock — server sẽ là INSERT `conversations` + `conversation_members`.
-    var createdDMs: [Conversation] = []
+    //
+    // Follow/danh sách giờ chạy `FollowStore` thật (bảng `follows`, 0028) — xem
+    // `Features/Friends/FollowStore.swift`. `follows`/`isFollowing`/`toggleFollow`/
+    // `followingList`/`suggestList` đã xoá khỏi đây; store đứng ở RootTabView, truyền
+    // xuống FriendsView + MemberProfileView.
 
     // MARK: - Chat: đính kèm & ghi âm
 
@@ -102,12 +113,6 @@ final class AppState {
     var attachOpen = false
     /// Đang ghi âm — thanh ghi âm thay chỗ ô nhập.
     var recording = false
-
-    /// Trạng thái hội thoại thay đổi được tại chỗ (swipe action).
-    /// Mock — sẽ là `channel_members.last_read_at` / `.muted_until` phía Supabase.
-    var unreadOverrides: [String: Int] = [:]
-    var mutedChannels: Set<String> = []
-    var leftChannels: Set<String> = []
 
     // MARK: - Dẫn xuất
 
@@ -125,83 +130,17 @@ final class AppState {
     }
 
     // MARK: - Bạn bè (dẫn xuất)
+    //
+    // Giữ lại — không ai gọi nữa sau khi Bạn bè chuyển sang FollowStore, nhưng
+    // `MockData.people`/`.members` vẫn còn sống (rollback an toàn) nên để hai hàm này
+    // đứng chờ, không xoá.
 
     func person(id: String) -> Person? { MockData.people.first { $0.id == id } }
     func member(id: String) -> Member? { MockData.members[id] }
-    func isFollowing(_ id: String) -> Bool { follows.contains(id) }
-
-    var followingList: [Person] { MockData.people.filter { follows.contains($0.id) } }
-    var suggestList: [Person] { MockData.people.filter { !follows.contains($0.id) } }
-
-    func toggleFollow(_ id: String) {
-        if follows.contains(id) { follows.remove(id) } else { follows.insert(id) }
-    }
-
-    /// "Nhắn tin" từ hồ sơ: dùng lại DM đã có, không thì tạo mới. Khớp theo TÊN chứ không
-    /// theo id vì DM seed sẵn (`hachi`, `quan`) trùng id người, còn DM tạo mới thì không.
-    func openOrCreateDM(with personId: String) {
-        guard let person = person(id: personId) else { return }
-        if let existing = conversations.first(where: { $0.kindLabel == nil && $0.name == person.name }) {
-            openChat(existing.id)
-            return
-        }
-        let dm = Conversation(
-            id: "dm-\(personId)", name: person.name, emoji: person.emoji, avatarBg: person.bg,
-            isRound: true, kindLabel: nil, kindBg: nil, sub: person.sub,
-            isBroadcast: false, time: "vừa xong", unread: 0
-        )
-        createdDMs.append(dm)
-        openChat(dm.id)
-    }
-
-    var conversations: [Conversation] {
-        (MockData.conversations + createdDMs)
-            .filter { !leftChannels.contains($0.id) }
-            .map { c in
-                guard let override = unreadOverrides[c.id] else { return c }
-                return Conversation(
-                    id: c.id, name: c.name, emoji: c.emoji, avatarBg: c.avatarBg,
-                    isRound: c.isRound, kindLabel: c.kindLabel, kindBg: c.kindBg,
-                    sub: c.sub, isBroadcast: c.isBroadcast, time: c.time, unread: override
-                )
-            }
-    }
-
-    func conversation(id: String) -> Conversation? {
-        conversations.first { $0.id == id }
-    }
-
-    /// Tổng tin chưa đọc cho badge trên tab Chat. Kênh đã tắt thông báo không tính —
-    /// user đã nói "đừng réo tôi về chỗ này" thì badge cũng phải im.
-    var totalUnread: Int {
-        conversations
-            .filter { !mutedChannels.contains($0.id) }
-            .reduce(0) { $0 + $1.unread }
-    }
 
     func question(id: String) -> Question {
         MockData.questions.first { $0.id == id } ?? MockData.questions[0]
     }
-
-    func messages(for chatId: String) -> [ChatMessage] {
-        messages[chatId] ?? []
-    }
-
-    /// Kênh phát một chiều thì không cho gõ. Client chỉ ẩn UI —
-    /// chặn thật phải nằm ở RLS phía Supabase.
-    func canPost(in chatId: String) -> Bool {
-        conversation(id: chatId).map { !$0.isBroadcast } ?? false
-    }
-
-    /// Tin nào cần hiện tên người gửi: chỉ tin đầu của một chuỗi cùng người.
-    func senderLabel(at index: Int, in list: [ChatMessage]) -> String? {
-        let m = list[index]
-        guard !m.isMine, let who = m.who else { return nil }
-        let prev = index > 0 ? list[index - 1] : nil
-        return prev?.who == who ? nil : who
-    }
-
-    func isMuted(_ chatId: String) -> Bool { mutedChannels.contains(chatId) }
 
     // MARK: - Điều hướng
 
@@ -239,82 +178,31 @@ final class AppState {
         qaPath = [id]
     }
 
-    func openChat(_ id: String) {
+    func openChat(_ id: UUID) {
         tab = .conversations
         chatsPath = [.chat(id)]
     }
 
-    /// Người đứng sau một DM — khớp theo tên (prototype: `nameToMember`).
-    /// nil với kênh/nhóm, và với DM của người không có trong `MockData.people`.
-    func member(inChat chatId: String) -> String? {
-        guard let c = conversation(id: chatId), c.kindLabel == nil else { return nil }
-        return MockData.people.first { $0.name == c.name }?.id
-    }
-
     // MARK: - Hành động
 
-    func draft(in chatId: String) -> String { drafts[chatId] ?? "" }
+    func draft(in channelId: UUID) -> String { drafts[channelId] ?? "" }
 
-    func send(in chatId: String) {
-        let text = draft(in: chatId).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
-        // Rung đặt SAU guard: bấm gửi với ô rỗng thì không có gì được gửi — không rung.
-        NodieHaptics.action()
-        drafts[chatId] = nil
-        // Đọc RỒI xoá: gửi xong là hết trích dẫn, không dính sang tin kế tiếp.
-        let parent = replyingTo[chatId]
-        replyingTo[chatId] = nil
-        messages[chatId, default: []].append(
-            ChatMessage(who: nil, isMine: true, text: text, time: Self.nowHHmm(), replyTo: parent)
-        )
-    }
-
-    // MARK: - Chat: trả lời & thả cảm xúc
+    // MARK: - Chat: trả lời
 
     /// Tin đang được trả lời, theo từng chat — bỏ dở ở chat này không xoá trích dẫn ở chat kia.
-    var replyingTo: [String: UUID] = [:]
+    /// Chỉ giữ Ý ĐỊNH trả lời (id tin nào); nội dung tin nằm ở `ConversationStore`.
+    var replyingTo: [UUID: UUID] = [:]
 
-    func replyTarget(in chatId: String) -> ChatMessage? {
-        guard let id = replyingTo[chatId] else { return nil }
-        return messages[chatId]?.first { $0.id == id }
-    }
-
-    func startReply(to messageId: UUID, in chatId: String) {
+    func startReply(to messageId: UUID, in channelId: UUID) {
         NodieHaptics.tap()
-        replyingTo[chatId] = messageId
+        replyingTo[channelId] = messageId
     }
 
-    func cancelReply(in chatId: String) { replyingTo[chatId] = nil }
-
-    /// Thả/gỡ — một loại, một người, một tin. Khớp PK `(message_id, user_id, kind)` của 0026:
-    /// thả lần hai chính là DELETE, nên ở đây cũng là toggle chứ không cộng dồn.
-    func toggleReaction(_ kind: ReactionKind, on messageId: UUID, in chatId: String) {
-        guard let i = messages[chatId]?.firstIndex(where: { $0.id == messageId }) else { return }
-        NodieHaptics.tap()
-        var m = messages[chatId]![i]
-        if m.myReactions.contains(kind) {
-            m.myReactions.remove(kind)
-            // Xoá hẳn khoá khi về 0 — để `reactions` chỉ chứa thứ thật sự có, view khỏi lọc số 0.
-            let left = (m.reactions[kind] ?? 1) - 1
-            m.reactions[kind] = left > 0 ? left : nil
-        } else {
-            m.myReactions.insert(kind)
-            m.reactions[kind, default: 0] += 1
-        }
-        messages[chatId]![i] = m
-    }
+    func cancelReply(in channelId: UUID) { replyingTo[channelId] = nil }
 
     // MARK: - Chat: đính kèm & ghi âm
 
     func toggleAttach() { attachOpen.toggle() }
-
-    /// Mock — server sẽ là upload R2 rồi INSERT `messages` với con trỏ tới file.
-    func sendMedia(_ kind: MediaKind, in chatId: String) {
-        NodieHaptics.action()
-        attachOpen = false
-        appendMine(ChatMessage(who: nil, isMine: true, text: "", time: Self.nowHHmm(), kind: .media(kind)),
-                   in: chatId)
-    }
 
     /// Mở thanh ghi âm. Đóng khay đính kèm — hai thứ tranh cùng một chỗ dưới ô nhập.
     func startRec() {
@@ -324,19 +212,6 @@ final class AppState {
     }
 
     func cancelRec() { recording = false }
-
-    /// Mock — chưa thu tiếng thật, thời lượng bịa cho giống prototype.
-    func sendVoice(in chatId: String) {
-        NodieHaptics.action()
-        recording = false
-        appendMine(ChatMessage(who: nil, isMine: true, text: "", time: Self.nowHHmm(),
-                               kind: .voice("0:0\(Int.random(in: 3...8))")),
-                   in: chatId)
-    }
-
-    private func appendMine(_ message: ChatMessage, in chatId: String) {
-        messages[chatId, default: []].append(message)
-    }
 
     func project() {
         let t = projectionDraft.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -431,23 +306,6 @@ final class AppState {
     /// Tên hiển thị tạm — sẽ lấy từ `AuthStore.profile.displayName` ở phase wire.
     private static let myName = "Minh Nguyễn"
 
-    // MARK: - Swipe action
-
-    func markRead(_ chatId: String) { unreadOverrides[chatId] = 0 }
-    func toggleMute(_ chatId: String) {
-        if mutedChannels.contains(chatId) { mutedChannels.remove(chatId) }
-        else { mutedChannels.insert(chatId) }
-    }
-    func leave(_ chatId: String) { leftChannels.insert(chatId) }
-
-    /// Làm mới — mock. Sẽ refetch Supabase ở phase wire.
-    func refresh() async {
-        try? await Task.sleep(for: .milliseconds(600))
-    }
-
-    private static func nowHHmm() -> String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm"
-        return f.string(from: Date())
-    }
+    // Đã đọc / tắt thông báo / rời kênh giờ là `ConversationStore.markRead·setMuted·leave`
+    // (ghi thẳng `channel_members`). Không còn bản mock ở đây.
 }

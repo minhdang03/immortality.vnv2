@@ -4,13 +4,20 @@ import SwiftUI
 ///
 /// Dùng `List` chứ không `LazyVStack`: `.swipeActions` chỉ chạy trong List.
 /// Toàn bộ style mặc định của List bị tắt để giữ nguyên thiết kế prototype.
+///
+/// Dữ liệu đến từ `ConversationStore` (Supabase thật). `state` chỉ còn để điều hướng
+/// (`chatsPath`) và bắt nhịp cuộn-lên-đầu — không giữ nội dung hội thoại nữa.
 struct ConversationListView: View {
     @Bindable var state: AppState
+    let store: ConversationStore
+    /// Chỉ để chuyển tiếp xuống NewMessageView (chọn người để nhắn) — màn danh sách
+    /// không tự dùng.
+    let follow: FollowStore
     @State private var filter: ConversationFilter = .all
     @State private var showNewMessage = false
 
-    private var visible: [Conversation] {
-        state.conversations.filter { filter.matches($0) }
+    private var visible: [ChannelRow] {
+        store.channels.filter { filter.matches($0) }
     }
 
     var body: some View {
@@ -19,13 +26,14 @@ struct ConversationListView: View {
 
             ScrollViewReader { proxy in
             List {
-                ForEach(visible) { conversation in
+                ForEach(visible) { channel in
                     ConversationRowView(
-                        conversation: conversation,
-                        preview: preview(for: conversation),
-                        isMuted: state.isMuted(conversation.id)
+                        channel: channel,
+                        preview: preview(for: channel),
+                        unread: store.unread(for: channel.id),
+                        isMuted: channel.isMuted
                     ) {
-                        state.openChat(conversation.id)
+                        state.openChat(channel.id)
                     }
                     .listRowInsets(EdgeInsets(top: 0, leading: NodieSpacing.screenH,
                                               bottom: 0, trailing: NodieSpacing.screenH))
@@ -38,22 +46,23 @@ struct ConversationListView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
-                            state.leave(conversation.id)
+                            Task { await store.leave(channelId: channel.id) }
                         } label: {
                             Label("Rời khỏi", systemImage: "rectangle.portrait.and.arrow.right")
                         }
 
                         Button {
-                            state.toggleMute(conversation.id)
+                            Task { await store.setMuted(channelId: channel.id,
+                                                        until: channel.isMuted ? nil : Self.muteHorizon) }
                         } label: {
-                            Label(state.isMuted(conversation.id) ? String(localized: "Bật lại") : String(localized: "Tắt thông báo"),
-                                  systemImage: state.isMuted(conversation.id) ? "bell" : "bell.slash")
+                            Label(channel.isMuted ? String(localized: "Bật lại") : String(localized: "Tắt thông báo"),
+                                  systemImage: channel.isMuted ? "bell" : "bell.slash")
                         }
                         .tint(NodieColors.inkMuted)
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         Button {
-                            state.markRead(conversation.id)
+                            Task { await store.markRead(channelId: channel.id) }
                         } label: {
                             Label("Đã đọc", systemImage: "envelope.open")
                         }
@@ -64,20 +73,21 @@ struct ConversationListView: View {
                     // hoặc dùng VoiceOver/Switch Control — vẫn phải tới được ba việc đó.
                     .contextMenu {
                         Button {
-                            state.markRead(conversation.id)
+                            Task { await store.markRead(channelId: channel.id) }
                         } label: {
                             Label("Đã đọc", systemImage: "envelope.open")
                         }
 
                         Button {
-                            state.toggleMute(conversation.id)
+                            Task { await store.setMuted(channelId: channel.id,
+                                                        until: channel.isMuted ? nil : Self.muteHorizon) }
                         } label: {
-                            Label(state.isMuted(conversation.id) ? String(localized: "Bật lại") : String(localized: "Tắt thông báo"),
-                                  systemImage: state.isMuted(conversation.id) ? "bell" : "bell.slash")
+                            Label(channel.isMuted ? String(localized: "Bật lại") : String(localized: "Tắt thông báo"),
+                                  systemImage: channel.isMuted ? "bell" : "bell.slash")
                         }
 
                         Button(role: .destructive) {
-                            state.leave(conversation.id)
+                            Task { await store.leave(channelId: channel.id) }
                         } label: {
                             Label("Rời khỏi", systemImage: "rectangle.portrait.and.arrow.right")
                         }
@@ -87,10 +97,10 @@ struct ConversationListView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(NodieColors.bg)
-            .refreshable { await state.refresh() }
+            .refreshable { await store.loadChannels() }
             // Overlay thay vì if/else quanh List: giữ nguyên pull-to-refresh khi rỗng.
             // allowsHitTesting(false): chữ empty-state không được nuốt cú kéo refresh.
-            .overlay { if visible.isEmpty { emptyState.allowsHitTesting(false) } }
+            .overlay { if visible.isEmpty && !store.isLoading { emptyState.allowsHitTesting(false) } }
             // Chạm lại tab khi đã ở root → cuộn lên đầu — cùng hành vi với QA/Bạn bè.
             // Neo vào dòng đầu (row đã có id từ ForEach Identifiable), không cần .id("top").
             .onChange(of: state.rootScrollTick) {
@@ -101,10 +111,17 @@ struct ConversationListView: View {
             }
         }
         .background(NodieColors.bg)
+        // Nạp một lần khi màn xuất hiện. `channels.isEmpty` để quay lại tab không refetch —
+        // pull-to-refresh và Realtime lo phần cập nhật.
+        .task { if store.channels.isEmpty { await store.loadChannels() } }
         // sheet được (khác màn Chiếu câu hỏi dùng fullScreenCover): chọn người là thao tác
         // một chạm, vuốt xuống đóng nhầm cũng không mất gì đang gõ dở.
-        .sheet(isPresented: $showNewMessage) { NewMessageView(state: state) }
+        .sheet(isPresented: $showNewMessage) { NewMessageView(state: state, store: store, follow: follow) }
     }
+
+    /// Tắt thông báo tới bao giờ. Prototype không có màn chọn thời hạn nên chọn một mốc xa —
+    /// "tắt" theo nghĩa người dùng hiểu là tắt hẳn cho tới khi bật lại.
+    private static var muteHorizon: Date { Date(timeIntervalSinceNow: 60 * 60 * 24 * 365 * 10) }
 
     /// Xoá/rời hết, hoặc bộ lọc không khớp cuộc nào — màn trống trơn thì user
     /// không phân biệt được "không có gì" với "đang tải".
@@ -124,13 +141,24 @@ struct ConversationListView: View {
     }
 
     /// Preview = tin cuối, gắn tiền tố "Bạn: " hoặc tên rút gọn của người gửi.
-    private func preview(for c: Conversation) -> String {
-        guard let last = state.messages(for: c.id).last else { return "" }
-        if last.isMine { return String(localized: "Bạn: \(last.text)") }
-        if let who = last.who, let shortName = who.split(separator: " ").last {
-            return "\(shortName): \(last.text)"
+    private func preview(for channel: ChannelRow) -> String {
+        guard let last = store.messages(for: channel.id).last else { return "" }
+        let text = last.body?.isEmpty == false ? last.body! : (last.media.map(Self.mediaLabel) ?? "")
+        if last.userId == store.currentUserId { return String(localized: "Bạn: \(text)") }
+        if let shortName = last.author?.name.split(separator: " ").last {
+            return "\(shortName): \(text)"
         }
-        return last.text
+        return text
+    }
+
+    /// Ảnh/thoại không có chữ để trích — mượn nhãn của chúng, vì preview rỗng thì dòng
+    /// hội thoại trông như chưa có tin nào.
+    private static func mediaLabel(_ media: MessageMedia) -> String {
+        switch media.kind {
+        case .photo: return String(localized: "▣ Ảnh")
+        case .file:  return String(localized: "▤ Tệp đính kèm")
+        case .voice: return String(localized: "▶ Tin nhắn thoại")
+        }
     }
 
     private var header: some View {
@@ -160,8 +188,4 @@ struct ConversationListView: View {
         .padding(.horizontal, NodieSpacing.screenH)
         .padding(.top, NodieSpacing.screenTop)
     }
-}
-
-#Preview {
-    ConversationListView(state: AppState())
 }
