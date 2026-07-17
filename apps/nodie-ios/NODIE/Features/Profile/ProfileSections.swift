@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UserNotifications
 
 /// Thẻ danh tính — avatar chữ cái, tên, vai trò, bio. Sửa được tại chỗ.
 struct ProfileIdentityCard: View {
@@ -141,30 +142,40 @@ struct ProfileContributionSection: View {
     }
 }
 
-/// Cài đặt — thông báo (cục bộ), ngôn ngữ (mở Settings hệ thống: app có nhiều localization
+/// Cài đặt — thông báo, ngôn ngữ (mở Settings hệ thống: app có nhiều localization
 /// thì iOS tự cho chọn ngôn ngữ riêng từng app, không phải tự viết picker),
 /// người đã chặn + điều khoản (App Store 1.2).
 struct ProfileSettingsSection: View {
-    @AppStorage("notificationsEnabled") private var notificationsEnabled = true
+    /// Nguồn sự thật của "có thông báo hay không" là iOS, KHÔNG phải một cờ trong app:
+    /// user tắt ở Cài đặt thì cờ nội bộ có bật cũng vô nghĩa. Đọc thẳng chỗ thật rồi đưa
+    /// người ta tới đúng đó.
+    ///
+    /// Thay cho `@AppStorage("notificationsEnabled")` cũ: biến đó KHÔNG ai đọc — bật/tắt
+    /// xong không có gì xảy ra. Toggle nói dối tệ hơn là không có toggle.
+    /// Tắt push mà vẫn giữ quyền hệ thống (opt-out phía server) là việc của phase-04,
+    /// đang chặn bởi capability Push chưa bật trên App ID.
+    @State private var pushStatus: UNAuthorizationStatus = .notDetermined
     @Environment(\.openURL) private var openURL
     let onOpenBlockedUsers: () -> Void
     let onOpenTerms: () -> Void
+
+    private var isPushOn: Bool { pushStatus == .authorized || pushStatus == .provisional }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: "Cài đặt")
 
             VStack(spacing: 0) {
-                Toggle(isOn: $notificationsEnabled) {
-                    Label {
-                        Text("Thông báo").font(NodieTypography.bodySm).foregroundStyle(NodieColors.ink)
-                    } icon: {
-                        Image(systemName: "bell").foregroundStyle(NodieColors.inkMuted)
+                // Ternary trong Text(...) suy ra String → init verbatim, KHÔNG tra String
+                // Catalog. Tách mỗi nhánh một Text (xem LoginView.swift:49).
+                ProfileRow(icon: "bell", title: "Thông báo",
+                           trailing: isPushOn ? Text("Đang bật") : Text("Đang tắt")) {
+                    // openNotificationSettingsURLString mở ĐÚNG trang thông báo của app,
+                    // không phải trang gốc của app như openSettingsURLString.
+                    if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                        openURL(url)
                     }
                 }
-                .tint(NodieColors.accent)
-                .padding(.horizontal, NodieSpacing.lg)
-                .padding(.vertical, 14)
 
                 Divider().background(NodieColors.rule)
                 ProfileRow(icon: "globe", title: "Ngôn ngữ",
@@ -180,6 +191,17 @@ struct ProfileSettingsSection: View {
             .background(RoundedRectangle(cornerRadius: 16).fill(NodieColors.surface))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(NodieColors.rule, lineWidth: 1))
         }
+        .task { await refreshPushStatus() }
+        // Bấm hàng → sang Settings → tắt/bật → quay lại app. Không đọc lại lúc quay về thì
+        // hàng đứng im ở giá trị cũ, tức là lại nói dối — đúng thứ vừa gỡ bỏ.
+        .onReceive(NotificationCenter.default.publisher(
+            for: UIApplication.willEnterForegroundNotification)) { _ in
+            Task { await refreshPushStatus() }
+        }
+    }
+
+    private func refreshPushStatus() async {
+        pushStatus = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
     }
 
     /// Tên ngôn ngữ app đang chạy, viết bằng chính ngôn ngữ đó ("Tiếng Việt", "English", "日本語").
