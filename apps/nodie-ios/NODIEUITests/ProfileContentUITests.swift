@@ -47,12 +47,14 @@ final class ProfileContentUITests: XCTestCase {
     ///
     /// Chốt riêng vì `navigationDestination(for: ProfileRoute.self)` khai ở ProfileView (tầng 1)
     /// còn link `.question` nằm ở tầng 2: sai chỗ khai là SwiftUI lặng thinh không đẩy.
-    /// Câu seed do chính tài khoản test đăng (`seed_nodie.sql`, `:admin_uid`) nên chắc chắn có.
+    /// Dùng `myQuestionTitle` — câu do CHÍNH tài khoản test đăng. `questionTitle` thuộc về
+    /// tài khoản admin của Đăng, mà từ 17/07 test chạy bằng user thường nên nó không nằm
+    /// trong "Câu hỏi của tôi" nữa.
     func testMyQuestionsPushesQuestionDetail() {
         app.buttons["Câu hỏi của tôi"].tap()
         XCTAssertTrue(app.staticTexts["CÂU HỎI CỦA TÔI"].waitForExistence(timeout: 10))
 
-        app.row(containing: NodieSeed.questionTitle).tap()
+        app.row(containing: NodieSeed.myQuestionTitle).tap()
         XCTAssertTrue(app.buttons["saveQuestion"].waitForExistence(timeout: 10),
                       "Bấm câu hỏi trong 'Câu hỏi của tôi' phải mở màn chi tiết")
     }

@@ -139,11 +139,19 @@ final class AuthUITests: XCTestCase {
 
         let name = app.staticTexts["profileName"]
         XCTAssertTrue(name.waitForExistence(timeout: 15), "Cá Nhân phải hiện tên")
-        // Trigger handle_new_user đặt display_name = phần trước @ của email → suy ra từ
-        // account đang test, không viết cứng (đổi tài khoản test là test vẫn đúng).
-        let expectedName = String(account.email.prefix(while: { $0 != "@" }))
-        XCTAssertEqual(name.label, expectedName, "Tên phải đến từ profiles thật, không hardcode")
-        XCTAssertTrue(app.staticTexts["Quản trị viên"].exists, "role='admin' trong DB phải hiện đúng nhãn")
+        XCTAssertEqual(name.label, account.displayName, "Tên phải đến từ profiles thật, không hardcode")
+
+        // Tài khoản test là user THƯỜNG ⇒ KHÔNG được có nhãn vai trò.
+        //
+        // Trước 17/07 chỗ này khẳng định ngược lại (`"Quản trị viên"` PHẢI hiện) vì tài khoản
+        // test là admin — nghĩa là bộ test được dựng quanh một tài khoản ngắn mạch 29 policy
+        // RLS, và nó đã giấu ba bug P0 (xem project.yml). Đổi sang user thường thì phép thử
+        // đúng là nhãn phải VẮNG: `UserProfile.roleLabel` trả nil với 'user' — "chỉ hiện khi
+        // khác 'user' để tránh phân tầng vô nghĩa", đúng luật không phân tầng của app.
+        XCTAssertFalse(app.staticTexts["Quản trị viên"].exists,
+                       "User thường không được hiện nhãn vai trò (luật không phân tầng)")
+        XCTAssertFalse(app.staticTexts["Điều hành viên"].exists,
+                       "User thường không được hiện nhãn vai trò (luật không phân tầng)")
 
         // Đính ảnh màn Cá Nhân với dữ liệu THẬT để review thiết kế.
         let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())

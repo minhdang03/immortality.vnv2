@@ -26,6 +26,7 @@ KEY=$(read_env VITE_SUPABASE_ANON_KEY)
 # Chỉ scheme test đọc 2 biến này — không vào Info.plist nên không nằm trong app ship đi.
 TEST_EMAIL=$(read_env NODIE_TEST_EMAIL)
 TEST_PASSWORD=$(read_env NODIE_TEST_PASSWORD)
+TEST_DISPLAY_NAME=$(read_env NODIE_TEST_DISPLAY_NAME)
 
 mkdir -p Config
 # CHỈ lưu host, KHÔNG lưu URL đầy đủ: xcconfig coi "//" là mở comment nên
@@ -36,6 +37,7 @@ cat > "$OUT" <<EOF
 SUPABASE_HOST = ${URL#https://}
 SUPABASE_ANON_KEY = $KEY
 NODIE_TEST_EMAIL = $TEST_EMAIL
+NODIE_TEST_DISPLAY_NAME = $TEST_DISPLAY_NAME
 NODIE_TEST_PASSWORD = $TEST_PASSWORD
 EOF
 

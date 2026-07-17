@@ -9,16 +9,23 @@ import XCTest
 ///
 /// Bypass vẫn hợp lệ cho test KHÔNG chạm dữ liệu mạng (vd Hội thoại đang còn MockData).
 enum NodieTestAuth {
-    struct Account { let email: String; let password: String }
+    /// `displayName` khai TƯỜNG MINH chứ không suy từ email.
+    ///
+    /// Trước 17/07 test tự suy `display_name == phần trước @` — chỉ đúng vì tài khoản test cũ
+    /// (`mr.dang1305`) được tạo KHÔNG kèm metadata nên trigger `handle_new_user` rơi vào nhánh
+    /// dự phòng `split_part(email,'@',1)`. Ai đăng ký qua app đều có `display_name` riêng
+    /// (`signUp` gửi kèm), nên phép suy đó sai với mọi tài khoản thật.
+    struct Account { let email: String; let password: String; let displayName: String }
 
     /// Thiếu credential → skip êm. Máy chưa chạy generate-secrets-xcconfig.sh không phải lỗi code.
     static func credentials() throws -> Account {
         let env = ProcessInfo.processInfo.environment
         guard let email = env["NODIE_TEST_EMAIL"], !email.isEmpty,
-              let password = env["NODIE_TEST_PASSWORD"], !password.isEmpty else {
+              let password = env["NODIE_TEST_PASSWORD"], !password.isEmpty,
+              let displayName = env["NODIE_TEST_DISPLAY_NAME"], !displayName.isEmpty else {
             throw XCTSkip("Thiếu NODIE_TEST_* — bỏ qua test cần Supabase thật")
         }
-        return Account(email: email, password: password)
+        return Account(email: email, password: password, displayName: displayName)
     }
 
     /// Xoá session cũ → app tự đăng nhập THẬT qua SDK (không gõ phím) → dừng khi đã vào trong.
@@ -36,15 +43,49 @@ enum NodieTestAuth {
         app.launchEnvironment["NODIE_TEST_PASSWORD"] = account.password
         app.launchVietnamese()
 
+        dismissPushPermissionAlert()
+
         XCTAssertTrue(app.buttons["Hỏi đáp"].waitForExistence(timeout: 25),
                       "App phải tự đăng nhập vào tới tab bar (--uitest-auto-login)")
         return account
+    }
+
+    /// Tắt hộp thoại "NODIE muốn gửi thông báo cho bạn".
+    ///
+    /// Vì sao PHẢI có: `RootView` gọi `push.requestAuthorizationAndRegister()` ngay khi
+    /// `phase == .signedIn`, nên iOS bật hộp thoại quyền đúng vào lúc test vừa đăng nhập xong.
+    /// Nó là cửa sổ của springboard — nằm NGOÀI cây view của app, `app.alerts` không thấy —
+    /// và nó nuốt chạm, khiến mọi test sau đăng nhập treo tới hết giờ rồi bị kill. Triệu chứng
+    /// ra ngoài là "Executed 0 tests" + "Test crashed with signal kill", đọc y như app crash.
+    ///
+    /// Hộp thoại chỉ hiện MỘT lần cho mỗi lần cài app, nên máy nào đã trả lời rồi sẽ không
+    /// thấy gì — đó là lý do bộ test xanh trên máy dev mà đỏ trên máy sạch/CI. Không dùng
+    /// `addUIInterruptionMonitor`: monitor chỉ chạy khi test chạm vào app, mà ở đây test đang
+    /// CHỜ chứ chưa chạm gì.
+    private static func dismissPushPermissionAlert() {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        // Nhãn theo ngôn ngữ HỆ THỐNG, không theo -AppleLanguages của app: springboard là
+        // tiến trình khác, cờ ngôn ngữ của app không với tới nó.
+        for label in ["Allow", "Cho phép"] {
+            let button = springboard.buttons[label]
+            if button.waitForExistence(timeout: 3) {
+                button.tap()
+                return
+            }
+        }
     }
 }
 
 /// Hằng số khớp `supabase/seed_nodie.sql`. Đổi seed → đổi ở ĐÂY, không rải khắp các test.
 enum NodieSeed {
     static let questionTitle = "Ngủ bao nhiêu là đủ để não tự dọn dẹp?"
+
+    /// Câu hỏi do CHÍNH tài khoản test đăng — cho hai màn "Câu hỏi của tôi"/"Trả lời của tôi".
+    ///
+    /// Tách khỏi `questionTitle`: câu kia thuộc về tài khoản admin của Đăng. Từ lúc test chạy
+    /// bằng user thường (17/07), "của tôi" của tài khoản test là RỖNG nếu vẫn tìm câu đó —
+    /// test đỏ mà code không hề sai.
+    static let myQuestionTitle = "Vì sao càng cố ngủ càng tỉnh?"
     static let questionTopic = "não bộ"
     static let answerOnePrefix = "Phần lớn nghiên cứu hiện tại nói 7–9 tiếng"
     static let answerTwoPrefix = "Ngủ trưa ngắn 20 phút"

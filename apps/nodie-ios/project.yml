@@ -109,8 +109,16 @@ schemes:
       targets:
         - NODIEUITests
       # Credential test auth: xcconfig (gitignored) → scheme → ProcessInfo của test runner.
-      # KHÔNG hardcode trong source — account này cũng là admin battudao.com.
+      # KHÔNG hardcode trong source.
       # Thiếu giá trị → AuthUITests tự skip.
+      #
+      # PHẢI là tài khoản THƯỜNG (role='user'), KHÔNG BAO GIỜ là admin.
+      # 29 policy RLS có nhánh `or is_admin()` → chạy test bằng admin là ngắn mạch toàn bộ
+      # phân quyền, tức test không kiểm tra thứ đáng kiểm tra nhất. Trước 17/07 biến này trỏ
+      # vào account admin của Đăng và đã giấu BA bug P0 cùng lúc: gửi tin nhắn hỏng hoàn toàn
+      # (0031), mở DM bất khả thi (0030), sửa hồ sơ không lưu được (0032) — cả ba đều chạy
+      # ngon lành dưới quyền admin. Đổi lại thành admin là mù trở lại.
       environmentVariables:
         NODIE_TEST_EMAIL: $(NODIE_TEST_EMAIL)
         NODIE_TEST_PASSWORD: $(NODIE_TEST_PASSWORD)
+        NODIE_TEST_DISPLAY_NAME: $(NODIE_TEST_DISPLAY_NAME)
