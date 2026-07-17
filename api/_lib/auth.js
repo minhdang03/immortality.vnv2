@@ -94,8 +94,10 @@ const CORS_ALLOWLIST = new Set([
   'https://www.immortality.vn',
   'http://localhost:5173',
   'http://localhost:4173',
-  'capacitor://localhost', // Capacitor iOS WebView
-  'ionic://localhost',     // Capacitor older
+  // Không còn `capacitor://localhost` / `ionic://localhost`: Capacitor đã bị gỡ khỏi repo
+  // (17/07). Origin không thể phát sinh nữa thì để lại chỉ là mở rộng bề mặt tấn công cho
+  // một client không tồn tại. NODIE iOS là app native, nó gọi Supabase thẳng chứ không đi
+  // qua /api/* bằng WebView origin.
 ])
 export function applyCors(req, res) {
   const origin = req.headers.origin

@@ -2,65 +2,84 @@
 
 ## Tổng quan
 
-Hybrid platform song ngữ (VI/EN) về tâm linh — Bất Tử Đạo. **Monorepo pnpm workspaces** (2026-05-10/11) với:
-- **Web:** Vite 5 + React 18 PWA, Firebase Firestore CMS, Cloud Functions OG rendering
-- **Mobile:** Expo SDK 54 React Native (iOS + Android), WebView cho content reuse
-- **Backend:** Cloudflare Workers + Durable Objects (REST API + WebSocket chat)
-- **Shared:** Common Firebase config, UI tokens, utilities (packages/)
+Platform song ngữ (VI/EN) về tâm linh — Bất Tử Đạo. **Monorepo pnpm workspaces** với:
+- **Web:** Vite 5 + React 18 PWA → battudao.com (Vercel)
+- **iOS:** `apps/nodie-ios` — SwiftUI **native**, không WebView, không RN
+- **Android:** **CHƯA CÓ** — xem "Nền tảng" bên dưới trước khi hứa gì với ai
+- **Backend:** Supabase (Postgres + Auth + Realtime + Storage) · Cloudflare Workers · Vercel functions (`api/`)
 
 ```
-immortality-vn/  (pnpm monorepo root — workspace setup)
+immortality-vn/  (pnpm monorepo root)
 ├── apps/
-│   ├── web/              ← Vite + React 18 SPA + PWA (swv3, manifest, FCM web push)
-│   └── mobile/           ← Expo SDK 54 RN (12 screens, iOS + Android, WebView content)
+│   ├── web/              ← Vite + React 18 SPA + PWA  ← Vercel build cái này
+│   └── nodie-ios/        ← NODIE, SwiftUI native (XcodeGen, không CocoaPods)
+├── api/                  ← Vercel serverless functions (OG render, upload R2, agent CMS)
 ├── workers/
-│   ├── api/              ← Hono REST API (Firebase Auth, Firestore, profiles, Q&A, votes)
-│   ├── realtime/         ← Durable Objects WebSocket chat (slow-mode, ephemeral TTL)
+│   ├── api/              ← Hono REST API
+│   ├── realtime/         ← Durable Objects WebSocket chat
 │   └── notion/           ← Notion sync cron + Claude AI hỏi ngược
-├── packages/
-│   ├── firebase-config/  ← Shared Firebase init (web + RN)
-│   ├── shared/           ← Types, utils, hooks
-│   └── ui-tokens/        ← Design tokens (colors, spacing, typography)
-├── scripts/              ← Seed/migration (Node + Python) cho Firestore
-├── functions/            ← Firebase Functions v2 (ogRenderer — legacy)
-├── public/               ← Static assets (favicon, sw.js v3, og-image, manifest.json)
-├── pnpm-workspace.yaml   ← Workspace definition
-├── firebase.json         ← Hosting + functions config
-├── firestore.rules       ← Security rules (KHÔNG auto-deploy)
-├── vercel.json           ← Alt deploy target
+├── supabase/
+│   ├── migrations/       ← NGUỒN SỰ THẬT của schema. Áp bằng psql TAY (xem dưới)
+│   └── functions/        ← Edge Functions (push-on-message)
+├── scripts/              ← Seed/migration + set-push-secrets.sh
+├── functions/            ← Firebase Functions v2 (ogRenderer — legacy, còn deploy)
+├── vercel.json           ← buildCommand: pnpm --filter @btd/web build
 └── CLAUDE.md             ← FILE NÀY
 ```
 
-**Main Stack:** Vite 5 + React 18 (web), Expo 54 + RN 0.76 (mobile), Cloudflare Workers + Durable Objects (API), Firebase 12 (Firestore + Auth + Analytics), pnpm workspaces.
+**Main Stack:** Vite 5 + React 18 (web) · SwiftUI iOS 17 (NODIE) · Supabase · Cloudflare Workers · pnpm workspaces.
 
 **Domain:** `https://battudao.com` (prod). Immortality.vn→EN, battudao.com→VI.
 
 ---
 
-## Mobile App (apps/mobile/)
+## Nền tảng — đọc trước khi tin bất kỳ tài liệu cũ nào
 
-Expo SDK 54 React Native with 12 screens (iOS + Android). Anti-Buddhist UX (no tier segregation, no engagement metrics on people, Đăng = peer).
-
-| Screen | Type | Features |
+| Nền tảng | Trạng thái | Ghi chú |
 |---|---|---|
-| Hub | Tab | Latest article, features, trending |
-| Tự Khai Trí | Browse+Parallel | Content cards, filter by difficulty, parallel track UI |
-| Tự Khai Trí AI | Interactive | Claude AI Q&A, context-aware suggestions |
-| Đối thoại sâu | Browse+Thread | Question list, inline reply threads, read-all |
-| Forum Q&A | Browse+Detail | Questions grid, detail page, vote system |
-| Bay Cùng | Profile | User profile, activity, bio, follow (TBD) |
-| Phá Nô Lệ | Modal/List | Self-liberation content, resources |
-| Trao Đổi NLTT | Browse+Booking | Workshops, bookings, calendar integration |
-| Knowledge Base | WebView | Embedded web articles (Firestore + rich text) |
-| Practice Journal | Tab | Audio Khai Trí, journaling |
-| Comments | Drawer | Inline comments on articles (async fetch) |
-| AI Hỏi Ngược | Paid/Modal | 99K/tháng subscription, Claude-powered reflection |
+| Web | ✅ sống | `apps/web` → battudao.com |
+| iOS | ✅ sống | `apps/nodie-ios`, SwiftUI native |
+| Android | ❌ **không tồn tại** | Không project, không gradle. **Chưa từng được dựng.** |
 
-**Tech:** Expo Router (file-based routing), @react-native-firebase (Firebase Auth + Firestore), Durable Objects WebSocket for chat, React Query for data, NativeWind for styling, expo-av for audio.
+**Ba stack mobile đã GỠ HẲN (17/07/2026)** — đừng hồi sinh mà chưa hỏi Đăng:
+- **Capacitor** (`ios/`, `capacitor.config.json`) — bỏ ~10 tuần trước.
+- **Expo SDK 54 RN** (`apps/mobile`) — bỏ theo quyết định 2026-07-14: NODIE làm **native Swift/Kotlin kiểu Zalo**.
+- **`packages/`** (firebase-config, shared, ui-tokens) — chỉ `apps/mobile` xài, chết theo.
 
-**WebView strategy:** Content (articles, teachings) rendered via WebView component pointing to `/article/:slug` on web app. Eliminates custom Swift/Kotlin; single source of truth for rich text.
+Tài liệu/plan cũ nào còn tả "Expo 12 màn hình", "WebView cho content reuse", "EAS Build → Google Play"
+là **mô tả một app đã bị xoá**. Lịch sử git giữ hết; cần thì lấy lại bằng tag.
 
-**Deploy:** Apple TestFlight → App Store, Google Play Console (deferred: IAP framework TBD, video provider not chosen yet).
+**Android khi nào làm:** sau khi iOS 1.0 ổn. Dựng `apps/nodie-android` (Kotlin/Compose) — KHÔNG quay lại Expo/Capacitor.
+
+---
+
+## iOS — NODIE (apps/nodie-ios/)
+
+SwiftUI native, iOS 17+. Dựng project bằng **XcodeGen** (`project.yml` là nguồn sự thật, `.xcodeproj`
+sinh ra — thêm file mới phải chạy `xcodegen generate`). Không CocoaPods; phụ thuộc duy nhất là
+supabase-swift qua SPM.
+
+| Tab | Trạng thái |
+|---|---|
+| Hỏi đáp | ✅ Supabase thật — hỏi/đáp/reply lồng, ▲vote, ☀lit, "Hay nhất", sửa/xoá của mình |
+| Chat | ✅ Supabase thật — kênh/DM, Realtime, ảnh/tệp/thoại, reply, reaction |
+| Bạn bè | ✅ Supabase thật — `follows`, hồ sơ thành viên, tìm người |
+| Cá nhân | ✅ Supabase thật — đóng góp của tôi, đã lưu, cài đặt |
+| Bảng tin · Hành trình | 🚫 **rút khỏi tab bar** (`NodieTab.visibleTabs`) — còn chạy MockData, chưa có nguồn thật |
+
+**Anti-pattern giữ nguyên:** không phân tầng người dùng (nhãn vai trò chỉ hiện với admin/mod),
+không leaderboard giữa người với người. Metric nằm trên NỘI DUNG, không trên NGƯỜI.
+Đăng = ngang hàng, không phải bề trên.
+
+**Bẫy đã trả giá — đọc trước khi sửa iOS:**
+- **Test bằng admin = không test gì.** 29 policy RLS có nhánh `or is_admin()`. Tài khoản admin ngắn
+  mạch toàn bộ phân quyền và đã giấu 4 bug P0 (17/07). `NODIE_TEST_*` **phải** là tài khoản role='user'.
+- **Build xanh không chứng minh gì về PostgREST.** Thêm embed thứ hai trỏ cùng một bảng → PGRST201,
+  mọi dòng không tải được, mà Swift vẫn compile sạch. Đổi chuỗi `select` thì phải test bằng HTTP thật.
+- **SourceKit trong editor hay báo bậy** "No such module 'Supabase'" / "Cannot find NodieColors" —
+  nhiễu, chỉ tin `xcodebuild`.
+
+**Deploy:** Archive → export → altool → TestFlight → App Store.
 
 ---
 
@@ -159,25 +178,36 @@ Admin SDK key (`*firebase-adminsdk*.json`) dùng cho scripts/seed — gitignored
 
 ## Build & Deploy
 
-### Web (apps/web/)
+### Web (apps/web/) → battudao.com
+
+**Vercel LÀ production.** (Tài liệu cũ ghi "Vercel: legacy, canonical = Firebase Hosting" — SAI, đã sửa
+17/07. Đo bằng HTTP + Vercel API: battudao.com/immortality.vn đều là alias của deployment Vercel.)
 
 | Cmd | Mô tả |
 |---|---|
-| `pnpm run dev` | Vite dev, port 5173 |
-| `pnpm run build` | `vite build` → `dist/` + copy → `functions/spa.html` (ogRenderer) |
-| `pnpm run preview` | Preview prod build |
-| `firebase deploy --only hosting,functions` | Deploy Firebase + functions |
-| `firebase deploy --only functions:ogRenderer` | Deploy OG function only |
+| `pnpm --filter @btd/web dev` | Vite dev, port 5173 |
+| `pnpm --filter @btd/web build` | **Đúng lệnh Vercel chạy** → `apps/web/dist` |
+| `pnpm install --no-frozen-lockfile` | Đúng lệnh install của Vercel |
 
-### Mobile (apps/mobile/)
+**Deploy = push lên `main`.** Vercel tự build (Git integration, từ 17/07).
+Trước đó deploy bằng `vercel --prod` TAY từ laptop — production không đến từ commit nào, không tái lập
+được, không rollback được. Đừng quay lại kiểu đó.
+
+**pnpm only.** Không `npm install` — `package-lock.json` ở root đã xoá (17/07) chính vì nó mời gọi
+nhầm. Lock file duy nhất: `pnpm-lock.yaml`.
+
+### iOS (apps/nodie-ios/)
 
 | Cmd | Mô tả |
 |---|---|
-| `pnpm run dev` | Expo dev client (physical device/simulator) |
-| `pnpm run build:ios` | EAS Build → TestFlight |
-| `pnpm run build:android` | EAS Build → Google Play Console |
-| `eas submit --platform ios` | Submit TestFlight → App Store |
-| `eas submit --platform android` | Submit APK/AAB → Play Store |
+| `xcodegen generate` | **Bắt buộc sau khi thêm/xoá file** — không chạy thì build không thấy file mới |
+| `./scripts/generate-secrets-xcconfig.sh` | Sinh `Config/Secrets.xcconfig` từ `.env` (gitignored) |
+| `xcodebuild -project NODIE.xcodeproj -scheme NODIE -destination 'platform=iOS Simulator,name=iPhone 17' build` | Build |
+| ... `test` | UITests — chạy bằng tài khoản THƯỜNG, xem `project.yml` |
+
+### Android
+
+**Chưa tồn tại.** Không có lệnh nào. Xem mục "Nền tảng".
 
 ### Workers (workers/api, workers/realtime, workers/notion)
 
@@ -187,9 +217,16 @@ Admin SDK key (`*firebase-adminsdk*.json`) dùng cho scripts/seed — gitignored
 | `pnpm -F @btd/workers-api run deploy` | Deploy to CF |
 | `pnpm -F @btd/workers-realtime run dev` | Durable Objects dev |
 
-**Firestore rules:** KHÔNG deploy bằng CLI (xem section trên). Phải paste vào Console.
+### Supabase — migrations
 
-**Vercel:** Legacy — `vercel.json` cho backup. Canonical = Firebase Hosting.
+**KHÔNG có `supabase_migrations.schema_migrations`.** CLI không theo dõi gì cả; migration áp bằng psql
+TAY. ⇒ **Số thứ tự file không chứng minh nó đã chạy trên prod.** Muốn biết prod có gì thì hỏi prod:
+```bash
+psql "$SUPABASE_DB_URL" -c "select ... from pg_policies/pg_proc/pg_tables ..."
+```
+Luôn dry-run trong `begin; ... rollback;` trước khi `commit;`. Migration phải chạy lại được (idempotent).
+
+**Firestore rules:** KHÔNG deploy bằng CLI. Phải paste vào Console.
 
 ---
 
@@ -240,8 +277,18 @@ App có SW precache. Khi đổi assets có thể cần bump cache name. Conventi
 - Ngôn ngữ UI: VI + EN song ngữ.
 - Plan tracking: `plans/YYMMDD-HHMM-kebab-name/` (xem `plans/` hiện có).
 - Favicon: `public/favicon.*` — bắt buộc (rule từ workspace root).
-- Git branch chính (PR target): `claude/immortality-vite-react-ISIpv` (xem git status đầu session).
-- Không commit `.env*`, không commit admin SDK key.
+- Không commit `.env*`, không commit admin SDK key, **không commit mật khẩu tài khoản test**
+  (đó là tài khoản THẬT trên prod, và đăng ký đang mở — dẫn tới `.env`, đừng chép giá trị).
+
+### Git — trunk là `main`
+
+- **`main` = trunk duy nhất, luôn deploy được.** Push lên `main` là ra thẳng battudao.com.
+- Việc mới: cắt nhánh từ `main` → PR về `main`.
+- Tài liệu cũ ghi "PR target: `claude/immortality-vite-react-ISIpv`" — **SAI, đã sửa 17/07**.
+  Branch đó chết từ 09/05, kiến trúc khác hẳn (Vite ở root + Firebase, không có `apps/`).
+  PR vào đó là PR vào một dự án không còn tồn tại.
+- `claude/immortality-mobile-hybrid` là tên trunk **cũ** — tên mô tả chiến lược hybrid đã bị bỏ.
+  Giữ tạm cho session đang chạy, sẽ xoá.
 
 ---
 
