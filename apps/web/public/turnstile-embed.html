@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Xác minh</title>
+<!--
+  Trang nhúng Cloudflare Turnstile cho WKWebView của NODIE.
+
+  VÌ SAO CÓ TRANG NÀY: Turnstile không có SDK native iOS. Cách duy nhất được Cloudflare
+  xác nhận domain là load một URL THẬT trên domain đã whitelist sitekey —
+  `loadHTMLString` + baseURL giả KHÔNG qua được domain-check.
+
+  KHÔNG nhúng thêm gì vào đây (không analytics, không font ngoài, không SDK):
+  giữ bề mặt tối thiểu và giữ App Review sạch — trang này không được trông như web wrapper.
+
+  HỢP ĐỒNG VỚI NATIVE (phase 05 phải khớp đúng cái này):
+    window.webkit.messageHandlers.turnstile.postMessage({ kind, value })
+      kind: 'token'   → value = captcha token, đem đi signUp/signIn/resetPassword
+      kind: 'error'   → value = mã lỗi Turnstile (hoặc 'missing-sitekey' / 'bad-sitekey')
+      kind: 'expired' → value = '' — token hết hạn, native phải xin lại
+  Native đăng ký handler tên "turnstile" qua WKUserContentController.add(_:name:).
+
+  SITEKEY: truyền qua ?sitekey=... , KHÔNG hardcode.
+    DEBUG   → 1x00000000000000000000BB (test key của Cloudflare, luôn pass, invisible)
+    RELEASE → key thật, đọc từ Config/Secrets.xcconfig
+-->
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+  }
+  #host {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 72px;
+  }
+  #fallback {
+    display: none;
+    font: 14px/1.5 -apple-system, system-ui, sans-serif;
+    color: #756d60;
+    text-align: center;
+    padding: 16px;
+  }
+</style>
+</head>
+<body>
+<div id="host"></div>
+<p id="fallback">Không tải được phần xác minh. Kiểm tra kết nối mạng rồi thử lại.</p>
+
+<script>
+(function () {
+  'use strict';
+
+  function post(kind, value) {
+    var bridge = window.webkit
+      && window.webkit.messageHandlers
+      && window.webkit.messageHandlers.turnstile;
+    // Mở trang này trong Safari thường (để soi lỗi) thì không có bridge — đừng ném.
+    if (bridge) bridge.postMessage({ kind: kind, value: value || '' });
+  }
+
+  function fail(code) {
+    document.getElementById('fallback').style.display = 'block';
+    post('error', code);
+  }
+
+  // Sitekey đi thẳng từ query param vào DOM ⇒ phải chặn ở cổng.
+  // Sitekey Turnstile thật chỉ gồm [A-Za-z0-9_-]; mọi thứ khác là input bẩn, vứt.
+  var sitekey = new URLSearchParams(window.location.search).get('sitekey');
+  if (!sitekey) { fail('missing-sitekey'); return; }
+  if (!/^[A-Za-z0-9_-]{8,64}$/.test(sitekey)) { fail('bad-sitekey'); return; }
+
+  // Callback phải là global: api.js gọi chúng theo TÊN trong data-*-callback.
+  window.onToken = function (token) { post('token', token); };
+  window.onTurnstileError = function (code) { fail(code || 'unknown'); };
+  window.onTurnstileExpired = function () { post('expired', ''); };
+
+  // Dựng widget bằng DOM API, không innerHTML — sitekey đã lọc nhưng vẫn không
+  // ghép chuỗi vào HTML. Chạy đồng bộ nên xong TRƯỚC khi api.js (async) quét .cf-turnstile.
+  var el = document.createElement('div');
+  el.className = 'cf-turnstile';
+  el.setAttribute('data-sitekey', sitekey);
+  el.setAttribute('data-callback', 'onToken');
+  el.setAttribute('data-error-callback', 'onTurnstileError');
+  el.setAttribute('data-expired-callback', 'onTurnstileExpired');
+  el.setAttribute('data-theme', 'light'); // scope v1 của app = light mode
+  document.getElementById('host').appendChild(el);
+
+  // api.js không tải được (mạng chặn Cloudflare) thì phải báo, đừng treo im.
+  window.addEventListener('load', function () {
+    if (!window.turnstile) fail('script-load-failed');
+  });
+})();
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</body>
+</html>

@@ -24,6 +24,7 @@
 
 /* Pages */
 @import './pages/comments.css' layer(pages);
+@import './pages/legal.css' layer(pages);
 @import './pages/search-contact.css' layer(pages);
 @import './pages/admin.css' layer(pages);
 @import './pages/about.css' layer(pages);

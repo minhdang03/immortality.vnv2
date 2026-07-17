@@ -48,6 +48,8 @@ const PracticePage = lazy(() => import('./pages/info/PracticePage'))
 const UngHoPage = lazy(() => import('./pages/info/UngHoPage'))
 const NangLuongPage = lazy(() => import('./pages/info/NangLuongPage'))
 const CongDongPage = lazy(() => import('./pages/info/CongDongPage'))
+const PrivacyPage = lazy(() => import('./pages/info/PrivacyPage'))
+const TermsPage = lazy(() => import('./pages/info/TermsPage'))
 // Admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
@@ -312,6 +314,12 @@ export default function App() {
           )}
           {page === 'cong-dong' && (
             <CongDongPage lang={lang} navigate={navigate} />
+          )}
+          {page === 'privacy' && (
+            <PrivacyPage lang={lang} />
+          )}
+          {page === 'terms' && (
+            <TermsPage lang={lang} />
           )}
           {page === 'admin' && (
             <AdminPanel

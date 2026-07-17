@@ -1,0 +1,42 @@
+/* ─── LEGAL PAGES (Điều khoản, Quyền riêng tư, Nội quy) ─── */
+/* Văn bản pháp lý: ưu tiên đọc được, không trang trí. Đo cột ~640px như About. */
+
+.legal-body { max-width: 640px; margin: 0 auto; }
+
+.legal-note {
+  padding: 12px 16px;
+  margin-bottom: 28px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.legal-section { margin-bottom: 32px; }
+
+.legal-section-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gold-bright);
+  margin-bottom: 10px;
+}
+
+.legal-section p {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.9;
+  margin-bottom: 12px;
+}
+
+.legal-section p:last-child { margin-bottom: 0; }
+
+.legal-updated {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}

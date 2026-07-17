@@ -111,6 +111,27 @@ const PAGES = [
     adminTab: { vi: 'Ủng Hộ', en: 'Donations' },
   },
   {
+    // Privacy Policy URL là field BẮT BUỘC của App Store Connect — trang này phải
+    // luôn trả 200 trên battudao.com. Không navDefault/homeCard: vào bằng link trực
+    // tiếp và từ footer, không chiếm chỗ trong nav.
+    id: 'privacy',
+    path: 'privacy',
+    labelVi: 'Quyền Riêng Tư', labelEn: 'Privacy',
+    titleVi: 'Quyền Riêng Tư', titleEn: 'Privacy Policy',
+    descVi: 'NODIE và Bất Tử Đạo thu thập gì, dùng làm gì, và bạn xoá được những gì.',
+    descEn: 'What NODIE and Bất Tử Đạo collect, what we use it for, and what you can delete.',
+    icon: '🔒',
+  },
+  {
+    id: 'terms',
+    path: 'terms',
+    labelVi: 'Điều Khoản', labelEn: 'Terms',
+    titleVi: 'Điều Khoản Sử Dụng', titleEn: 'Terms of Use',
+    descVi: 'Điều khoản sử dụng và quy tắc cộng đồng của app NODIE.',
+    descEn: 'Terms of use and community rules for the NODIE app.',
+    icon: '📜',
+  },
+  {
     id: 'search',
     path: 'search',
     labelVi: 'Tìm Kiếm', labelEn: 'Search',
