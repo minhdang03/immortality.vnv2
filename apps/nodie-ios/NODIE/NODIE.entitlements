@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Giá trị đến từ APS_ENVIRONMENT trong project.yml: development ở Debug,
+	     production ở Release. Một file cho cả hai config thay vì hai file song song —
+	     hai file là hai chỗ để quên sửa một.
+
+	     Sai môi trường là kiểu hỏng khó chịu nhất của push: build TestFlight/App Store
+	     mang token production, mà server lại đẩy vào sandbox (hoặc ngược lại) thì APNs
+	     trả BadDeviceToken cho một token hoàn toàn hợp lệ. -->
+	<key>aps-environment</key>
+	<string>$(APS_ENVIRONMENT)</string>
+</dict>
+</plist>

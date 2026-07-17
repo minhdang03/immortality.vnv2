@@ -104,7 +104,7 @@ struct ChatDetailView: View {
                 // Kênh/nhóm chưa có màn thông tin riêng — prototype cũng chỉ đóng menu.
                 Button("Thông tin nhóm") {}.disabled(true)
             }
-            Button(state.isMuted(chatId) ? "Bật thông báo" : "Tắt thông báo") {
+            Button(state.isMuted(chatId) ? String(localized: "Bật thông báo") : String(localized: "Tắt thông báo")) {
                 state.toggleMute(chatId)
             }
             Button("Xoá cuộc trò chuyện", role: .destructive) {

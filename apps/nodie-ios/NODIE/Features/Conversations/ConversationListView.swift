@@ -46,7 +46,7 @@ struct ConversationListView: View {
                         Button {
                             state.toggleMute(conversation.id)
                         } label: {
-                            Label(state.isMuted(conversation.id) ? "Bật lại" : "Tắt thông báo",
+                            Label(state.isMuted(conversation.id) ? String(localized: "Bật lại") : String(localized: "Tắt thông báo"),
                                   systemImage: state.isMuted(conversation.id) ? "bell" : "bell.slash")
                         }
                         .tint(NodieColors.inkMuted)

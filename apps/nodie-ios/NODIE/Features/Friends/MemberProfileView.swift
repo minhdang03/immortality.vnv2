@@ -115,7 +115,7 @@ struct MemberProfileView: View {
         .buttonStyle(.plain)
     }
 
-    private func darkPill(_ label: String) -> some View {
+    private func darkPill(_ label: LocalizedStringKey) -> some View {
         Text(label)
             .font(NodieTypography.bodySm.weight(.bold))
             .foregroundStyle(NodieColors.cream)

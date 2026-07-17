@@ -160,7 +160,7 @@ struct QuestionDetailView: View {
                 .expandedHitArea()
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(saved ? "Bỏ lưu câu hỏi" : "Lưu câu hỏi")
+        .accessibilityLabel(saved ? Text("Bỏ lưu câu hỏi") : Text("Lưu câu hỏi"))
         .accessibilityIdentifier("saveQuestion")
     }
 

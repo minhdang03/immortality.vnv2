@@ -138,7 +138,7 @@ struct PersonRowView: View {
             .buttonStyle(.plain)
 
             Button(action: onToggleFollow) {
-                Text(isFollowing ? "✓ Đang theo dõi" : "＋ Theo dõi")
+                (isFollowing ? Text("✓ Đang theo dõi") : Text("＋ Theo dõi"))
                     .font(NodieTypography.chip.weight(.bold))
                     .foregroundStyle(isFollowing ? NodieColors.inkSoft : .white)
                     .padding(.horizontal, 15)
@@ -147,7 +147,7 @@ struct PersonRowView: View {
                     .overlay(Capsule().stroke(isFollowing ? NodieColors.chipBorder : NodieColors.accent, lineWidth: 1))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(isFollowing ? "Bỏ theo dõi \(person.name)" : "Theo dõi \(person.name)")
+            .accessibilityLabel(isFollowing ? Text("Bỏ theo dõi \(person.name)") : Text("Theo dõi \(person.name)"))
         }
         .padding(.vertical, 11)
     }
