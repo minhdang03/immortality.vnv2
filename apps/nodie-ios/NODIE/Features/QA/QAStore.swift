@@ -68,6 +68,10 @@ final class QAStore {
         do {
             let rows: [QuestionRow] = try await client.from("questions")
                 .select(Self.questionSelect)
+                // Lọc ở client vì RLS KHÔNG còn tự lo: 0034 buộc phải cho tác giả đọc lại
+                // hàng đã xoá của chính mình (không thì Postgres bác luôn lệnh xoá mềm).
+                // Bỏ dòng này là người ta thấy lại bài mình vừa xoá.
+                .is("deleted_at", value: nil)
                 .order("created_at", ascending: false).limit(limit)
                 .execute().value
             questions = rows.filter { !isBlocked($0.authorId) }
@@ -95,7 +99,9 @@ final class QAStore {
         guard questionsById[id] == nil else { return }
         do {
             let row: QuestionRow = try await client.from("questions")
-                .select(Self.questionSelect).eq("id", value: id).single()
+                .select(Self.questionSelect).eq("id", value: id)
+                .is("deleted_at", value: nil)       // xem ghi chú ở loadQuestions
+                .single()
                 .execute().value
             cache([row])
         } catch { errorMessage = ErrorText.localized(error) }
@@ -107,6 +113,7 @@ final class QAStore {
             let answers: [AnswerRow] = try await client.from("answers")
                 .select(Self.answerSelect)
                 .eq("question_id", value: questionId)
+                .is("deleted_at", value: nil)            // xem ghi chú ở loadQuestions
                 .order("is_best", ascending: false)      // Hay nhất lên đầu
                 .order("vote_count", ascending: false)
                 .order("created_at", ascending: true)
@@ -119,6 +126,7 @@ final class QAStore {
             let replies: [ReplyRow] = try await client.from("answer_replies")
                 .select(Self.replySelect)
                 .in("answer_id", values: answerIds)
+                .is("deleted_at", value: nil)       // xem ghi chú ở loadQuestions
                 .order("created_at", ascending: true)
                 .execute().value
             for a in answers { repliesByAnswer[a.id] = replies.filter { $0.answerId == a.id } }
@@ -402,15 +410,11 @@ extension QAStore {
 
 /// Dịch lỗi Supabase sang chuỗi thân thiện (đa ngữ qua String Catalog) — dùng chung các store NODIE.
 enum ErrorText {
+    /// Giữ nguyên tên/chữ ký vì ~30 chỗ đang gọi — nhưng việc phân loại đã dọn sang
+    /// `NodieErrorKind`, nơi mỗi loại lỗi còn trả lời được "có nên mời thử lại không".
+    /// Chỗ nào chỉ cần một câu chữ thì gọi ở đây; chỗ nào cần quyết định hành vi thì hỏi
+    /// thẳng `NodieErrorKind.of(error)`.
     static func localized(_ error: Error) -> String {
-        if (error as NSError).domain == NSURLErrorDomain {
-            return String(localized: "Không kết nối được. Kiểm tra mạng giúp mình nhé.")
-        }
-        let raw = "\(error)".lowercased()
-        if raw.contains("slow_mode") { return String(localized: "Chậm lại chút — chờ 2 giây giữa các tin nhé.") }
-        if raw.contains("insufficient_privilege") || raw.contains("row-level security") || raw.contains("permission") {
-            return String(localized: "Bạn không có quyền thực hiện thao tác này.")
-        }
-        return String(localized: "Có lỗi xảy ra. Thử lại giúp mình nhé.")
+        NodieErrorKind.of(error).message
     }
 }

@@ -43,13 +43,23 @@ final class UndoDeleteUITests: XCTestCase {
                       "Bấm Xoá phải mở hộp xác nhận 'Xoá nội dung này?'")
         confirmDelete.tap()
 
+        // Xoá xong `dismiss()` → tab bar hiện lại. Nếu RLS bác lệnh xoá (bug trước 0034) thì
+        // deleteQuestion trả false, không pop, và ta dừng ở đây với thông báo đúng bệnh —
+        // thay vì báo "không thấy banner" và đổ oan cho banner.
+        XCTAssertTrue(app.buttons["Hỏi đáp"].waitForExistence(timeout: 10),
+                      "Xoá thành công phải pop về danh sách (deleteQuestion trả true)")
+
         // Xoá câu hỏi thì màn chi tiết bị pop — banner phải sống ở gốc cây mới kịp hiện.
         let undo = app.buttons["Hoàn tác"]
         XCTAssertTrue(undo.waitForExistence(timeout: 10),
                       "Xoá xong phải có banner Hoàn tác (banner gắn ở RootTabView)")
         XCTAssertTrue(app.staticTexts["Đã xoá câu hỏi"].exists, "Banner phải nói rõ vừa xoá gì")
 
-        XCTAssertFalse(app.row(containing: title).waitForExistence(timeout: 3),
+        // `.exists` chứ KHÔNG `waitForExistence`: banner chỉ sống 6 giây, mà chờ ở đây là chờ
+        // một thứ phải VẮNG — nó sẽ ngốn trọn timeout rồi mới trả false, và lúc quay ra thì
+        // banner đã tắt, `undo.tap()` bấm vào hư không. Danh sách đã dựng lại xong từ trước
+        // khi banner hiện, nên hỏi ngay là đủ.
+        XCTAssertFalse(app.row(containing: title).exists,
                        "Xoá xong câu hỏi phải biến mất khỏi danh sách")
 
         undo.tap()

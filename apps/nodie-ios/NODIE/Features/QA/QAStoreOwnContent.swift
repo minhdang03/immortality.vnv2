@@ -4,10 +4,14 @@ import Supabase
 /// Sửa/xoá nội dung của CHÍNH MÌNH. Tách khỏi QAStore.swift (đã gần 400 dòng) theo đúng
 /// pattern QAStoreSaves.swift/QAStoreModeration.swift.
 ///
-/// RLS đã có sẵn từ trước (0017+0018+0019), không phải migration mới đợt này:
-/// `questions_update_own`/`answers_update_own`/`answer_replies_update_own` (author_id = mình),
-/// `questions_read`/`answers_read`/... đã tự bỏ hàng `deleted_at IS NOT NULL` cho user thường
-/// (admin thì vẫn thấy vì policy có `OR is_admin()` — đo trên prod, không phải lỗi).
+/// RLS sửa/xoá có sẵn từ 0017+0018+0019: `questions_update_own`/`answers_update_own`/
+/// `answer_replies_update_own` (author_id = mình).
+///
+/// ⚠️ Policy ĐỌC không còn tự lọc hàng đã xoá nữa. Trước 0034 nó là `deleted_at is null or
+/// is_admin()`, và chính vế đó làm xoá mềm BẤT KHẢ THI với người thường: hàng mới có
+/// `deleted_at` không lọt qua policy đọc của chính người vừa xoá → Postgres bác cả lệnh update
+/// (42501). 0034 nới ra `or author_id = auth.uid()` để lệnh đi qua được, đổi lại **mọi select
+/// phải tự lọc `.is("deleted_at", value: nil)`** — xem QAStore/QAStoreSaves.
 ///
 /// Xoá là xoá MỀM (`deleted_at = now()`), không DELETE thật: `answer_replies.answer_id` có
 /// `on delete cascade` — xoá cứng một câu trả lời sẽ cuốn theo reply của NGƯỜI KHÁC nằm dưới

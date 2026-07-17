@@ -120,6 +120,19 @@ struct RootTabView: View {
         )) {
             Button("OK") { follow.clearError() }
         } message: { Text(follow.errorMessage ?? "") }
+        // Lỗi ConversationStore — cùng khuôn hai alert trên.
+        //
+        // Thiếu nó thì `chat.errorMessage` là biến CHỈ GHI: store gán chuỗi lỗi rồi không ai
+        // đọc. Chọn tệp 30MB → bị chặn đúng luật → màn hình không nhúc nhích, người dùng chọn
+        // lại lần nữa, lại im. Lỗi từng bong bóng (ảnh upload hỏng) KHÔNG đi đường này —
+        // chúng hiện ngay trên bong bóng kèm "Gửi lại"; đây chỉ dành cho lỗi không thuộc về
+        // bong bóng nào (chặn quá cỡ, không đọc nổi tệp, không mở nổi tệp).
+        .alert("Lỗi", isPresented: Binding(
+            get: { chat.errorMessage != nil },
+            set: { if !$0 { chat.clearError() } }
+        )) {
+            Button("OK") { chat.clearError() }
+        } message: { Text(chat.errorMessage ?? "") }
         // "Đã xoá — Hoàn tác". Ở gốc cây, cùng lý do với alert ngay trên: xoá câu hỏi xong là
         // màn chi tiết bị pop, banner đặt trong màn đó chết theo trước khi ai kịp đọc.
         .nodieUndoBanner(qa: qa)

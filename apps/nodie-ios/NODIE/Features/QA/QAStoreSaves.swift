@@ -98,6 +98,10 @@ extension QAStore {
             let rows: [QuestionRow] = try await client.from("questions")
                 .select(Self.questionSelect)
                 .eq("author_id", value: uid)
+                // Chỗ này lộ rõ nhất nếu quên: 0034 cho tác giả đọc lại hàng đã xoá của
+                // chính mình, mà đây đúng là màn lọc theo author_id — không lọc thì "Câu hỏi
+                // của tôi" hiện nguyên si mọi bài mình đã xoá.
+                .is("deleted_at", value: nil)
                 .order("created_at", ascending: false)
                 .execute().value
             cache(rows)
@@ -119,6 +123,7 @@ extension QAStore {
             let rows: [MyAnswerRow] = try await client.from("answers")
                 .select("id, body, created_at, lit_count, is_best, question_id, question:questions(title,author_id)")
                 .eq("author_id", value: uid)
+                .is("deleted_at", value: nil)       // xem ghi chú ở myQuestions
                 .order("created_at", ascending: false)
                 .execute().value
             return rows.filter { !isBlocked($0.question?.authorId) }
