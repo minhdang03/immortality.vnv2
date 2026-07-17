@@ -14,9 +14,22 @@ struct NodieApp: App {
     }
 }
 
-/// Chỉ tồn tại để chuyển hai callback push của UIKit về `PushManager`.
+/// Chỉ tồn tại để chuyển các callback push của UIKit về `PushManager`.
 final class AppDelegate: NSObject, UIApplicationDelegate {
     let push = PushManager()
+
+    /// Gắn delegate NGAY lúc launch, không đợi tới sau đăng nhập.
+    ///
+    /// Apple giao `didReceive` (user bấm push) đúng MỘT lần, ngay sau khi app khởi động. Chưa
+    /// có delegate vào thời điểm đó thì cú bấm rơi mất luôn, không có lần thứ hai — mà đó
+    /// chính là đường vào phổ biến nhất: app đang tắt hẳn, có tin nhắn, user bấm banner.
+    /// `requestAuthorizationAndRegister()` cũng gắn delegate nhưng nó chạy SAU đăng nhập,
+    /// quá muộn cho lần mở này.
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        UNUserNotificationCenter.current().delegate = push
+        return true
+    }
 
     func application(_ application: UIApplication,
                      didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
@@ -47,7 +60,7 @@ struct RootView: View {
                 LoginView(auth: auth)
                     .transition(.opacity)
             case .signedIn:
-                RootTabView(auth: auth)
+                RootTabView(auth: auth, push: push)
                     .transition(.opacity)
             }
         }

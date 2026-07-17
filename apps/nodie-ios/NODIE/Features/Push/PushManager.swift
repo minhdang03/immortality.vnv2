@@ -13,6 +13,14 @@ final class PushManager: NSObject {
     /// Đã hỏi quyền chưa và user trả lời gì — view dùng để biết có nên mời bật lại không.
     private(set) var authorization: UNAuthorizationStatus = .notDetermined
 
+    /// Kênh mà user vừa bấm push để vào. `RootTabView` đọc rồi tự xoá.
+    ///
+    /// GIỮ LẠI chứ không gọi callback thẳng: lúc user bấm push khi app đang TẮT HẲN, iOS gọi
+    /// `didReceive` gần như ngay sau khi launch — sớm hơn cả lúc `RootTabView` tồn tại (còn
+    /// phải đợi `auth.phase` khôi phục session từ Keychain). Callback lúc đó không có ai nghe
+    /// và cú bấm rơi mất. Biến này nằm đó đợi tới khi có người đọc.
+    var pendingChannelId: UUID?
+
     private let client = SupabaseClientProvider.shared
     /// Token Apple cấp cho lần chạy này; giữ lại để lúc user đăng nhập xong còn ghi được.
     private var pendingToken: String?
@@ -122,5 +130,19 @@ extension PushManager: UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
         [.banner, .sound, .badge]
+    }
+
+    /// User bấm vào push → ghi lại kênh cần mở. `RootTabView` lo phần điều hướng.
+    ///
+    /// `channel_id` do Edge Function `push-on-message` đặt ở TẦNG NGOÀI payload (cạnh `aps`,
+    /// không nằm trong nó) — key tuỳ ý phải ở ngoài, APNs chỉ sở hữu `aps`.
+    @MainActor
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        let info = response.notification.request.content.userInfo
+        guard let raw = info["channel_id"] as? String, let id = UUID(uuidString: raw) else { return }
+        pendingChannelId = id
     }
 }
