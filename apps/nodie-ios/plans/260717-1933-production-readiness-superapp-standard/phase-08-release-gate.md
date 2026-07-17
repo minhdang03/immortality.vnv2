@@ -1,6 +1,7 @@
 # Phase 08 — Release gate: device matrix + DoD checklist + TestFlight
 
 **Audit:** mục "Test ma trận" + "Definition of done". Chạy CUỐI, sau khi 01–07 merge.
+**Model:** Opus (fast) — chạy checklist + ma trận tay theo luật phase 04 đã dựng, upload TestFlight theo pipeline đã có; việc cơ khí.
 
 ## Steps
 

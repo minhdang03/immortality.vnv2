@@ -19,16 +19,18 @@ source-audit: apps/plans/reports/ux-ui-260717-1915-nodie-ios-production-readines
 
 ## Phases
 
-| # | Phase | Audit IDs | Ước lượng | Status |
-|---|---|---|---|---|
-| 01 | [Chat media pipeline: ảnh/camera/tệp end-to-end](phase-01-chat-media-pipeline.md) | P0-01, P0-03 | 1.5 ngày | ⬜ |
-| 02 | [Voice message thật kiểu WhatsApp](phase-02-voice-messages.md) | P0-02, P0-03 | 1 ngày | ⬜ |
-| 03 | [Diệt dead affordance + push trong chat](phase-03-dead-affordances-push.md) | P0-04 + medium push | 0.5 ngày | ⬜ |
-| 04 | [Test suite chạy dữ liệu thật, xanh 3 lần](phase-04-test-suite-real-data.md) | P0-05 | 1 ngày | ⬜ |
-| 05 | [Accessibility AA: contrast + hit target + matrix](phase-05-accessibility-aa.md) | P1-01, P1-02, P1-07 | 1 ngày | ⬜ |
-| 06 | [Friends hoàn chỉnh: following + states](phase-06-friends-completion.md) | P1-04, P1-05 | 0.5 ngày | ⬜ |
-| 07 | [Trust & error UX: AI copy, safety tự hại, error taxonomy](phase-07-trust-error-ux.md) | P1-03, P1-06, P1-08 | 1 ngày | ⬜ |
-| 08 | [Release gate: device matrix + DoD checklist](phase-08-release-gate.md) | DoD audit | 0.5 ngày | ⬜ |
+| # | Phase | Audit IDs | Model | Ước lượng | Status |
+|---|---|---|---|---|---|
+| 01 | [Chat media pipeline: ảnh/camera/tệp end-to-end](phase-01-chat-media-pipeline.md) | P0-01, P0-03 | **Fable** | 1.5 ngày | ✅ commit `8a5dbc4` |
+| 02 | [Voice message thật kiểu WhatsApp](phase-02-voice-messages.md) | P0-02, P0-03 | **Fable** | 1 ngày | ✅ 17/07 21:12 — E2E prod pass |
+| 03 | [Diệt dead affordance + push trong chat](phase-03-dead-affordances-push.md) | P0-04 + medium push | Opus (fast) | 0.5 ngày | ⬜ |
+| 04 | [Test suite chạy dữ liệu thật, xanh 3 lần](phase-04-test-suite-real-data.md) | P0-05 | **Fable** | 1 ngày | ⬜ |
+| 05 | [Accessibility AA: contrast + hit target + matrix](phase-05-accessibility-aa.md) | P1-01, P1-02, P1-07 | Opus (fast) | 1 ngày | ⬜ |
+| 06 | [Friends hoàn chỉnh: following + states](phase-06-friends-completion.md) | P1-04, P1-05 | Opus (fast) | 0.5 ngày | ⬜ |
+| 07 | [Trust & error UX: AI copy, safety tự hại, error taxonomy](phase-07-trust-error-ux.md) | P1-03, P1-06, P1-08 | Opus (fast) | 1 ngày | ⬜ |
+| 08 | [Release gate: device matrix + DoD checklist](phase-08-release-gate.md) | DoD audit | Opus (fast) | 0.5 ngày | ⬜ |
+
+**Tư vấn model (Đăng chốt 17/07 20:44):** Fable cho 01·02·04 — vùng bẫy (pipeline media nhiều tầng, lỗi "im lặng tuyệt đối" chỉ lộ khi tự đo bằng HTTP/psql thật) và độ tinh interaction chuẩn X/FB/IG. Opus (fast) cho phần còn lại — việc cơ khí có spec rõ. Lý do chi tiết ghi ở dòng **Model:** đầu mỗi phase file.
 
 **Thứ tự:** 01→02→03 (chat), 04 sau 03 (test cần UI ổn định). 05/06/07 độc lập, chạy được song song sau 03. 08 cuối cùng.
 

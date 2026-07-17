@@ -2,6 +2,7 @@
 
 **Audit:** P0-01 (attach tray chỉ đóng khay), P0-03 (media nhận về là gradient, file không mở được).
 **Chuẩn:** IG/WhatsApp — optimistic send, progress, retry, viewer, cache. Không hand-roll thứ hệ thống đã cho.
+**Model:** Fable — pipeline nhiều tầng (picker → downscale → upload → optimistic bubble → Realtime → signed URL → cache), sai một khớp là hỏng cả chuỗi mà UI vẫn "trông ổn"; độ tinh interaction chuẩn X/FB/IG (retry per-message, progress, huỷ giữa chừng) là thứ model yếu hơn hay làm ra bản "gần giống".
 
 ## Context
 

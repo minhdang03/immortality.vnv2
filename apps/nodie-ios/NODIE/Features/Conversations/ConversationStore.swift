@@ -70,8 +70,11 @@ final class ConversationStore {
     /// `messages.user_id` (tác giả) và đường vòng qua `message_reactions.user_id` (người thả).
     /// PostgREST không đoán, nó trả PGRST201 và toàn bộ tin nhắn không tải được.
     /// Nêu đích danh FK để nói rõ: tác giả, không phải người thả.
+    // `metadata` PHẢI có mặt: `MessageRow.metadata` là optional nên thiếu cột này thì decode
+    // vẫn "thành công" — ảnh/thoại chỉ sống qua Realtime, mở lại chat là thành bong bóng rỗng.
+    // Bug im lặng tuyệt đối, đã dính một lần (17/07).
     static let messageSelect =
-        "id,channel_id,user_id,parent_id,body,created_at,edited_at,author:public_profiles!messages_user_id_fkey(display_name),reactions:message_reactions(kind,user_id)"
+        "id,channel_id,user_id,parent_id,body,created_at,edited_at,metadata,author:public_profiles!messages_user_id_fkey(display_name),reactions:message_reactions(kind,user_id)"
 
     /// Realtime subscription đang mở, khoá theo kênh — để `unsubscribe` đúng cái cần đóng.
     /// Không `private`: ConversationStoreRealtime.swift (file khác) quản vòng đời của chúng.

@@ -2,6 +2,7 @@
 
 **Audit:** P1-01 (contrast fail: `inkMuted` 3.91:1, `inkFaint` 2.59:1, `sunDim` 2.79:1 — cần 4.5:1 text nhỏ), P1-02 (☀ ▲ Trả lời follow Huỷ/Đổi/tag chip <44pt), P1-07 (chưa test largest Dynamic Type / VoiceOver / Bold Text / Increase Contrast) + medium (avatar chữ cái chưa `accessibilityHidden`).
 **Chuẩn:** FB/IG đạt AA và 44pt toàn bộ; a11y có regression test, không audit tay một lần rồi thôi.
+**Model:** Opus (fast) — spec đo được bằng số (contrast ≥4.5:1, hit ≥44pt), sửa token + áp helper `expandedHitArea` có sẵn; việc cơ khí, verify bằng đo lại.
 
 ## Files
 

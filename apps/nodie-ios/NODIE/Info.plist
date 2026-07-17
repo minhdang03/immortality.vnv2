@@ -35,6 +35,8 @@
 	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>Cho phép NODIE dùng máy ảnh để bạn chụp và gửi ảnh trong trò chuyện.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Cho phép NODIE dùng micro để bạn ghi và gửi tin nhắn thoại.</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>SUPABASE_HOST</key>

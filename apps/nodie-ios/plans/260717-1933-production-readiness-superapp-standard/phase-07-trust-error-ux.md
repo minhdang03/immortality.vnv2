@@ -3,6 +3,7 @@
 **Audit:** P1-03 ("AI đọc câu hỏi" thực chất regex 5 nhóm keyword — vấn đề trust), P1-06 (alert "Lỗi" chung chung ở root, không phân loại, không Retry), P1-08 (thiếu guardrail).
 **ĐÃ CHỐT (Đăng 17/07 19:41): NODIE là MẠNG XÃ HỘI** — P1-08 giải theo chuẩn safety FB/IG cho social network (banner hỗ trợ tự hại), KHÔNG theo hướng app y tế (bỏ disclaimer y khoa rải trong flow — audit viết mục đó trên tiền đề "app sức khoẻ" nay không còn đúng).
 **Chuẩn:** X/FB — lỗi phân loại + hành động tại chỗ; big app không gọi thứ-không-phải-AI là AI (FTC + App Store review risk); FB/IG hiện tài nguyên hỗ trợ khi phát hiện nội dung tự hại.
+**Model:** Opus (fast) — copy + error taxonomy theo quyết định đã chốt (mạng xã hội, không compliance y khoa); spec rõ, ít bẫy backend.
 
 ## Files
 

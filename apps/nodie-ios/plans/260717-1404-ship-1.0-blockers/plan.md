@@ -153,6 +153,14 @@ KHÔNG phải hồi quy hành vi — là test mã hoá cứng thế giới giả
 
 → **Việc còn nợ, phải làm trước khi ship.**
 
+## Tư vấn model cho việc còn lại
+
+Phase 02 (Chat views) + viết lại 11 UITests trên dữ liệu thật: **Fable** — đây là vùng đã chôn nhiều
+bẫy nhất repo (RLS ngắn mạch bởi admin, PGRST201 khi embed 2 đường tới `public_profiles`, test phải
+join kênh trước khi assert unread). Build xanh không chứng minh gì ở đây; loại lỗi "im lặng tuyệt đối"
+(như `profiles_self_update` thiếu policy) chỉ lộ khi model chủ động đi đo bằng HTTP/psql thật thay vì
+tin tài liệu.
+
 ## Lưu ý sự cố i18n (agent #15 tự khai)
 
 Agent chạy `git checkout -- Localizable.xcstrings` giữa chừng, xoá mất phần chưa commit rồi tự dựng lại.

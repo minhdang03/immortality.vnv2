@@ -59,6 +59,15 @@ struct ChatDetailView: View {
     /// Đang tải tệp về để mở — chặn chạm hai lần vào cùng một bong bóng.
     @State private var openingFile = false
 
+    // MARK: - Thoại
+
+    /// Một recorder cho mỗi màn chat: nó cầm AVAudioSession, và hai màn cùng ghi là vô nghĩa.
+    @State private var recorder = VoiceRecorder()
+    /// Quyền mic đã bị từ chối — sheet chỉ đường ra Cài đặt.
+    @State private var micDenied = false
+    /// Player dùng CHUNG cả app: phát tin mới thì tin cũ phải im.
+    private var player: VoiceMessagePlayer { .shared }
+
     /// Mốc đáy để cuộn tới. Cuộn vào MỐC chứ không vào tin cuối: tin cuối có thể cao
     /// (ảnh, trích dẫn, hàng cảm xúc) và `anchor: .bottom` của nó vẫn hụt mất phần đệm dưới.
     private static let bottomAnchor = "bottomAnchor"
@@ -119,6 +128,7 @@ struct ChatDetailView: View {
                                 myReactions: message.myReactions(uid: store.currentUserId),
                                 reduceMotion: reduceMotion,
                                 pending: store.pending(for: message.id),
+                                recordingActive: state.recording,
                                 onReply: { state.startReply(to: message.id, in: channelId) },
                                 onReact: { kind in
                                     Task { await store.toggleReaction(messageId: message.id, channelId: channelId, kind: kind) }
@@ -184,6 +194,16 @@ struct ChatDetailView: View {
         // ConversationStoreRealtime.swift).
         .onDisappear {
             Task { await store.unsubscribe(from: channelId) }
+            // Rời màn thì im: giọng nói vẫn phát khi người ta đã sang chỗ khác là hành vi
+            // không ai muốn. Đang ghi dở mà thoát → huỷ, đừng để recorder giữ mic lại.
+            player.stop()
+            if state.recording { cancelRecording() }
+        }
+        .sheet(isPresented: $micDenied) {
+            PermissionDeniedSheet(
+                title: "Cần quyền micro",
+                message: "Bật quyền micro trong Cài đặt để ghi và gửi tin nhắn thoại."
+            )
         }
         .alert("Sửa tin nhắn", isPresented: Binding(
             get: { editingMessage != nil },
@@ -452,7 +472,7 @@ struct ChatDetailView: View {
                 // không dịch và bàn phím không có nó, nên test bám vào đây cho chắc.
                 .accessibilityIdentifier("sendMessage")
             } else {
-                Button { state.startRec() } label: {
+                Button { Task { await startRecording() } } label: {
                     Image(systemName: "mic")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(NodieColors.cream)
@@ -591,42 +611,149 @@ struct ChatDetailView: View {
         HStack(spacing: NodieSpacing.md) {
             RecordingDot()
 
-            Text("Đang ghi âm…")
-                .font(NodieTypography.bodySm.weight(.medium))
+            // Đồng hồ của chính recorder, không phải Timer tự cộng — số này phải khớp độ dài
+            // tệp gửi đi.
+            Text(Self.clock(recorder.elapsed))
+                .font(NodieTypography.bodySm.weight(.medium).monospacedDigit())
                 .foregroundStyle(NodieColors.inkSoft)
                 .fixedSize()
 
-            // Waveform giả — chưa thu tiếng thật thì không có biên độ để vẽ.
-            WaveformStripe()
-                .frame(height: 14)
+            LiveWaveform(levels: recorder.levels)
+                .frame(height: 16)
                 .frame(maxWidth: .infinity)
-                .opacity(0.7)
                 .accessibilityHidden(true)
 
-            Button("Huỷ") { state.cancelRec() }
+            Button("Huỷ") { cancelRecording() }
                 .font(NodieTypography.bodySm)
                 .foregroundStyle(NodieColors.inkFaint)
                 .buttonStyle(.plain)
+                .expandedHitArea(visual: 44)
 
             Button {
-                // CHƯA nối thật: chưa có AVAudioRecorder thu âm thanh thật nên không có `Data`
-                // để gọi `store.sendMedia`. Huỷ ghi âm thay vì giả vờ gửi thành công — xem report.
-                state.cancelRec()
+                finishRecording()
             } label: {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(width: 38, height: 38)
                     .background(Circle().fill(NodieColors.accent))
-                    .expandedHitArea(visual: 38)
+                    .expandedHitArea(visual: 44)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Gửi tin nhắn thoại")
+            .accessibilityIdentifier("sendVoice")
         }
         .padding(.horizontal, NodieSpacing.lg)
         .padding(.vertical, 9)
         .background(Capsule().fill(NodieColors.surface))
         .overlay(Capsule().stroke(NodieColors.recBorder, lineWidth: 1))
+    }
+
+    /// "0:07" — cùng cách đọc với `MessageMedia.durationLabel`.
+    private static func clock(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds)
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+
+    /// Bấm mic: xin quyền (lần đầu) rồi bắt đầu ghi.
+    private func startRecording() async {
+        guard await VoiceRecorder.requestPermission() else {
+            micDenied = true
+            return
+        }
+        // Đang phát thoại thì DỪNG trước khi ghi (chuẩn WhatsApp): không dừng thì tiếng phát
+        // ra loa bị mic thu ngược vào bản ghi, và hai bên giành nhau audio session.
+        player.stop()
+        do {
+            try recorder.start()
+            state.startRec()
+        } catch {
+            store.errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Thả tay / bấm gửi: dừng ghi rồi đẩy đi qua đúng đường của ảnh (lạc quan + gửi lại).
+    private func finishRecording() {
+        state.cancelRec()                    // đóng thanh ghi ngay, đừng để nó đứng đó lúc gửi
+        guard let take = recorder.finish() else { return }   // <1s = bấm nhầm, bỏ im lặng
+        let queued = store.sendMedia(
+            channelId: channelId, data: take.data, kind: .voice,
+            ext: "m4a", contentType: "audio/mp4",
+            duration: take.duration, waveform: take.waveform,
+            parentId: state.replyingTo[channelId]
+        )
+        if queued { state.replyingTo[channelId] = nil }
+    }
+
+    private func cancelRecording() {
+        recorder.cancel()
+        state.cancelRec()
+    }
+}
+
+/// Waveform vẽ từ biên độ THẬT của recorder — mỗi vạch một mẫu, mới nhất ở bên phải.
+///
+/// Chỉ giữ đoạn đuôi vừa với bề ngang: ghi hai phút là 2400 mẫu, vẽ hết thì mỗi vạch mảnh
+/// hơn một điểm ảnh và thành một vệt xám. Kiểu chạy-ngang này giống WhatsApp/Zalo.
+struct LiveWaveform: View {
+    let levels: [Float]
+
+    var body: some View {
+        Canvas { context, size in
+            let barWidth: CGFloat = 2
+            let gap: CGFloat = 3
+            let capacity = max(1, Int(size.width / (barWidth + gap)))
+            let tail = levels.suffix(capacity)
+            var x = size.width - CGFloat(tail.count) * (barWidth + gap)
+
+            for level in tail {
+                // Sàn 2pt: im lặng vẫn phải thấy một vạch, không thì waveform mất tiêu
+                // giữa hai câu nói và trông như đã ngừng ghi.
+                let height = max(2, CGFloat(level) * size.height)
+                let rect = CGRect(x: x, y: (size.height - height) / 2,
+                                  width: barWidth, height: height)
+                context.fill(Path(roundedRect: rect, cornerRadius: 1), with: .color(NodieColors.rec))
+                x += barWidth + gap
+            }
+        }
+    }
+}
+
+/// Waveform tĩnh của tin đã ghi — vẽ từ ~50 mẫu trong metadata, tô đậm phần đã nghe.
+///
+/// Tap để tua (chỉ khi tin này đang cầm player). Tap chứ KHÔNG drag: bong bóng đã có cử chỉ
+/// kéo-để-trả-lời, gắn thêm DragGesture ở đây là hai cử chỉ giẫm nhau.
+struct VoiceWaveformView: View {
+    let levels: [Float]
+    let progress: Double
+    let playedColor: Color
+    let restColor: Color
+    /// nil = không tua được. Nhận tỉ lệ 0–1 tính từ chỗ chạm.
+    let onSeek: ((Double) -> Void)?
+
+    var body: some View {
+        GeometryReader { geo in
+            Canvas { context, size in
+                // Tin cũ (trước khi có thoại) không mang waveform — vạch đều còn hơn ô trống.
+                let bars = levels.isEmpty ? Array(repeating: Float(0.35), count: 28) : levels
+                let step = size.width / CGFloat(bars.count)
+                let barWidth = max(1.5, step * 0.55)
+                let cut = progress * Double(bars.count)
+
+                for (i, level) in bars.enumerated() {
+                    let height = max(3, CGFloat(level) * size.height)
+                    let rect = CGRect(x: CGFloat(i) * step, y: (size.height - height) / 2,
+                                      width: barWidth, height: height)
+                    context.fill(Path(roundedRect: rect, cornerRadius: 1),
+                                 with: .color(Double(i) < cut ? playedColor : restColor))
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { location in
+                guard let onSeek, geo.size.width > 0 else { return }
+                onSeek(min(max(location.x / geo.size.width, 0), 1))
+            }
+        }
     }
 }
 
@@ -681,6 +808,10 @@ struct MessageBubbleView: View {
     /// Đính kèm chưa lên xong — nil nghĩa là tin đã nằm trên server (hoặc không có đính kèm).
     /// Non-nil thì bong bóng vẽ từ bytes trong máy và hiện trạng thái đang-lên / đã-hỏng.
     let pending: ConversationStore.PendingMedia?
+    /// Thanh ghi âm đang mở. Phát thoại lúc này là GIẾT bản ghi: player đổi category của
+    /// audio session mà recorder đang cầm — cùng-app nên KHÔNG có interruption notification
+    /// nào bắn ra, recorder chết im lặng. Chặn từ UI là tầng chắc nhất.
+    let recordingActive: Bool
     let onReply: () -> Void
     let onReact: (ReactionKind) -> Void
     let onTapReplyQuote: (UUID) -> Void
@@ -757,8 +888,7 @@ struct MessageBubbleView: View {
 
     @ViewBuilder
     private var bubble: some View {
-        // Ảnh/tệp có ô riêng; thoại (chưa phát được thì) và tin chữ dùng chung bong bóng chữ.
-        if let media = message.media, media.kind != .voice {
+        if let media = message.media {
             mediaBubble(media)
         } else {
             textBubble
@@ -931,8 +1061,137 @@ struct MessageBubbleView: View {
         switch media.kind {
         case .photo: photoBubble(media)
         case .file: fileBubble(media)
-        case .voice: EmptyView()   // thoại đi đường `textBubble`/player riêng
+        case .voice: voiceBubble(media)
         }
+    }
+
+    /// Thoại: nút phát + waveform tô theo tiến trình + thời lượng + nút tốc độ.
+    ///
+    /// Player dùng CHUNG cả app (xem `VoiceMessagePlayer`) — bong bóng chỉ so `playingId`
+    /// với id của mình để biết vẽ ▶ hay ⏸; phát bong bóng khác là bong bóng này tự về ▶.
+    /// Tin còn đang upload vẫn nghe lại được: bytes truyền qua `pending.data`.
+    private func voiceBubble(_ media: MessageMedia) -> some View {
+        let player = VoiceMessagePlayer.shared
+        let isCurrent = player.playingId == message.id
+        let fraction = isCurrent ? player.progress : 0
+        let duration = media.duration ?? 0
+        // Đang phát thì đếm NGƯỢC — người nghe muốn biết còn bao lâu, không phải đã dài bao nhiêu.
+        let shownSeconds = isCurrent ? duration * (1 - fraction) : duration
+
+        return HStack(spacing: 10) {
+            if pending?.phase == .failed {
+                // Gửi lại VÀ Bỏ — cùng khuôn với bong bóng tệp.
+                Button(action: onRetryMedia) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(NodieColors.rec)
+                        .expandedHitArea(visual: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Gửi lại")
+                .accessibilityIdentifier("retryMedia")
+
+                Button(action: onDiscardMedia) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(voiceMuted)
+                        .expandedHitArea(visual: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Bỏ")
+            } else if player.loadingId == message.id {
+                ProgressView()
+                    .tint(voiceTint)
+                    .frame(width: 34, height: 34)
+            } else {
+                Button {
+                    guard !recordingActive else { return }   // xem chú thích `recordingActive`
+                    let data = pending?.data
+                    Task {
+                        await player.toggle(messageId: message.id, path: media.path, localData: data)
+                    }
+                } label: {
+                    Image(systemName: isCurrent && player.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(isMine ? NodieColors.ink : NodieColors.cream)
+                        .frame(width: 34, height: 34)
+                        .background(Circle().fill(isMine ? NodieColors.cream : NodieColors.accent))
+                        .expandedHitArea(visual: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(isCurrent && player.isPlaying ? Text("Tạm dừng") : Text("Phát"))
+                .accessibilityIdentifier("voicePlay")
+            }
+
+            VoiceWaveformView(
+                levels: media.waveform ?? [],
+                progress: fraction,
+                playedColor: isMine ? NodieColors.cream : NodieColors.accent,
+                restColor: voiceMuted,
+                // Tua chỉ khi chính tin này đang cầm player — chạm waveform tin khác mà nhảy
+                // vị trí của tin đang phát là hành vi ma quái.
+                onSeek: isCurrent ? { player.seek(to: $0) } : nil
+            )
+            .frame(height: 22)
+            .frame(maxWidth: .infinity)
+            .accessibilityHidden(true)
+
+            VStack(alignment: .trailing, spacing: 3) {
+                if isCurrent {
+                    Button { player.cycleRate() } label: {
+                        Text(verbatim: String(format: "%g×", player.rate))
+                            .font(NodieTypography.tag.weight(.bold))
+                            .foregroundStyle(isMine ? NodieColors.ink : NodieColors.cream)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(isMine ? NodieColors.cream : NodieColors.accent))
+                            .expandedHitArea(visual: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Đổi tốc độ phát")
+                    .accessibilityIdentifier("voiceRate")
+                }
+                HStack(spacing: 4) {
+                    if pending?.phase == .uploading {
+                        ProgressView().controlSize(.mini).tint(voiceMuted)
+                    }
+                    Text(verbatim: Self.voiceClock(shownSeconds))
+                        .font(NodieTypography.timestampXs.monospacedDigit())
+                        .foregroundStyle(voiceMuted)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(width: 232)
+        .background(bubbleShape.fill(isMine ? NodieColors.ink : NodieColors.surface))
+        .overlay(bubbleShape.stroke(isMine ? NodieColors.ink : NodieColors.rule, lineWidth: 1))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(voiceLabel(duration))
+        .accessibilityIdentifier("voiceBubble")
+    }
+
+    /// Màu phụ trong bong bóng thoại — kem mờ trên nền mực (tin mình), mực mờ trên nền giấy.
+    private var voiceMuted: Color {
+        isMine ? NodieColors.cream.opacity(0.55) : NodieColors.inkMuted
+    }
+
+    private var voiceTint: Color {
+        isMine ? NodieColors.cream : NodieColors.accent
+    }
+
+    private func voiceLabel(_ duration: Double) -> Text {
+        switch pending?.phase {
+        case .uploading: return Text("Tin nhắn thoại, đang gửi")
+        case .failed: return Text("Tin nhắn thoại, gửi không thành công")
+        case nil: return Text("Tin nhắn thoại, \(Int(duration.rounded())) giây")
+        }
+    }
+
+    /// "0:07" — trùng cách đọc với đồng hồ thanh ghi âm.
+    private static func voiceClock(_ seconds: Double) -> String {
+        let total = Int(seconds.rounded())
+        return String(format: "%d:%02d", total / 60, total % 60)
     }
 
     /// Bề ngang cố định kiểu IG; chiều cao suy từ tỉ lệ trong metadata nên khung đã đúng

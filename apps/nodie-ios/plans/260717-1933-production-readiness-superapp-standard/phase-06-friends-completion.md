@@ -2,6 +2,7 @@
 
 **Audit:** P1-04 (chỉ có "Gợi ý cho bạn", không có nơi quản lý người đã follow), P1-05 (không phân biệt đang tải / rỗng / lỗi) + medium (search không có "không tìm thấy", nút clear).
 **Chuẩn:** IG — segmented Đang theo dõi/Gợi ý, skeleton khi tải, empty state có CTA, search có trạng thái rõ.
+**Model:** Opus (fast) — `FollowStore` + RLS đã prod sẵn (plan 1404 phase 04), còn lại là UI states theo khuôn IG; việc cơ khí có spec.
 
 ## Context
 

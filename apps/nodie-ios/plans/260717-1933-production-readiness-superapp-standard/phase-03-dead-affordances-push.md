@@ -2,6 +2,7 @@
 
 **Audit:** P0-04 ("Xem hồ sơ/Thông tin nhóm" disable cứng trong menu Chat) + medium (push foreground vẫn banner khi đang đứng trong đúng chat).
 **Chuẩn:** IG rule #1 — nút chưa hoạt động thì không render. WhatsApp — không notify hội thoại đang mở.
+**Model:** Opus (fast) — việc cơ khí có spec rõ (gỡ menu item, filter push foreground); ít bẫy prod, verify bằng build + chạy tay.
 
 ## Files
 

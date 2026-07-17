@@ -2,6 +2,7 @@
 
 **Audit:** P0-05 — 35 XCUITest: 11 pass / 24 fail; 15 bị signal kill (infra), còn lại assert trên mock đã gỡ (`Lab trường thọ #3`, `Hà Chi`, `newMessagePerson-mai`, `12 tin chưa đọc`). Release gate không đáng tin.
 **Chuẩn:** super app không ship khi gate đỏ; test phân quyền bằng user THƯỜNG (bài học 3 P0 sống sót vì test bằng admin — plan 1404).
+**Model:** Fable — vùng chôn nhiều bẫy nhất repo: RLS ngắn mạch bởi admin, PGRST201 khi embed 2 đường tới `public_profiles`, test phải join kênh trước khi assert unread. Build xanh không chứng minh gì; loại lỗi "im lặng tuyệt đối" chỉ lộ khi model tự nghi ngờ và tự verify bằng HTTP/psql thật thay vì tin tài liệu.
 
 ## Context
 
