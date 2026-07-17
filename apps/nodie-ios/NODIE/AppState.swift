@@ -261,9 +261,47 @@ final class AppState {
         // Rung đặt SAU guard: bấm gửi với ô rỗng thì không có gì được gửi — không rung.
         NodieHaptics.action()
         drafts[chatId] = nil
+        // Đọc RỒI xoá: gửi xong là hết trích dẫn, không dính sang tin kế tiếp.
+        let parent = replyingTo[chatId]
+        replyingTo[chatId] = nil
         messages[chatId, default: []].append(
-            ChatMessage(who: nil, isMine: true, text: text, time: Self.nowHHmm())
+            ChatMessage(who: nil, isMine: true, text: text, time: Self.nowHHmm(), replyTo: parent)
         )
+    }
+
+    // MARK: - Chat: trả lời & thả cảm xúc
+
+    /// Tin đang được trả lời, theo từng chat — bỏ dở ở chat này không xoá trích dẫn ở chat kia.
+    var replyingTo: [String: UUID] = [:]
+
+    func replyTarget(in chatId: String) -> ChatMessage? {
+        guard let id = replyingTo[chatId] else { return nil }
+        return messages[chatId]?.first { $0.id == id }
+    }
+
+    func startReply(to messageId: UUID, in chatId: String) {
+        NodieHaptics.tap()
+        replyingTo[chatId] = messageId
+    }
+
+    func cancelReply(in chatId: String) { replyingTo[chatId] = nil }
+
+    /// Thả/gỡ — một loại, một người, một tin. Khớp PK `(message_id, user_id, kind)` của 0026:
+    /// thả lần hai chính là DELETE, nên ở đây cũng là toggle chứ không cộng dồn.
+    func toggleReaction(_ kind: ReactionKind, on messageId: UUID, in chatId: String) {
+        guard let i = messages[chatId]?.firstIndex(where: { $0.id == messageId }) else { return }
+        NodieHaptics.tap()
+        var m = messages[chatId]![i]
+        if m.myReactions.contains(kind) {
+            m.myReactions.remove(kind)
+            // Xoá hẳn khoá khi về 0 — để `reactions` chỉ chứa thứ thật sự có, view khỏi lọc số 0.
+            let left = (m.reactions[kind] ?? 1) - 1
+            m.reactions[kind] = left > 0 ? left : nil
+        } else {
+            m.myReactions.insert(kind)
+            m.reactions[kind, default: 0] += 1
+        }
+        messages[chatId]![i] = m
     }
 
     // MARK: - Chat: đính kèm & ghi âm

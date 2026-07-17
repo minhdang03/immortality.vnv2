@@ -62,8 +62,28 @@ struct QuestionListView: View {
         }
     }
 
+    /// Khung xương thay vòng xoay: vòng xoay nói "chờ đi", khung xương nói "sắp có gì" —
+    /// và vì nó dùng lại chính `QuestionRowView`, danh sách thật hiện ra không nhảy layout.
+    /// Cùng lối `.redacted` với ProfileStatsGrid, không phải bộ hình thứ hai để phải nhớ sửa kèm.
     private var loading: some View {
-        ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).tint(NodieColors.accent)
+        VStack(spacing: 0) {
+            ForEach(0..<6, id: \.self) { seed in
+                QuestionRowView(question: .placeholder(seed: seed)) {}
+                Divider().background(NodieColors.rule)
+            }
+        }
+        .padding(.horizontal, NodieSpacing.screenH)
+        .padding(.top, NodieSpacing.sm)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .redacted(reason: .placeholder)
+        // Khung xương là tiếng ồn với VoiceOver — nó đọc ra sáu câu hỏi bịa. Một thông báo
+        // "Đang tải" nói đúng thứ đang xảy ra.
+        .accessibilityHidden(true)
+        .overlay {
+            Color.clear
+                .accessibilityLabel("Đang tải câu hỏi")
+                .accessibilityAddTraits(.updatesFrequently)
+        }
     }
 
     private var emptyState: some View {

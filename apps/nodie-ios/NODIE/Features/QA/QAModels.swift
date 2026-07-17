@@ -34,6 +34,27 @@ struct QuestionRow: Codable, Identifiable, Hashable {
     var authorName: String { author?.name ?? String(localized: "Ẩn danh") }
     var relativeTime: String { RelativeTime.format(createdAt) }
     var answerMeta: String { String(localized: "\(answerCount) câu trả lời") }
+
+    /// Hàng giả cho khung xương lúc đang nạp. `.redacted` vẽ thanh xám theo ĐỘ DÀI chữ thật,
+    /// nên tiêu đề phải dài ngắn khác nhau — sáu dòng bằng chằn chặn trông như mã vạch,
+    /// không giống một danh sách sắp hiện ra.
+    ///
+    /// KHÔNG dịch: `.redacted` phủ kín trước khi tới mắt ai, và skeleton `.accessibilityHidden`
+    /// nên VoiceOver cũng không đọc. Đưa vào catalog dịch là bắt người dịch làm việc vô ích.
+    static func placeholder(seed: Int) -> QuestionRow {
+        let titles = [
+            "Làm sao biết mình đang tiến bộ hay chỉ đang bận rộn?",
+            "Thiền buổi sáng có khác buổi tối không?",
+            "Khi trí nhớ dài hạn được củng cố lúc ngủ, phần nào của não làm việc đó?",
+            "Vì sao càng cố ngủ càng tỉnh?",
+            "Có nên tập khi đang mệt?",
+            "Ăn chay có ảnh hưởng tới năng lượng tập luyện không?",
+        ]
+        return QuestionRow(
+            id: UUID(), title: titles[seed % titles.count], body: nil, topic: "———",
+            answerCount: 0, createdAt: Date(), authorId: nil, author: nil
+        )
+    }
 }
 
 /// Một dòng `answers` — có vote/lit/Hay nhất (đếm denormalized).

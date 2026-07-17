@@ -59,6 +59,29 @@ struct ConversationListView: View {
                         }
                         .tint(NodieColors.accent)
                     }
+                    // Cùng ba việc của hai cụm vuốt trên, mở bằng cách giữ. Vuốt là cử chỉ
+                    // GIẤU: không có gì trên màn hình nói nó tồn tại. Ai không biết vuốt —
+                    // hoặc dùng VoiceOver/Switch Control — vẫn phải tới được ba việc đó.
+                    .contextMenu {
+                        Button {
+                            state.markRead(conversation.id)
+                        } label: {
+                            Label("Đã đọc", systemImage: "envelope.open")
+                        }
+
+                        Button {
+                            state.toggleMute(conversation.id)
+                        } label: {
+                            Label(state.isMuted(conversation.id) ? String(localized: "Bật lại") : String(localized: "Tắt thông báo"),
+                                  systemImage: state.isMuted(conversation.id) ? "bell" : "bell.slash")
+                        }
+
+                        Button(role: .destructive) {
+                            state.leave(conversation.id)
+                        } label: {
+                            Label("Rời khỏi", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
+                    }
                 }
             }
             .listStyle(.plain)

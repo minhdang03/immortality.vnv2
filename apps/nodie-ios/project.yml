@@ -16,6 +16,10 @@ settings:
     SWIFT_VERSION: "5.9"
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "2"
+    # Trình biên dịch tự trích chuỗi vào Localizable.xcstrings mỗi lần build.
+    # Tắt nó thì catalog phải cập nhật BẰNG TAY — đã quên hai lần (14 key ở đợt
+    # App Store, rồi loạt key trả lời/cảm xúc). Người sẽ quên, trình biên dịch thì không.
+    SWIFT_EMIT_LOC_STRINGS: "YES"
 targets:
   NODIE:
     type: application
@@ -30,25 +34,7 @@ targets:
         INFOPLIST_KEY_UIUserInterfaceStyle: Light
         DEVELOPMENT_TEAM: X6L54S9V87
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        # PUSH ĐANG TẮT — bật bằng cách bỏ comment dòng dưới:
-        #   CODE_SIGN_ENTITLEMENTS: NODIE/NODIE.entitlements
-        #
-        # Chưa bật được vì App ID `com.battudao.nodie` CHƯA có capability Push Notifications,
-        # nên profile "NODIE App Store" không mang `aps-environment`. Bật entitlement lúc này
-        # là Release gãy ngay ở khâu ký (đã thử: "Provisioning profile doesn't include the
-        # Push Notifications capability") → mất luôn đường ship TestFlight.
-        #
-        # Thứ tự phải làm, thiếu bước nào cũng hỏng:
-        #   1. developer.apple.com > Identifiers > com.battudao.nodie > tick Push Notifications
-        #   2. Tạo lại profile "NODIE App Store" (profile cũ không tự mọc thêm capability)
-        #   3. Keys > khoá MỚI có tick "Apple Push Notifications service (APNs)"
-        #      — KHÔNG dùng lại AuthKey_AYLK6Z9A58.p8: đó là khoá App Store Connect API
-        #      (dùng cho altool), ký JWT bằng nó gọi APNs trả 403 InvalidProviderToken.
-        #   4. Điền APNS_KEY_ID + APNS_KEY_PATH vào .env, bỏ comment dòng trên
-        #
-        # `PushManager` + `NODIE.entitlements` đã viết sẵn và biên dịch được; thiếu entitlement
-        # thì `registerForRemoteNotifications` chỉ rơi vào `didFailToRegister` — app vẫn chạy,
-        # chỉ là không có push.
+        CODE_SIGN_ENTITLEMENTS: NODIE/NODIE.entitlements
       configs:
         # Debug: automatic signing để chạy simulator/thiết bị lúc dev.
         Debug:

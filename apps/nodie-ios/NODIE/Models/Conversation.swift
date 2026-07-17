@@ -9,6 +9,17 @@ struct ChatMessage: Identifiable, Hashable {
     let time: String
     var kind: Kind = .text
 
+    /// Tin này trả lời tin nào — khớp `messages.parent_id` (đã có từ 0017).
+    /// Giữ ID chứ không chụp lại nội dung: sửa/xoá tin gốc thì trích dẫn theo kịp,
+    /// và không phải nghĩ cách đồng bộ hai bản của cùng một câu.
+    var replyTo: UUID?
+
+    /// Tổng mỗi loại, gồm cả của mình — khớp `count(*)` trên `message_reactions`.
+    var reactions: [ReactionKind: Int] = [:]
+    /// Loại mình đã thả — khớp các dòng `message_reactions` có `user_id = auth.uid()`.
+    /// Tách khỏi `reactions` vì hiển thị khác nhau: đếm để hiện số, cái này để tô đậm.
+    var myReactions: Set<ReactionKind> = []
+
     /// Ba loại nội dung loại trừ nhau. Enum thay vì `media: String?` + `voice: String?`
     /// để không dựng nổi một tin vừa là ảnh vừa là thoại.
     enum Kind: Hashable {
@@ -16,6 +27,40 @@ struct ChatMessage: Identifiable, Hashable {
         case media(MediaKind)
         /// Thời lượng đã format, vd "0:07".
         case voice(String)
+    }
+
+    /// Một dòng tóm tắt tin. Ảnh/thoại không có chữ để trích, nên mượn nhãn của chúng —
+    /// trích dẫn rỗng thì người đọc không biết đang trả lời cái gì.
+    /// Một chỗ duy nhất cho cả trích dẫn trong bong bóng lẫn băng "Đang trả lời".
+    var previewText: String {
+        switch kind {
+        case .text: return text
+        case .media(let k): return "\(k.glyph) \(k.bubbleLabel)"
+        case .voice(let d): return String(localized: "▶ Tin nhắn thoại · \(d)")
+        }
+    }
+}
+
+/// Thả lên tin nhắn. Hai loại thôi, khớp `check (kind in ('lit','heart'))` của 0026 —
+/// ☀ là ngôn ngữ "chiếu sáng" của app, ❤️ là thứ ai cũng hiểu mà không cần học.
+enum ReactionKind: String, CaseIterable, Identifiable, Hashable {
+    case lit, heart
+
+    var id: String { rawValue }
+
+    var glyph: String {
+        switch self {
+        case .lit: return "☀"
+        case .heart: return "❤️"
+        }
+    }
+
+    /// Nhãn cho VoiceOver và menu giữ-bong-bóng.
+    var label: String {
+        switch self {
+        case .lit: return String(localized: "Chiếu sáng")
+        case .heart: return String(localized: "Thích")
+        }
     }
 }
 
