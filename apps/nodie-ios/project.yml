@@ -99,6 +99,9 @@ targets:
         # "https://host" sẽ bị cắt cụt thành "https:" (đã dính lỗi này một lần).
         SUPABASE_HOST: $(SUPABASE_HOST)
         SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
+        # Sitekey Turnstile — public theo thiết kế (đã nằm trong bundle web).
+        # TurnstileWebView đọc từ Info.plist; secret sống ở Supabase Auth, không vào app.
+        TURNSTILE_SITEKEY: $(TURNSTILE_SITEKEY)
   NODIEUITests:
     type: bundle.ui-testing
     platform: iOS

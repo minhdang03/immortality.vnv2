@@ -18,6 +18,9 @@ read_env() { grep "^$1=" "$ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"'\''' | 
 
 URL=$(read_env VITE_SUPABASE_URL)
 KEY=$(read_env VITE_SUPABASE_ANON_KEY)
+# Sitekey Turnstile — public theo thiết kế (nằm trong bundle web luôn rồi).
+# Secret thì KHÔNG BAO GIỜ vào app: nó sống ở Supabase Auth config.
+TURNSTILE=$(read_env TURNSTILE_SITE_KEY)
 
 [ -n "$URL" ] && [ -n "$KEY" ] || { echo "✗ Thiếu VITE_SUPABASE_URL hoặc VITE_SUPABASE_ANON_KEY trong $ENV_FILE"; exit 1; }
 
@@ -36,6 +39,7 @@ cat > "$OUT" <<EOF
 // SINH TỰ ĐỘNG bởi scripts/generate-secrets-xcconfig.sh — đừng sửa tay, đừng commit.
 SUPABASE_HOST = ${URL#https://}
 SUPABASE_ANON_KEY = $KEY
+TURNSTILE_SITEKEY = $TURNSTILE
 NODIE_TEST_EMAIL = $TEST_EMAIL
 NODIE_TEST_DISPLAY_NAME = $TEST_DISPLAY_NAME
 NODIE_TEST_PASSWORD = $TEST_PASSWORD

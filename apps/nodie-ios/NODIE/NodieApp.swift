@@ -55,6 +55,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 struct RootView: View {
     let push: PushManager
     @State private var auth = AuthStore()
+    /// Captcha Turnstile — sheet sống ở ĐÂY vì RootView là view duy nhất luôn tồn tại:
+    /// đặt trong LoginView thì luồng quên-mật-khẩu (sheet trên sheet) không hiện được.
+    @State private var captcha = CaptchaPresenter()
 
     var body: some View {
         ZStack {
@@ -93,6 +96,19 @@ struct RootView: View {
             guard auth.phase == .signedIn else { return }
             await push.requestAuthorizationAndRegister()
             await push.saveTokenIfPending()   // token có thể về trước cả session
+        }
+        // Captcha lười: AuthStore chỉ gọi tới đây khi server ĐÒI captcha (xem runWithCaptcha).
+        // Captcha còn tắt trên Supabase thì sheet này không bao giờ hiện.
+        .onAppear {
+            auth.captchaTokenProvider = { [weak captcha] in
+                await captcha?.requestToken()
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { captcha.isPresenting },
+            set: { if !$0 { captcha.finish(with: nil) } }
+        )) {
+            CaptchaSheetView(presenter: captcha)
         }
     }
 }

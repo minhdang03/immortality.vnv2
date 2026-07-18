@@ -128,8 +128,8 @@ final class AuthStore {
     // MARK: - Hành động
 
     func signIn(email: String, password: String) async {
-        await run {
-            try await self.client.auth.signIn(email: email, password: password)
+        await runWithCaptcha { token in
+            try await self.client.auth.signIn(email: email, password: password, captchaToken: token)
             // phase chuyển sang .signedIn qua authStateChanges — không set tay ở đây
             // để tránh hai nguồn sự thật.
         }
@@ -143,12 +143,13 @@ final class AuthStore {
     /// cộng đồng (`nguyenvanan1988@gmail.com` → ai cũng thấy "nguyenvanan1988").
     /// Nhánh coalesce chỉ còn là lưới an toàn cho user tạo thẳng bằng Admin API.
     func signUp(email: String, password: String, displayName: String) async {
-        await run {
+        await runWithCaptcha { token in
             let response = try await self.client.auth.signUp(
                 email: email,
                 password: password,
                 data: ["display_name": .string(displayName.trimmingCharacters(in: .whitespacesAndNewlines))],
-                redirectTo: Self.confirmURL
+                redirectTo: Self.confirmURL,
+                captchaToken: token
             )
             // Supabase bật xác nhận email → chưa có session. Phải báo user đi check mail,
             // KHÔNG được để họ tưởng đã vào được.
@@ -181,10 +182,11 @@ final class AuthStore {
     /// Supabase cố tình KHÔNG báo email có tồn tại hay không (chống dò tài khoản), nên
     /// gọi xong là coi như đã gửi — không có gì để kiểm chứng phía client.
     func sendPasswordReset(email: String) async {
-        await run {
+        await runWithCaptcha { token in
             try await self.client.auth.resetPasswordForEmail(
                 email.trimmingCharacters(in: .whitespacesAndNewlines),
-                redirectTo: Self.resetURL
+                redirectTo: Self.resetURL,
+                captchaToken: token
             )
             self.didSendResetEmail = true
         }
@@ -317,6 +319,35 @@ final class AuthStore {
             errorMessage = Self.viMessage(for: error)
         }
         isBusy = false
+    }
+
+    // MARK: - Captcha (Turnstile, plan 2015 phase 05)
+
+    /// RootView cắm vào đây một closure BẬT SHEET captcha và trả token (nil = user đóng sheet).
+    /// Store là logic thuần, không tự hiện UI được — sheet sống ở RootView, nơi luôn tồn tại.
+    var captchaTokenProvider: (@MainActor () async -> String?)?
+
+    /// Captcha kiểu LƯỜI: thử KHÔNG token trước, server đòi mới hỏi rồi làm lại một lần.
+    ///
+    /// Vì sao không lấy token trước mọi lần gọi (kiểu spec gốc): lúc captcha còn TẮT trên
+    /// Supabase thì sheet là ma sát vô cớ và UITests auth chết oan; lúc BẬT thì đường retry
+    /// này tự vận hành, không cần build lại. Một build chạy đúng ở cả hai trạng thái server.
+    private func runWithCaptcha(_ action: @escaping (String?) async throws -> Void) async {
+        await run {
+            do {
+                try await action(nil)
+            } catch where Self.isCaptchaRequired(error) {
+                guard let token = await self.captchaTokenProvider?() else { throw error }
+                try await action(token)
+            }
+        }
+    }
+
+    /// Server bật captcha thì request thiếu token bị Auth chặn với thông điệp nhắc "captcha"
+    /// ("captcha verification process failed", "captcha token is missing"…). Bắt theo chuỗi
+    /// vì AuthError của supabase-swift không có code riêng cho nhóm này.
+    private static func isCaptchaRequired(_ error: Error) -> Bool {
+        (error as? AuthError)?.message.lowercased().contains("captcha") ?? false
     }
 
     /// Dịch lỗi Supabase sang chuỗi thân thiện (đa ngữ qua String Catalog).

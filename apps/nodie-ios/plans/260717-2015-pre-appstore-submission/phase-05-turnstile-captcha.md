@@ -1,6 +1,32 @@
 # Phase 05 — Captcha Turnstile end-to-end
 
-**Mục:** C-04 (P0 vì TestFlight public link) · **Đợt B** · Ước lượng **1 ngày** · Status: ⬜
+**Mục:** C-04 (P0 vì TestFlight public link) · **Đợt B** · Ước lượng **1 ngày** · Status: ✅ code + verify 18/07 21:50 (captcha đang TẮT chờ lệnh bật — xem dưới)
+
+## Kết quả (Fable, 18/07)
+
+- ✅ **Lệch spec CÓ CHỦ ĐÍCH — captcha kiểu LƯỜI:** thử auth KHÔNG token trước, server đòi
+  (`isCaptchaRequired`) mới hiện sheet lấy token rồi retry một lần (`runWithCaptcha`).
+  Vì sao: (a) captcha tắt → không friction, UITests xanh nguyên; (b) bật → tự vận hành,
+  MỘT build đúng ở cả hai trạng thái server; (c) ý "auto-login dùng test sitekey" của spec
+  KHÔNG khả thi — Supabase chỉ có một secret, secret thật từ chối token test. Hệ quả đã
+  chấp nhận: sau khi BẬT, suite auth tự động chết (muốn có lại → project staging, v1.1).
+- ✅ `TurnstileCaptcha.swift`: CaptchaPresenter (continuation) + CaptchaSheetView (retry/
+  đóng-sheet-là-từ-chối) + TurnstileWebView (trang thật battudao.com, dismantle gỡ handler
+  chống retain cycle của WKUserContentController). Sheet gắn ở RootView — LoginView/Recovery
+  không đổi một dòng.
+- ✅ 3 call site SDK nhận `captchaToken` · sitekey đi đường `.env → Secrets.xcconfig →
+  Info.plist` (verify trên bundle ĐÃ BUILD: `0x4AAAAAAD4eRuWeqMHnfoOo`) · secret nằm ở
+  Supabase Auth (provider=turnstile), KHÔNG vào app · i18n 2 key mới đủ 8 ngôn ngữ.
+- ✅ **Chứng cứ end-to-end (18/07 21:47):** Auth suite 9/9 xanh khi tắt → BẬT tạm →
+  signin không token bị chặn (`no captcha_token found`) → token RÁC bị chặn
+  (`invalid-input-response` — server verify bằng secret thật) → TẮT lại → signin sống lại.
+- ⚠️ Còn 2 việc, đúng thứ tự:
+  1. **Kiểm tay 1 lần trên simulator/device** lúc bật: sheet hiện, widget Managed qua,
+     đăng nhập thành công (đường interactive không automate được) — nhét vào ma trận phase 08.
+  2. **Lệnh bật thật — chạy NGAY TRƯỚC khi phát public link** (hỏi Đăng số tester trước):
+     `curl -X PATCH https://api.supabase.com/v1/projects/dzctvmrlsxwkcuidsqzk/config/auth
+     -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json"
+     -d '{"security_captcha_enabled":true}'`
 **Model:** Fable — đụng auth có khả năng **khoá sạch build cũ** + **vỡ auto-login UITests**; 2 câu hỏi mở chưa chốt. Loại lỗi "bật xong mới biết" — cần model tự nghi ngờ và verify từng nhánh (signup/signin/recover) bằng build thật.
 
 ## Điều kiện tiên quyết (CỨNG)
