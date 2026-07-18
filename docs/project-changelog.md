@@ -1,5 +1,16 @@
 # Bất Tử Đạo Project Changelog
 
+## [2026-07-18] Articles UX & Accessibility Fix — Complete
+
+### Fixed
+- Giảm khoảng trắng đầu trang `/articles` bằng cách bỏ top padding bị cộng dồn; hero tiếp tục quản lý nhịp dọc và nội dung bài viết xuất hiện sớm hơn trong viewport đầu tiên.
+- Chuyển điều hướng header, menu “Thêm” và mobile overlay sang liên kết semantic với URL chuẩn; click thường vẫn dùng SPA navigation, còn modifier/middle-click giữ hành vi native của trình duyệt.
+- Bổ sung nhãn accessibility được localize, `aria-current`, icon trang trí ẩn với screen reader và focus-visible rõ ràng cho header/overlay controls.
+- Thêm reduced-motion toàn cục cho smooth scroll, View Transitions và các hiệu ứng sun/particle/ambient/light-ray.
+
+### Validation
+- Web production build PASS (`pnpm --dir apps/web run build`, 224 modules transformed).
+
 ## [2026-07-08] /nang-luong Big Bang Intro "Khai Thiên" — Complete
 
 ### Added
