@@ -6,8 +6,13 @@
 
 ## Kết quả (18/07 10:1x — Fable)
 
-**Code XONG, gate 3× CHƯA chạy trọn** — 3 lần khởi động gate đều bị dừng từ bên ngoài
-(máy đang được dùng). Chạy nốt: `scripts/run-uitest-gate.sh 3` (tự seed trước mỗi run).
+**✅ GATE XANH 3/3 — 18/07 21:36, commit `cba54be`**: 38/38 × 3 run liên tiếp
+(681.9s / 682.0s / 684.7s — lệch <3s, suite deterministic), phủ cả Friends (06) +
+MetricKit (2015-04) vừa land. Điều kiện: load <8, sim erase sạch, seed trước mỗi run.
+Đường flake đã đi qua để tới đây (17 đỏ → 3/3 xanh): tap nút đang hoán đổi · typeText
+ký tự lạ · đua banner-vs-mạng · state một-lần không reseed · câu hỏi xoá-mềm-kẹt ·
+zombie simulator đẩy load 156 · va build với phiên khác. Chi tiết: memory
+`nodie-uitest-gate-discipline` + `nodie-ios-test-ops-traps`.
 
 - ✅ Viết lại 5 file test trên dữ liệu thật (hết sạch chuỗi mock — grep `Hà Chi|Lab trường
   thọ|hachi|-mai` = 0). Suite 38 test; các lần chạy đo được: 17 đỏ → 9 → 1 → 37-38/38 xanh.
