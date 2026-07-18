@@ -26,7 +26,7 @@ source-audit: apps/plans/reports/ux-ui-260717-1915-nodie-ios-production-readines
 | 03 | [Diệt dead affordance + push trong chat](phase-03-dead-affordances-push.md) | P0-04 + medium push | ~~Opus~~ Fable (Đăng đổi 17/07 21:00) | 0.5 ngày | ✅ 18/07 08:5x |
 | 04 | [Test suite chạy dữ liệu thật, xanh 3 lần](phase-04-test-suite-real-data.md) | P0-05 | **Fable** | 1 ngày | 🔨 code xong (`45860a4`), gate 3× chạy `scripts/run-uitest-gate.sh 3` khi máy rảnh |
 | 05 | [Accessibility AA: contrast + hit target + matrix](phase-05-accessibility-aa.md) | P1-01, P1-02, P1-07 | Opus (fast) | 1 ngày | ⬜ |
-| 06 | [Friends hoàn chỉnh: following + states](phase-06-friends-completion.md) | P1-04, P1-05 | Opus (fast) | 0.5 ngày | ⬜ |
+| 06 | [Friends hoàn chỉnh: following + states](phase-06-friends-completion.md) | P1-04, P1-05 | Opus (fast) | 0.5 ngày | 🔨 18/07 16:5x — code xong, build xanh, query mới verify HTTP role=user; CÒN: validation 2-account trên UI (xem phase file) |
 | 07 | [Trust & error UX: AI copy, safety tự hại, error taxonomy](phase-07-trust-error-ux.md) | P1-03, P1-06, P1-08 | Opus (fast) | 1 ngày | ⬜ |
 | 08 | [Release gate: device matrix + DoD checklist](phase-08-release-gate.md) | DoD audit | Opus (fast) | 0.5 ngày | ⬜ |
 

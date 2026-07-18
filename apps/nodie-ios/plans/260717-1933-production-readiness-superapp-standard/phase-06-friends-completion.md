@@ -26,3 +26,23 @@
 - Account An follow Bình → tab Bạn bè thấy Bình trong Đang theo dõi; unfollow → biến mất, Gợi ý hiện lại Bình.
 - Airplane mode → error state có Thử lại, bấm Thử lại khi có mạng → hồi phục.
 - Search "zzzz" → empty state; clear → về mặc định.
+
+## Đã làm 18/07 16:5x
+
+- `FollowStore`: thêm `followingProfiles` (nạp mẻ 50 id qua `id=in.(...)`), `directory` làm nguồn
+  chung → `suggestions`/`peoplePicker` thành computed (follow/unfollow tự cập nhật cả hai section),
+  `isLoading`/`isSearching`/`loadError` (NodieErrorKind, lỗi NẠP vẽ tại chỗ — lỗi GHI vẫn alert gốc),
+  toggle đổi `following`+`followingProfiles` cùng nhịp qua `applyOptimistic` (revert cùng đường);
+  follow người ngoài danh bạ tại chỗ → tự nạp lại followingProfiles.
+- `FriendsView`: 2 section Đang theo dõi/Gợi ý, skeleton `.redacted` dùng lại PersonRowView
+  (a11y hidden + "Đang tải danh sách"), empty × 2 có CTA, error inline + Thử lại (chỉ khi
+  `isRetryable`), search: spinner trong field + nút clear (×, a11y "Xoá tìm kiếm") + empty
+  "Không tìm thấy ai với …"; unfollow qua confirmationDialog (cả từ kết quả tìm).
+- `PersonRowView.swift` tách file riêng + `PublicProfile.placeholder`; nút follow nới hit area 44pt.
+- i18n: 11 key × 8 ngôn ngữ splice tay vào xcstrings (`extractionState: manual` — xcodebuild
+  KHÔNG tự trích, đo thật 18/07; gồm cả "Gợi ý cho bạn" trước giờ THIẾU trong catalog vì bẫy
+  EyebrowLabel runtime-key). Diff xcstrings 583+/0−, format cũ nguyên vẹn.
+- Verify: build xanh iPhone 17, app launch sống; query mới test HTTP thật bằng `an.nodie.test`
+  (role=user) → 200, trả đúng hồ sơ người đang theo ("Bình Trần").
+- CÒN (tay/gate): 3 mục Validation trên UI thật; cân nhắc FriendsUITests SAU khi 1933-04 land
+  (không thêm test giữa lúc gate 3× đang tính).

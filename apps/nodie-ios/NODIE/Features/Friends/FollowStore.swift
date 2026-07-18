@@ -33,12 +33,29 @@ final class FollowStore {
     /// Những người MÌNH đang theo dõi. Set chứ không mảng: câu hỏi hay gặp nhất là
     /// "có theo người này không" — hỏi mảng là quét tuyến tính trên mỗi dòng danh sách.
     private(set) var following: Set<UUID> = []
-    private(set) var suggestions: [PublicProfile] = []
+    /// Hồ sơ (có tên/bio) của những người mình theo — nguồn cho section "Đang theo dõi".
+    /// Tách khỏi `directory`: người mình theo có thể không lọt top-50 của danh bạ.
+    private(set) var followingProfiles: [PublicProfile] = []
+    /// 50 hồ sơ nạp một lần (order theo tên) — nguồn chung cho gợi ý lẫn picker.
+    private var directory: [PublicProfile] = []
+    /// Gợi ý = danh bạ trừ người đã theo. TÍNH chứ không chứa: follow/unfollow xong
+    /// danh sách tự đổi theo `following`, không phải nhớ cập-nhật-kèm ở từng chỗ ghi.
+    var suggestions: [PublicProfile] { directory.filter { !following.contains($0.id) } }
     /// MỌI người (trừ mình), người đang theo dõi xếp TRƯỚC — cho picker "Tin nhắn mới".
     /// Khác `suggestions` (đã trừ người mình theo): picker nhắn tin mà giấu đúng những
     /// người mình theo là ngược đời — IG/Zalo liệt kê người quen trước tiên.
-    private(set) var peoplePicker: [PublicProfile] = []
+    var peoplePicker: [PublicProfile] {
+        directory.sorted { a, b in
+            let fa = following.contains(a.id), fb = following.contains(b.id)
+            return fa == fb ? a.name < b.name : fa
+        }
+    }
     private(set) var searchResults: [PublicProfile] = []
+    private(set) var isLoading = false
+    private(set) var isSearching = false
+    /// Lỗi của lần NẠP màn hình — view vẽ tại chỗ (message + Thử lại nếu đáng),
+    /// không bắn alert gốc như `errorMessage` (lỗi của thao tác ghi).
+    private(set) var loadError: NodieErrorKind?
     private(set) var errorMessage: String?
     private(set) var didLoadOnce = false
 
@@ -58,18 +75,39 @@ final class FollowStore {
     /// Nạp danh sách mình đang theo dõi + gợi ý. Gọi khi mở tab Bạn bè.
     func load() async {
         guard let uid else { return }
+        isLoading = true
+        loadError = nil
+        defer { isLoading = false }
         do {
             struct Row: Decodable { let followee_id: UUID }
             let rows: [Row] = try await client.from("follows")
                 .select("followee_id").eq("follower_id", value: uid)
                 .execute().value
             following = Set(rows.map(\.followee_id))
-            await loadSuggestions()
+            try await loadDirectory(uid: uid)
+            try await loadFollowingProfiles()
             didLoadOnce = true
-        } catch { errorMessage = ErrorText.localized(error) }
+        } catch { loadError = NodieErrorKind.of(error) }
     }
 
-    /// Gợi ý = người chưa theo dõi, trừ chính mình.
+    /// Nạp hồ sơ những người mình theo. Cắt mẻ 50 id một: `.in` nhét cả trăm UUID vào
+    /// query string là chạm giới hạn độ dài URL của PostgREST (cùng lý do `loadDirectory`
+    /// không dùng `not.in`).
+    private func loadFollowingProfiles() async throws {
+        let ids = Array(following)
+        var profiles: [PublicProfile] = []
+        for start in stride(from: 0, to: ids.count, by: 50) {
+            let chunk = Array(ids[start..<min(start + 50, ids.count)])
+            let rows: [PublicProfile] = try await client.from("public_profiles")
+                .select("id,display_name,bio")
+                .in("id", values: chunk)
+                .execute().value
+            profiles += rows
+        }
+        followingProfiles = profiles.sorted { $0.name < $1.name }
+    }
+
+    /// Nạp danh bạ 50 người (trừ mình) — `suggestions`/`peoplePicker` tính từ đây.
     ///
     /// Lọc "chưa theo dõi" ở CLIENT chứ không `not.in.(...)` trong query: danh sách mình
     /// theo dõi có thể dài, mà nhét cả trăm UUID vào query string là chạm giới hạn độ dài URL
@@ -78,23 +116,15 @@ final class FollowStore {
     /// Người đã chặn KHÔNG cần lọc ở đây — `follows_insert` (0028) đã từ chối, và trigger
     /// `trg_block_removes_follows` đã cắt quan hệ cũ. Nhưng họ vẫn hiện trong gợi ý; đó là
     /// việc của bộ lọc chặn phía nội dung, không phải của store này.
-    private func loadSuggestions() async {
-        guard let uid else { return }
-        do {
-            // `.order` là BẮT BUỘC khi có `.limit`: không order thì 50 dòng là bộ NGẪU NHIÊN
-            // đổi theo plan của Postgres — người dùng biến mất khỏi picker không vì lý do gì.
-            let rows: [PublicProfile] = try await client.from("public_profiles")
-                .select("id,display_name,bio")
-                .neq("id", value: uid)
-                .order("display_name")
-                .limit(50)
-                .execute().value
-            suggestions = rows.filter { !following.contains($0.id) }
-            peoplePicker = rows.sorted { a, b in
-                let fa = following.contains(a.id), fb = following.contains(b.id)
-                return fa == fb ? a.name < b.name : fa
-            }
-        } catch { errorMessage = ErrorText.localized(error) }
+    private func loadDirectory(uid: UUID) async throws {
+        // `.order` là BẮT BUỘC khi có `.limit`: không order thì 50 dòng là bộ NGẪU NHIÊN
+        // đổi theo plan của Postgres — người dùng biến mất khỏi picker không vì lý do gì.
+        directory = try await client.from("public_profiles")
+            .select("id,display_name,bio")
+            .neq("id", value: uid)
+            .order("display_name")
+            .limit(50)
+            .execute().value
     }
 
     // MARK: - Tìm người
@@ -108,8 +138,12 @@ final class FollowStore {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         searchToken &+= 1
         let token = searchToken
-        guard !q.isEmpty else { searchResults = []; return }
+        guard !q.isEmpty else { searchResults = []; isSearching = false; return }
         guard let uid else { return }
+        isSearching = true
+        // Tắt spinner cũng phải qua token: câu hỏi cũ về muộn mà tắt spinner của câu mới
+        // thì màn hình nói "xong rồi" trong khi request thật còn đang bay.
+        defer { if token == searchToken { isSearching = false } }
         do {
             let rows: [PublicProfile] = try await client.from("public_profiles")
                 .select("id,display_name,bio")
@@ -148,7 +182,11 @@ final class FollowStore {
         defer { inFlight.remove(id) }
 
         let wasFollowing = following.contains(id)
-        if wasFollowing { following.remove(id) } else { following.insert(id) }
+        // Hồ sơ nếu đã biết tại chỗ — để section "Đang theo dõi" đổi ngay cùng nhịp với nút.
+        let knownProfile = followingProfiles.first { $0.id == id }
+            ?? directory.first { $0.id == id }
+            ?? searchResults.first { $0.id == id }
+        applyOptimistic(id: id, profile: knownProfile, nowFollowing: !wasFollowing)
 
         do {
             if wasFollowing {
@@ -167,11 +205,28 @@ final class FollowStore {
                             ignoreDuplicates: true)
                     .execute()
             }
+            // Theo dõi người ngoài danh bạ tại chỗ (vd mở hồ sơ từ Chat) → không có hồ sơ
+            // để chèn optimistic, nạp lại danh sách cho section khỏi thiếu người.
+            if !wasFollowing, knownProfile == nil { try? await loadFollowingProfiles() }
         } catch {
             // Trả lại đúng trạng thái trước cú bấm. Người bị chặn sẽ rơi vào đây —
             // `follows_insert` từ chối, nút bật lại, và thông báo nói vì sao.
-            if wasFollowing { following.insert(id) } else { following.remove(id) }
+            applyOptimistic(id: id, profile: knownProfile, nowFollowing: wasFollowing)
             errorMessage = ErrorText.localized(error)
+        }
+    }
+
+    /// Đổi `following` + `followingProfiles` cùng một nhịp — dùng cho cả cú đổi lạc quan
+    /// lẫn cú trả lại khi mạng hỏng, để hai nguồn không bao giờ lệch nhau.
+    private func applyOptimistic(id: UUID, profile: PublicProfile?, nowFollowing: Bool) {
+        if nowFollowing {
+            following.insert(id)
+            if let profile, !followingProfiles.contains(where: { $0.id == id }) {
+                followingProfiles = (followingProfiles + [profile]).sorted { $0.name < $1.name }
+            }
+        } else {
+            following.remove(id)
+            followingProfiles.removeAll { $0.id == id }
         }
     }
 

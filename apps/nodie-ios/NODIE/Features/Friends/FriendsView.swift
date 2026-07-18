@@ -1,14 +1,7 @@
 import SwiftUI
 
-/// Bạn bè — danh sách người trong cộng đồng + tìm kiếm, chạy `FollowStore` thật.
-///
-/// Không còn "Đang theo dõi"/"Gợi ý cho bạn" là hai section tách biệt: `FollowStore`
-/// (đã verify chạy prod, KHÔNG sửa ở đây) chỉ chở `following: Set<UUID>` (không tên) và
-/// `suggestions: [PublicProfile]` (tối đa 50 người, đã loại người mình theo — xem
-/// `loadSuggestions()`). Không có nguồn thật nào để dựng lại một danh sách "đang theo dõi"
-/// có tên/bio mà không sửa store — dựng danh sách đó ở đây sẽ phải tự bịa hoặc query trùng
-/// logic của store, phạm DRY. Ghi nợ: cần `FollowStore` thêm hàm nạp hồ sơ những người mình
-/// đang theo, cho một section riêng đúng thiết kế gốc.
+/// Bạn bè — hai section kiểu IG: "Đang theo dõi" (quản lý người đã theo) + "Gợi ý cho bạn",
+/// kèm tìm kiếm. Chạy `FollowStore` thật; mọi trạng thái tải/rỗng/lỗi/tìm đều có mặt riêng.
 struct FriendsView: View {
     @Bindable var state: AppState
     @Bindable var follow: FollowStore
@@ -17,57 +10,217 @@ struct FriendsView: View {
 
     @State private var query = ""
     @State private var searchTask: Task<Void, Never>?
+    /// Người đang chờ xác nhận bỏ theo dõi — bỏ theo là phá huỷ nhẹ (mất kết nối đã gây
+    /// dựng), một confirmationDialog chặn cú bấm trượt. Theo dõi thì không hỏi.
+    @State private var pendingUnfollow: PublicProfile?
 
-    /// Đang gõ tìm kiếm thì hiện kết quả tìm; ô trống thì hiện danh sách gợi ý.
-    private var displayedPeople: [PublicProfile] {
-        query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? follow.suggestions : follow.searchResults
-    }
+    private var trimmedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var isSearchActive: Bool { !trimmedQuery.isEmpty }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
-
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        section(title: "Gợi ý cho bạn", people: displayedPeople)
-                    }
-                    .padding(.horizontal, NodieSpacing.screenH)
-                    .padding(.top, NodieSpacing.lg)
-                    .padding(.bottom, NodieSpacing.md)
-                    .id("top")
-                }
-                // Chạm lại tab khi đã ở root → cuộn lên đầu (xem AppState.selectTab).
-                .onChange(of: state.rootScrollTick) {
-                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("top", anchor: .top) }
-                }
-            }
+            content
         }
         .background(NodieColors.bg)
         .task {
             if !follow.didLoadOnce { await follow.load() }
         }
-    }
-
-    private func section(title: String, people: [PublicProfile]) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            EyebrowLabel(text: title).padding(.bottom, NodieSpacing.xs)
-            ForEach(people) { profile in
-                PersonRowView(
-                    profile: profile,
-                    isFollowing: follow.isFollowing(profile.id),
-                    onTap: { state.friendsPath.append(FriendsRoute.member(profile.id)) },
-                    onToggleFollow: {
-                        NodieHaptics.tap()
-                        // Nút đổi nhãn "＋ Theo dõi" ↔ "✓ Đang theo dõi" (bề rộng khác nhau)
-                        // — spring cho cú đổi chỗ, không phải nhảy khựng.
-                        Task { await follow.toggle(profile.id) }
-                    }
-                )
-                Divider().background(NodieColors.ruleLight)
+        .confirmationDialog(
+            Text("Bỏ theo dõi \(pendingUnfollow?.name ?? "")?"),
+            isPresented: Binding(
+                get: { pendingUnfollow != nil },
+                set: { if !$0 { pendingUnfollow = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Bỏ theo dõi", role: .destructive) {
+                guard let person = pendingUnfollow else { return }
+                NodieHaptics.tap()
+                Task { await follow.toggle(person.id) }
             }
         }
     }
+
+    /// Ưu tiên trạng thái: đang tìm > đang tải lần đầu > lỗi nạp > nội dung.
+    /// Lỗi nạp chỉ chặn màn khi CHƯA từng có dữ liệu — refresh hỏng thì giữ nội dung cũ.
+    @ViewBuilder private var content: some View {
+        if isSearchActive {
+            searchResults
+        } else if follow.isLoading && !follow.didLoadOnce {
+            loading
+        } else if let error = follow.loadError, !follow.didLoadOnce {
+            errorState(error)
+        } else {
+            peopleList
+        }
+    }
+
+    // MARK: - Nội dung chính
+
+    private var peopleList: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    followingSection
+                    suggestionsSection.padding(.top, NodieSpacing.lg)
+                }
+                .padding(.horizontal, NodieSpacing.screenH)
+                .padding(.top, NodieSpacing.lg)
+                .padding(.bottom, NodieSpacing.md)
+                .id("top")
+            }
+            // Chạm lại tab khi đã ở root → cuộn lên đầu (xem AppState.selectTab).
+            .onChange(of: state.rootScrollTick) {
+                withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("top", anchor: .top) }
+            }
+        }
+    }
+
+    private var followingSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            EyebrowLabel(text: "Đang theo dõi").padding(.bottom, NodieSpacing.xs)
+            if follow.followingProfiles.isEmpty {
+                // Gợi ý nằm ngay bên dưới nên CTA chỉ cần trỏ xuống, không cần nút cuộn.
+                sectionNote(title: "Bạn chưa theo dõi ai.", hint: "Xem gợi ý bên dưới nhé.")
+            } else {
+                rows(follow.followingProfiles, isFollowing: { _ in true }) { profile in
+                    pendingUnfollow = profile
+                }
+            }
+        }
+    }
+
+    private var suggestionsSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            EyebrowLabel(text: "Gợi ý cho bạn").padding(.bottom, NodieSpacing.xs)
+            if follow.suggestions.isEmpty {
+                sectionNote(title: "Chưa có gợi ý mới.", hint: nil)
+            } else {
+                rows(follow.suggestions, isFollowing: { follow.isFollowing($0.id) }) { profile in
+                    NodieHaptics.tap()
+                    // Nút đổi nhãn "＋ Theo dõi" ↔ "✓ Đang theo dõi" (bề rộng khác nhau)
+                    // — spring cho cú đổi chỗ, không phải nhảy khựng.
+                    Task { await follow.toggle(profile.id) }
+                }
+            }
+        }
+    }
+
+    private func rows(_ people: [PublicProfile],
+                      isFollowing: @escaping (PublicProfile) -> Bool,
+                      onToggle: @escaping (PublicProfile) -> Void) -> some View {
+        ForEach(people) { profile in
+            PersonRowView(
+                profile: profile,
+                isFollowing: isFollowing(profile),
+                onTap: { state.friendsPath.append(FriendsRoute.member(profile.id)) },
+                onToggleFollow: { onToggle(profile) }
+            )
+            Divider().background(NodieColors.ruleLight)
+        }
+    }
+
+    private func sectionNote(title: LocalizedStringKey, hint: LocalizedStringKey?) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(NodieTypography.bodySm).foregroundStyle(NodieColors.inkMuted)
+            if let hint {
+                Text(hint).font(NodieTypography.metaSm).foregroundStyle(NodieColors.inkFaint)
+            }
+        }
+        .padding(.vertical, NodieSpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Tìm kiếm
+
+    @ViewBuilder private var searchResults: some View {
+        if follow.searchResults.isEmpty {
+            if follow.isSearching {
+                // Chưa có gì để vẽ mà nói "không tìm thấy" là nói dối sớm — chờ câu trả lời.
+                ProgressView().tint(NodieColors.accent)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                VStack(spacing: NodieSpacing.sm) {
+                    Image(systemName: "person.crop.circle.badge.questionmark")
+                        .font(.system(size: 30)).foregroundStyle(NodieColors.inkFaint)
+                    Text("Không tìm thấy ai với “\(trimmedQuery)”.")
+                        .font(NodieTypography.body).foregroundStyle(NodieColors.inkMuted)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.horizontal, NodieSpacing.screenH)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    rows(follow.searchResults, isFollowing: { follow.isFollowing($0.id) }) { profile in
+                        NodieHaptics.tap()
+                        // Trong kết quả tìm, bỏ theo cũng hỏi lại — cùng luật với section trên.
+                        if follow.isFollowing(profile.id) { pendingUnfollow = profile }
+                        else { Task { await follow.toggle(profile.id) } }
+                    }
+                }
+                .padding(.horizontal, NodieSpacing.screenH)
+                .padding(.top, NodieSpacing.sm)
+            }
+        }
+    }
+
+    // MARK: - Tải / lỗi
+
+    /// Khung xương thay vòng xoay — dùng lại chính `PersonRowView` nên danh sách thật
+    /// hiện ra không nhảy layout (cùng lối `.redacted` với QuestionListView).
+    private var loading: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<6, id: \.self) { seed in
+                PersonRowView(profile: .placeholder(seed: seed), isFollowing: false,
+                              onTap: {}, onToggleFollow: {})
+                Divider().background(NodieColors.ruleLight)
+            }
+        }
+        .padding(.horizontal, NodieSpacing.screenH)
+        .padding(.top, NodieSpacing.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .redacted(reason: .placeholder)
+        // Khung xương là tiếng ồn với VoiceOver — nó đọc ra sáu người bịa.
+        .accessibilityHidden(true)
+        .overlay {
+            Color.clear
+                .accessibilityLabel("Đang tải danh sách")
+                .accessibilityAddTraits(.updatesFrequently)
+        }
+    }
+
+    /// Lỗi vẽ tại chỗ, không alert gốc: màn hình nói được vì sao và mời đúng hành động
+    /// (`NodieErrorKind` quyết có nên mời "Thử lại" — hết quyền thì mời là hứa suông).
+    private func errorState(_ error: NodieErrorKind) -> some View {
+        VStack(spacing: NodieSpacing.sm) {
+            Image(systemName: error == .offline ? "wifi.slash" : "exclamationmark.triangle")
+                .font(.system(size: 30)).foregroundStyle(NodieColors.inkFaint)
+            Text(error.message)
+                .font(NodieTypography.body).foregroundStyle(NodieColors.inkMuted)
+                .multilineTextAlignment(.center)
+            if error.isRetryable {
+                Button {
+                    Task { await follow.load() }
+                } label: {
+                    Text("Thử lại")
+                        .font(NodieTypography.chip.weight(.bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, NodieSpacing.lg)
+                        .padding(.vertical, 9)
+                        .background(Capsule().fill(NodieColors.accent))
+                        .expandedHitArea(visual: 34)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, NodieSpacing.screenH)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Header
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -111,6 +264,20 @@ struct FriendsView: View {
                             await follow.search(newValue)
                         }
                     }
+                if follow.isSearching {
+                    ProgressView().controlSize(.small).tint(NodieColors.inkFaint)
+                } else if !query.isEmpty {
+                    Button {
+                        query = ""   // onChange lo phần còn lại: huỷ task cũ, xoá kết quả
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 15))
+                            .foregroundStyle(NodieColors.inkFaint)
+                            .expandedHitArea(visual: 20)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Xoá tìm kiếm")
+                }
             }
             .padding(.horizontal, 15)
             .padding(.vertical, 10)
@@ -121,56 +288,6 @@ struct FriendsView: View {
         }
         .padding(.horizontal, NodieSpacing.screenH)
         .padding(.top, NodieSpacing.screenTop)
-    }
-}
-
-/// Một người trong danh sách: chạm dòng mở hồ sơ, chạm nút follow thì KHÔNG mở.
-///
-/// Nút nằm lồng trong vùng chạm của dòng nên phải là `Button` riêng với `.buttonStyle(.plain)`
-/// — bọc cả dòng bằng Button rồi đặt Button con vào trong thì con ăn trước, đúng thứ ta cần.
-struct PersonRowView: View {
-    let profile: PublicProfile
-    let isFollowing: Bool
-    let onTap: () -> Void
-    let onToggleFollow: () -> Void
-
-    var body: some View {
-        HStack(spacing: NodieSpacing.md) {
-            Button(action: onTap) {
-                HStack(spacing: NodieSpacing.md) {
-                    InitialAvatar(initial: String(profile.name.prefix(1)).uppercased(), size: 46)
-
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(profile.name)
-                            .font(NodieTypography.rowTitle)
-                            .foregroundStyle(NodieColors.ink)
-                            .lineLimit(1)
-                        if let bio = profile.bio, !bio.isEmpty {
-                            Text(bio)
-                                .font(NodieTypography.metaSm)
-                                .foregroundStyle(NodieColors.inkMuted)
-                                .lineLimit(1)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            Button(action: onToggleFollow) {
-                (isFollowing ? Text("✓ Đang theo dõi") : Text("＋ Theo dõi"))
-                    .font(NodieTypography.chip.weight(.bold))
-                    .foregroundStyle(isFollowing ? NodieColors.inkSoft : .white)
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 7)
-                    .background(Capsule().fill(isFollowing ? .clear : NodieColors.accent))
-                    .overlay(Capsule().stroke(isFollowing ? NodieColors.chipBorder : NodieColors.accent, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(isFollowing ? Text("Bỏ theo dõi \(profile.name)") : Text("Theo dõi \(profile.name)"))
-        }
-        .padding(.vertical, 11)
     }
 }
 
