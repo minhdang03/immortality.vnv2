@@ -24,7 +24,7 @@ source-audit: apps/plans/reports/ux-ui-260717-1915-nodie-ios-production-readines
 | 01 | [Chat media pipeline: ảnh/camera/tệp end-to-end](phase-01-chat-media-pipeline.md) | P0-01, P0-03 | **Fable** | 1.5 ngày | ✅ commit `8a5dbc4` |
 | 02 | [Voice message thật kiểu WhatsApp](phase-02-voice-messages.md) | P0-02, P0-03 | **Fable** | 1 ngày | ✅ 17/07 21:12 — E2E prod pass |
 | 03 | [Diệt dead affordance + push trong chat](phase-03-dead-affordances-push.md) | P0-04 + medium push | ~~Opus~~ Fable (Đăng đổi 17/07 21:00) | 0.5 ngày | ✅ 18/07 08:5x |
-| 04 | [Test suite chạy dữ liệu thật, xanh 3 lần](phase-04-test-suite-real-data.md) | P0-05 | **Fable** | 1 ngày | ⬜ |
+| 04 | [Test suite chạy dữ liệu thật, xanh 3 lần](phase-04-test-suite-real-data.md) | P0-05 | **Fable** | 1 ngày | 🔨 code xong (`45860a4`), gate 3× chạy `scripts/run-uitest-gate.sh 3` khi máy rảnh |
 | 05 | [Accessibility AA: contrast + hit target + matrix](phase-05-accessibility-aa.md) | P1-01, P1-02, P1-07 | Opus (fast) | 1 ngày | ⬜ |
 | 06 | [Friends hoàn chỉnh: following + states](phase-06-friends-completion.md) | P1-04, P1-05 | Opus (fast) | 0.5 ngày | ⬜ |
 | 07 | [Trust & error UX: AI copy, safety tự hại, error taxonomy](phase-07-trust-error-ux.md) | P1-03, P1-06, P1-08 | Opus (fast) | 1 ngày | ⬜ |
