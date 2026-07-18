@@ -26,6 +26,8 @@
   background: var(--card); border: 1px solid var(--rule);
   border-radius: 12px; cursor: pointer; transition: all 0.3s;
   box-shadow: var(--shadow-sm);
+  /* Rendered as <button> for keyboard access — undo UA button styling */
+  width: 100%; text-align: left; font: inherit; color: inherit;
 }
 .story-item:hover { border-color: var(--rule-strong); box-shadow: var(--shadow-md); }
 .story-item.has-content { border-left: 3px solid var(--gold); }

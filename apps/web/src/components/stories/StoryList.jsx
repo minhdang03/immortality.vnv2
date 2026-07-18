@@ -38,8 +38,9 @@ export default function StoryList({ allStories, filtered, filter, setFilter, lan
           const tag = STORY_TAGS[story.tag]
           const hasContent = !!(story.contentVi || story.contentEn)
           return (
-            <div
+            <button
               key={story.id}
+              type="button"
               className={`story-item fade-up fade-up-d${(i % 4) + 1} ${hasContent ? 'has-content' : ''}`}
               onClick={() => onSelect(story)}
             >
@@ -48,8 +49,8 @@ export default function StoryList({ allStories, filtered, filter, setFilter, lan
                 <div className="story-item-title">{lang === 'vi' ? story.titleVi : story.titleEn}</div>
                 {tag && <span className={`story-tag tag-${story.tag}`}>{lang === 'vi' ? tag.vi : tag.en}</span>}
               </div>
-              <span className="story-arrow">&rsaquo;</span>
-            </div>
+              <span className="story-arrow" aria-hidden="true">&rsaquo;</span>
+            </button>
           )
         })}
       </div>

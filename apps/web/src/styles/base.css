@@ -9,6 +9,30 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 
+/* Visually hidden but available to screen readers (form labels, announcements) */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* Keyboard users jump past header nav; visible only while focused */
+.skip-link {
+  position: absolute; top: -100px; left: 12px; z-index: 1000;
+  padding: 10px 18px; border-radius: 8px;
+  background: var(--gold-deep, #b08642); color: #fff;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ─── EDITORIAL SACRED — Design Tokens ─── */
 :root, [data-theme="dark"] {
   /* Surface (layered: bg < surface/card < surface-2) */

@@ -80,6 +80,9 @@ export default function App() {
     const id = p.replace(/^\//, '').replace(/\/$/, '').split('/')[0]
     return id || 'home'
   })
+  // Screen readers announce content in the right language when the user toggles VI/EN.
+  useEffect(() => { document.documentElement.lang = lang }, [lang])
+
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [selectedArticle, setSelectedArticle] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState(null) // slug for /category/:slug
@@ -234,6 +237,9 @@ export default function App() {
 
   return (
     <>
+      <a className="skip-link" href="#main">
+        {lang === 'vi' ? 'Bỏ qua đến nội dung chính' : 'Skip to main content'}
+      </a>
       <BackgroundEffects />
       <div className="app-wrap">
         <Header
@@ -245,7 +251,7 @@ export default function App() {
           user={user} navItems={navItems}
         />
 
-        <main className="container">
+        <main id="main" className="container">
           <ErrorBoundary key={page}>
           <Suspense fallback={
             // On F5 of any detail URL, show DetailSkeleton — not ListSkeleton.

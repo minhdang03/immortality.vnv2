@@ -40,12 +40,18 @@ export default function ContactPage({ t }) {
   return (
     <section className="section">
       <PageHero icon={<SunIcon size={40} />} title={t.contactTitle} />
-      {status === 'sent' && <div className="contact-thanks fade-up">{t.contactThanks}</div>}
-      {status === 'error' && <div className="contact-thanks fade-up" style={{ color: '#c0392b' }}>Tin nhắn không hợp lệ — kiểm tra lại email và nội dung.</div>}
+      {/* Always-rendered live region so screen readers announce sent/error status changes */}
+      <div aria-live="polite" role="status">
+        {status === 'sent' && <div className="contact-thanks fade-up">{t.contactThanks}</div>}
+        {status === 'error' && <div className="contact-thanks fade-up" style={{ color: '#c0392b' }}>{t.contactError}</div>}
+      </div>
       <form className="contact-form fade-up fade-up-d1" onSubmit={handleSubmit}>
-        <input type="text" placeholder={t.contactName} required maxLength={100} value={form.name} onChange={set('name')} />
-        <input type="email" placeholder={t.contactEmail} required maxLength={200} value={form.email} onChange={set('email')} />
-        <textarea placeholder={t.contactMsg} required maxLength={4000} value={form.message} onChange={set('message')} />
+        <label className="sr-only" htmlFor="contact-name">{t.contactName}</label>
+        <input id="contact-name" name="name" type="text" autoComplete="name" placeholder={t.contactName} required maxLength={100} value={form.name} onChange={set('name')} />
+        <label className="sr-only" htmlFor="contact-email">{t.contactEmail}</label>
+        <input id="contact-email" name="email" type="email" autoComplete="email" placeholder={t.contactEmail} required maxLength={200} value={form.email} onChange={set('email')} />
+        <label className="sr-only" htmlFor="contact-message">{t.contactMsg}</label>
+        <textarea id="contact-message" name="message" placeholder={t.contactMsg} required maxLength={4000} value={form.message} onChange={set('message')} />
         <button type="submit" className="submit-btn" disabled={status === 'sending'}>
           {status === 'sending' ? '...' : t.contactSend}
         </button>
