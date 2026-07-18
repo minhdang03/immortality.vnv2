@@ -41,7 +41,7 @@ final class TouchTargetUITests: XCTestCase {
     /// lẫn nút của app → truy vấn mơ hồ, XCTest văng. Nhãn vẫn được kiểm riêng bên dưới.
     func testChatControlsHitTargetsAndVietnameseLabels() {
         app.buttons["Chat"].tap()
-        app.staticTexts["Lab trường thọ #3"].tap()
+        app.row(containing: NodieChatSeed.dmRowTitle).tap()
 
         assertHitTarget(app.buttons["Quay lại"], "nút quay lại")
         assertHitTarget(app.buttons["Đính kèm"], "nút đính kèm")
@@ -66,8 +66,8 @@ final class TouchTargetUITests: XCTestCase {
     /// Dòng danh sách phải là Button thật → VoiceOver đọc đúng là bấm được.
     func testRowsAreRealButtons() {
         app.buttons["Chat"].tap()
-        XCTAssertTrue(app.buttons.containing(.staticText, identifier: "Lab trường thọ #3").firstMatch
-            .waitForExistence(timeout: 5), "Dòng hội thoại phải là Button, không phải khối chữ bắt tap")
+        XCTAssertTrue(app.row(containing: NodieChatSeed.dmRowTitle)
+            .waitForExistence(timeout: 10), "Dòng hội thoại phải là Button, không phải khối chữ bắt tap")
 
         app.buttons["Hỏi đáp"].tap()
         // Câu hỏi từ Supabase thật (seed_nodie.sql), không còn MockData.

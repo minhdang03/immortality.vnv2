@@ -47,7 +47,7 @@ final class SwipeBackUITests: XCTestCase {
     /// Nếu test này pass mà test vuốt fail → lỗi ở gesture, không phải ở điều hướng/test.
     func testBackButtonPopsChatDetail() {
         app.buttons["Chat"].tap()
-        app.staticTexts["Hà Chi"].tap()
+        app.row(containing: NodieChatSeed.dmRowTitle).tap()
 
         let input = app.textFields["Nhắn tin…"]
         XCTAssertTrue(input.waitForExistence(timeout: 3), "Phải vào được chat detail")
@@ -61,8 +61,8 @@ final class SwipeBackUITests: XCTestCase {
     func testSwipeBackFromChatDetail() {
         app.buttons["Chat"].tap()
 
-        let row = app.staticTexts["Lab trường thọ #3"]
-        XCTAssertTrue(row.waitForExistence(timeout: 3), "Danh sách hội thoại phải hiện")
+        let row = app.row(containing: NodieChatSeed.groupTitle)
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "Danh sách hội thoại phải hiện")
         row.tap()
 
         // Ô nhập chỉ có ở chat detail → dùng làm mốc nhận biết đã vào detail
@@ -104,8 +104,8 @@ final class SwipeBackUITests: XCTestCase {
         let friendsTab = app.buttons["Bạn bè"]
         XCTAssertTrue(friendsTab.waitForExistence(timeout: 3), "Tab bar phải hiện ở màn list")
 
-        app.staticTexts["Hà Chi"].tap()
-        XCTAssertTrue(app.textFields["Nhắn tin…"].waitForExistence(timeout: 3))
+        app.row(containing: NodieChatSeed.dmRowTitle).tap()
+        XCTAssertTrue(app.textFields["Nhắn tin…"].waitForExistence(timeout: 10))
         XCTAssertFalse(friendsTab.exists, "Tab bar phải ẩn ở chat detail")
 
         swipeBackFromLeftEdge()
@@ -117,7 +117,7 @@ final class SwipeBackUITests: XCTestCase {
 
     func testSwipeBackFromContentAreaOfChatDetail() {
         app.buttons["Chat"].tap()
-        app.staticTexts["Hà Chi"].tap()
+        app.row(containing: NodieChatSeed.dmRowTitle).tap()
 
         let input = app.textFields["Nhắn tin…"]
         XCTAssertTrue(input.waitForExistence(timeout: 3), "Phải vào được chat detail")
@@ -137,7 +137,7 @@ final class SwipeBackUITests: XCTestCase {
     /// Đây là cái giá phải canh khi mở rộng vùng vuốt ra cả màn hình.
     func testVerticalScrollInChatDetailDoesNotPop() {
         app.buttons["Chat"].tap()
-        app.staticTexts["Lab trường thọ #3"].tap()
+        app.row(containing: NodieChatSeed.dmRowTitle).tap()
 
         let input = app.textFields["Nhắn tin…"]
         XCTAssertTrue(input.waitForExistence(timeout: 3), "Phải vào được chat detail")
@@ -152,7 +152,7 @@ final class SwipeBackUITests: XCTestCase {
     /// Kéo sang TRÁI không phải là back — không được pop.
     func testLeftwardDragDoesNotPop() {
         app.buttons["Chat"].tap()
-        app.staticTexts["Hà Chi"].tap()
+        app.row(containing: NodieChatSeed.dmRowTitle).tap()
 
         let input = app.textFields["Nhắn tin…"]
         XCTAssertTrue(input.waitForExistence(timeout: 3), "Phải vào được chat detail")

@@ -55,11 +55,15 @@ final class UndoDeleteUITests: XCTestCase {
                       "Xoá xong phải có banner Hoàn tác (banner gắn ở RootTabView)")
         XCTAssertTrue(app.staticTexts["Đã xoá câu hỏi"].exists, "Banner phải nói rõ vừa xoá gì")
 
-        // `.exists` chứ KHÔNG `waitForExistence`: banner chỉ sống 6 giây, mà chờ ở đây là chờ
-        // một thứ phải VẮNG — nó sẽ ngốn trọn timeout rồi mới trả false, và lúc quay ra thì
-        // banner đã tắt, `undo.tap()` bấm vào hư không. Danh sách đã dựng lại xong từ trước
-        // khi banner hiện, nên hỏi ngay là đủ.
-        XCTAssertFalse(app.row(containing: title).exists,
+        // Chờ VẮNG MẶT bằng predicate có trần 4 giây — không `.exists` ngay (danh sách nạp
+        // lại qua mạng, có lúc banner hiện TRƯỚC khi list xong — đã flake thật 18/07), cũng
+        // không `waitForExistence` (chờ thứ phải vắng là ngốn trọn timeout, banner 6s tắt
+        // mất trước khi kịp bấm Hoàn tác). Predicate thoả là trả về SỚM — còn dư ≥2s banner.
+        let gone = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"),
+            object: app.row(containing: title)
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [gone], timeout: 4), .completed,
                        "Xoá xong câu hỏi phải biến mất khỏi danh sách")
 
         undo.tap()

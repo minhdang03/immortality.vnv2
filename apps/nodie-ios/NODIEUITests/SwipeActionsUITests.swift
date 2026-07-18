@@ -1,66 +1,74 @@
 import XCTest
 
-/// Verify swipe action trên dòng hội thoại + kéo-xuống-làm-mới.
+/// Swipe action trên dòng hội thoại + kéo-xuống-làm-mới — dữ liệu Supabase thật.
+///
+/// Đăng nhập thật: mark-read/mute/leave giờ ghi `channel_members` qua RLS của user thường.
+/// Bypass không có JWT thì hành động nào cũng câm (204 khớp 0 dòng) — đúng loại lỗi im lặng
+/// mà suite này tồn tại để bắt.
 final class SwipeActionsUITests: XCTestCase {
     private var app: XCUIApplication!
 
-    override func setUp() {
+    override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        // Test này soi gesture/UI, không soi auth → bỏ qua đăng nhập cho nhanh & tất định.
-        app.launchArguments.append("--uitest-bypass-auth")
-        app.launchVietnamese()
+        try NodieTestAuth.signIn(app)
         app.buttons["Chat"].tap()
     }
 
     private func row(_ name: String) -> XCUIElement {
-        app.cells.containing(.staticText, identifier: name).firstMatch
+        app.buttons.containing(.staticText, identifier: name).firstMatch
     }
 
-    /// Vuốt phải trên dòng → "Đã đọc" → badge chưa đọc biến mất thật.
+    /// Vuốt phải trên nhóm còn tin chưa đọc → "Đã đọc" → badge biến mất (ghi `last_read_at` thật).
+    /// Đo trên NHÓM RỜI THỬ — xem chú thích `leaveGroupUnreadBadge` về thứ tự chạy.
     func testSwipeLeadingMarksAsRead() {
-        let badge = app.staticTexts["12 tin chưa đọc"]
-        XCTAssertTrue(badge.waitForExistence(timeout: 3), "Lab trường thọ #3 phải có 12 chưa đọc")
+        let badge = app.staticTexts[NodieChatSeed.leaveGroupUnreadBadge]
+        XCTAssertTrue(badge.waitForExistence(timeout: 10),
+                      "Nhóm rời thử phải có badge '\(NodieChatSeed.leaveGroupUnreadBadge)' — seed đặt last_read trước tin của Bình")
 
-        row("Lab trường thọ #3").swipeRight()
+        row(NodieChatSeed.leaveGroupTitle).swipeRight()
         app.buttons["Đã đọc"].tap()
 
-        XCTAssertFalse(badge.waitForExistence(timeout: 2), "Badge chưa đọc phải biến mất sau khi đánh dấu đã đọc")
+        XCTAssertFalse(badge.waitForExistence(timeout: 3),
+                       "Badge chưa đọc phải biến mất sau khi đánh dấu đã đọc")
     }
 
-    /// Vuốt trái → "Tắt thông báo" → chuông gạch hiện lên, nhãn đổi thành "Bật lại".
+    /// Vuốt trái trên nhóm → "Tắt thông báo" → vuốt lại thấy "Bật lại" (ghi `muted_until` thật).
     func testSwipeTrailingMutesChannel() {
-        let target = row("Khoa học não bộ")
-        XCTAssertTrue(target.waitForExistence(timeout: 3))
+        let target = row(NodieChatSeed.groupTitle)
+        XCTAssertTrue(target.waitForExistence(timeout: 10))
 
         target.swipeLeft()
         app.buttons["Tắt thông báo"].tap()
 
         target.swipeLeft()
-        XCTAssertTrue(app.buttons["Bật lại"].waitForExistence(timeout: 2),
+        XCTAssertTrue(app.buttons["Bật lại"].waitForExistence(timeout: 5),
                       "Đã tắt thông báo thì nhãn phải đổi thành 'Bật lại'")
+        // Trả lại trạng thái cũ để lần chạy sau (gate 3×) không thấy nhóm đã tắt sẵn.
+        app.buttons["Bật lại"].tap()
     }
 
-    /// Vuốt trái → "Rời khỏi" → dòng biến mất khỏi danh sách.
+    /// Vuốt trái → "Rời khỏi" → dòng biến mất (xoá membership thật).
+    /// Nhóm RIÊNG cho test này — seed dựng lại mỗi lần chạy, các test khác không dùng nó.
     func testSwipeTrailingLeavesConversation() {
-        let target = app.staticTexts["Vũ trụ học hiện đại"]
-        XCTAssertTrue(target.waitForExistence(timeout: 3))
+        let target = app.staticTexts[NodieChatSeed.leaveGroupTitle]
+        XCTAssertTrue(target.waitForExistence(timeout: 10))
 
-        row("Vũ trụ học hiện đại").swipeLeft()
+        row(NodieChatSeed.leaveGroupTitle).swipeLeft()
         app.buttons["Rời khỏi"].tap()
 
-        XCTAssertFalse(target.waitForExistence(timeout: 2), "Rời khỏi rồi thì dòng phải biến mất")
+        XCTAssertFalse(target.waitForExistence(timeout: 3), "Rời khỏi rồi thì dòng phải biến mất")
     }
 
-    /// Kéo xuống ở đầu danh sách → refresh chạy, danh sách vẫn nguyên vẹn sau đó.
+    /// Kéo xuống ở đầu danh sách → refresh chạy lại từ Supabase, danh sách vẫn nguyên.
     func testPullToRefreshKeepsListIntact() {
-        let first = app.staticTexts["Khoa học não bộ"]
-        XCTAssertTrue(first.waitForExistence(timeout: 3))
+        let first = app.staticTexts[NodieChatSeed.dmRowTitle]
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
 
         let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35))
         let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85))
         start.press(forDuration: 0.1, thenDragTo: end)
 
-        XCTAssertTrue(first.waitForExistence(timeout: 4), "Sau khi làm mới, danh sách phải còn nguyên")
+        XCTAssertTrue(first.waitForExistence(timeout: 8), "Sau khi làm mới, danh sách phải còn nguyên")
     }
 }

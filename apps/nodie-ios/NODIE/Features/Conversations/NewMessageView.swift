@@ -29,7 +29,10 @@ struct NewMessageView: View {
 
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    ForEach(follow.suggestions) { profile in
+                    // `peoplePicker` chứ không `suggestions`: suggestions trừ người mình theo,
+                    // mà đây là picker nhắn tin — giấu người quen là ngược đời (bug đã dính:
+                    // An theo Bình xong không nhắn được cho Bình từ nút ✎).
+                    ForEach(follow.peoplePicker) { profile in
                         Button {
                             // Đóng sheet TRƯỚC để nó không còn nằm trên khung chat vừa mở
                             // (RPC + điều hướng chạy async, không đợi kịp sẽ thấy giật).

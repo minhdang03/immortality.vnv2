@@ -13,7 +13,10 @@ import SwiftUI
 struct ChannelRow: Codable, Identifiable, Hashable {
     let id: UUID
     let slug: String?
-    let title: String?
+    /// `var` chứ không `let`: DM trong DB KHÔNG mang title (create_dm không đặt — title tĩnh
+    /// sẽ mốc khi người ta đổi tên). `ConversationStore.resolveDMTitles` vá tại tầng load:
+    /// title DM = tên NGƯỜI KIA, để displayTitle/avatarGlyph/mọi view tự đúng theo.
+    var title: String?
     /// public | group | dm | feed
     let kind: String
     let isBroadcast: Bool

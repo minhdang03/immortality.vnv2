@@ -98,9 +98,48 @@ final class ConversationStore {
                 .order("last_message_at", ascending: false, nullsFirst: false)
                 .execute().value
             channels = rows
+            await resolveDMTitles()
             await loadUnreadCounts()
         } catch { errorMessage = ErrorText.localized(error) }
         isLoading = false
+    }
+
+    /// Đặt title cho các DM = tên NGƯỜI KIA — một query cho tất cả DM, không N+1.
+    ///
+    /// Không lưu vào DB: tên người thay đổi được, title tĩnh sẽ mốc; WhatsApp/Zalo cũng
+    /// resolve lúc hiển thị. Cần FK `channel_members.user_id → profiles` (0039) để embed.
+    /// Lỗi mạng thì rơi về "Hội thoại" — lần refresh sau thử lại, không chặn danh sách.
+    private func resolveDMTitles() async {
+        guard let uid else { return }
+        let dmIds = channels.filter { $0.kind == "dm" }.map(\.id)
+        guard !dmIds.isEmpty else { return }
+
+        struct Row: Decodable {
+            let channelId: UUID
+            let member: Name?
+            struct Name: Decodable {
+                let displayName: String?
+                enum CodingKeys: String, CodingKey { case displayName = "display_name" }
+            }
+            enum CodingKeys: String, CodingKey {
+                case member
+                case channelId = "channel_id"
+            }
+        }
+        do {
+            let rows: [Row] = try await client.from("channel_members")
+                .select("channel_id,member:public_profiles!channel_members_user_id_fkey(display_name)")
+                .in("channel_id", values: dmIds)
+                .neq("user_id", value: uid)
+                .execute().value
+            let names = Dictionary(
+                rows.compactMap { r in r.member?.displayName.map { (r.channelId, $0) } },
+                uniquingKeysWith: { first, _ in first }
+            )
+            for i in channels.indices where channels[i].kind == "dm" {
+                if let name = names[channels[i].id] { channels[i].title = name }
+            }
+        } catch { /* giữ title cũ */ }
     }
 
     /// Đếm chưa đọc = `messages` mới hơn `last_read_at` (quy tắc scale #4: không bảng

@@ -34,6 +34,10 @@ final class FollowStore {
     /// "có theo người này không" — hỏi mảng là quét tuyến tính trên mỗi dòng danh sách.
     private(set) var following: Set<UUID> = []
     private(set) var suggestions: [PublicProfile] = []
+    /// MỌI người (trừ mình), người đang theo dõi xếp TRƯỚC — cho picker "Tin nhắn mới".
+    /// Khác `suggestions` (đã trừ người mình theo): picker nhắn tin mà giấu đúng những
+    /// người mình theo là ngược đời — IG/Zalo liệt kê người quen trước tiên.
+    private(set) var peoplePicker: [PublicProfile] = []
     private(set) var searchResults: [PublicProfile] = []
     private(set) var errorMessage: String?
     private(set) var didLoadOnce = false
@@ -77,12 +81,19 @@ final class FollowStore {
     private func loadSuggestions() async {
         guard let uid else { return }
         do {
+            // `.order` là BẮT BUỘC khi có `.limit`: không order thì 50 dòng là bộ NGẪU NHIÊN
+            // đổi theo plan của Postgres — người dùng biến mất khỏi picker không vì lý do gì.
             let rows: [PublicProfile] = try await client.from("public_profiles")
                 .select("id,display_name,bio")
                 .neq("id", value: uid)
+                .order("display_name")
                 .limit(50)
                 .execute().value
             suggestions = rows.filter { !following.contains($0.id) }
+            peoplePicker = rows.sorted { a, b in
+                let fa = following.contains(a.id), fb = following.contains(b.id)
+                return fa == fb ? a.name < b.name : fa
+            }
         } catch { errorMessage = ErrorText.localized(error) }
     }
 

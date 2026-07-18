@@ -92,6 +92,25 @@ enum NodieSeed {
     static let replyPrefix = "Bổ sung: rượu bia làm giảm mạnh N3"
 }
 
+/// Hằng số khớp `scripts/seed-uitest-chat.sh`. Đổi seed → đổi ở ĐÂY, không rải khắp test.
+///
+/// DM seed có title `"An ↔ Bình [uitest-chat-seed]"` trong DB nhưng app HIỂN THỊ tên người
+/// kia ("Bình Trần") — `ConversationStore.resolveDMTitles` đè title DM bằng tên peer, đúng
+/// chuẩn WhatsApp. Test assert theo thứ NGƯỜI DÙNG thấy.
+enum NodieChatSeed {
+    /// Dòng DM trong danh sách — tên người kia, không phải title DB.
+    static let dmRowTitle = "Bình Trần"
+    static let groupTitle = "Nhóm kiểm thử [uitest-chat-seed]"
+    static let leaveGroupTitle = "Nhóm rời thử [uitest-chat-seed]"
+    static let dmOldestMessage = "Chào An 👋"
+    /// Badge chưa đọc đo trên NHÓM RỜI THỬ (1 tin của Bình sau last_read của An), không
+    /// phải DM: mọi test mở DM đều tiêu mất trạng thái chưa đọc của nó, mà thứ tự chạy
+    /// theo alphabet thì ChatDetail đứng trước SwipeActions.
+    static let leaveGroupUnreadBadge = "1 tin chưa đọc"
+    /// Người thứ ba CHƯA có DM với An — cho test tạo DM mới. Seed dọn DM của Chi mỗi lần chạy.
+    static let thirdPersonName = "Chi Thử Nghiệm"
+}
+
 extension XCUIApplication {
     /// Dòng danh sách là Button bọc chữ → chữ bên trong không hittable.
     /// Muốn bấm phải tìm Button chứa nó (xem TouchTargetUITests.testRowsAreRealButtons).

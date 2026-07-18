@@ -322,20 +322,25 @@ struct ChatDetailView: View {
     /// Menu ⋯ — hồ sơ/thông tin, tắt thông báo, xoá.
     private var chatMenu: some View {
         Menu {
-            if channel?.kind == "dm" {
-                // Tìm người kia qua `members(of:)` (RLS `members_read` cho thành viên thấy
-                // nhau) rồi push hồ sơ — back quay về đúng khung chat này.
-                Button("Xem hồ sơ") {
-                    Task {
-                        let members = await store.members(of: channelId)
-                        guard let peer = members.first(where: { $0.id != store.currentUserId })
-                        else { return }
-                        state.chatsPath.append(ChatRoute.member(peer.id))
+            // `if let` chứ không `channel?.kind == "dm"`: vào thẳng chat từ push khi
+            // `channels` chưa nạp thì channel còn nil — lúc đó DM sẽ hiện nhầm mục
+            // "Thông tin nhóm". Chưa biết kênh là gì thì chưa vẽ mục nào.
+            if let channel {
+                if channel.kind == "dm" {
+                    // Tìm người kia qua `members(of:)` (RLS `members_read` cho thành viên
+                    // thấy nhau) rồi push hồ sơ — back quay về đúng khung chat này.
+                    Button("Xem hồ sơ") {
+                        Task {
+                            let members = await store.members(of: channelId)
+                            guard let peer = members.first(where: { $0.id != store.currentUserId })
+                            else { return }
+                            state.chatsPath.append(ChatRoute.member(peer.id))
+                        }
                     }
-                }
-            } else {
-                Button("Thông tin nhóm") {
-                    state.chatsPath.append(ChatRoute.groupInfo(channelId))
+                } else {
+                    Button("Thông tin nhóm") {
+                        state.chatsPath.append(ChatRoute.groupInfo(channelId))
+                    }
                 }
             }
             Button(channel?.isMuted == true ? String(localized: "Bật thông báo") : String(localized: "Tắt thông báo")) {
