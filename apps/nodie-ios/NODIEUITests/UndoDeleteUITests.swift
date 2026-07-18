@@ -55,20 +55,33 @@ final class UndoDeleteUITests: XCTestCase {
                       "Xoá xong phải có banner Hoàn tác (banner gắn ở RootTabView)")
         XCTAssertTrue(app.staticTexts["Đã xoá câu hỏi"].exists, "Banner phải nói rõ vừa xoá gì")
 
-        // Chờ VẮNG MẶT bằng predicate có trần 4 giây — không `.exists` ngay (danh sách nạp
-        // lại qua mạng, có lúc banner hiện TRƯỚC khi list xong — đã flake thật 18/07), cũng
-        // không `waitForExistence` (chờ thứ phải vắng là ngốn trọn timeout, banner 6s tắt
-        // mất trước khi kịp bấm Hoàn tác). Predicate thoả là trả về SỚM — còn dư ≥2s banner.
-        let gone = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "exists == false"),
-            object: app.row(containing: title)
-        )
-        XCTAssertEqual(XCTWaiter.wait(for: [gone], timeout: 4), .completed,
-                       "Xoá xong câu hỏi phải biến mất khỏi danh sách")
-
+        // Bấm Hoàn tác NGAY khi banner còn chắc chắn sống. KHÔNG soi danh sách trước:
+        // danh sách nạp lại qua mạng, chạy lạnh mất hơn 4 giây, mà cửa sổ banner chỉ có 6 —
+        // cuộc đua "chờ vắng mặt rồi mới bấm" đã thua 2 lần (18/07). Đua với mạng thì
+        // đừng đặt cửa banner làm trọng tài.
         undo.tap()
 
         XCTAssertTrue(app.row(containing: title).waitForExistence(timeout: 15),
                       "Hoàn tác phải trả câu hỏi về danh sách (deleted_at = null + nạp lại)")
+
+        // VÒNG HAI chứng minh nốt "xoá là biến mất": lần này không hoàn tác nữa nên được
+        // quyền chờ rộng rãi, không còn banner nào ràng buộc. Câu hỏi kết thúc ở trạng thái
+        // đã-xoá — seed-uitest-chat.sh hồi sinh nó trước mỗi run, đây là điều seed đã tính.
+        app.row(containing: title).tap()
+        XCTAssertTrue(menu.waitForExistence(timeout: 10), "Vòng hai: phải thấy lại menu ⋯")
+        menu.tap()
+        XCTAssertTrue(menuDelete.waitForExistence(timeout: 5), "Vòng hai: menu phải có mục Xoá")
+        menuDelete.tap()
+        XCTAssertTrue(confirmDelete.waitForExistence(timeout: 5), "Vòng hai: phải có hộp xác nhận")
+        confirmDelete.tap()
+        XCTAssertTrue(app.buttons["Hỏi đáp"].waitForExistence(timeout: 10),
+                      "Vòng hai: xoá xong phải pop về danh sách")
+
+        let gone = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"),
+            object: app.row(containing: title)
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [gone], timeout: 15), .completed,
+                       "Xoá xong câu hỏi phải biến mất khỏi danh sách")
     }
 }

@@ -23,6 +23,10 @@ final class AuthUITests: XCTestCase {
     private func launchSignedOut() {
         app.launchArguments.append("--uitest-reset-auth")
         app.launchVietnamese()
+        XCTAssertTrue(
+            app.textFields["Email"].waitForExistence(timeout: 25),
+            "Reset session phải hoàn tất và hiện màn Login kể cả ở cold start"
+        )
     }
 
     /// Vào app ở trạng thái đã đăng nhập, KHÔNG qua bàn phím — dùng cho các test soi thứ
@@ -207,11 +211,15 @@ final class AuthUITests: XCTestCase {
 
         app.terminate()
 
-        // Lần này KHÔNG reset auth → phải tự vào thẳng app
-        let relaunched = XCUIApplication()
-        relaunched.launchVietnamese()
+        // Tái dùng cùng automation handle: tạo XCUIApplication thứ hai ngay sau terminate
+        // làm XCTest runner trên iOS 26.5 kẹt ở "Setting up automation session" rồi bị SIGKILL.
+        // Xoá reset/auto-login flags để lần mở này chỉ có thể vào nhờ session Keychain.
+        app.launchArguments = []
+        app.launchEnvironment = [:]
+        app.launchVietnamese()
 
-        XCTAssertTrue(relaunched.buttons["Bạn bè"].waitForExistence(timeout: 20),
+        XCTAssertTrue(app.buttons["Bạn bè"].waitForExistence(timeout: 20),
                       "Mở lại app phải vẫn đăng nhập, không hiện Login")
+        app.terminate()
     }
 }

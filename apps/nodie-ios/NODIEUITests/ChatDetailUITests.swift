@@ -60,9 +60,19 @@ final class ChatDetailUITests: XCTestCase {
         let unique = "tin nhắn thật \(Int(Date().timeIntervalSince1970))"
         input.tap()
         input.typeText(unique)
-        app.buttons["sendMessage"].tap()
 
-        XCTAssertEqual(input.value as? String, "Nhắn tin…", "Gửi xong ô nhập phải sạch")
+        // Chờ nút gửi HIỆN rồi tap, và chờ ô sạch bằng predicate thay vì assert tức thì:
+        // nút mic↔gửi hoán đổi có animation, tap giữa lúc đổi chỗ là cú gửi trượt im lặng
+        // (đã dính ở đây 18/07 15:51 — value còn nguyên chuỗi vừa gõ).
+        let send = app.buttons["sendMessage"]
+        XCTAssertTrue(send.waitForExistence(timeout: 3), "Có chữ thì nút gửi phải hiện")
+        send.tap()
+
+        let cleared = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "Nhắn tin…"), object: input
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [cleared], timeout: 5), .completed,
+                       "Gửi xong ô nhập phải sạch")
         XCTAssertTrue(app.staticTexts[unique].waitForExistence(timeout: 10),
                       "Tin vừa gửi phải hiện trong khung chat (đường Supabase thật)")
     }

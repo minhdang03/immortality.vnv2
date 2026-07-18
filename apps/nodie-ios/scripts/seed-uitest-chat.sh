@@ -16,7 +16,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-ENV_FILE="$ROOT/.env"
+ENV_FILE="${NODIE_UITEST_ENV_FILE:-$ROOT/.env}"
 
 [[ -f "$ENV_FILE" ]] || { echo "❌ Không thấy $ENV_FILE"; exit 1; }
 # shellcheck disable=SC1090
