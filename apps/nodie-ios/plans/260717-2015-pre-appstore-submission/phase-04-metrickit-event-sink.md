@@ -1,6 +1,6 @@
 # Phase 04 — MetricKit + đường ghi sự kiện (AppEventLogger)
 
-**Mục:** B-01 (P0 crash reporting) · B-02 phần writer (P1) · **Đợt A** · Ước lượng **0.5 ngày** · Status: ⬜
+**Mục:** B-01 (P0 crash reporting) · B-02 phần writer (P1) · **Đợt A** · Ước lượng **0.5 ngày** · Status: 🔨 code xong 18/07 16:4x (chờ verify tay bước 6)
 **Model:** Opus (fast) — boilerplate MetricKit + một writer mỏng vào bảng đã có schema; spec rõ, verify bằng Simulate MetricKit Payloads + đọc row.
 
 ## Context links
@@ -65,12 +65,12 @@ Kèm một `AppEventLogger` mỏng để phase 06 (funnel) có sẵn đường g
 
 ## Todo
 
-- [ ] `AppEventLogger.swift` — writer best-effort, guard session, cắt payload lớn
-- [ ] `MetricKitSubscriber.swift` — 3 kind diagnostic, tóm gọn payload
-- [ ] `NodieApp.swift` — add subscriber ở didFinishLaunching (chạm tối thiểu)
-- [ ] `xcodegen generate` (hẹn cửa sổ build)
-- [ ] Build xanh simulator
-- [ ] Simulate MetricKit Payloads → verify row `app_events`
+- [x] `AppEventLogger.swift` — writer best-effort, guard session, cắt payload lớn (bỏ dần field nặng nhất < 50KB, đánh dấu `truncated`)
+- [x] `MetricKitSubscriber.swift` — 3 kind diagnostic, tóm gọn payload; call stack cắt 16K ký tự; KHÔNG nhận MXMetricPayload (YAGNI, method optional)
+- [x] `NodieApp.swift` — add subscriber ở didFinishLaunching (import + property + 1 dòng add)
+- [x] `xcodegen generate` — chạy 16:3x sau khi gate UITest phiên 1933 kết thúc (16:32), không đua build
+- [x] Build xanh simulator (iPhone 17) + app launch sống 8s, `Localizable.xcstrings` không bị build ghi lại
+- [ ] **Đăng bấm tay:** Xcode → Debug → Simulate MetricKit Payloads (app chạy debugger, đăng nhập role='user') → verify: `select kind, created_at, pg_column_size(payload) from public.app_events order by created_at desc limit 5;` (MetricKit simulate không script được từ CLI)
 
 ## Success criteria
 

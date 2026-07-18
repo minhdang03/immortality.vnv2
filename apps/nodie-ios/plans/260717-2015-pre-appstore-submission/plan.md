@@ -22,7 +22,7 @@ source-report: apps/nodie-ios/plans/reports/production-gap-analysis-260717-1949-
 | 01 | [Web: privacy + terms + trang nhúng captcha](phase-01-web-legal-pages.md) | A-02 (+hạ tầng C-04) | A | Opus (fast) | 0.5 ngày | ✅ 18/07 — prod 200 cả 3 URL, Terms khớp từng chữ (script đối chiếu), + link footer |
 | 02 | [Supabase ops: sổ migration, log push hỏng, bảng sự kiện](phase-02-supabase-ops-ledger-logs.md) | C-02, B-03, B-02(SQL) | A | **Fable** | 0.5 ngày | ✅ 18/07 — 0035-0037 trên prod (verify psql: cả 3 bảng CÓ) |
 | 03 | [Seed kênh + nội dung mồi từ stories/khaitri](phase-03-seed-launch-content.md) | D-01 | A | **Fable** | 0.5 ngày | ✅ 18/07 — 12 câu/4 persona, verify HTTP role=user (xem phase file) |
-| 04 | [MetricKit + đường ghi sự kiện](phase-04-metrickit-event-sink.md) | B-01, B-02(writer) | A | Opus (fast) | 0.5 ngày | ⬜ |
+| 04 | [MetricKit + đường ghi sự kiện](phase-04-metrickit-event-sink.md) | B-01, B-02(writer) | A | Opus (fast) | 0.5 ngày | 🔨 18/07 16:4x — code xong, build xanh, app launch OK; CÒN: Đăng bấm Xcode → Debug → Simulate MetricKit Payloads (app đăng nhập role=user) rồi verify row `app_events` |
 | 05 | [Captcha Turnstile end-to-end](phase-05-turnstile-captcha.md) | C-04 | B | **Fable** | 1 ngày | ⬜ |
 | 06 | [Nội quy cộng đồng + link đăng ký + funnel events](phase-06-community-guidelines-funnel.md) | D-05, A-05(code), B-02(call-site) | B | Opus (fast) | 0.5 ngày | ⬜ |
 | 07 | [Checklist bàn giao Đăng (console)](phase-07-handoff-checklist.md) | A-03, A-04, A-06, C-01, C-03 | — | — (Đăng bấm tay) | 0.5 ngày | ⬜ |

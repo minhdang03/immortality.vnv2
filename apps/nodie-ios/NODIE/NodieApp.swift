@@ -1,3 +1,4 @@
+import MetricKit
 import SwiftUI
 import UIKit
 
@@ -18,6 +19,10 @@ struct NodieApp: App {
 final class AppDelegate: NSObject, UIApplicationDelegate {
     let push = PushManager()
 
+    /// Property chứ không phải biến cục bộ: MXMetricManager giữ subscriber yếu,
+    /// ARC thả là callback không bao giờ chạy. AppDelegate sống suốt đời app.
+    private let metricSubscriber = MetricKitSubscriber()
+
     /// Gắn delegate NGAY lúc launch, không đợi tới sau đăng nhập.
     ///
     /// Apple giao `didReceive` (user bấm push) đúng MỘT lần, ngay sau khi app khởi động. Chưa
@@ -28,6 +33,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = push
+        // MetricKit giao payload chẩn đoán đang chờ ngay sau launch — đăng ký trễ là lỡ.
+        MXMetricManager.shared.add(metricSubscriber)
         return true
     }
 
