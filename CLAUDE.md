@@ -204,6 +204,7 @@ nhầm. Lock file duy nhất: `pnpm-lock.yaml`.
 | `./scripts/generate-secrets-xcconfig.sh` | Sinh `Config/Secrets.xcconfig` từ `.env` (gitignored) |
 | `xcodebuild -project NODIE.xcodeproj -scheme NODIE -destination 'platform=iOS Simulator,name=iPhone 17' build` | Build |
 | ... `test` | UITests — chạy bằng tài khoản THƯỜNG, xem `project.yml` |
+| `scripts/run-uitest-gate.sh 3` | **Release gate**: full suite 3 lần liên tiếp, tự seed trước MỖI run (bắt buộc — vài test tiêu thụ trạng thái một lần). Máy phải nguội (load <8), không phiên nào khác đang build iOS. |
 
 ### Android
 
