@@ -41,7 +41,8 @@
   align-items: center;
   gap: 24px;
 }
-.overlay-links button {
+.overlay-links button,
+.overlay-links a {
   background: none;
   border: none;
   color: var(--gold-bright);
@@ -52,9 +53,12 @@
   transition: color 0.3s, transform 0.3s;
   position: relative;
 }
-.overlay-links button:hover { color: var(--white); transform: scale(1.05); }
-.overlay-links button.active { color: var(--white); }
-.overlay-links button.active::after {
+.overlay-links button:hover,
+.overlay-links a:hover { color: var(--white); transform: scale(1.05); }
+.overlay-links button.active,
+.overlay-links a.active { color: var(--white); }
+.overlay-links button.active::after,
+.overlay-links a.active::after {
   content: '';
   position: absolute;
   bottom: -4px;
@@ -63,6 +67,14 @@
   height: 2px;
   background: var(--gold);
   border-radius: 2px;
+}
+
+.overlay-close:focus-visible,
+.overlay-links button:focus-visible,
+.overlay-links a:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
 .overlay-divider {

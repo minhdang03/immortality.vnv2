@@ -128,7 +128,8 @@
     justify-content: center;
     gap: 4px;
   }
-  .desktop-nav button {
+  .desktop-nav button,
+  .desktop-nav a {
     background: none;
     border: none;
     color: var(--text-dim);
@@ -141,14 +142,17 @@
     position: relative;
     transition: color 0.3s;
   }
-  .desktop-nav button:hover {
+  .desktop-nav button:hover,
+  .desktop-nav a:hover {
     color: var(--gold-bright);
   }
-  .desktop-nav button.active {
+  .desktop-nav button.active,
+  .desktop-nav a.active {
     color: var(--gold-bright);
     font-weight: 600;
   }
-  .desktop-nav button.active::after {
+  .desktop-nav button.active::after,
+  .desktop-nav a.active::after {
     content: '';
     position: absolute;
     bottom: -2px;
@@ -162,7 +166,8 @@
 
 @media (min-width: 1024px) {
   .desktop-nav { gap: 8px; }
-  .desktop-nav button { padding: 6px 14px; font-size: 0.95rem; }
+  .desktop-nav button,
+  .desktop-nav a { padding: 6px 14px; font-size: 0.95rem; }
 }
 
 /* ─── "Thêm" dropdown — gom mục phụ khỏi nav chính ─── */
@@ -175,12 +180,19 @@
   border-radius: 12px; box-shadow: var(--shadow-md);
   display: flex; flex-direction: column; gap: 2px;
 }
-.nav-more-menu button {
+.nav-more-menu button, .nav-more-menu a {
   display: block; width: 100%; text-align: left;
   padding: 10px 14px; border-radius: 8px;
 }
-.nav-more-menu button:hover { background: var(--gold-tint); }
-.nav-more-menu button.active::after { display: none; }
+.nav-more-menu button:hover, .nav-more-menu a:hover { background: var(--gold-tint); }
+.nav-more-menu button.active::after,
+.nav-more-menu a.active::after { display: none; }
+
+.logo:focus-visible, .desktop-nav button:focus-visible, .desktop-nav a:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
 
 @media (min-width: 1280px) {
   .desktop-nav { gap: 12px; }

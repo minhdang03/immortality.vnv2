@@ -28,7 +28,7 @@ export default function ArticlesPage({ t, lang, articles, topics, navigate }) {
   const hasMore = filtered.length > visibleItems.length
 
   return (
-    <section className="section">
+    <section className="section articles-page">
       <PageHero
         icon={<SunIcon size={40} />}
         eyebrow={lang === 'vi' ? 'Thư Viện' : 'Library'}

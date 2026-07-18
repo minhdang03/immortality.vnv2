@@ -9,6 +9,9 @@
    Galaxy Z Fold folded (≤300) handled below as edge case.
 */
 
+/* PageHero owns the vertical rhythm on the article index; avoid stacked section padding. */
+.articles-page.section { padding-top: 0; }
+
 /* ─── FOLDABLE OPEN + LARGE MOBILE (≥600) ─── */
 @media (min-width: 600px) {
   .hero { padding: 64px 20px 48px; }
