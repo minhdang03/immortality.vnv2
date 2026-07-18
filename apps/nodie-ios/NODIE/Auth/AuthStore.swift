@@ -106,6 +106,19 @@ final class AuthStore {
             await self.autoLoginForUITestsIfRequested()
             #endif
 
+            // Có session trong Keychain → vào app NGAY, đừng bắt người dùng nhìn spinner.
+            //
+            // Vì sao: token hết hạn sau 1 giờ, nên hầu như LẦN MỞ NÀO SDK cũng phải refresh
+            // qua mạng trước khi phát `initialSession` — mạng chậm là màn hình trắng đứng
+            // đó vài giây (chính là "mở app load rất lâu" Đăng báo 18/07). `currentSession`
+            // đọc thẳng Keychain, không mạng. Chuẩn WhatsApp/IG: tin phiên cũ trước,
+            // refresh chạy ngầm; các query đầu tự chờ token mới ở tầng SDK.
+            // `authStateChanges` vẫn là nguồn sự thật — refresh hỏng thật (revoke) thì
+            // `.signedOut` bên dưới đá về Login như thường.
+            if self.client.auth.currentSession != nil, case .restoring = self.phase {
+                self.phase = .signedIn
+            }
+
             for await (event, session) in client.auth.authStateChanges {
                 switch event {
                 case .initialSession, .signedIn, .tokenRefreshed, .userUpdated:

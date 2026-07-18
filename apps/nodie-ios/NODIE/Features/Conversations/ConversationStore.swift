@@ -98,6 +98,10 @@ final class ConversationStore {
                 .order("last_message_at", ascending: false, nullsFirst: false)
                 .execute().value
             channels = rows
+            // Danh sách HIỆN từ đây — tên DM và badge là trang trí vá vào sau, không được
+            // bắt cả màn chờ chúng. Đo 18/07: kênh về sau 330ms mà spinner đứng ~3s vì
+            // chuỗi cũ chờ đếm chưa đọc tuần tự xong mới tắt.
+            isLoading = false
             await resolveDMTitles()
             await loadUnreadCounts()
         } catch { errorMessage = ErrorText.localized(error) }
@@ -145,22 +149,26 @@ final class ConversationStore {
     /// Đếm chưa đọc = `messages` mới hơn `last_read_at` (quy tắc scale #4: không bảng
     /// read-state per-message).
     ///
-    /// Mỗi kênh một query — chấp nhận ở v1 vì user chỉ có dăm kênh, và `count(head:)` không
-    /// kéo dòng nào về. Khi nào nhiều kênh thì gộp thành RPC `unread_counts()` trả một lượt;
-    /// chưa cần nên chưa làm.
+    /// MỘT RPC cho mọi kênh (`nodie_unread_counts`, 0040) — bản cũ đếm từng kênh TUẦN TỰ,
+    /// 6 kênh ăn 1.5-2.5 giây (đo 18/07, chính là "app load chậm" Đăng báo). RPC chạy
+    /// security INVOKER: đếm dưới đúng RLS của người gọi, không biết nhiều hơn chính họ.
     private func loadUnreadCounts() async {
-        for channel in channels {
-            guard let lastRead = channel.me?.lastReadAt else { continue }
-            do {
-                let count = try await client.from("messages")
-                    .select("id", head: true, count: .exact)
-                    .eq("channel_id", value: channel.id)
-                    .gt("created_at", value: lastRead)
-                    .is("deleted_at", value: nil)
-                    .execute().count
-                unreadByChannel[channel.id] = count ?? 0
-            } catch { /* thiếu badge không làm hỏng danh sách — lần refresh sau đếm lại */ }
+        struct Row: Decodable {
+            let channelId: UUID
+            let unread: Int
+            enum CodingKeys: String, CodingKey {
+                case unread
+                case channelId = "channel_id"
+            }
         }
+        do {
+            let rows: [Row] = try await client.rpc("nodie_unread_counts").execute().value
+            // Thay TOÀN BỘ map chứ không vá từng khoá: kênh vắng mặt trong kết quả nghĩa là
+            // 0 chưa đọc — giữ số cũ là badge ma sống lại sau khi đã đọc trên máy khác.
+            var counts: [UUID: Int] = [:]
+            for row in rows { counts[row.channelId] = row.unread }
+            unreadByChannel = counts
+        } catch { /* thiếu badge không làm hỏng danh sách — lần refresh sau đếm lại */ }
     }
 
     /// 50 tin mới nhất, hoặc 50 tin trước `before` (keyset — KHÔNG offset, quy tắc scale #2).
