@@ -59,6 +59,10 @@ final class QAStore {
     /// User hiện tại — view dùng để biết có được chọn "Hay nhất" (tác giả câu hỏi) không.
     var currentUserId: UUID? { uid }
 
+    /// Chữ cái đầu của user hiện tại — cho avatar ô trả lời inline. Set từ RootTabView
+    /// (giống `chat.myDisplayName`), vì `client.auth` không giữ display_name.
+    var currentUserInitial: String = "?"
+
     // MARK: - Đọc
 
     func loadQuestions(limit: Int = 50) async {

@@ -25,7 +25,7 @@ struct AnswerCardView: View {
     private struct ReplyTarget: Equatable { let parentId: UUID?; let name: String }
 
     private var replies: [FlatReply] { qa.flatReplies(for: answer.id) }
-    private var myInitial: String { "?" }
+    private var myInitial: String { qa.currentUserInitial }
     private var isMine: Bool { qa.isMine(answer.authorId) }
 
     var body: some View {

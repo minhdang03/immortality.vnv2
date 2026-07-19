@@ -168,11 +168,14 @@ struct RootTabView: View {
         .task {
             // Tên mình cho payload typing (phase 06) — profile có thể về sau, onChange dưới bù.
             chat.myDisplayName = auth.profile?.displayName
+            // Chữ cái đầu cho avatar ô trả lời Q&A — cùng lý do: store không giữ display_name.
+            qa.currentUserInitial = auth.profile?.initial ?? "?"
             await chat.warmFromDisk()
             await chat.startRealtime()
         }
         .onChange(of: auth.profile?.displayName) { _, name in
             chat.myDisplayName = name
+            qa.currentUserInitial = auth.profile?.initial ?? "?"
         }
         // Socket không sống qua background. Về active: đập đi mở lại + fetch bù những gì
         // đến trong lúc vắng mặt — không có nhánh này thì tin đến khi app ở nền "mất tích"

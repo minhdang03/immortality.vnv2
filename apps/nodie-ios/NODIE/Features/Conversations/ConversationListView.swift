@@ -262,7 +262,9 @@ struct ConversationListView: View {
         }
         if channelMatches.isEmpty && searchHits.isEmpty {
             Group {
-                if searchInFlight {
+                // <2 ký tự: tìm TIN NHẮN chưa chạy (task chờ đủ 2 ký tự) → chưa được khẳng
+                // định "không có gì", chỉ mới lọc kênh xong. Đang chờ server cũng vậy.
+                if searchInFlight || trimmedQuery.count < 2 {
                     ProgressView().tint(NodieColors.inkFaint)
                 } else {
                     Text("Không tìm thấy gì.")
