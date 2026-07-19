@@ -33,7 +33,6 @@ struct ChatDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @FocusState private var inputFocused: Bool
 
     /// Đang ở sát đáy hay không — quyết định tin mới được cuộn tới hay chỉ báo bằng nút.
     /// Mặc định `true`: mở chat là đang ở đáy (xem `.onAppear` bên dưới).
@@ -112,73 +111,6 @@ struct ChatDetailView: View {
     @State private var members: [ConversationStore.ChannelMember] = []
     /// Tên hiển thị → uid, cho MessageBubbleView tô @tên.
     @State private var mentionMap: [String: UUID] = [:]
-    /// Từ khoá @ đang gõ ở cuối ô nhập (nil = không có popup). "" = vừa gõ @, gợi ý mọi người.
-    @State private var mentionQuery: String?
-
-    private var mentionCandidates: [ConversationStore.ChannelMember] {
-        guard let query = mentionQuery else { return [] }
-        let me = store.currentUserId
-        let matches = members.filter { $0.id != me &&
-            (query.isEmpty || $0.displayName.localizedCaseInsensitiveContains(query)) }
-        return Array(matches.prefix(6))
-    }
-
-    /// Token @ đang gõ ở CUỐI ô nhập, hoặc nil. v1 chỉ bắt @ ở cuối (không cần vị trí con trỏ —
-    /// SwiftUI TextField không lộ ra): `@` mở đầu hoặc sau khoảng trắng, theo sau là chữ không
-    /// có khoảng trắng, và nằm sát cuối chuỗi. "@" trơ (vừa gõ) → "" (gợi ý mọi người).
-    private static func mentionQuery(in text: String) -> String? {
-        guard let atIndex = text.lastIndex(of: "@") else { return nil }
-        // Ký tự trước @ phải là đầu chuỗi hoặc khoảng trắng — "email@site" không phải nhắc tên.
-        if atIndex > text.startIndex {
-            let before = text[text.index(before: atIndex)]
-            if !before.isWhitespace { return nil }
-        }
-        let after = text[text.index(after: atIndex)...]
-        // Sau @ mà có khoảng trắng nghĩa là token đã "đóng" — không còn đang gõ tên nữa.
-        guard !after.contains(where: { $0.isWhitespace }) else { return nil }
-        return String(after)
-    }
-
-    /// Chèn tên đã chọn: thay token "@query" ở cuối bằng "@DisplayName ".
-    private func insertMention(_ member: ConversationStore.ChannelMember) {
-        var text = draft.wrappedValue
-        guard let atIndex = text.lastIndex(of: "@") else { return }
-        text.replaceSubrange(atIndex..., with: "@\(member.displayName) ")
-        draft.wrappedValue = text
-        mentionQuery = nil
-    }
-
-    private var mentionPopup: some View {
-        VStack(spacing: 0) {
-            ForEach(mentionCandidates) { member in
-                Button {
-                    insertMention(member)
-                } label: {
-                    HStack(spacing: 10) {
-                        Text(member.displayName.first.map { String($0).uppercased() } ?? "?")
-                            .font(NodieTypography.tag.weight(.bold))
-                            .foregroundStyle(NodieColors.cream)
-                            .frame(width: 30, height: 30)
-                            .background(Circle().fill(NodieColors.accent))
-                        Text(member.displayName)
-                            .font(NodieTypography.body)
-                            .foregroundStyle(NodieColors.ink)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                }
-                .buttonStyle(.plain)
-                if member.id != mentionCandidates.last?.id {
-                    Divider().background(NodieColors.ruleLight)
-                }
-            }
-        }
-        .background(RoundedRectangle(cornerRadius: 12).fill(NodieColors.surface))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(NodieColors.rule, lineWidth: 1))
-        .padding(.horizontal, NodieSpacing.screenH)
-    }
-
     private var unreadDivider: some View {
         HStack(spacing: 8) {
             Rectangle().fill(NodieColors.rule).frame(height: 1)
@@ -264,21 +196,9 @@ struct ChatDetailView: View {
 
     private var channel: ChannelRow? { store.channel(id: channelId) }
     private var messages: [MessageRow] { store.messages(for: channelId) }
-    private var hasDraft: Bool {
-        !state.draft(in: channelId).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
 
     /// Tôn trọng Giảm chuyển động: `withAnimation(nil)` là nhảy thẳng, không phải đứng im.
     private var motion: Animation? { reduceMotion ? nil : .easeOut(duration: 0.2) }
-
-    /// Draft của riêng chat này. Viết tay vì `$state.drafts[channelId]` cho Binding<String?>,
-    /// còn TextField cần Binding<String>.
-    private var draft: Binding<String> {
-        Binding(
-            get: { state.draft(in: channelId) },
-            set: { state.drafts[channelId] = $0 }
-        )
-    }
 
     var body: some View {
         // Chụp MỘT lần mỗi render. `messages` là computed chạy filter/map cả mảng — để mỗi
@@ -772,8 +692,29 @@ struct ChatDetailView: View {
                         replyBanner(target).padding(.bottom, NodieSpacing.sm)
                     }
                     if state.attachOpen { attachTray.padding(.bottom, NodieSpacing.md) }
-                    if !mentionCandidates.isEmpty { mentionPopup.padding(.bottom, NodieSpacing.sm) }
-                    composeRow
+                    // Ô soạn tin TÁCH RIÊNG — chữ đang gõ nằm ở @State cục bộ của nó, không
+                    // ghi vào AppState mỗi phím, nên gõ chỉ vẽ lại ô này chứ không phải cả
+                    // danh sách tin (xem MessageComposer). `id(channelId)`: đổi kênh là ô nhập
+                    // mới, khôi phục đúng draft của kênh đó.
+                    MessageComposer(
+                        initialDraft: state.draft(in: channelId),
+                        members: members,
+                        currentUserId: store.currentUserId,
+                        onAttach: { state.toggleAttach() },
+                        onTyping: { store.broadcastTyping(channelId: channelId) },
+                        onSend: { body in
+                            let parentId = state.replyingTo[channelId]
+                            let ok = await store.send(channelId: channelId, body: body, parentId: parentId)
+                            if ok {
+                                state.drafts[channelId] = ""
+                                state.replyingTo[channelId] = nil
+                            }
+                            return ok
+                        },
+                        onStartRecording: { Task { await startRecording() } },
+                        persistDraft: { state.drafts[channelId] = $0 }
+                    )
+                    .id(channelId)
                 }
             } else {
                 // Kênh phát: client chỉ ẩn ô nhập — chặn thật phải ở RLS.
@@ -831,82 +772,6 @@ struct ChatDetailView: View {
         .frame(height: 46)
         .background(RoundedRectangle(cornerRadius: 12).fill(NodieColors.surface))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(NodieColors.rule, lineWidth: 1))
-    }
-
-    /// Gửi draft hiện tại. Chỉ xoá chữ + huỷ trích dẫn KHI server xác nhận — gửi fail phải
-    /// giữ nguyên cả hai để user thử lại, cùng luật draft-safety với màn Hỏi đáp.
-    private func sendDraft() {
-        let text = draft.wrappedValue
-        let parentId = state.replyingTo[channelId]
-        Task {
-            let ok = await store.send(channelId: channelId, body: text, parentId: parentId)
-            if ok {
-                state.drafts[channelId] = ""
-                state.replyingTo[channelId] = nil
-            }
-        }
-    }
-
-    private var composeRow: some View {
-        HStack(spacing: 10) {
-            Button { state.toggleAttach() } label: {
-                Text("＋")
-                    .font(.system(size: 22, weight: .light))
-                    .foregroundStyle(NodieColors.inkSoft)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().stroke(NodieColors.chipBorder, lineWidth: 1))
-                    .expandedHitArea(visual: 40)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Đính kèm")
-
-            TextField("Nhắn tin…", text: draft)
-                // Đang gõ → bắn tín hiệu typing (throttle 3s nằm trong store). Chỉ khi CÓ
-                // chữ: xoá sạch ô nhập không phải là "đang nhập". Đồng thời dò @nhắc-tên.
-                .onChange(of: draft.wrappedValue) { _, text in
-                    if !text.isEmpty { store.broadcastTyping(channelId: channelId) }
-                    mentionQuery = Self.mentionQuery(in: text)
-                }
-                .font(NodieTypography.body)
-                .foregroundStyle(NodieColors.ink)
-                .focused($inputFocused)
-                .submitLabel(.send)
-                .onSubmit { sendDraft() }
-                .padding(.horizontal, NodieSpacing.lg)
-                .padding(.vertical, 12)
-                .background(Capsule().fill(NodieColors.surface))
-                .overlay(Capsule().stroke(NodieColors.chipBorder, lineWidth: 1))
-
-            // Có chữ thì gửi, chưa gõ gì thì ghi âm — cùng một chỗ, như FB/IG/Zalo.
-            if hasDraft {
-                Button { sendDraft() } label: {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(NodieColors.accent))
-                        .expandedHitArea(visual: 44)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Gửi")
-                // Bàn phím tiếng Việt vẽ phím Enter là "Gửi" (do `.submitLabel(.send)` ở trên),
-                // trùng đúng nhãn nút này → UITest tìm theo nhãn sẽ thấy HAI nút. Định danh
-                // không dịch và bàn phím không có nó, nên test bám vào đây cho chắc.
-                .accessibilityIdentifier("sendMessage")
-            } else {
-                Button { Task { await startRecording() } } label: {
-                    Image(systemName: "mic")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(NodieColors.cream)
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(NodieColors.ink))
-                        .expandedHitArea(visual: 44)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Ghi âm")
-                .accessibilityIdentifier("recordVoice")
-            }
-        }
     }
 
     private var attachTray: some View {
