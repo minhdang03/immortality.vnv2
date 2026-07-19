@@ -205,6 +205,7 @@ final class QAStore {
                 .insert(payload).select(Self.questionSelect).single().execute().value
             questions.insert(row, at: 0)
             cache([row])
+            AppEventLogger.log(kind: "post_question")
             return row
         } catch { errorMessage = ErrorText.localized(error); return nil }
     }
@@ -222,6 +223,7 @@ final class QAStore {
                 .select(Self.answerSelect).single().execute().value
             answersByQuestion[questionId, default: []].append(row)
             bumpAnswerCount(questionId, by: 1)
+            AppEventLogger.log(kind: "post_answer")
             return true
         } catch { errorMessage = ErrorText.localized(error); return false }
     }

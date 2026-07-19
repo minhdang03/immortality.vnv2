@@ -34,24 +34,30 @@ actor SignedURLCache {
     /// `forceRefresh` dành cho lúc tải ảnh **thất bại**: URL có thể đã bị vô hiệu sớm hơn hạn
     /// (đổi quyền, file bị xoá rồi tạo lại). Chờ hết TTL mới ký lại thì người dùng nhìn khung
     /// hỏng suốt 50 phút — nên chỗ gọi bắt được lỗi tải phải xin ký lại ngay.
-    func url(for path: String, client: SupabaseClient, forceRefresh: Bool = false) async -> URL? {
+    ///
+    /// `thumbWidth` là MỘT PHẦN của khoá cache: bản 464px và bản gốc của cùng một path là hai
+    /// URL khác nhau (`/render/image/` vs `/object/`) — trộn chung khoá thì bubble và viewer
+    /// tráo URL của nhau.
+    func url(for path: String, client: SupabaseClient,
+             thumbWidth: Int? = nil, forceRefresh: Bool = false) async -> URL? {
+        let key = thumbWidth.map { "\(path)#w\($0)" } ?? path
         if forceRefresh {
-            entries[path] = nil
-        } else if let entry = entries[path],
+            entries[key] = nil
+        } else if let entry = entries[key],
                   Date().timeIntervalSince(entry.signedAt) < Self.lifetime {
             return entry.url
         }
 
-        if let running = inFlight[path] { return await running.value }
+        if let running = inFlight[key] { return await running.value }
 
         let task = Task<URL?, Never> {
-            await ChatMediaStorage.signedURL(for: path, client: client)
+            await ChatMediaStorage.signedURL(for: path, client: client, thumbWidth: thumbWidth)
         }
-        inFlight[path] = task
+        inFlight[key] = task
         let url = await task.value
-        inFlight[path] = nil
+        inFlight[key] = nil
 
-        if let url { entries[path] = Entry(url: url, signedAt: Date()) }
+        if let url { entries[key] = Entry(url: url, signedAt: Date()) }
         return url
     }
 

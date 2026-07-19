@@ -15,6 +15,7 @@ struct LoginView: View {
     @State private var password = ""
     @State private var displayName = ""
     @State private var showTerms = false
+    @State private var showGuidelines = false
     @State private var showForgotPassword = false
     @FocusState private var focus: Field?
 
@@ -158,6 +159,23 @@ struct LoginView: View {
             .padding(.top, NodieSpacing.sm)
             .sheet(isPresented: $showTerms) { TermsOfUseView() }
             .sheet(isPresented: $showForgotPassword) { ForgotPasswordSheet(auth: auth) }
+
+            // Nội quy tách khỏi Điều khoản có chủ ý: Điều khoản là văn bản pháp lý không ai
+            // đọc trước khi đăng ký, còn đây là luật chơi rút gọn đọc thật trong 30 giây —
+            // thứ guideline 1.2 muốn user THẤY. Sheet gắn vào chính nút này chứ không chồng
+            // thêm lên nút Điều khoản: host đó đã giữ hai sheet, thêm cái thứ ba là đúng vào
+            // bẫy "một host một modal" mà đoạn dưới đã ghi.
+            Button { showGuidelines = true } label: {
+                Text("Nội quy cộng đồng")
+                    .font(NodieTypography.metaSm)
+                    .underline()
+                    .foregroundStyle(NodieColors.inkFaint)
+                    .frame(maxWidth: .infinity)
+                    .multilineTextAlignment(.center)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, NodieSpacing.xs)
+            .sheet(isPresented: $showGuidelines) { CommunityGuidelinesView() }
             // Link trong mail quay về lúc sheet "kiểm tra hộp thư" CÒN MỞ (đường thật của
             // user: gửi xong là sang Mail luôn, chẳng ai bấm "Xong"). Một host chỉ trình bày
             // được một modal — sheet này còn đó thì `.fullScreenCover` đặt ở RootView bị

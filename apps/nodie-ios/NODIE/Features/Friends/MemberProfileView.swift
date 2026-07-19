@@ -165,6 +165,7 @@ struct MemberProfileView: View {
             darkPill(isFollowing ? "✓ Đang theo dõi" : "＋ Theo dõi")
                 .background(Capsule().fill(isFollowing ? NodieColors.onDarkFill : NodieColors.accent))
                 .overlay(Capsule().stroke(isFollowing ? NodieColors.onDarkBorder : NodieColors.accent, lineWidth: 1))
+                .expandedHitArea(visual: 34)
         }
         .buttonStyle(.plain)
     }
@@ -188,6 +189,7 @@ struct MemberProfileView: View {
                 .background(Capsule().fill(NodieColors.onDarkFill))
                 .overlay(Capsule().stroke(NodieColors.onDarkBorder, lineWidth: 1))
                 .opacity(isOpeningChat ? 0.6 : 1)
+                .expandedHitArea(visual: 34)
         }
         .buttonStyle(.plain)
         .disabled(isOpeningChat)

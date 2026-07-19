@@ -29,7 +29,7 @@ struct InlineReplyField: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(NodieColors.inkMuted)
                     .frame(width: 24, height: 24)
-                    .expandedHitArea()
+                    .expandedHitArea(visual: 24)
             }
             .buttonStyle(.plain)
             .disabled(isSending)
@@ -56,6 +56,7 @@ struct InlineReplyField: View {
                 }
                 .frame(width: sendSize, height: sendSize)
                 .background(Circle().fill(canSend ? NodieColors.accent : NodieColors.chipBorder))
+                .expandedHitArea(visual: sendSize)
             }
             .buttonStyle(.plain)
             .disabled(!canSend || isSending)

@@ -17,11 +17,14 @@ struct PersonRowView: View {
                     InitialAvatar(initial: String(profile.name.prefix(1)).uppercased(), size: 46)
 
                     VStack(alignment: .leading, spacing: 1) {
+                        // Tên là danh tính chính — cho tràn 2 dòng ở cỡ chữ lớn nhất thay vì
+                        // cắt mất một phần tên (phase 05, a11y).
                         Text(profile.name)
                             .font(NodieTypography.rowTitle)
                             .foregroundStyle(NodieColors.ink)
-                            .lineLimit(1)
+                            .lineLimit(1...2)
                         if let bio = profile.bio, !bio.isEmpty {
+                            // Bio là thông tin phụ, xem đầy đủ được ở hồ sơ — cắt 1 dòng có chủ đích.
                             Text(bio)
                                 .font(NodieTypography.metaSm)
                                 .foregroundStyle(NodieColors.inkMuted)

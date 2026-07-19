@@ -20,7 +20,9 @@ struct ChannelRow: Codable, Identifiable, Hashable {
     /// public | group | dm | feed
     let kind: String
     let isBroadcast: Bool
-    let lastMessageAt: Date?
+    /// `var` vì Realtime cấp store cập nhật tại chỗ khi có tin mới (kênh nổi lên đầu danh
+    /// sách ngay, không chờ refetch) — cùng lý do `title` là var.
+    var lastMessageAt: Date?
 
     /// Mặt mũi kênh (0025). Cả ba nil với DM — avatar DM suy từ tên/uid người kia, không ai
     /// đi chọn emoji cho từng cuộc 1-1.
@@ -153,6 +155,10 @@ struct MessageMedia: Codable, Hashable {
     /// ~50 mẫu biên độ chuẩn hoá 0–1 — chỉ có ở thoại (phase 02). Vẽ được waveform ngay khi
     /// bong bóng hiện ra, không phải tải hết tệp âm thanh về mới biết nó hình thù ra sao.
     let waveform: [Float]?
+    /// Đường dẫn ảnh POSTER trong bucket — chỉ có ở video (phase 16). Video không tự có
+    /// thumbnail như ảnh: sinh một frame lúc gửi, upload riêng, để bong bóng hiện được ngay
+    /// mà không phải tải cả tệp video về. Tin cũ nil.
+    let posterPath: String?
 
     /// Tin cũ chỉ có `kind`/`path`/`duration`; mọi field thêm sau đều optional để chúng vẫn
     /// đọc được. Khởi tạo có giá trị mặc định để chỗ gọi chỉ khai thứ nó thật sự có.
@@ -164,7 +170,8 @@ struct MessageMedia: Codable, Hashable {
         height: Int? = nil,
         size: Int? = nil,
         name: String? = nil,
-        waveform: [Float]? = nil
+        waveform: [Float]? = nil,
+        posterPath: String? = nil
     ) {
         self.kind = kind
         self.path = path
@@ -174,10 +181,11 @@ struct MessageMedia: Codable, Hashable {
         self.size = size
         self.name = name
         self.waveform = waveform
+        self.posterPath = posterPath
     }
 
     enum Kind: String, Codable, Hashable {
-        case photo, file, voice
+        case photo, file, voice, video
     }
 
     /// "0:07" — định dạng như prototype.
@@ -201,9 +209,11 @@ struct MessageMedia: Codable, Hashable {
     }
 
     /// Điền đường dẫn sau khi upload xong — metadata dựng lúc chọn ảnh chưa thể biết path.
-    func replacingPath(_ path: String) -> MessageMedia {
+    /// `poster` optional cho video (điền cùng lúc với path video sau khi cả hai upload xong).
+    func replacingPath(_ path: String, posterPath: String? = nil) -> MessageMedia {
         MessageMedia(kind: kind, path: path, duration: duration, width: width, height: height,
-                     size: size, name: name, waveform: waveform)
+                     size: size, name: name, waveform: waveform,
+                     posterPath: posterPath ?? self.posterPath)
     }
 }
 
@@ -274,6 +284,14 @@ struct MessageRow: Codable, Identifiable, Hashable {
         MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
                    body: body, createdAt: createdAt, editedAt: editedAt,
                    author: author, metadata: metadata, reactions: rows)
+    }
+
+    /// Bản sao với nội dung đã sửa — cho Realtime vá tại chỗ khi NGƯỜI KHÁC sửa tin
+    /// (tin của mình thì `edit()` đã reload cả trang).
+    func replacingBody(_ body: String?, editedAt: Date?) -> MessageRow {
+        MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
+                   body: body, createdAt: createdAt, editedAt: editedAt,
+                   author: author, metadata: metadata, reactions: reactions)
     }
 
     /// Gắn đính kèm đã có đường dẫn thật vào bản lạc quan, sau khi upload xong.

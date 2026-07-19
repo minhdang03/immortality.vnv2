@@ -142,10 +142,10 @@ struct ChatMediaFlows: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            // 6 ảnh một lượt — cùng con số IG dùng. `.images` loại video: chưa gửi được video
-            // thì đừng cho chọn rồi báo lỗi sau.
+            // 6 mục một lượt — cùng con số IG dùng. Cho cả ảnh LẪN video (phase 16);
+            // `sendPickedPhotos` tự phân luồng theo loại từng mục.
             .photosPicker(isPresented: $photosPresented, selection: $photoItems,
-                          maxSelectionCount: 6, matching: .images)
+                          maxSelectionCount: 6, matching: .any(of: [.images, .videos]))
             .onChange(of: photoItems) { _, items in
                 guard !items.isEmpty else { return }
                 // Dọn danh sách NGAY: `photoItems` là "vừa chọn xong cái gì", không phải

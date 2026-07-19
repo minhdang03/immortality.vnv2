@@ -50,7 +50,24 @@ enum ChatMediaStorage {
 
     /// URL xem được, hạn 1 giờ. Ký thất bại (mất quyền / file đã xoá) → nil, view hiện
     /// khung hỏng thay vì làm sập cả màn chat.
-    static func signedURL(for path: String, client: SupabaseClient) async -> URL? {
-        try? await client.storage.from(bucket).createSignedURL(path: path, expiresIn: 3600)
+    ///
+    /// `thumbWidth`: xin bản thu nhỏ từ Storage (`/render/image/`) thay vì ảnh gốc — bubble
+    /// 232pt mà tải nguyên 2048px là tốn ~15× data (đo 19/07: 754KB → 50KB). `resize:contain`
+    /// BẮT BUỘC: chỉ đưa `width` thì Storage giữ nguyên chiều cao — ảnh 1536×2048 thành
+    /// 464×2048, méo toàn tập (đo thật, không phải giả định).
+    ///
+    /// Fallback là PER-REQUEST, không có cờ tắt toàn phiên: ký transform hỏng còn vì file
+    /// đã xoá hay mạng chớp — một ảnh chết mà kéo cả phiên về ảnh gốc là đổ oan. Transform
+    /// đã xác nhận đang bật trên prod (đo 19/07); nếu sau này tắt plan thì mỗi ảnh tốn thêm
+    /// một lượt thử rồi vẫn tự về bản gốc — chậm hơn chút, không hỏng.
+    static func signedURL(for path: String, client: SupabaseClient, thumbWidth: Int? = nil) async -> URL? {
+        if let thumbWidth,
+           let url = try? await client.storage.from(bucket).createSignedURL(
+               path: path, expiresIn: 3600,
+               transform: TransformOptions(width: thumbWidth, resize: "contain", quality: 75)
+           ) {
+            return url
+        }
+        return try? await client.storage.from(bucket).createSignedURL(path: path, expiresIn: 3600)
     }
 }

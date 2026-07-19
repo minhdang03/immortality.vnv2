@@ -27,16 +27,20 @@ struct ConversationRowView: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 5) {
+                    // Tên/tiêu đề hội thoại là danh tính chính — cho tràn 2 dòng ở cỡ chữ lớn
+                    // nhất thay vì cắt mất một phần tên (phase 05, a11y).
                     Text(channel.displayTitle)
                         .font(NodieTypography.rowTitle)
                         .foregroundStyle(NodieColors.ink)
-                        .lineLimit(1)
+                        .lineLimit(1...2)
                     if isMuted {
                         Image(systemName: "bell.slash.fill")
                             .font(.system(size: 10))
                             .foregroundStyle(NodieColors.inkFaint)
                     }
                 }
+                // Preview tin nhắn — cắt 1 dòng CÓ CHỦ ĐÍCH: xem đầy đủ được ngay khi mở
+                // hội thoại, không mất nội dung thật, chỉ mất bản xem trước.
                 Text(preview)
                     .font(NodieTypography.bodyXs)
                     .foregroundStyle(NodieColors.inkMuted)

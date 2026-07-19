@@ -95,10 +95,12 @@ struct GroupInfoView: View {
                     .background(Circle().fill(NodieColors.accent))
                     .accessibilityHidden(true)
 
+                // Tên là danh tính chính — cho tràn 2 dòng ở cỡ chữ lớn nhất thay vì cắt mất
+                // một phần tên (phase 05, a11y).
                 Text(member.displayName)
                     .font(NodieTypography.rowTitle)
                     .foregroundStyle(NodieColors.ink)
-                    .lineLimit(1)
+                    .lineLimit(1...2)
 
                 Spacer()
 

@@ -13,6 +13,9 @@ extension MessageRow {
         guard let media else { return body ?? "" }
         switch media.kind {
         case .photo: return "▣ " + String(localized: "Ảnh")
+        case .video:
+            let duration = media.durationLabel.map { " · \($0)" } ?? ""
+            return "▶ " + String(localized: "Video") + duration
         case .file: return "▤ " + String(localized: "Tệp đính kèm")
         case .voice:
             let duration = media.durationLabel.map { " · \($0)" } ?? ""
@@ -54,6 +57,8 @@ struct ChatDetailView: View {
     @State private var cameraDenied = false
     /// Ảnh đang xem toàn màn.
     @State private var viewingPhoto: ChatPhotoSource?
+    /// Video đang xem toàn màn (phase 16).
+    @State private var viewingVideo: ChatVideoSource?
     /// Tệp đã tải về thư mục tạm, sẵn sàng cho QuickLook.
     @State private var previewingFile: URL?
     /// Đang tải tệp về để mở — chặn chạm hai lần vào cùng một bong bóng.
@@ -71,6 +76,188 @@ struct ChatDetailView: View {
     /// Mốc đáy để cuộn tới. Cuộn vào MỐC chứ không vào tin cuối: tin cuối có thể cao
     /// (ảnh, trích dẫn, hàng cảm xúc) và `anchor: .bottom` của nó vẫn hụt mất phần đệm dưới.
     private static let bottomAnchor = "bottomAnchor"
+
+    /// Tin cuối CỦA MÌNH trong DM — chỉ nó mang nhãn "Đã gửi/Đã xem" (kiểu Zalo/Messenger;
+    /// gắn mọi bong bóng là rác thị giác). Nhóm/kênh không có nhãn ở v1. Tin đang upload/hỏng
+    /// cũng không: trạng thái của nó là chuyện của bong bóng (spinner/Gửi lại), chưa tới lượt
+    /// chuyện đọc.
+    private func statusLabelMessageId(in rows: [MessageRow]) -> UUID? {
+        guard store.channel(id: channelId)?.kind == "dm",
+              let last = rows.last(where: { $0.userId == store.currentUserId }),
+              store.pending(for: last.id) == nil,
+              !store.isQueued(last.id) else { return nil }
+        return last.id
+    }
+
+    /// Vạch chưa đọc: tin ĐẦU TIÊN của người khác mới hơn mốc đọc của MÌNH. `@State` chụp
+    /// một lần trong `.task` (TRƯỚC markRead — markRead xong thì mốc server đã đổi).
+    @State private var unreadDividerId: UUID?
+
+    /// Tin đang chọn kênh để chuyển tiếp — non-nil là sheet mở.
+    @State private var forwardingMessage: MessageRow?
+
+    // MARK: - Jump-to-message (phase 18)
+
+    /// Tin cần cuộn tới sau khi nạp cửa sổ (từ kết quả tìm kiếm). Đọc-rồi-xoá.
+    @State private var pendingScrollId: UUID?
+    /// Tin đang nháy nền để mắt bắt được sau khi nhảy tới. Tự tắt sau ~1.2s.
+    @State private var flashMessageId: UUID?
+    /// Đang trong lượt nhảy-tới-tin: chặn onChange(messages.count) cuộn xuống đáy oan khi
+    /// loadWindow đổ mảng vào (atBottom mặc định true). Không dựa vào thứ tự onChange nữa.
+    @State private var jumpingToTarget = false
+
+    // MARK: - Nhắc tên @ (phase 17)
+
+    /// Thành viên kênh, nạp một lần khi vào chat — nguồn của gợi ý @ và bản đồ tô đậm.
+    @State private var members: [ConversationStore.ChannelMember] = []
+    /// Tên hiển thị → uid, cho MessageBubbleView tô @tên.
+    @State private var mentionMap: [String: UUID] = [:]
+    /// Từ khoá @ đang gõ ở cuối ô nhập (nil = không có popup). "" = vừa gõ @, gợi ý mọi người.
+    @State private var mentionQuery: String?
+
+    private var mentionCandidates: [ConversationStore.ChannelMember] {
+        guard let query = mentionQuery else { return [] }
+        let me = store.currentUserId
+        let matches = members.filter { $0.id != me &&
+            (query.isEmpty || $0.displayName.localizedCaseInsensitiveContains(query)) }
+        return Array(matches.prefix(6))
+    }
+
+    /// Token @ đang gõ ở CUỐI ô nhập, hoặc nil. v1 chỉ bắt @ ở cuối (không cần vị trí con trỏ —
+    /// SwiftUI TextField không lộ ra): `@` mở đầu hoặc sau khoảng trắng, theo sau là chữ không
+    /// có khoảng trắng, và nằm sát cuối chuỗi. "@" trơ (vừa gõ) → "" (gợi ý mọi người).
+    private static func mentionQuery(in text: String) -> String? {
+        guard let atIndex = text.lastIndex(of: "@") else { return nil }
+        // Ký tự trước @ phải là đầu chuỗi hoặc khoảng trắng — "email@site" không phải nhắc tên.
+        if atIndex > text.startIndex {
+            let before = text[text.index(before: atIndex)]
+            if !before.isWhitespace { return nil }
+        }
+        let after = text[text.index(after: atIndex)...]
+        // Sau @ mà có khoảng trắng nghĩa là token đã "đóng" — không còn đang gõ tên nữa.
+        guard !after.contains(where: { $0.isWhitespace }) else { return nil }
+        return String(after)
+    }
+
+    /// Chèn tên đã chọn: thay token "@query" ở cuối bằng "@DisplayName ".
+    private func insertMention(_ member: ConversationStore.ChannelMember) {
+        var text = draft.wrappedValue
+        guard let atIndex = text.lastIndex(of: "@") else { return }
+        text.replaceSubrange(atIndex..., with: "@\(member.displayName) ")
+        draft.wrappedValue = text
+        mentionQuery = nil
+    }
+
+    private var mentionPopup: some View {
+        VStack(spacing: 0) {
+            ForEach(mentionCandidates) { member in
+                Button {
+                    insertMention(member)
+                } label: {
+                    HStack(spacing: 10) {
+                        Text(member.displayName.first.map { String($0).uppercased() } ?? "?")
+                            .font(NodieTypography.tag.weight(.bold))
+                            .foregroundStyle(NodieColors.cream)
+                            .frame(width: 30, height: 30)
+                            .background(Circle().fill(NodieColors.accent))
+                        Text(member.displayName)
+                            .font(NodieTypography.body)
+                            .foregroundStyle(NodieColors.ink)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                }
+                .buttonStyle(.plain)
+                if member.id != mentionCandidates.last?.id {
+                    Divider().background(NodieColors.ruleLight)
+                }
+            }
+        }
+        .background(RoundedRectangle(cornerRadius: 12).fill(NodieColors.surface))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(NodieColors.rule, lineWidth: 1))
+        .padding(.horizontal, NodieSpacing.screenH)
+    }
+
+    private var unreadDivider: some View {
+        HStack(spacing: 8) {
+            Rectangle().fill(NodieColors.rule).frame(height: 1)
+            Text("Tin chưa đọc")
+                .font(NodieTypography.tag)
+                .foregroundStyle(NodieColors.inkMuted)
+                .fixedSize()
+            Rectangle().fill(NodieColors.rule).frame(height: 1)
+        }
+    }
+
+    /// Id của tin ĐẦU TIÊN mỗi ngày lịch — chỗ chèn chip mốc ngày. Chụp một lần trong body
+    /// (như `rows`): để mỗi row tự dò tin liền trước là O(n²) mỗi khung hình cuộn/gõ.
+    private func firstOfDayIds(in rows: [MessageRow]) -> Set<UUID> {
+        var ids = Set<UUID>()
+        for (i, row) in rows.enumerated() {
+            // Tin 0 luôn mở đầu ngày; tin sau chỉ khi khác ngày với tin liền trước.
+            if i == 0 || !Calendar.current.isDate(row.createdAt, inSameDayAs: rows[i - 1].createdAt) {
+                ids.insert(row.id)
+            }
+        }
+        return ids
+    }
+
+    /// Chip mốc ngày căn giữa. Nền đặc bo tròn — KHÔNG hai đường kẻ như vạch chưa đọc, để
+    /// mắt phân biệt "mốc thời gian" với "ranh giới đã đọc".
+    private func dayDivider(for date: Date) -> some View {
+        Text(dayLabel(for: date))
+            .font(NodieTypography.tag)
+            .foregroundStyle(NodieColors.inkMuted)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(RoundedRectangle(cornerRadius: 10).fill(NodieColors.surface))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+    }
+
+    /// Nhãn ngày: Hôm nay / Hôm qua cho hai ngày gần nhất, còn lại là ngày lịch (bỏ năm nếu
+    /// cùng năm hiện tại cho gọn).
+    private func dayLabel(for date: Date) -> String {
+        if Calendar.current.isDateInToday(date) { return String(localized: "Hôm nay") }
+        if Calendar.current.isDateInYesterday(date) { return String(localized: "Hôm qua") }
+        let sameYear = Calendar.current.isDate(date, equalTo: Date(), toGranularity: .year)
+        return (sameYear ? Self.dayFormatterSameYear : Self.dayFormatterOtherYear).string(from: date)
+    }
+
+    /// STATIC: DateFormatter đắt khi dựng, mà chip ngày vẽ lại mỗi khung hình cuộn — dựng
+    /// một lần dùng chung. `d 'thg' M` = "12 thg 7"; bản khác năm thêm ", yyyy".
+    private static let dayFormatterSameYear: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "vi_VN")
+        f.dateFormat = "d 'thg' M"
+        return f
+    }()
+    private static let dayFormatterOtherYear: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "vi_VN")
+        f.dateFormat = "d 'thg' M, yyyy"
+        return f
+    }()
+
+    private var typingLabel: String? {
+        let names = store.activeTypers
+        guard !names.isEmpty else { return nil }
+        return names.count == 1
+            ? String(localized: "\(names[0]) đang nhập…")
+            : String(localized: "Nhiều người đang nhập…")
+    }
+
+    /// "Đã xem" = tin không mới hơn mốc đọc của NGƯỜI KIA (`channel_members.last_read_at`,
+    /// nạp ở resolveDMTitles + đổi live qua Realtime 0041). Không bảng read-state per-message.
+    private func seenStatusLabel(for message: MessageRow) -> some View {
+        let seen = store.dmPeerLastRead[channelId].map { $0 >= message.createdAt } ?? false
+        return Text(seen ? String(localized: "Đã xem") : String(localized: "Đã gửi"))
+            .font(NodieTypography.tag)
+            .foregroundStyle(NodieColors.inkFaint)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.top, 4)
+    }
     /// "Tắt thông báo" không có màn chọn thời hạn — chọn một mốc xa, đồng bộ với
     /// ConversationListView (mỗi file giữ hằng số riêng, tránh kéo thêm phụ thuộc chéo).
     private static var muteHorizon: Date { Date(timeIntervalSinceNow: 60 * 60 * 24 * 365 * 10) }
@@ -94,15 +281,25 @@ struct ChatDetailView: View {
     }
 
     var body: some View {
+        // Chụp MỘT lần mỗi render. `messages` là computed chạy filter/map cả mảng — để mỗi
+        // row tự gọi lại nó (senderLabel 3 lượt, replyTarget 1 lượt + scan) là O(n²) mỗi
+        // khung hình, mà khung hình chạy MỖI PHÍM GÕ. 150 tin trên máy cũ = giật thấy được.
+        let rows = messages
+        let parentById = Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let statusId = statusLabelMessageId(in: rows)
+        // Chụp một lần MỖI render — cùng lý do với `rows`: dò "tin đầu ngày" trong từng row
+        // là quét tin liền trước mỗi lượt, O(n²) mỗi khung hình gõ phím.
+        let firstOfDayIds = firstOfDayIds(in: rows)
+
         VStack(spacing: 0) {
             header
 
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, message in
                             let isMine = message.userId == store.currentUserId
-                            let target = replyTarget(of: message)
+                            let target = message.parentId.flatMap { parentById[$0] }
                             // Sửa/xoá chỉ có ý nghĩa với tin CỦA MÌNH — nil ẩn hẳn mục khỏi
                             // menu thay vì hiện rồi disable.
                             //
@@ -111,39 +308,49 @@ struct ChatDetailView: View {
                             // `(() -> Void)?` từ (closure literal, nil) — nó bỏ cuộc và đổ
                             // lỗi "ambiguous use of 'init'" lên tận `ScrollView` ở trên,
                             // cách chỗ sai 40 dòng.
-                            let onEdit: (() -> Void)? = isMine ? {
-                                editText = message.body ?? ""
-                                editingMessage = message
-                            } : nil
-                            let onDelete: (() -> Void)? = isMine ? {
-                                Task { await store.deleteMessage(messageId: message.id, channelId: channelId) }
-                            } : nil
+                            // Chip mốc ngày (Hôm nay / Hôm qua / "12 thg 7") trước tin ĐẦU
+                            // mỗi ngày lịch. Trùng tin với vạch chưa đọc thì ngày ở TRÊN, vạch
+                            // chưa đọc ở DƯỚI — mốc thời gian trước, ranh giới đã đọc sau.
+                            if firstOfDayIds.contains(message.id) {
+                                dayDivider(for: message.createdAt)
+                            }
 
-                            MessageBubbleView(
-                                message: message,
-                                isMine: isMine,
-                                senderLabel: senderLabel(at: index),
-                                replyTarget: target,
-                                replyTargetIsMine: target?.userId == store.currentUserId,
-                                myReactions: message.myReactions(uid: store.currentUserId),
-                                reduceMotion: reduceMotion,
-                                pending: store.pending(for: message.id),
-                                recordingActive: state.recording,
-                                onReply: { state.startReply(to: message.id, in: channelId) },
-                                onReact: { kind in
-                                    Task { await store.toggleReaction(messageId: message.id, channelId: channelId, kind: kind) }
-                                },
-                                onTapReplyQuote: { parentId in
-                                    withAnimation(motion) { proxy.scrollTo(parentId, anchor: .center) }
-                                },
-                                onEdit: onEdit,
-                                onDelete: onDelete,
-                                onRetryMedia: { Task { await store.retryMedia(messageId: message.id) } },
-                                onDiscardMedia: { store.discardMedia(messageId: message.id) },
-                                onOpenMedia: { media in open(media, of: message) }
-                            )
-                            .padding(.top, index > 0 ? 10 : 0)
-                            .id(message.id)
+                            // Vạch "Tin chưa đọc" (phase 10) — đứng TRƯỚC tin đầu tiên chưa
+                            // đọc, chụp một lần lúc vào màn nên không nhảy khi tin mới đến.
+                            if message.id == unreadDividerId {
+                                unreadDivider.padding(.top, index > 0 ? 12 : 0)
+                            }
+
+                            // Tách khỏi thân ForEach: MessageBubbleView nhiều tham số + closure,
+                            // để nguyên trong body làm type-checker của SwiftUI quá tải (báo
+                            // "unable to type-check in reasonable time").
+                            messageBubble(message, isMine: isMine, index: index, rows: rows,
+                                          target: target, proxy: proxy)
+                                .padding(.top, index > 0 ? 10 : 0)
+                                // Nháy nền khi vừa nhảy tới từ tìm kiếm (phase 18).
+                                .listRowFlash(active: flashMessageId == message.id)
+                                .id(message.id)
+
+                            if message.id == statusId {
+                                seenStatusLabel(for: message)
+                            }
+                            // Tin văn bản đang chờ mạng (phase 07) — trạng thái theo TỪNG tin,
+                            // không phải chỉ tin cuối như nhãn Đã xem. Bấm được = van xả cho
+                            // ca "lỗi xếp loại offline mà NWPath vẫn satisfied" (timeout, host
+                            // không với tới): transition mạng sẽ không bao giờ bắn, người dùng
+                            // tự đẩy hàng đợi đi.
+                            if store.isQueued(message.id) {
+                                Button {
+                                    Task { await store.flushQueued() }
+                                } label: {
+                                    Text("Đang chờ mạng…")
+                                        .font(NodieTypography.tag)
+                                        .foregroundStyle(NodieColors.inkFaint)
+                                }
+                                .buttonStyle(.plain)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                                .padding(.top, 3)
+                            }
                         }
 
                         // Mốc đáy kiêm cảm biến "đang ở đáy". LazyVStack chỉ dựng nó khi cuộn
@@ -162,6 +369,8 @@ struct ChatDetailView: View {
                 // Kéo xuống là bàn phím hạ theo ngón tay — chuẩn iMessage/Messenger.
                 .scrollDismissesKeyboard(.interactively)
                 .onChange(of: messages.count) { old, new in
+                    // Đang nhảy tới một tin cụ thể → đừng cuộn xuống đáy khi cửa sổ vừa đổ về.
+                    guard !jumpingToTarget else { return }
                     guard let last = messages.last else { return }
                     // Đang ở đáy → theo tin mới. Đang đọc ngược lên → ĐỨNG YÊN, chỉ đếm.
                     // Giật màn hình của người đang đọc là cách nhanh nhất làm họ mất chỗ.
@@ -175,9 +384,46 @@ struct ChatDetailView: View {
                 .onAppear {
                     // Mở chat phải thấy NGAY tin mới nhất, không phải tự cuộn xuống.
                     // Không animation: đây là vị trí xuất phát, không phải chuyển động.
-                    proxy.scrollTo(Self.bottomAnchor, anchor: .bottom)
+                    // TRỪ khi vào từ kết quả tìm kiếm: có tin đích thì đừng nhảy xuống đáy
+                    // trước rồi lại nhảy lên — chờ loadWindow xong, onChange dưới cuộn tới nó.
+                    if state.pendingScrollTarget[channelId] == nil {
+                        proxy.scrollTo(Self.bottomAnchor, anchor: .bottom)
+                    }
+                }
+                // Cuộn tới tin đích sau khi cửa sổ đã nạp (jump-to-message). Nháy nền để mắt
+                // bắt được nó giữa những tin xung quanh.
+                .onChange(of: pendingScrollId) { _, target in
+                    guard let target else { return }
+                    proxy.scrollTo(target, anchor: .center)
+                    flashMessageId = target
+                    pendingScrollId = nil
+                    // Đã tới đích — mở lại cuộn-theo-tin-mới cho các tin realtime sau đó.
+                    jumpingToTarget = false
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(1200))
+                        if flashMessageId == target { flashMessageId = nil }
+                    }
                 }
                 .overlay(alignment: .bottom) { newMessagesPill(proxy) }
+                // Lỗi nạp tin CHỈ chặn màn khi kênh chưa có tin nào — cùng luật với
+                // ConversationListView/FriendsView. Đã có tin thì giữ nguyên, đừng đá người
+                // dùng ra khỏi cuộc trò chuyện đang đọc dở vì một lần refresh hỏng.
+                .overlay {
+                    if messages.isEmpty, let error = store.loadError(for: channelId) {
+                        chatErrorState(error)
+                    }
+                }
+            }
+
+            // "{tên} đang nhập…" — trên inputBar, chuẩn Messenger. Tự tắt theo TTL 5s
+            // (store dọn) hoặc khi tin thật của người đó đến.
+            if let typing = typingLabel {
+                Text(typing)
+                    .font(NodieTypography.tag)
+                    .foregroundStyle(NodieColors.inkMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 2)
             }
 
             inputBar
@@ -186,19 +432,72 @@ struct ChatDetailView: View {
         // Nạp tin, mở Realtime, đánh dấu đã đọc — theo đúng thứ tự: có tin rồi mới nghe tin
         // mới, đọc tin rồi mới báo đã đọc.
         .task {
-            await store.loadMessages(channelId: channelId)
-            await store.subscribe(to: channelId)
+            // Đĩa trước, mạng sau: lịch sử hiện NGAY từ cache (WhatsApp/Zalo-style), rồi
+            // loadMessages thay bằng bản server khi mạng về. Realtime đã là MỘT subscription
+            // cấp store (mở từ RootTabView) — màn này chỉ cần khai "tôi đang hiện kênh này"
+            // để tin đến không bump unread mà đi thẳng markRead.
+            store.visibleChannelId = channelId
+            // Vào từ tìm kiếm với một tin đích → nạp cửa sổ QUANH nó thay vì trang đáy, rồi
+            // báo onChange cuộn tới. Đọc-rồi-xoá để quay lại kênh sau không nhảy lại chỗ cũ.
+            if let target = state.pendingScrollTarget[channelId] {
+                state.pendingScrollTarget[channelId] = nil
+                jumpingToTarget = true
+                if await store.loadWindow(around: target, channelId: channelId) {
+                    pendingScrollId = target
+                } else {
+                    jumpingToTarget = false
+                }
+            } else {
+                await store.loadCachedMessages(channelId: channelId)
+                await store.loadMessages(channelId: channelId)
+            }
+            // Chốt vạch chưa đọc TRƯỚC markRead — sau đó mốc đã bị đẩy về "bây giờ".
+            // Điều kiện badge local > 0 chặn vạch oan: mở lại chat VỪA đọc mà danh sách kênh
+            // chưa refresh thì `me.lastReadAt` còn là mốc cũ, trong khi `unreadByChannel` đã
+            // về 0 từ lần markRead trước — tin badge, không tin mốc cũ.
+            if unreadDividerId == nil,
+               store.unread(for: channelId) > 0,
+               let myLastRead = store.channel(id: channelId)?.me?.lastReadAt {
+                unreadDividerId = messages.first(where: {
+                    $0.createdAt > myLastRead && $0.userId != store.currentUserId
+                })?.id
+            }
             await store.markRead(channelId: channelId)
+            // Mở chat cũng là cơ hội đẩy hàng đợi offline — cùng lý do với resumeFromForeground:
+            // transition NWPath không phải trigger duy nhất đáng tin.
+            await store.flushQueued()
+            // Topic typing của kênh này (phase 06) — mở SAU tin, nhãn "đang nhập" không phải
+            // thứ đáng chờ trước lịch sử.
+            await store.startTyping(in: channelId)
+            // Thành viên cho @nhắc-tên (phase 17) — một query, giữ để tô đậm + gợi ý.
+            members = await store.members(of: channelId)
+            mentionMap = Dictionary(members.map { ($0.displayName, $0.id) },
+                                    uniquingKeysWith: { first, _ in first })
         }
-        // Đóng kênh Realtime khi rời màn — không đóng thì rò subscription (xem
-        // ConversationStoreRealtime.swift).
         .onDisappear {
-            Task { await store.unsubscribe(from: channelId) }
+            // Chỉ xoá nếu vẫn là MÌNH: push có thể đã điều hướng sang chat khác và màn kia
+            // set trước khi onDisappear của màn này kịp chạy — xoá mù là xoá của người ta.
+            if store.visibleChannelId == channelId { store.visibleChannelId = nil }
+            Task { await store.stopTyping(ifCurrent: channelId) }
             // Rời màn thì im: giọng nói vẫn phát khi người ta đã sang chỗ khác là hành vi
             // không ai muốn. Đang ghi dở mà thoát → huỷ, đừng để recorder giữ mic lại.
             player.stop()
             if state.recording { cancelRecording() }
         }
+        .sheet(item: $forwardingMessage) { message in
+            ForwardMessageSheet(store: store, message: message)
+        }
+        .fullScreenCover(item: $viewingVideo) { ChatVideoViewer(source: $0) }
+        // Bắt link nội bộ @nhắc-tên (nodie://mention/{uid}) → mở hồ sơ; link thật (http) để
+        // hệ thống mở như thường. Một handler cho cả cây tin, không phải mỗi bong bóng.
+        .environment(\.openURL, OpenURLAction { url in
+            guard url.scheme == "nodie", url.host == "mention",
+                  let uid = UUID(uuidString: url.lastPathComponent) else {
+                return .systemAction
+            }
+            state.chatsPath.append(.member(uid))
+            return .handled
+        })
         .sheet(isPresented: $micDenied) {
             PermissionDeniedSheet(
                 title: "Cần quyền micro",
@@ -242,17 +541,64 @@ struct ChatDetailView: View {
     /// Tin mà `message` đang trả lời — nil nếu không trả lời ai, hoặc tin gốc đã trôi khỏi
     /// khoảng đã nạp (nạp 50 tin/lượt). Trôi mất thì bong bóng chỉ mất phần trích dẫn,
     /// không phải hiện một ô rỗng khó hiểu.
-    private func replyTarget(of message: MessageRow) -> MessageRow? {
-        guard let parentId = message.parentId else { return nil }
-        return messages.first { $0.id == parentId }
+    /// Dựng một bong bóng tin — tách khỏi thân ForEach vì số tham số + closure của
+    /// MessageBubbleView làm type-checker SwiftUI quá tải khi để nội tuyến.
+    private func messageBubble(_ message: MessageRow, isMine: Bool, index: Int,
+                               rows: [MessageRow], target: MessageRow?,
+                               proxy: ScrollViewProxy) -> some View {
+        // Tin đang chờ mạng: KHÔNG sửa (payload trong hàng đợi giữ chữ cũ — sửa xong flush
+        // vẫn gửi bản trước khi sửa); xoá thì được, deleteMessage tự gỡ khỏi hàng đợi.
+        let onEdit: (() -> Void)? = (isMine && !store.isQueued(message.id)) ? {
+            editText = message.body ?? ""
+            editingMessage = message
+        } : nil
+        let onDelete: (() -> Void)? = isMine ? {
+            Task { await store.deleteMessage(messageId: message.id, channelId: channelId) }
+        } : nil
+
+        return MessageBubbleView(
+            message: message,
+            isMine: isMine,
+            senderLabel: senderLabel(at: index, in: rows),
+            replyTarget: target,
+            replyTargetIsMine: target?.userId == store.currentUserId,
+            myReactions: message.myReactions(uid: store.currentUserId),
+            reduceMotion: reduceMotion,
+            pending: store.pending(for: message.id),
+            recordingActive: state.recording,
+            mentions: mentionMap,
+            // Tin chưa lên server (đang chờ mạng): reply/react trỏ vào một id server chưa
+            // biết → FK nổ khó hiểu. Chặn từ cửa.
+            onReply: {
+                guard !store.isQueued(message.id) else { return }
+                state.startReply(to: message.id, in: channelId)
+            },
+            onReact: { kind in
+                guard !store.isQueued(message.id) else { return }
+                Task { await store.toggleReaction(messageId: message.id, channelId: channelId, kind: kind) }
+            },
+            onForward: (!store.isQueued(message.id) && store.pending(for: message.id) == nil) ? {
+                forwardingMessage = message
+            } : nil,
+            onTapReplyQuote: { parentId in
+                withAnimation(motion) { proxy.scrollTo(parentId, anchor: .center) }
+            },
+            onEdit: onEdit,
+            onDelete: onDelete,
+            onRetryMedia: { Task { await store.retryMedia(messageId: message.id) } },
+            onDiscardMedia: { store.discardMedia(messageId: message.id) },
+            onOpenMedia: { media in open(media, of: message) }
+        )
     }
 
     /// Nhãn tên người gửi phía trên bong bóng — chỉ hiện ở tin ĐẦU của một chuỗi cùng người,
     /// và không hiện cho tin của chính mình (đã đủ biết là mình qua căn lề phải).
-    private func senderLabel(at index: Int) -> String? {
-        let message = messages[index]
+    /// Nhận mảng đã chụp từ body, KHÔNG đọc lại computed `messages` — mỗi lượt đọc là một
+    /// lần chạy accessor trên cả mảng (xem chú thích đầu body).
+    private func senderLabel(at index: Int, in rows: [MessageRow]) -> String? {
+        let message = rows[index]
         guard message.userId != store.currentUserId else { return nil }
-        if index > 0, messages[index - 1].userId == message.userId { return nil }
+        if index > 0, rows[index - 1].userId == message.userId { return nil }
         return message.authorName
     }
 
@@ -284,7 +630,60 @@ struct ChatDetailView: View {
             .padding(.bottom, 10)
             .accessibilityIdentifier("newMessagesPill")
             .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+        } else if !atBottom {
+            // Đã cuộn lên nhưng không có tin mới — nút tròn về đáy kiểu WhatsApp/Zalo,
+            // căn phải để không đè giữa dòng tin. unseen vốn đã 0 nên khỏi đặt lại.
+            HStack {
+                Spacer()
+                Button {
+                    withAnimation(motion) { proxy.scrollTo(Self.bottomAnchor, anchor: .bottom) }
+                } label: {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(NodieColors.ink)
+                        .frame(width: 36, height: 36)
+                        .background(Circle().fill(NodieColors.surface))
+                        .overlay(Circle().strokeBorder(NodieColors.rule, lineWidth: 1))
+                        .shadow(color: .black.opacity(0.18), radius: 8, y: 2)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(localized: "Xuống cuối"))
+                .accessibilityIdentifier("scrollToBottomButton")
+            }
+            .padding(.trailing, 16)
+            .padding(.bottom, 10)
+            .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
         }
+    }
+
+    /// Lỗi nạp tin vẽ tại chỗ — cùng khuôn `FriendsView.errorState`/`ConversationListView.errorState`.
+    private func chatErrorState(_ error: NodieErrorKind) -> some View {
+        VStack(spacing: NodieSpacing.sm) {
+            Image(systemName: error == .offline ? "wifi.slash" : "exclamationmark.triangle")
+                .font(.system(size: 30)).foregroundStyle(NodieColors.inkFaint)
+            Text(error.message)
+                .font(NodieTypography.body).foregroundStyle(NodieColors.inkMuted)
+                .multilineTextAlignment(.center)
+            if error.isRetryable {
+                Button {
+                    Task { await store.loadMessages(channelId: channelId) }
+                } label: {
+                    Text("Thử lại")
+                        .font(NodieTypography.chip.weight(.bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, NodieSpacing.lg)
+                        .padding(.vertical, 9)
+                        .background(Capsule().fill(NodieColors.accent))
+                        .expandedHitArea(visual: 34)
+                }
+                .buttonStyle(.plain)
+                .disabled(!NodieNetworkMonitor.shared.isOnline)
+                .opacity(NodieNetworkMonitor.shared.isOnline ? 1 : 0.5)
+            }
+        }
+        .padding(.horizontal, NodieSpacing.screenH)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(NodieColors.bg)
     }
 
     private var header: some View {
@@ -373,6 +772,7 @@ struct ChatDetailView: View {
                         replyBanner(target).padding(.bottom, NodieSpacing.sm)
                     }
                     if state.attachOpen { attachTray.padding(.bottom, NodieSpacing.md) }
+                    if !mentionCandidates.isEmpty { mentionPopup.padding(.bottom, NodieSpacing.sm) }
                     composeRow
                 }
             } else {
@@ -461,6 +861,12 @@ struct ChatDetailView: View {
             .accessibilityLabel("Đính kèm")
 
             TextField("Nhắn tin…", text: draft)
+                // Đang gõ → bắn tín hiệu typing (throttle 3s nằm trong store). Chỉ khi CÓ
+                // chữ: xoá sạch ô nhập không phải là "đang nhập". Đồng thời dò @nhắc-tên.
+                .onChange(of: draft.wrappedValue) { _, text in
+                    if !text.isEmpty { store.broadcastTyping(channelId: channelId) }
+                    mentionQuery = Self.mentionQuery(in: text)
+                }
                 .font(NodieTypography.body)
                 .foregroundStyle(NodieColors.ink)
                 .focused($inputFocused)
@@ -552,12 +958,47 @@ struct ChatDetailView: View {
     /// thread là màn hình đứng hình mấy giây.
     private func sendPickedPhotos(_ items: [PhotosPickerItem]) async {
         for item in items {
-            guard let raw = try? await item.loadTransferable(type: Data.self) else { continue }
-            guard let encoded = await Task.detached(priority: .userInitiated, operation: {
-                ChatImageProcessor.encode(data: raw)
-            }).value else { continue }
-            sendPhoto(encoded)
+            // Video hay ảnh? PhotosPickerItem khai loại nó chở — video đi đường riêng
+            // (sinh poster + gửi kèm), còn lại xử như ảnh.
+            if item.supportedContentTypes.contains(where: { $0.conforms(to: .movie) }) {
+                await sendPickedVideo(item)
+            } else {
+                guard let raw = try? await item.loadTransferable(type: Data.self) else { continue }
+                guard let encoded = await Task.detached(priority: .userInitiated, operation: {
+                    ChatImageProcessor.encode(data: raw)
+                }).value else { continue }
+                sendPhoto(encoded)
+            }
         }
+    }
+
+    /// Video: tải bản sao ra đĩa, sinh poster + metadata off-main, rồi gửi (kèm poster upload).
+    private func sendPickedVideo(_ item: PhotosPickerItem) async {
+        guard let movie = try? await item.loadTransferable(type: PickedMovie.self) else {
+            store.errorMessage = String(localized: "Không đọc được video này.")
+            return
+        }
+        defer { try? FileManager.default.removeItem(at: movie.url) }
+        // Chặn quá cỡ NGAY từ metadata tệp — TRƯỚC khi đọc cả video vào RAM: clip 4K vài trăm
+        // MB → GB, `Data(contentsOf:)` nuốt nguyên khối là OOM trên máy yếu, mà rồi vẫn bị
+        // 25MB chặn. Đọc kích thước từ thuộc tính tệp, không phải từ bytes.
+        let fileSize = (try? movie.url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        guard fileSize <= ChatMediaStorage.maxBytes else {
+            store.errorMessage = ChatMediaStorage.UploadError.tooLarge(fileSize).localizedDescription
+            return
+        }
+        guard let prepared = await ChatVideoProcessor.prepare(url: movie.url) else {
+            store.errorMessage = String(localized: "Không đọc được video này.")
+            return
+        }
+        let queued = store.sendMedia(
+            channelId: channelId, data: prepared.videoData, kind: .video,
+            ext: prepared.ext, contentType: prepared.contentType, preview: prepared.poster,
+            duration: prepared.duration, width: prepared.width, height: prepared.height,
+            size: prepared.videoData.count, parentId: state.replyingTo[channelId],
+            posterData: prepared.posterData, posterExt: "jpg"
+        )
+        if queued { state.replyingTo[channelId] = nil }
     }
 
     private func sendPhoto(_ encoded: ChatImageProcessor.Encoded) {
@@ -607,6 +1048,20 @@ struct ChatDetailView: View {
                 viewingPhoto = .local(pending.data)
             } else {
                 viewingPhoto = .remote(path: media.path)
+            }
+        case .video:
+            // Video đang gửi vẫn xem được: ghi bytes ra tệp tạm rồi phát local. Đã gửi thì
+            // stream từ signed URL.
+            if let pending = store.pending(for: message.id) {
+                let url = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(message.id.uuidString)
+                    .appendingPathExtension(pending.ext)
+                if !FileManager.default.fileExists(atPath: url.path) {
+                    try? pending.data.write(to: url)
+                }
+                viewingVideo = .local(url)
+            } else {
+                viewingVideo = .remote(path: media.path)
             }
         case .file:
             guard !openingFile else { return }
@@ -735,6 +1190,25 @@ struct LiveWaveform: View {
     }
 }
 
+/// Nháy nền một tin sau khi nhảy tới nó từ tìm kiếm (phase 18) — accent mờ dần rồi tắt.
+/// Modifier riêng để khỏi phải nhồi thêm tham số vào MessageBubbleView (đã rất nhiều).
+private struct ListRowFlash: ViewModifier {
+    let active: Bool
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(NodieColors.accent.opacity(active ? 0.16 : 0))
+                    .padding(.horizontal, -6)
+                    .animation(.easeOut(duration: 0.5), value: active)
+            )
+    }
+}
+
+extension View {
+    func listRowFlash(active: Bool) -> some View { modifier(ListRowFlash(active: active)) }
+}
+
 /// Waveform tĩnh của tin đã ghi — vẽ từ ~50 mẫu trong metadata, tô đậm phần đã nghe.
 ///
 /// Tap để tua (chỉ khi tin này đang cầm player). Tap chứ KHÔNG drag: bong bóng đã có cử chỉ
@@ -828,8 +1302,14 @@ struct MessageBubbleView: View {
     /// audio session mà recorder đang cầm — cùng-app nên KHÔNG có interruption notification
     /// nào bắn ra, recorder chết im lặng. Chặn từ UI là tầng chắc nhất.
     let recordingActive: Bool
+    /// Tên hiển thị → uid của thành viên kênh, cho tô đậm @nhắc-tên (phase 17). Rỗng ở kênh
+    /// chưa nạp được thành viên → không tô gì, chữ @tên vẫn đọc bình thường.
+    let mentions: [String: UUID]
     let onReply: () -> Void
     let onReact: (ReactionKind) -> Void
+    /// nil = tin chưa lên server (queued/đang upload) — chuyển tiếp một tin server chưa biết
+    /// là chuyển tiếp hư không.
+    let onForward: (() -> Void)?
     let onTapReplyQuote: (UUID) -> Void
     /// nil = không phải tin của mình — ẩn hẳn mục "Sửa" khỏi menu.
     let onEdit: (() -> Void)?
@@ -878,8 +1358,6 @@ struct MessageBubbleView: View {
             reactionRow
 
             HStack(spacing: 4) {
-                // Non-nil "Sửa"/"Xoá"/"(đã sửa)" CHƯA có trong Localizable.xcstrings (9 ngôn
-                // ngữ) — xem report để thêm key.
                 if message.isEdited {
                     Text("(đã sửa)")
                         .font(NodieTypography.timestampXs)
@@ -926,6 +1404,11 @@ struct MessageBubbleView: View {
         Divider()
         Button { onReply() } label: {
             Label("Trả lời", systemImage: "arrowshape.turn.up.left")
+        }
+        if let onForward {
+            Button { onForward() } label: {
+                Label("Chuyển tiếp", systemImage: "arrowshape.turn.up.right")
+            }
         }
         if message.media == nil {
             Button {
@@ -1013,14 +1496,63 @@ struct MessageBubbleView: View {
     /// thêm gạch chân nữa là hai tín hiệu cho một việc (iMessage/WhatsApp cũng chỉ tô màu).
     private var attributedBody: AttributedString {
         let raw = bubbleText
-        guard let detector = Self.linkDetector else { return AttributedString(raw) }
         let ns = NSMutableAttributedString(string: raw)
-        let full = NSRange(location: 0, length: (raw as NSString).length)
-        for match in detector.matches(in: raw, range: full) {
-            guard let url = match.url else { continue }
-            ns.addAttribute(.link, value: url, range: match.range)
+        let nsRaw = raw as NSString
+        let full = NSRange(location: 0, length: nsRaw.length)
+
+        if let detector = Self.linkDetector {
+            for match in detector.matches(in: raw, range: full) {
+                guard let url = match.url else { continue }
+                ns.addAttribute(.link, value: url, range: match.range)
+            }
+        }
+
+        // Không có `@` thì thôi hẳn — accessor này chạy MỖI bong bóng MỖI khung hình gõ phím;
+        // kênh vài trăm thành viên mà quét từng tên trên mọi tin là input lag thấy được.
+        guard raw.contains("@") else { return AttributedString(ns) }
+
+        // Nhắc tên: mọi "@Tên" KHỚP một thành viên đã biết → link nội bộ nodie://mention/{uid}
+        // (openURL ở danh sách tin bắt scheme này mở hồ sơ). Không khớp ai thì để chữ thường.
+        // Tên dài trước tên ngắn: "@An Nguyên" phải thắng "@An" khi cùng bắt đầu một chỗ.
+        for (name, uid) in mentions.sorted(by: { $0.key.count > $1.key.count }) {
+            let needle = "@\(name)"
+            var searchStart = 0
+            while searchStart < nsRaw.length {
+                let found = nsRaw.range(of: needle, options: [],
+                                        range: NSRange(location: searchStart, length: nsRaw.length - searchStart))
+                guard found.location != NSNotFound else { break }
+                // Ký tự NGAY SAU "@Tên" phải là ranh giới từ — nếu không thì "@Bo" đang khớp
+                // vào giữa "@Bobby", tô link Bo cho một cái tên khác → tap nhảy nhầm người.
+                let after = found.location + found.length
+                let boundaryOK: Bool = {
+                    guard after < nsRaw.length,
+                          let scalar = Unicode.Scalar(nsRaw.character(at: after)) else { return true }
+                    return !CharacterSet.alphanumerics.contains(scalar)
+                }()
+                // Chưa bị link khác (http) chiếm rồi mới tô — tránh chồng thuộc tính.
+                if boundaryOK,
+                   ns.attribute(.link, at: found.location, effectiveRange: nil) == nil,
+                   let url = URL(string: "nodie://mention/\(uid.uuidString)") {
+                    ns.addAttribute(.link, value: url, range: found)
+                }
+                searchStart = after
+            }
         }
         return AttributedString(ns)
+    }
+
+    /// URL http(s) ĐẦU TIÊN trong tin — nguồn của card preview. Một card là đủ (IG/Messenger
+    /// cũng vậy); tin media không có card — ảnh/tệp đã là nội dung chính rồi.
+    private var firstLinkURL: URL? {
+        guard message.media == nil, let detector = Self.linkDetector else { return nil }
+        let raw = bubbleText
+        let full = NSRange(location: 0, length: (raw as NSString).length)
+        for match in detector.matches(in: raw, range: full) {
+            if let url = match.url, url.scheme == "http" || url.scheme == "https" {
+                return url
+            }
+        }
+        return nil
     }
 
     private var textBubble: some View {
@@ -1034,6 +1566,9 @@ struct MessageBubbleView: View {
                 // là cặp màu không đọc nổi.
                 .tint(isMine ? NodieColors.cream : NodieColors.purple)
                 .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
+            if let url = firstLinkURL {
+                ChatLinkPreviewCard(url: url, isMine: isMine)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -1076,9 +1611,56 @@ struct MessageBubbleView: View {
     private func mediaBubble(_ media: MessageMedia) -> some View {
         switch media.kind {
         case .photo: photoBubble(media)
+        case .video: videoBubble(media)
         case .file: fileBubble(media)
         case .voice: voiceBubble(media)
         }
+    }
+
+    /// Video: poster (thumbnail) + nút play + thời lượng. Cùng khung với ảnh — chỉ khác là
+    /// nguồn poster (`posterPath` chứ không phải chính path media) và lớp play/thời lượng phủ lên.
+    private func videoBubble(_ media: MessageMedia) -> some View {
+        let ratio = media.aspectRatio ?? (16.0 / 9.0)
+        let height = Self.photoWidth / ratio
+
+        return Group {
+            if let image = pending?.preview {
+                Image(uiImage: image).resizable().aspectRatio(contentMode: .fill)
+            } else if let poster = media.posterPath {
+                ChatRemoteImage(path: poster, thumbWidth: Int(Self.photoWidth) * 2)
+            } else {
+                // Tin video cũ không có poster → nền tối đặc, vẫn bấm play được.
+                NodieColors.ink.opacity(0.85)
+            }
+        }
+        .frame(width: Self.photoWidth, height: height)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(NodieColors.rule, lineWidth: 1))
+        // Nút play + thời lượng CHỈ khi đã gửi xong; đang lên thì uploadOverlay lo.
+        .overlay {
+            if pending == nil {
+                Image(systemName: "play.circle.fill")
+                    .font(.system(size: 44))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .shadow(color: .black.opacity(0.3), radius: 6)
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if pending == nil, let label = media.durationLabel {
+                Text(label)
+                    .font(NodieTypography.tag.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(Capsule().fill(.black.opacity(0.5)))
+                    .padding(6)
+            }
+        }
+        .overlay { uploadOverlay }
+        .contentShape(RoundedRectangle(cornerRadius: 16))
+        .onTapGesture { if pending?.phase != .failed { onOpenMedia(media) } }
+        .accessibilityLabel(pending == nil ? Text("Video, chạm để xem") : Text("Video, đang gửi"))
+        .accessibilityIdentifier("mediaBubble")
+        .accessibilityAddTraits(.isButton)
     }
 
     /// Thoại: nút phát + waveform tô theo tiến trình + thời lượng + nút tốc độ.
@@ -1224,7 +1806,10 @@ struct MessageBubbleView: View {
             if let image = pending?.preview {
                 Image(uiImage: image).resizable().aspectRatio(contentMode: .fill)
             } else {
-                ChatRemoteImage(path: media.path)
+                // 2× bề rộng điểm của bubble (232pt) — đủ nét màn retina, và tải bản thu nhỏ
+                // từ Storage thay vì nguyên 2048px (đo 19/07: 754KB → 50KB). Viewer
+                // full-screen (ChatMediaViewer) vẫn tải bản gốc.
+                ChatRemoteImage(path: media.path, thumbWidth: Int(Self.photoWidth) * 2)
             }
         }
         .frame(width: Self.photoWidth, height: height)

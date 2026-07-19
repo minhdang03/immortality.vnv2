@@ -32,7 +32,7 @@ Session kia **commit `ac3a9db` lúc ~13:05** (giải phóng gần hết danh sá
 | # | File | Nội dung | File sở hữu | Rủi ro đụng (ảnh chụp 13:1x) | Status |
 |---|---|---|---|---|---|
 | 01 | [phase-01-deep-link-password-reset.md](phase-01-deep-link-password-reset.md) | `nodie://` + Quên mật khẩu (#16 + #14) | Auth/* · +PasswordRecoveryViews.swift · +AuthFieldStyle.swift · NodieApp.swift · project.yml | — | ✅ **XONG** `5201a8b`+`c31f6e8` · chờ Đăng whitelist URL |
-| 02 | [phase-02-own-content-edit-delete.md](phase-02-own-content-edit-delete.md) | Sửa/xoá câu hỏi·trả lời·reply của mình (#15) | +QAStoreOwnContent.swift · QAStore · ModerationMenu · AnswerCardView · AnswerReplyRow · QuestionDetailView · MyContentViews · +migration 0027 | **CAO** — `QAModels.swift` + `QuestionListView.swift` đang trong tay họ, mà phase này phải thêm `editedAt` vào QAModels → **đợi họ commit rồi mới mở** | chưa |
+| 02 | [phase-02-own-content-edit-delete.md](phase-02-own-content-edit-delete.md) | Sửa/xoá câu hỏi·trả lời·reply của mình (#15) | session kia dựng (`e7f0834`); em bù **undo** + **vá RLS 0034** | — | ✅ **XONG** `fdf90c7` · 8/8 test xanh |
 | 03 | [phase-03-tab-restore-notifications-row.md](phase-03-tab-restore-notifications-row.md) | Khôi phục tab (#20) + hàng Thông báo thật (#17) | +TabRestoration.swift · ProfileSections.swift · RootTabView.swift (1 dòng) | — | ✅ **XONG** `f304793` · #20 chờ nghiệm thu tay |
 | 04 | [phase-04-push-optout-blocked.md](phase-04-push-optout-blocked.md) | Tắt push thật (xoá `device_tokens`) | ProfileSections · PushManager · project.yml | — | **CHẶN** — chờ Đăng làm Apple Developer portal, không phải vì file |
 

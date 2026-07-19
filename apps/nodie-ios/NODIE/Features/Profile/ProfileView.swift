@@ -30,6 +30,7 @@ struct ProfileView: View {
     @State private var showSignOutConfirm = false
     @State private var showBlockedUsers = false
     @State private var showTerms = false
+    @State private var showGuidelines = false
     @State private var showDeleteConfirm = false
 
     var body: some View {
@@ -69,6 +70,7 @@ struct ProfileView: View {
 
                     ProfileSettingsSection(
                         onOpenBlockedUsers: { showBlockedUsers = true },
+                        onOpenGuidelines: { showGuidelines = true },
                         onOpenTerms: { showTerms = true }
                     )
                     .padding(.top, NodieSpacing.xl)
@@ -97,6 +99,7 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showBlockedUsers) { BlockedUsersView(qa: qa) }
         .sheet(isPresented: $showTerms) { TermsOfUseView() }
+        .sheet(isPresented: $showGuidelines) { CommunityGuidelinesView() }
         // Khai ở ĐÂY chứ không ở RootTabView: màn này được push từ cả stack Bảng tin lẫn
         // stack Bạn bè — khai một lần tại chỗ thì hai stack dùng chung, khỏi chép hai bản.
         .navigationDestination(for: ProfileRoute.self) { route in

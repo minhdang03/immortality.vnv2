@@ -74,4 +74,70 @@ final class TouchTargetUITests: XCTestCase {
         XCTAssertTrue(app.row(containing: NodieSeed.questionTitle).waitForExistence(timeout: 10),
                       "Dòng câu hỏi phải là Button")
     }
+
+    // MARK: - Phase 05: ☀/▲/Trả lời/chip/Đổi/Huỷ/clear search — audit P1-02
+
+    /// ☀ + ▲ + Trả lời trong chi tiết câu hỏi (`QAActionButtons`). Chỉ ĐO frame, không bấm —
+    /// bấm sẽ đổi trạng thái lit/vote thật trên Supabase, cùng bẫy với QAWireUITests.
+    /// Nhãn ☀/▲ đổi theo trạng thái nên khớp HẬU TỐ chung ("ánh sáng"/"hữu ích") thay vì
+    /// chuỗi cứng — xem `AccessibilityUITests.testQuestionDetailControlsHaveMeaningfulLabels`.
+    func testQADetailActionButtonsHitTargets() {
+        app.buttons["Hỏi đáp"].tap()
+        let row = app.row(containing: NodieSeed.questionTitle)
+        XCTAssertTrue(row.waitForExistence(timeout: 15), "Phải thấy dòng câu hỏi seed")
+        row.tap()
+
+        let lit = app.buttons.containing(NSPredicate(format: "label ENDSWITH %@", "ánh sáng")).firstMatch
+        assertHitTarget(lit, "nút ☀")
+
+        let vote = app.buttons.containing(NSPredicate(format: "label ENDSWITH %@", "hữu ích")).firstMatch
+        assertHitTarget(vote, "nút ▲")
+
+        assertHitTarget(app.buttons["Trả lời"].firstMatch, "nút Trả lời")
+    }
+
+    /// Chip lĩnh vực ở màn "Chiếu câu hỏi" — vẽ ~28pt theo prototype, vùng chạm phải nới ≥44pt.
+    /// Gõ chữ không khớp luật AI nào để hàng chip hiện lên tay chọn (`showManualPicker`).
+    func testAskQuestionTagChipHitTarget() {
+        app.buttons["Hỏi đáp"].tap()
+        app.buttons["＋ Chiếu câu hỏi"].tap()
+
+        assertHitTarget(app.buttons["Huỷ"], "nút Huỷ (Chiếu câu hỏi)")
+
+        let title = app.textFields["Câu hỏi của bạn là gì?"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        title.tap()
+        title.typeText("qwxjk zvbjq flmpt")
+
+        assertHitTarget(app.buttons["Não bộ"], "chip lĩnh vực 'Não bộ'")
+
+        app.buttons["Huỷ"].tap()
+    }
+
+    /// Nút "Đổi" trong thẻ AI tự nhận lĩnh vực — chỉ hiện khi AI đoán ra (gõ chữ khớp luật).
+    func testAskQuestionAiChangeButtonHitTarget() {
+        app.buttons["Hỏi đáp"].tap()
+        app.buttons["＋ Chiếu câu hỏi"].tap()
+
+        let title = app.textFields["Câu hỏi của bạn là gì?"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        title.tap()
+        // "ngủ" khớp luật "Giấc ngủ" (fieldRules) → thẻ AI tự nhận hiện ra kèm nút Đổi.
+        title.typeText("Tại sao tôi hay mất ngủ giữa đêm")
+
+        assertHitTarget(app.buttons["Đổi"], "nút Đổi (AI tự nhận lĩnh vực)")
+
+        app.buttons["Huỷ"].tap()
+    }
+
+    /// Ô "Xoá tìm kiếm" ở Bạn bè — vẽ 15pt icon, chỉ hiện khi có chữ trong ô tìm.
+    func testFriendsClearSearchHitTarget() {
+        app.buttons["Bạn bè"].tap()
+        let search = app.textFields["Tìm người trong cộng đồng…"]
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap()
+        search.typeText("a")
+
+        assertHitTarget(app.buttons["Xoá tìm kiếm"], "nút xoá tìm kiếm")
+    }
 }

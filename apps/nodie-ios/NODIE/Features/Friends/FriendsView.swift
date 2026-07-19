@@ -214,6 +214,10 @@ struct FriendsView: View {
                         .expandedHitArea(visual: 34)
                 }
                 .buttonStyle(.plain)
+                // Mời "Thử lại" lúc đang mất mạng là hứa suông — khoá nút, không ẩn hẳn
+                // (ẩn thì người dùng không hiểu vì sao nút vừa nãy còn đó giờ biến mất).
+                .disabled(!NodieNetworkMonitor.shared.isOnline)
+                .opacity(NodieNetworkMonitor.shared.isOnline ? 1 : 0.5)
             }
         }
         .padding(.horizontal, NodieSpacing.screenH)
@@ -273,7 +277,9 @@ struct FriendsView: View {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 15))
                             .foregroundStyle(NodieColors.inkFaint)
-                            .expandedHitArea(visual: 20)
+                            // Đo thật (TouchTargetUITests): glyph 15pt render ~17.7pt, không
+                            // phải 20 như ước lượng ban đầu — 20 làm hụt vùng chạm còn 41.7pt.
+                            .expandedHitArea(visual: 15)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Xoá tìm kiếm")

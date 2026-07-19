@@ -11,9 +11,12 @@ enum NodieColors {
     // Mực — cũng là nền của card tối và tab bar
     static let ink = Color(hex: 0x241C10)
     static let inkBody = Color(hex: 0x4D4230)     // thân bài
-    static let inkSoft = Color(hex: 0x6D5F45)     // chữ trên chip
-    static let inkMuted = Color(hex: 0x8A7A5C)    // meta
-    static let inkFaint = Color(hex: 0xA99A78)    // timestamp
+    // WCAG AA (phase 05, 260718): hue/saturation giữ nguyên, chỉ hạ value — vẫn đúng tông
+    // be/mực. Đo trên nền kem thật 0xFAF7F0 (script `contrast.py` trong report phase 05):
+    // inkSoft 7.00:1, inkMuted 5.57:1, inkFaint 4.50:1 — cả ba đạt ngưỡng AA text nhỏ ≥4.5:1.
+    static let inkSoft = Color(hex: 0x60533D)     // chữ trên chip
+    static let inkMuted = Color(hex: 0x6F624A)    // meta
+    static let inkFaint = Color(hex: 0x7C7158)    // timestamp
 
     /// Nhãn tiết diện in hoa giãn chữ ("HÚT VỀ · KHỚP ĐIỀU BẠN CHIẾU SÁNG")
     static let label = Color(hex: 0x8A6D3F)
@@ -30,7 +33,10 @@ enum NodieColors {
     /// vàng trầm khi chưa. KHÔNG dùng `gold`/`inkSoft` cho ☀ nữa: hai màu này là
     /// nhãn/chữ chung, còn ☀ cần đọc ra ngay là bật hay tắt.
     static let sun = Color(hex: 0xE8A200)
-    static let sunDim = Color(hex: 0xC69214)
+    /// WCAG AA (phase 05): chỉ dùng cho glyph ☀ (non-text) ở `QAActionButtons.LitButton`
+    /// — ngưỡng non-text 3:1 đủ, KHÔNG đẩy lên 4.5:1 (sẽ mất sắc vàng trầm). Đo 3.01:1
+    /// trên nền kem 0xFAF7F0.
+    static let sunDim = Color(hex: 0xB88713)
     static let purple = Color(hex: 0x5B43D8)
 
     /// Ghi âm — đỏ báo động, chỉ dùng cho chấm nhấp nháy + viền thanh ghi âm.

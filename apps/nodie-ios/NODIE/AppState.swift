@@ -185,6 +185,17 @@ final class AppState {
         chatsPath = [.chat(id)]
     }
 
+    /// Tin cần cuộn tới sau khi mở kênh (từ kết quả tìm kiếm) — đọc-rồi-xoá trong
+    /// ChatDetailView, cùng khuôn với push pendingChannelId. ChatRoute vẫn chỉ chở channelId;
+    /// target đi kèm bên ngoài để không phải nhét vào enum điều hướng.
+    var pendingScrollTarget: [UUID: UUID] = [:]
+
+    /// Mở kênh VÀ nhớ cuộn tới đúng tin (jump-to-message, phase 18).
+    func openChat(_ id: UUID, scrollTo messageId: UUID) {
+        pendingScrollTarget[id] = messageId
+        openChat(id)
+    }
+
     // MARK: - Hành động
 
     func draft(in channelId: UUID) -> String { drafts[channelId] ?? "" }

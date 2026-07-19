@@ -125,4 +125,22 @@ extension XCUIApplication {
         launchArguments += ["-AppleLanguages", "(vi)", "-AppleLocale", "vi_VN"]
         launch()
     }
+
+    /// Cuộn tới khi phần tử thật sự bấm được, tối đa `maxSwipes` nhịp.
+    ///
+    /// `exists` KHÔNG bằng `isHittable`: XCUITest dựng cả cây accessibility kể cả phần nằm
+    /// ngoài màn, nên một nút ở y=1631 trong cửa sổ cao 874 vẫn `exists == true` mà chạm
+    /// không tới. Ở cỡ Dynamic Type lớn nhất chữ nở gấp đôi, mọi thứ dưới nếp gấp trôi
+    /// xuống rất sâu — assert thẳng `isHittable` là đỏ oan, không phải lỗi layout.
+    ///
+    /// Vẫn giữ được ý nghĩa test: nút bị CLIP hay kẹt ngoài vùng cuộn thì cuộn mấy cũng
+    /// không hittable, test vẫn đỏ đúng.
+    @discardableResult
+    func scrollUntilHittable(_ element: XCUIElement, maxSwipes: Int = 10) -> Bool {
+        for _ in 0..<maxSwipes {
+            if element.exists && element.isHittable { return true }
+            swipeUp()
+        }
+        return element.exists && element.isHittable
+    }
 }

@@ -21,7 +21,11 @@ ENV_FILE="${NODIE_UITEST_ENV_FILE:-$ROOT/.env}"
 SEED_SCRIPT="${NODIE_UITEST_SEED_SCRIPT:-scripts/seed-uitest-chat.sh}"
 XCODEBUILD_BIN="${NODIE_XCODEBUILD_BIN:-xcodebuild}"
 DESTINATION="${NODIE_UITEST_DESTINATION:-platform=iOS Simulator,name=iPhone 17}"
-EXPECTED_TESTS=38
+# Đếm cứng để một suite lặng lẽ không chạy (sai tên target, file mới quên xcodegen) không
+# trôi qua gate dưới dạng "xanh". Thêm/bớt test thì SỬA SỐ NÀY, đừng nới điều kiện.
+# 38 → 50: +5 AccessibilityUITests, +4 TouchTargetUITests, +3 TrustUXUITests (a11y AA + trust copy).
+# 50 → 51: +1 LegalAccessUITests (nội quy cộng đồng mở được từ màn đăng nhập, guideline 1.2).
+EXPECTED_TESTS=51
 
 [[ -f "$ENV_FILE" ]] || { echo "❌ Không thấy $ENV_FILE" >&2; exit 66; }
 

@@ -2,13 +2,15 @@ import SwiftUI
 
 /// Màn "Chiếu câu hỏi" — soạn câu hỏi mới.
 ///
-/// **AI tự nhận lĩnh vực:** không bắt user chọn lĩnh vực trước khi gõ. Người đang có câu hỏi
+/// **Gợi ý lĩnh vực tự động:** không bắt user chọn lĩnh vực trước khi gõ. Người đang có câu hỏi
 /// trong đầu thì muốn gõ ngay, bắt phân loại trước là dựng rào ở đúng chỗ họ hào hứng nhất.
 /// Đọc xong mới đoán, và luôn cho bấm "Đổi" để cãi lại.
 ///
-/// Bản này khớp keyword như prototype — CHỖ NÀY LÀ TẠM. Nó chỉ dò mặt chữ nên
-/// "quên tên người quen" ra Não bộ là may, chứ "sao tôi mệt suốt" thì chịu. Chỗ cắm AI phân
-/// loại ngữ nghĩa thật là `detectedTag`; ngoài nó ra không gì phải đổi.
+/// Cơ chế thật là khớp REGEX theo từ khoá (`fieldRules`), KHÔNG phải mô hình AI nào — nhãn
+/// trong UI phải nói đúng vậy (audit P1-03: gọi regex là "AI" là rủi ro App Store/FTC).
+/// Nó chỉ dò mặt chữ nên "quên tên người quen" ra Não bộ là may, chứ "sao tôi mệt suốt" thì
+/// chịu. Chỗ cắm classifier ngữ nghĩa thật (khi có) là `detectedTag`; ngoài nó ra không gì
+/// phải đổi — đây là backlog, không chặn ship.
 struct AskQuestionView: View {
     @Bindable var qa: QAStore
     /// Gọi khi tạo xong để màn list mở luôn câu vừa chiếu.
@@ -17,7 +19,7 @@ struct AskQuestionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var context = ""
-    /// User đã bấm "Đổi"/chọn chip → thôi nghe AI, theo tay.
+    /// User đã bấm "Đổi"/chọn chip → thôi nghe gợi ý tự động, theo tay.
     @State private var tagManual = false
     /// Lĩnh vực user tự chọn — chỉ có nghĩa khi `tagManual`.
     @State private var pickedTag: String?
@@ -45,11 +47,11 @@ struct AskQuestionView: View {
         }?.name
     }
 
-    /// Lĩnh vực sẽ gửi đi: tay đè lên AI.
+    /// Lĩnh vực sẽ gửi đi: tay đè lên gợi ý tự động.
     private var effectiveTag: String? { tagManual ? pickedTag : detectedTag }
-    /// AI đoán ra và user chưa cãi → hiện thẻ gợi ý.
-    private var aiConfident: Bool { !tagManual && detectedTag != nil }
-    /// Hiện hàng chip khi user đòi chọn tay, HOẶC khi đã gõ mà AI chịu thua.
+    /// Regex khớp được từ khoá và user chưa cãi → hiện thẻ gợi ý.
+    private var keywordMatched: Bool { !tagManual && detectedTag != nil }
+    /// Hiện hàng chip khi user đòi chọn tay, HOẶC khi đã gõ mà không khớp từ khoá nào.
     private var showManualPicker: Bool { tagManual || (hasText && detectedTag == nil) }
     private var canAsk: Bool {
         title.trimmingCharacters(in: .whitespacesAndNewlines).count > 6 && !sending
@@ -107,6 +109,7 @@ struct AskQuestionView: View {
                     .padding(.vertical, 7)
                     .background(Capsule().fill(NodieColors.surface))
                     .overlay(Capsule().stroke(NodieColors.chipBorder, lineWidth: 1))
+                    .expandedHitArea(visual: 26)
             }
             .buttonStyle(.plain)
 
@@ -124,6 +127,7 @@ struct AskQuestionView: View {
                     .padding(.horizontal, NodieSpacing.lg)
                     .padding(.vertical, NodieSpacing.sm)
                     .background(Capsule().fill(canAsk ? NodieColors.accent : NodieColors.chipBorder))
+                    .expandedHitArea(visual: 27)
             }
             .buttonStyle(.plain)
             .disabled(!canAsk)
@@ -169,32 +173,39 @@ struct AskQuestionView: View {
                     .textCase(.uppercase)
                     .foregroundStyle(NodieColors.label)
                 Spacer()
-                if aiConfident {
+                if keywordMatched {
                     HStack(spacing: 5) {
                         Text("☀").foregroundStyle(NodieColors.sun)
-                        Text("AI tự nhận")
+                        Text("Gợi ý theo từ khoá")
                     }
                     .font(NodieTypography.tag)
                     .foregroundStyle(NodieColors.accent)
                 }
             }
 
-            if aiConfident, let detectedTag {
-                aiCard(tag: detectedTag)
+            if keywordMatched, let detectedTag {
+                suggestionCard(tag: detectedTag)
             }
             if showManualPicker {
                 tagChips
             }
             if !hasText {
-                Text("AI sẽ tự nhận lĩnh vực khi bạn gõ câu hỏi.")
+                Text("Gợi ý xếp lĩnh vực sẽ hiện theo từ khoá bạn gõ.")
                     .font(NodieTypography.meta)
                     .italic()
                     .foregroundStyle(NodieColors.inkFaint)
             }
+            if selfHarmDetected {
+                SelfHarmSupportBanner().padding(.top, 4)
+            }
         }
     }
 
-    private func aiCard(tag: String) -> some View {
+    /// Khớp cùng nội dung đang gõ (`combined`) với nhóm từ khoá tự hại — banner hỗ trợ
+    /// KHÔNG chặn gửi, KHÔNG phán xét (chuẩn safety FB/IG cho mạng xã hội, xem SelfHarmSupportBanner).
+    private var selfHarmDetected: Bool { SelfHarmKeywordDetector.matches(combined) }
+
+    private func suggestionCard(tag: String) -> some View {
         HStack(spacing: 11) {
             Text("☀")
                 .font(.system(size: 15))
@@ -203,7 +214,7 @@ struct AskQuestionView: View {
                 .background(Circle().fill(NodieColors.accent))
 
             VStack(alignment: .leading, spacing: 1) {
-                Text("AI đọc câu hỏi & xếp vào")
+                Text("Khớp từ khoá, xếp vào")
                     .font(NodieTypography.tag.weight(.regular))
                     .foregroundStyle(NodieColors.inkMuted)
                 Text(tag)
@@ -213,7 +224,7 @@ struct AskQuestionView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Button {
-                // "Đổi" mở sẵn lựa chọn của AI để user sửa, không bắt chọn lại từ đầu.
+                // "Đổi" mở sẵn lựa chọn gợi ý để user sửa, không bắt chọn lại từ đầu.
                 tagManual = true
                 pickedTag = detectedTag
             } label: {
@@ -224,6 +235,7 @@ struct AskQuestionView: View {
                     .padding(.vertical, 6)
                     .background(Capsule().fill(NodieColors.surface))
                     .overlay(Capsule().stroke(NodieColors.chipBorder, lineWidth: 1))
+                    .expandedHitArea(visual: 22)
             }
             .buttonStyle(.plain)
         }
@@ -247,6 +259,7 @@ struct AskQuestionView: View {
                         .padding(.horizontal, 13)
                         .padding(.vertical, 6)
                         .background(Capsule().fill(active ? NodieColors.ink : NodieColors.tagBg))
+                        .expandedHitArea(visual: 24)
                 }
                 .buttonStyle(.plain)
             }

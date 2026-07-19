@@ -160,6 +160,7 @@ struct AnswerCardView: View {
                     .foregroundStyle(NodieColors.inkMuted)
                     .buttonStyle(.plain)
                     .disabled(editSending)
+                    .expandedHitArea(visual: 12)
                 Spacer(minLength: 0)
                 Button {
                     Task { await saveEdit() }
@@ -170,6 +171,7 @@ struct AnswerCardView: View {
                 .foregroundStyle(NodieColors.accent)
                 .buttonStyle(.plain)
                 .disabled(editSending || editDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .expandedHitArea(visual: 12)
             }
         }
     }

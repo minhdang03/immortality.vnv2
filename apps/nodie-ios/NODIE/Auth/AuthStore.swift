@@ -145,6 +145,9 @@ final class AuthStore {
             try await self.client.auth.signIn(email: email, password: password, captchaToken: token)
             // phase chuyển sang .signedIn qua authStateChanges — không set tay ở đây
             // để tránh hai nguồn sự thật.
+            // Đứng SAU lời gọi: sai mật khẩu thì `throw` ở trên, không rơi xuống đây ⇒ đếm
+            // đúng lần đăng nhập được, không phải lần bấm nút.
+            AppEventLogger.log(kind: "signin_success")
         }
     }
 
@@ -169,6 +172,13 @@ final class AuthStore {
             if response.session == nil {
                 self.phase = .awaitingEmailConfirmation(email: email)
             }
+            // Tách hai trạng thái vì phễu hỏng ở đúng khe giữa chúng: tạo được tài khoản
+            // nhưng không bao giờ xác nhận mail là ca rụng đông nhất, mà nhìn từ
+            // "signup_success" gộp thì không thấy. `awaiting_confirmation` xác nhận sau
+            // bằng chính lần `signin_success` đầu tiên của người đó.
+            AppEventLogger.log(
+                kind: response.session == nil ? "signup_awaiting_confirmation" : "signup_success"
+            )
         }
     }
 
@@ -186,6 +196,8 @@ final class AuthStore {
         await SignedURLCache.shared.clear()
         ChatImageCache.clear()
         ChatFileDownloader.clear()
+        // Lịch sử chat trên đĩa cũng là dữ liệu của phiên vừa thoát — cùng nguyên tắc trên.
+        await ChatDiskCache.shared.clear()
     }
 
     // MARK: - Đặt lại mật khẩu

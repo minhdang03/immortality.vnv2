@@ -22,6 +22,10 @@ struct RootTabView: View {
     /// font trong NodieTypography là giá trị đã tính sẵn, không tự biết mình cũ.
     /// Không có chỗ nào đọc biến này thì SwiftUI bỏ qua việc dựng lại → chữ đứng im.
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// Cho Realtime chat: về foreground thì nối lại socket + fetch bù, xuống nền thì đóng.
+    @Environment(\.scenePhase) private var scenePhase
+    /// Đã từng xuống hẳn `.background` chưa — xem chú thích ở `.onChange(of: scenePhase)`.
+    @State private var wasInBackground = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -156,6 +160,42 @@ struct RootTabView: View {
         // Chỉ có `.onChange` là hỏng đúng đường vào phổ biến nhất của push.
         .task { consumePendingPush() }
         .onChange(of: push.pendingChannelId) { consumePendingPush() }
+        // Vẽ danh sách kênh + badge tab Chat từ ĐĨA ngay khi app mở, trước khi mạng kịp trả
+        // lời — ở gốc cây vì badge phải có mặt kể cả khi user chưa vào tab Chat.
+        // Sync mạng vẫn do ConversationListView `.task` lo (điều kiện hasSyncedChannels).
+        // Realtime cũng mở Ở ĐÂY: tin mới phải làm badge nhảy + kênh nổi lên đầu kể cả khi
+        // đang đứng tab khác — subscription cấp màn chat thì rời màn là điếc.
+        .task {
+            // Tên mình cho payload typing (phase 06) — profile có thể về sau, onChange dưới bù.
+            chat.myDisplayName = auth.profile?.displayName
+            await chat.warmFromDisk()
+            await chat.startRealtime()
+        }
+        .onChange(of: auth.profile?.displayName) { _, name in
+            chat.myDisplayName = name
+        }
+        // Socket không sống qua background. Về active: đập đi mở lại + fetch bù những gì
+        // đến trong lúc vắng mặt — không có nhánh này thì tin đến khi app ở nền "mất tích"
+        // trên màn cho tới lần kéo-refresh.
+        //
+        // Chỉ resume khi TRƯỚC ĐÓ thật sự xuống `.background` (cờ, vì đường về luôn là
+        // background→inactive→active nên không đọc được từ `oldPhase`): kéo Notification
+        // Center hay liếc app-switcher chỉ đi qua `.inactive` — đập socket + loadChannels
+        // cho mỗi cú kéo là churn pin/mạng vô ích. Cold start cũng KHÔNG resume (cờ còn
+        // false) — `.task` ở trên là đường mở duy nhất, khỏi đua nhau double-subscribe.
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .background:
+                wasInBackground = true
+                Task { await chat.stopRealtime() }
+            case .active:
+                if wasInBackground {
+                    wasInBackground = false
+                    Task { await chat.resumeFromForeground() }
+                }
+            default: break
+            }
+        }
         // Cho PushManager biết chat nào đang HIỂN THỊ để willPresent nuốt banner của đúng
         // kênh đó (chuẩn WhatsApp — không réo hội thoại đang mở). `weak state`: push sống
         // đời app (AppDelegate giữ), state chết theo phiên đăng nhập — giữ mạnh là state cũ
@@ -167,6 +207,15 @@ struct RootTabView: View {
                 return id
             }
         }
+        // Mạng về → gửi hàng đợi tin nhắn offline (phase 07). Ở gốc cây vì tin queued phải
+        // đi kể cả khi người dùng đã rời màn chat sang tab khác.
+        .onChange(of: NodieNetworkMonitor.shared.isOnline) { _, online in
+            if online { Task { await chat.flushQueued() } }
+        }
+        // Banner offline Ở GỐC CÂY, MỘT lần cho cả app — không phải mỗi tab/màn tự mở
+        // NWPathMonitor riêng (xem NodieNetworkMonitor). Modifier cuối cùng: bọc ngoài toàn
+        // bộ cây đã có tab bar + alert, banner luôn nằm trên cùng bất kể đang ở tab nào.
+        .nodieOfflineBanner()
     }
 
     /// Đọc RỒI xoá: không xoá thì quay lại tab Chat lần nào cũng bị ném vào kênh cũ,

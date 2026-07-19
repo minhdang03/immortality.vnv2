@@ -157,6 +157,7 @@ struct ProfileSettingsSection: View {
     @State private var pushStatus: UNAuthorizationStatus = .notDetermined
     @Environment(\.openURL) private var openURL
     let onOpenBlockedUsers: () -> Void
+    let onOpenGuidelines: () -> Void
     let onOpenTerms: () -> Void
 
     private var isPushOn: Bool { pushStatus == .authorized || pushStatus == .provisional }
@@ -184,6 +185,12 @@ struct ProfileSettingsSection: View {
                 }
                 Divider().background(NodieColors.rule)
                 ProfileRow(icon: "hand.raised", title: "Người đã chặn", action: onOpenBlockedUsers)
+                Divider().background(NodieColors.rule)
+                // Đứng TRƯỚC Điều khoản có chủ ý: đây mới là bản người ta đọc thật.
+                // Ai đã đăng ký xong thì không thấy màn đăng nhập nữa — thiếu hàng này là
+                // nội quy chỉ tồn tại cho người chưa vào, đúng nhóm ít cần nó nhất.
+                ProfileRow(icon: "list.bullet.rectangle", title: "Nội quy cộng đồng",
+                           action: onOpenGuidelines)
                 Divider().background(NodieColors.rule)
                 ProfileRow(icon: "doc.text", title: "Điều khoản sử dụng", action: onOpenTerms)
             }

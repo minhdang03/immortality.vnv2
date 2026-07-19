@@ -25,6 +25,12 @@ struct LitButton: View {
             .foregroundStyle(isLit ? NodieColors.sun : NodieColors.sunDim)
             .animation(.snappy(duration: 0.2), value: count)
             .contentShape(Rectangle())
+            // Chữ trần không padding — vẽ ~14-15pt tuỳ `font` (bodyXs mặc định, hoặc metaSm
+            // 11.5pt khi AnswerReplyRow truyền `font:` nhỏ hơn cho tầng reply). Ước lượng 12
+            // CHỦ Ý thấp hơn cả hai: helper nới theo (44-visual), đoán thấp thì vùng chạm thật
+            // vẫn ≥44; đoán cao (từng dùng 14, hụt 0.2pt ở font nhỏ) mới hụt — xem
+            // NodieChips.expandedHitArea + đo thật bằng TouchTargetUITests.
+            .expandedHitArea(visual: 12)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isLit ? Text("Bỏ thả ánh sáng") : Text("Thả ánh sáng"))
@@ -52,6 +58,7 @@ struct VoteButton: View {
             .foregroundStyle(hasVoted ? NodieColors.accent : NodieColors.inkMuted)
             .animation(.snappy(duration: 0.2), value: count)
             .contentShape(Rectangle())
+            .expandedHitArea(visual: 12)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(hasVoted ? Text("Bỏ đánh dấu hữu ích") : Text("Đánh dấu hữu ích"))
@@ -73,12 +80,21 @@ struct ReplyButton: View {
             .font(font.weight(.semibold))
             .foregroundStyle(NodieColors.inkMuted)
             .contentShape(Rectangle())
+            .expandedHitArea(visual: 12)
         }
         .buttonStyle(.plain)
+        // Thiếu dòng này thì VoiceOver gộp CẢ glyph ↩ lẫn chữ "Trả lời" thành một nhãn
+        // đọc tên ký tự Unicode trước — cùng lỗi lớp mà ☀/▲/Hay nhất đã né bằng
+        // `.accessibilityLabel` riêng, chỉ ReplyButton bị bỏ sót (bắt được bằng UITest phase 05).
+        .accessibilityLabel(Text("Trả lời"))
     }
 }
 
 /// Avatar chữ cái đầu — nền kem, chữ mực. Dùng cho user thật (Q&A + chat) thay gradient giả.
+///
+/// `accessibilityHidden`: MỌI chỗ dùng component này đều đặt tên đầy đủ ngay cạnh (hoặc —
+/// như ô trả lời inline — là avatar của chính người đang gõ, không mang thông tin gì mới).
+/// Không ẩn thì VoiceOver đọc lặp "M, Minh…" trước tên thật (phase 05, audit medium).
 struct InitialAvatar: View {
     let initial: String
     var size: CGFloat = 30
@@ -92,6 +108,7 @@ struct InitialAvatar: View {
                     .font(.system(size: size * 0.42, weight: .semibold))
                     .foregroundStyle(NodieColors.inkSoft)
             )
+            .accessibilityHidden(true)
     }
 }
 
@@ -112,6 +129,7 @@ struct BestToggleButton: View {
             .font(NodieTypography.bodyXs.weight(.semibold))
             .foregroundStyle(isBest ? NodieColors.accent : NodieColors.inkMuted)
             .contentShape(Rectangle())
+            .expandedHitArea(visual: 12)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isBest ? Text("Bỏ đánh dấu Hay nhất") : Text("Đánh dấu Hay nhất"))

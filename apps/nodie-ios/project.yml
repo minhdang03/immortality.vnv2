@@ -3,6 +3,10 @@ packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift
     from: "2.0.0"
+  # Cache đĩa cho chat (ChatDiskCache) — mở app thấy lịch sử ngay, mạng chỉ sync phần mới.
+  GRDB:
+    url: https://github.com/groue/GRDB.swift
+    from: "7.0.0"
 options:
   bundleIdPrefix: com.battudao
   deploymentTarget:
@@ -55,6 +59,8 @@ targets:
     dependencies:
       - package: Supabase
         product: Supabase
+      - package: GRDB
+        product: GRDB
     info:
       path: NODIE/Info.plist
       properties:

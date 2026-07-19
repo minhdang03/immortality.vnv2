@@ -1,6 +1,20 @@
 # Phase 06 — Nội quy cộng đồng + link đăng ký + funnel events
 
-**Mục:** D-05 (P2 nội quy in-app) · A-05 phần code (P1 link Nội quy màn đăng ký) · B-02 phần call-site (P1 funnel) · **Đợt B** · Ước lượng **0.5 ngày** · Status: ⬜
+**Mục:** D-05 (P2 nội quy in-app) · A-05 phần code (P1 link Nội quy màn đăng ký) · B-02 phần call-site (P1 funnel) · **Đợt B** · Ước lượng **0.5 ngày** · Status: 🔨 19/07
+
+## Đã làm (19/07)
+
+- `CommunityGuidelinesView.swift` — 6 điều rút từ mục 2 Điều khoản, cuối màn link sang `TermsOfUseView`. Không nhân đôi toàn văn.
+- **Hai** lối vào (plan chỉ ghi một): `LoginView` (trước khi có tài khoản) **+ hàng "Nội quy cộng đồng" ở Profile → Cài đặt**. Chỉ để ở màn đăng nhập thì người đã đăng ký không còn đường nào tới — tức là nhóm đang dùng app hằng ngày lại không đọc được luật.
+- **Đi khác plan:** link hiện ở CẢ hai nhánh đăng nhập/đăng ký, không riêng `isSignUp` — vì link Điều khoản sẵn có cũng không guard theo `isSignUp`, guard riêng cái mới là lệch nhau vô cớ.
+- Funnel: `signin_success`, `signup_success` / `signup_awaiting_confirmation` (`AuthStore`), `post_question`, `post_answer` (`QAStore`). Tách hai nhánh signup vì phễu rụng nặng nhất ở khe "tạo tài khoản xong nhưng không bao giờ xác nhận mail" — gộp lại thì không nhìn ra.
+- i18n: 2 key mới × 8 ngôn ngữ, splice text. `"Nội quy cộng đồng"` khai `extractionState: manual` vì `EyebrowLabel` dựng `LocalizedStringKey` lúc chạy → bộ trích không thấy, thiếu cờ là build sau đánh stale oan.
+- Test: `LegalAccessUITests` (mới, KHÔNG đăng nhập) canh link mở được từ màn đăng nhập — guideline 1.2 đòi tới được, mà thứ dễ vỡ là cái link chứ không phải chữ. Gate `EXPECTED_TESTS` 50 → 51.
+
+## Còn lại
+
+- [ ] Funnel `first_message` / `post_message` trong `ConversationStore` — **phiên khác đang giữ file** (+91 dòng chưa commit, plan `260719-0023`). Làm sau khi chat land.
+- [ ] Gate 3× trên cây đông cứng (gate 19/07 00:07 vô hiệu: có phiên khác sửa file giữa lúc chạy).
 **Model:** Opus (fast) — một màn tĩnh + vài call-site logger đã có sẵn writer (phase 04); việc cơ khí có spec rõ, verify cục bộ.
 
 ## Điều kiện tiên quyết
