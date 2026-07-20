@@ -40,6 +40,11 @@ struct ChatDetailView: View {
     @State private var atBottom = true
     /// Số tin đến trong lúc đang đọc ngược lên. 0 = không hiện nút.
     @State private var unseen = 0
+    /// Id tin CUỐI đã thấy ở lần `onChange(count)` trước. Phân biệt "tin mới đến đáy" với
+    /// "nạp trang cũ chèn vào đầu": prepend KHÔNG đổi tin cuối. Dựa cấu trúc thay vì cờ
+    /// `isLoadingOlder` — cờ đó bị hạ trong cùng nhịp MainActor với lúc chèn nên onChange đọc
+    /// ra đã false, đếm nhầm cả trang cũ thành "N tin mới".
+    @State private var seenLastId: UUID?
     /// Tin đang sửa (nợ plan 1306 #15) — non-nil mở hộp thoại sửa. Alert đơn giản hơn dựng
     /// lại nguyên băng "Đang trả lời" cho một thao tác hiếm dùng.
     @State private var editingMessage: MessageRow?
@@ -59,6 +64,8 @@ struct ChatDetailView: View {
     @State private var viewingPhoto: ChatPhotoSource?
     /// Video đang xem toàn màn (phase 16).
     @State private var viewingVideo: ChatVideoSource?
+    /// Cụm ảnh đang xem toàn màn (lật ngang) — mở từ một ô trong lưới album.
+    @State private var viewingAlbum: ChatAlbumSource?
     /// Tệp đã tải về thư mục tạm, sẵn sàng cho QuickLook.
     @State private var previewingFile: URL?
     /// Đang tải tệp về để mở — chặn chạm hai lần vào cùng một bong bóng.
@@ -369,12 +376,14 @@ struct ChatDetailView: View {
                 // Kéo xuống là bàn phím hạ theo ngón tay — chuẩn iMessage/Messenger.
                 .scrollDismissesKeyboard(.interactively)
                 .onChange(of: messages.count) { old, new in
+                    let currentLastId = messages.last?.id
+                    defer { seenLastId = currentLastId }
                     // Đang nhảy tới một tin cụ thể → đừng cuộn xuống đáy khi cửa sổ vừa đổ về.
                     guard !jumpingToTarget else { return }
-                    // Đang nạp trang CŨ (chèn vào ĐẦU) → không phải tin mới đến. Không chặn thì
-                    // nhánh dưới đếm nhầm vào "N tin mới" và cuộn sai. loadOlder tự neo vị trí.
-                    guard !isLoadingOlder else { return }
                     guard let last = messages.last else { return }
+                    // Nạp trang CŨ chèn vào ĐẦU không đổi tin cuối → không phải tin mới đến, bỏ qua.
+                    // (loadOlder tự neo vị trí cuộn.) Chỉ xử lý khi tin CUỐI thật sự đổi.
+                    guard currentLastId != seenLastId else { return }
                     // Đang ở đáy → theo tin mới. Đang đọc ngược lên → ĐỨNG YÊN, chỉ đếm.
                     // Giật màn hình của người đang đọc là cách nhanh nhất làm họ mất chỗ.
                     // Ngoại lệ: tin của CHÍNH MÌNH luôn kéo xuống — bấm gửi là đã tỏ ý muốn thấy nó.
@@ -455,6 +464,9 @@ struct ChatDetailView: View {
                 jumpingToTarget = true
                 if await store.loadWindow(around: target, channelId: channelId) {
                     pendingScrollId = target
+                    // Cửa sổ quanh tin đích thay cả mảng → lịch sử cũ hơn nó lại nạp được.
+                    // Không mở lại thì lần trước từng chạm đáy lịch sử sẽ khoá cuộn-lên vĩnh viễn.
+                    reachedOldest = false
                 } else {
                     // Không tới được tin đích (đã xoá / ngoài trang / lỗi mạng) → ĐỪNG để màn
                     // trắng câm. Báo ngắn rồi rơi về đáy hội thoại như mở bình thường; nếu
@@ -567,6 +579,7 @@ struct ChatDetailView: View {
             },
             onPickedFile: { result in await sendPickedFile(result) }
         ))
+        .fullScreenCover(item: $viewingAlbum) { ChatAlbumViewer(source: $0) }
         // Xem lại + gõ chú thích trước khi gửi. Tệp KHÔNG đi đường này: một tệp đính kèm
         // đã tự mang tên nó, còn ảnh thì không nói được gì nếu không có chỗ gõ.
         .sheet(isPresented: Binding(
@@ -728,8 +741,8 @@ struct ChatDetailView: View {
                     // Đang chọn thì chạm là chọn, không mở ảnh.
                     if selecting {
                         toggleSelect(message.id)
-                    } else if let media = message.media {
-                        open(media, of: message)
+                    } else {
+                        openAlbumPhoto(message, in: group)
                     }
                 },
                 cellMenu: { message in albumCellMenu(message, isMine: isMine) },
@@ -966,6 +979,8 @@ struct ChatDetailView: View {
         jumpingToTarget = true
         if await store.loadWindow(around: messageId, channelId: channelId) {
             pendingScrollId = messageId
+            // Cửa sổ mới → mở lại cuộn-lên (xem ghi chú ở deep-link `.task`).
+            reachedOldest = false
         } else {
             jumpingToTarget = false
         }
@@ -1215,10 +1230,19 @@ struct ChatDetailView: View {
                 }
             } else if !store.hasSyncedChannels {
                 // CHƯA BIẾT: danh sách kênh chưa nạp xong (mở thẳng từ deep-link/push).
-                // `.task` đã kích loadChannels — chờ nó, đừng vẽ băng từ chối oan.
-                ProgressView()
+                // `.task` đã kích loadChannels — chờ nó, đừng vẽ băng từ chối oan. NHƯNG offline
+                // thì loadChannels fail và cờ này mãi false: cho CHẠM để thử lại, đừng để spinner
+                // quay vĩnh viễn (còn khoá luôn catch-up realtime vì catchUp gác theo cờ này).
+                Button { Task { await store.loadChannels() } } label: {
+                    HStack(spacing: NodieSpacing.sm) {
+                        ProgressView()
+                        Text("Đang tải… chạm để thử lại")
+                            .font(NodieTypography.meta)
+                            .foregroundColor(NodieColors.inkMuted)
+                    }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, NodieSpacing.sm)
+                }
             } else {
                 // Đã sync mà vẫn không thấy kênh = thật sự không có quyền / không còn là
                 // thành viên. Câu trung tính, không đổ cho "kênh phát".
@@ -1440,6 +1464,30 @@ struct ChatDetailView: View {
     }
 
     /// Chạm vào bong bóng: ảnh → xem toàn màn; tệp → tải về rồi mở QuickLook.
+    /// Bấm một ô trong lưới album → mở viewer lật-ngang qua các ẢNH của cụm.
+    ///
+    /// Chỉ gom ảnh ĐÃ lên server (`.remote`): ảnh đang gửi vẽ từ bytes local, và video là
+    /// viewer khác. Ô được bấm mà không phải ảnh-đã-gửi (video, hoặc ảnh đang upload) rơi về
+    /// `open()` đơn — không ép nó vào pager ảnh.
+    private func openAlbumPhoto(_ tapped: MessageRow, in group: [MessageRow]) {
+        // Ô đang gửi / video: đường cũ (mở đơn, xem được cả ảnh trong máy lẫn video).
+        guard tapped.media?.kind == .photo, store.pending(for: tapped.id) == nil else {
+            if let media = tapped.media { open(media, of: tapped) }
+            return
+        }
+        // Các ảnh đã-gửi trong cụm, giữ đúng thứ tự lưới.
+        let photos = group.filter { $0.media?.kind == .photo && store.pending(for: $0.id) == nil }
+        let sources = photos.compactMap { row -> ChatPhotoSource? in
+            row.media.map { .remote(path: $0.path) }
+        }
+        let start = photos.firstIndex(where: { $0.id == tapped.id }) ?? 0
+        guard !sources.isEmpty else {
+            if let media = tapped.media { open(media, of: tapped) }
+            return
+        }
+        viewingAlbum = ChatAlbumSource(photos: sources, startIndex: start)
+    }
+
     private func open(_ media: MessageMedia, of message: MessageRow) {
         switch media.kind {
         case .photo:

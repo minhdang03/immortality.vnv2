@@ -212,7 +212,10 @@ struct ChatPhotoViewer: View {
                     offset = CGSize(width: committedOffset.width + value.translation.width,
                                     height: committedOffset.height + value.translation.height)
                 } else {
-                    dismissDrag = value.translation
+                    // Kéo-để-đóng chỉ nhận trục DỌC: khi ảnh này nằm trong TabView album
+                    // (ChatAlbumViewer), trục ngang phải để cho pager lật trang. Ở ảnh đơn,
+                    // kéo ngang lúc chưa phóng vốn chỉ nảy về — bỏ nó không mất gì.
+                    dismissDrag = CGSize(width: 0, height: value.translation.height)
                 }
             }
             .onEnded { value in
@@ -270,6 +273,44 @@ struct ChatPhotoViewer: View {
             ChatImageCache.store(decoded, for: path)
             image = decoded
         }
+    }
+}
+
+/// Nhiều ảnh của một cụm album (phase 02) để lật ngang. Identifiable cho `.fullScreenCover`.
+struct ChatAlbumSource: Identifiable {
+    let id = UUID()
+    let photos: [ChatPhotoSource]
+    /// Ảnh bấm vào — trang mở đầu.
+    let startIndex: Int
+}
+
+/// Xem cả cụm ảnh, vuốt ngang qua lại — chuẩn IG/Messenger khi bấm một ảnh trong lưới.
+///
+/// `TabView(.page)` lo phần lật; mỗi trang là `ChatPhotoViewer` nguyên vẹn (pinch, kéo-dọc-
+/// để-đóng, lưu ảnh). Xung đột cử chỉ được gỡ ở `ChatPhotoViewer.drag`: lúc chưa phóng to,
+/// kéo-để-đóng chỉ ăn trục DỌC, nên trục ngang thuộc về pager. Phóng to thì kéo là để xem
+/// chỗ khác trong ảnh (pager của iOS tự nhường khi con đang cuộn).
+///
+/// CHỈ ảnh — video trong cụm mở bằng viewer video đơn (video-trong-pager là bài toán khác:
+/// phát/tạm dừng theo trang, khác hẳn ảnh tĩnh).
+struct ChatAlbumViewer: View {
+    let source: ChatAlbumSource
+    @State private var index: Int
+
+    init(source: ChatAlbumSource) {
+        self.source = source
+        _index = State(initialValue: source.startIndex)
+    }
+
+    var body: some View {
+        TabView(selection: $index) {
+            ForEach(Array(source.photos.enumerated()), id: \.offset) { i, photo in
+                ChatPhotoViewer(source: photo)
+                    .tag(i)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: source.photos.count > 1 ? .automatic : .never))
+        .background(Color.black.ignoresSafeArea())
     }
 }
 

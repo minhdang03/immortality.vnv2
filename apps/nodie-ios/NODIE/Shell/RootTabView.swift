@@ -152,6 +152,8 @@ struct RootTabView: View {
         // "Đã xoá — Hoàn tác". Ở gốc cây, cùng lý do với alert ngay trên: xoá câu hỏi xong là
         // màn chi tiết bị pop, banner đặt trong màn đó chết theo trước khi ai kịp đọc.
         .nodieUndoBanner(qa: qa)
+        // Hoàn tác xoá tin chat — gốc cây, cùng lý do với banner Q&A ở trên.
+        .nodieChatUndoBanner(store: chat)
         // Đổi cỡ chữ → đổi identity → dựng lại toàn bộ cây với font mới.
         // `state` là @State của RootTabView nên nằm NGOÀI id: draft và path điều hướng
         // không mất khi user chỉnh cỡ chữ.

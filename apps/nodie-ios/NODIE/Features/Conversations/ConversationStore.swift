@@ -130,6 +130,17 @@ final class ConversationStore {
     /// `last_read_at` của NGƯỜI KIA trong từng DM — nguồn của nhãn "Đã xem" (quy tắc scale #4:
     /// không bảng read-state per-message; đã xem = tin cũ hơn mốc đọc của họ).
     var peerLastRead: [UUID: Date] = [:]
+
+    /// Lần xoá tin vừa rồi, còn hoàn tác được (khuôn giống QAStore.pendingUndo). Giữ nguyên
+    /// các MessageRow đã gỡ để khôi phục cục bộ không phải refetch — và chỉ chứa tin ĐÃ lên
+    /// server (xoá mềm), không chứa tin hàng-đợi/đang-upload (chúng bị gỡ hẳn, không có gì
+    /// trên server để `deleted_at = null`).
+    var pendingUndo: PendingUndo?
+    struct PendingUndo: Identifiable, Equatable {
+        let id = UUID()
+        let channelId: UUID
+        let rows: [MessageRow]
+    }
     /// Chat đang MỞ trên màn — tin đến kênh này không bump unread (markRead lo), tin đến kênh
     /// khác thì bump. ChatDetailView set khi vào màn, xoá khi rời.
     var visibleChannelId: UUID?
@@ -549,6 +560,11 @@ final class ConversationStore {
         // Kiểm lại SAU await — mạng có thể đã về trong lúc đọc đĩa, bản server thắng.
         guard hasOnlyLocalRows(channelId), !rows.isEmpty else { return }
         messagesByChannel[channelId] = rows
+        // Seed con trỏ server từ chính cache (đây là tin server thật đã lưu, `created_at` là
+        // giờ server). Thiếu bước này thì trước khi loadMessages kịp chạy (hoặc khi nó fail
+        // offline), một tick Realtime gọi fetchNewMessages với con trỏ nil ⇒ nạp 50 tin CỔ
+        // NHẤT dồn xuống đáy. `advanceServerCursor` lấy max nên không kéo con trỏ tụt.
+        advanceServerCursor(channelId, from: rows)
         // Cùng bẫy với loadMessages trang đầu: thay cả mảng là nuốt bong bóng đang gửi —
         // reattach trả lại cả pendingMedia lẫn queuedTexts.
         reattachPendingRows(in: channelId)
@@ -576,9 +592,21 @@ final class ConversationStore {
         messagesByChannel[channelId, default: []].append(optimistic)
 
         do {
-            try await client.from("messages").insert(payload).execute()
+            // Lấy `created_at` server về (một cột, rẻ) để vá vào bản lạc quan — không thì
+            // dấu ✓✓ so mốc đọc-server với giờ-máy, lệch đồng hồ là "đã xem" sai (xem
+            // `replacingCreatedAt`). Insert vẫn là một round-trip, chỉ thêm `select`.
+            struct Inserted: Decodable {
+                let createdAt: Date
+                enum CodingKeys: String, CodingKey { case createdAt = "created_at" }
+            }
+            let row: Inserted = try await client.from("messages")
+                .insert(payload).select("created_at").single().execute().value
+            let confirmed = optimistic.replacingCreatedAt(row.createdAt)
+            if let i = messagesByChannel[channelId]?.firstIndex(where: { $0.id == payload.id }) {
+                messagesByChannel[channelId]?[i] = confirmed
+            }
             // Server nhận rồi mới ghi đĩa — tin đang bay không được sống qua lần mở app sau.
-            Task { await ChatDiskCache.shared.insertMessages([optimistic]) }
+            Task { await ChatDiskCache.shared.insertMessages([confirmed]) }
             return true
         } catch {
             // MẤT MẠNG: bubble Ở LẠI với trạng thái "chờ mạng", vào hàng đợi — flushQueued
@@ -836,6 +864,25 @@ final class ConversationStore {
                 guard Self.isDuplicateKey(error) else { throw error }
             }
 
+            // Xoá ập tới TRONG LÚC INSERT đang bay: guard ở trên đã qua nên tin ĐÃ commit lên
+            // server, Realtime sẽ hồi sinh nó — đúng lỗi "tin sống lại" mà C1 đi vá. Kiểm lại
+            // sau INSERT; bị huỷ thì xoá mềm ngay. `detached` để `cancel()` của chính task này
+            // không giết luôn lệnh xoá dở.
+            if Task.isCancelled || pendingMedia[messageId] == nil {
+                let id = messageId
+                Task.detached { [client] in
+                    struct SoftDelete: Encodable {
+                        let deletedAt: Date
+                        enum CodingKeys: String, CodingKey { case deletedAt = "deleted_at" }
+                    }
+                    try? await client.from("messages")
+                        .update(SoftDelete(deletedAt: Date()))
+                        .eq("id", value: id)
+                        .execute()
+                }
+                return false
+            }
+
             // Gắn path thật vào chính bong bóng đang hiện, rồi mới bỏ khỏi `pendingMedia`:
             // làm ngược lại thì có một khoảnh khắc view không còn `Data` local mà cũng chưa
             // có path — bong bóng chớp thành khung trống.
@@ -1003,6 +1050,7 @@ final class ConversationStore {
             enum CodingKeys: String, CodingKey { case deletedAt = "deleted_at" }
         }
         let backup = messagesByChannel[channelId]
+        let removed = backup?.first { $0.id == messageId }
         messagesByChannel[channelId]?.removeAll { $0.id == messageId }
         do {
             try await client.from("messages")
@@ -1010,6 +1058,7 @@ final class ConversationStore {
                 .eq("id", value: messageId)
                 .execute()
             Task { await ChatDiskCache.shared.deleteMessage(id: messageId) }
+            if let removed { pendingUndo = PendingUndo(channelId: channelId, rows: [removed]) }
         } catch {
             messagesByChannel[channelId] = backup
             errorMessage = ErrorText.localized(error)
@@ -1064,6 +1113,8 @@ final class ConversationStore {
         let serverIds = ids.filter { !isQueued($0) && pendingMedia[$0] == nil }
 
         let backup = messagesByChannel[channelId]
+        // Giữ các hàng ĐÃ lên server để hoàn tác — chỉ chúng khôi phục được (deleted_at=null).
+        let restorable = (backup ?? []).filter { serverIds.contains($0.id) }
         messagesByChannel[channelId]?.removeAll { ids.contains($0.id) }
         guard !serverIds.isEmpty else { return }
         do {
@@ -1074,8 +1125,43 @@ final class ConversationStore {
             for id in serverIds {
                 Task { await ChatDiskCache.shared.deleteMessage(id: id) }
             }
+            if !restorable.isEmpty {
+                pendingUndo = PendingUndo(channelId: channelId, rows: restorable)
+            }
         } catch {
             messagesByChannel[channelId] = backup
+            errorMessage = ErrorText.localized(error)
+        }
+    }
+
+    /// Hoàn tác lần xoá vừa rồi — `deleted_at = null`. Rẻ vì xoá là xoá MỀM. Khôi phục cục
+    /// bộ từ các hàng đã giữ (không refetch: không xáo vị trí cuộn, không mất tin cũ ngoài
+    /// cửa sổ 50 tin). RLS `messages_read` cho tác giả đọc lại hàng đã xoá của mình, và
+    /// `messages_update_own` cho update nó (không lọc deleted_at) — cùng nền với Q&A.
+    func undoLastDelete() async {
+        guard let undo = pendingUndo else { return }
+        pendingUndo = nil  // xoá cờ TRƯỚC: bấm hai lần không gửi hai lệnh restore
+        let ids = undo.rows.map(\.id)
+        struct RestoreDeleted: Encodable {
+            enum CodingKeys: String, CodingKey { case deletedAt = "deleted_at" }
+            func encode(to encoder: Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                // encodeNil, KHÔNG bỏ key: Optional tự sinh dùng encodeIfPresent → nil là bỏ
+                // hẳn key, PostgREST nhận update rỗng và không đổi gì (cùng bẫy QAStoreUndo).
+                try c.encodeNil(forKey: .deletedAt)
+            }
+        }
+        do {
+            try await client.from("messages")
+                .update(RestoreDeleted()).in("id", values: ids).execute()
+            // Chèn lại rồi sắp theo thời gian — giữ đúng chỗ cũ trong luồng.
+            var list = messagesByChannel[undo.channelId] ?? []
+            let present = Set(list.map(\.id))
+            list.append(contentsOf: undo.rows.filter { !present.contains($0.id) })
+            list.sort { $0.createdAt < $1.createdAt }
+            messagesByChannel[undo.channelId] = list
+            Task { await ChatDiskCache.shared.insertMessages(undo.rows) }
+        } catch {
             errorMessage = ErrorText.localized(error)
         }
     }

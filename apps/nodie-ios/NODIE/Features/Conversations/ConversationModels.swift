@@ -322,6 +322,21 @@ struct MessageRow: Codable, Identifiable, Hashable {
                    pinnedAt: pinnedAt, pinnedBy: pinnedBy)
     }
 
+    /// Bản sao với dấu thời gian của SERVER — vá vào bản lạc quan sau khi insert xong.
+    ///
+    /// Bản lạc quan sinh với `Date()` của MÁY để bong bóng hiện ngay. Nhưng `deliveryState`
+    /// so `createdAt` với `peerLastRead` (mốc đọc do server cấp, 0042) để quyết ✓✓ — hai
+    /// đồng hồ khác nhau. Máy chậm vài phút thì tin mới `createdAt` < mốc đọc cũ của người
+    /// kia → hiện "đã xem" NGAY dù họ chưa thấy. Vá `createdAt` về giờ server là đưa cả hai
+    /// vế về cùng một đồng hồ. Tin vẫn là mới nhất (server-now ≈ máy-now, lệch giây), nên
+    /// không xáo con trỏ keyset.
+    func replacingCreatedAt(_ serverCreatedAt: Date) -> MessageRow {
+        MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
+                   body: body, createdAt: serverCreatedAt, editedAt: editedAt,
+                   author: author, metadata: metadata, reactions: reactions,
+                   pinnedAt: pinnedAt, pinnedBy: pinnedBy)
+    }
+
     /// Bản sao với trạng thái ghim khác — cho Realtime vá tại chỗ khi quản trị ghim/gỡ.
     func replacingPin(at pinnedAt: Date?, by pinnedBy: UUID?) -> MessageRow {
         MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,

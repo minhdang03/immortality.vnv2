@@ -77,4 +77,65 @@ extension View {
     func nodieUndoBanner(qa: QAStore) -> some View {
         modifier(UndoBannerModifier(qa: qa))
     }
+
+    /// Bản cho chat — cùng khuôn, khác nguồn. Xoá tin xong màn chat vẫn còn (khác Q&A pop
+    /// màn chi tiết), nhưng đặt ở gốc cây cho nhất quán và để banner sống qua lúc chọn-nhiều
+    /// gỡ thanh công cụ.
+    func nodieChatUndoBanner(store: ConversationStore) -> some View {
+        modifier(ChatUndoBannerModifier(store: store))
+    }
+}
+
+/// Dải "Đã xoá — Hoàn tác" cho tin nhắn chat (xoá mềm, khôi phục được — xem
+/// ConversationStore.undoLastDelete).
+private struct ChatUndoBannerModifier: ViewModifier {
+    @Bindable var store: ConversationStore
+    private static let visibleFor: Duration = .seconds(6)
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                if let undo = store.pendingUndo {
+                    banner(undo)
+                        .padding(.horizontal, NodieSpacing.screenH)
+                        .padding(.bottom, 84)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .task(id: undo.id) {
+                            try? await Task.sleep(for: Self.visibleFor)
+                            guard !Task.isCancelled, store.pendingUndo?.id == undo.id else { return }
+                            store.pendingUndo = nil
+                        }
+                }
+            }
+            .animation(.easeOut(duration: 0.2), value: store.pendingUndo)
+    }
+
+    private func banner(_ undo: ConversationStore.PendingUndo) -> some View {
+        HStack(spacing: NodieSpacing.md) {
+            (undo.rows.count > 1
+             ? Text("Đã xoá \(undo.rows.count) tin")
+             : Text("Đã xoá tin nhắn"))
+                .font(NodieTypography.metaSm)
+                .foregroundStyle(.white)
+
+            Spacer(minLength: 0)
+
+            Button {
+                NodieHaptics.tap()
+                Task { await store.undoLastDelete() }
+            } label: {
+                Text("Hoàn tác")
+                    .font(NodieTypography.cta)
+                    .foregroundStyle(NodieColors.accentLight)
+                    .frame(minHeight: 44)
+                    .padding(.horizontal, NodieSpacing.sm)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("Hoàn tác")
+        }
+        .padding(.leading, NodieSpacing.lg)
+        .padding(.trailing, NodieSpacing.sm)
+        .background(Capsule().fill(NodieColors.ink))
+    }
 }
