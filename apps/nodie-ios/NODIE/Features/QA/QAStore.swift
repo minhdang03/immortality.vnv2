@@ -67,21 +67,61 @@ final class QAStore {
 
     func loadQuestions(limit: Int = 50) async {
         isLoading = true; errorMessage = nil
-        // Danh sách chặn phải có TRƯỚC khi lọc — sai thứ tự là flash nội dung đã chặn.
-        await loadBlockedIds()
+        // Hai truy vấn ĐỘC LẬP → đi song song, cắt một round-trip khỏi thời gian chờ.
+        // Bất biến "không flash nội dung đã chặn" vẫn nguyên: `questions` chỉ được gán SAU
+        // khi cả hai về, nên không có khoảnh khắc nào danh sách sống mà bộ lọc chưa có.
+        // Cả hai đều là hàm THUẦN (trả giá trị, không chạm state) — chạy song song rồi mới
+        // gán ở đây, tránh hai Task cùng ghi vào store.
+        async let blockedFetch = fetchBlockedIds()
+        async let rowsFetch = fetchQuestions(limit: limit)
         do {
-            let rows: [QuestionRow] = try await client.from("questions")
-                .select(Self.questionSelect)
-                // Lọc ở client vì RLS KHÔNG còn tự lo: 0034 buộc phải cho tác giả đọc lại
-                // hàng đã xoá của chính mình (không thì Postgres bác luôn lệnh xoá mềm).
-                // Bỏ dòng này là người ta thấy lại bài mình vừa xoá.
-                .is("deleted_at", value: nil)
-                .order("created_at", ascending: false).limit(limit)
-                .execute().value
+            let rows = try await rowsFetch
+            // nil = truy vấn chặn hỏng; giữ danh sách cũ thay vì mở toang bộ lọc.
+            if let blocked = await blockedFetch { blockedUserIds = blocked }
             questions = rows.filter { !isBlocked($0.authorId) }
             cache(questions)
-        } catch { errorMessage = ErrorText.localized(error) }
+            persistQuestions()
+        } catch {
+            _ = await blockedFetch
+            errorMessage = ErrorText.localized(error)
+        }
         isLoading = false
+    }
+
+    /// Truy vấn thuần, không chạm state — xem chú thích ở `loadQuestions`.
+    private func fetchQuestions(limit: Int) async throws -> [QuestionRow] {
+        try await client.from("questions")
+            .select(Self.questionSelect)
+            // Lọc ở client vì RLS KHÔNG còn tự lo: 0034 buộc phải cho tác giả đọc lại
+            // hàng đã xoá của chính mình (không thì Postgres bác luôn lệnh xoá mềm).
+            // Bỏ dòng này là người ta thấy lại bài mình vừa xoá.
+            .is("deleted_at", value: nil)
+            .order("created_at", ascending: false).limit(limit)
+            .execute().value
+    }
+
+    // MARK: - Cache đĩa (QADiskCache là cache, server luôn thắng)
+
+    /// Vẽ danh sách từ đĩa TRƯỚC khi mạng kịp trả lời. Gọi ở RootTabView cùng chỗ với
+    /// `chat.warmFromDisk()` — cold start có danh sách ngay, khung xương chỉ còn cho lần
+    /// cài mới tinh.
+    func warmFromDisk() async {
+        guard let uid else { return }
+        await QADiskCache.shared.prepare(ownerUid: uid)
+        guard questions.isEmpty else { return }
+        let cached = await QADiskCache.shared.loadQuestions()
+        // Kiểm lại SAU await: mạng có thể đã về trong lúc đọc đĩa — bản server thắng.
+        guard questions.isEmpty, !cached.isEmpty else { return }
+        questions = cached
+        cache(cached)
+    }
+
+    /// Ghi lại snapshot. Gọi ở MỌI chỗ làm `questions` đổi (nạp, tạo, sửa, xoá, chặn) —
+    /// bỏ sót chỗ nào là lần mở app sau bài đã gỡ sống dậy cho tới khi mạng về.
+    /// Fire-and-forget: đĩa không được phép giữ chân UI.
+    func persistQuestions() {
+        let snapshot = questions
+        Task { await QADiskCache.shared.saveQuestions(snapshot) }
     }
 
     /// Ghi vào cache theo id — gọi ở MỌI nơi nhận QuestionRow về, để màn chi tiết mở được
@@ -176,6 +216,9 @@ final class QAStore {
     /// khỏi cache hiển thị phải đi qua đây.
     func removeQuestions(by authorId: UUID) {
         questions.removeAll { $0.authorId == authorId }
+        // Ghi lại đĩa NGAY: cache giữ mảng đã lọc, không rửa lại là lần mở app sau bài của
+        // người vừa chặn hiện ra trước khi mạng kịp nói gì.
+        persistQuestions()
     }
 
     /// Làm phẳng cây reply kèm độ sâu (DFS: cha rồi tới con).
@@ -209,6 +252,7 @@ final class QAStore {
                 .insert(payload).select(Self.questionSelect).single().execute().value
             questions.insert(row, at: 0)
             cache([row])
+            persistQuestions()
             AppEventLogger.log(kind: "post_question")
             return row
         } catch { errorMessage = ErrorText.localized(error); return nil }

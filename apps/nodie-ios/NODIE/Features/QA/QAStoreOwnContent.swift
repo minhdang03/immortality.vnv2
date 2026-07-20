@@ -37,6 +37,7 @@ extension QAStore {
                                       authorId: current.authorId, author: current.author, editedAt: editedAt)
             questionsById[id] = updated
             if let i = questions.firstIndex(where: { $0.id == id }) { questions[i] = updated }
+            persistQuestions()
             return true
         } catch { errorMessage = ErrorText.localized(error); return false }
     }
@@ -94,6 +95,7 @@ extension QAStore {
                 .update(SoftDelete(deletedAt: Date()))
                 .eq("id", value: id).execute()
             questions.removeAll { $0.id == id }
+            persistQuestions()
             questionsById[id] = nil
             savedQuestionIds.remove(id)
             pendingUndo = PendingUndo(target: .question(row, wasSaved: wasSaved))

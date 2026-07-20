@@ -171,6 +171,9 @@ struct RootTabView: View {
             // Chữ cái đầu cho avatar ô trả lời Q&A — cùng lý do: store không giữ display_name.
             qa.currentUserInitial = auth.profile?.initial ?? "?"
             await chat.warmFromDisk()
+            // Hỏi đáp cũng vẽ từ đĩa. SAU chat: badge tab Chat là thứ hiện ở mọi tab, còn
+            // danh sách Hỏi đáp chỉ cần có mặt khi user đứng ở tab đó.
+            await qa.warmFromDisk()
             await chat.startRealtime()
         }
         .onChange(of: auth.profile?.displayName) { _, name in

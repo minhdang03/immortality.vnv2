@@ -30,12 +30,19 @@ extension QAStore {
 
     /// RLS `blocks_self` chỉ trả hàng của mình — không cần eq(blocker_id).
     func loadBlockedIds() async {
+        if let ids = await fetchBlockedIds() { blockedUserIds = ids }
+    }
+
+    /// Truy vấn thuần, không chạm state — `loadQuestions` chạy nó song song với truy vấn
+    /// câu hỏi rồi tự gán. `nil` = hỏng: caller giữ danh sách cũ, vì thiếu danh sách chặn
+    /// không được làm sập màn (lần refresh sau nạp lại) và càng không được mở toang bộ lọc.
+    func fetchBlockedIds() async -> Set<UUID>? {
         struct Row: Decodable { let blocked_id: UUID }
         do {
             let rows: [Row] = try await client.from("blocks")
                 .select("blocked_id").execute().value
-            blockedUserIds = Set(rows.map(\.blocked_id))
-        } catch { /* thiếu danh sách chặn không được làm sập màn — lần refresh sau nạp lại */ }
+            return Set(rows.map(\.blocked_id))
+        } catch { return nil }
     }
 
     func report(_ target: ModerationTarget, reason: ReportReason) async {

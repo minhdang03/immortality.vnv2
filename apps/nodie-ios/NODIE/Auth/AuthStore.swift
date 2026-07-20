@@ -198,6 +198,9 @@ final class AuthStore {
         ChatFileDownloader.clear()
         // Lịch sử chat trên đĩa cũng là dữ liệu của phiên vừa thoát — cùng nguyên tắc trên.
         await ChatDiskCache.shared.clear()
+        // Hỏi đáp: nội dung công khai, nhưng snapshot đã LỌC theo danh sách chặn của người
+        // vừa thoát — giữ lại là để lộ họ đã chặn ai.
+        await QADiskCache.shared.clear()
     }
 
     // MARK: - Đặt lại mật khẩu
