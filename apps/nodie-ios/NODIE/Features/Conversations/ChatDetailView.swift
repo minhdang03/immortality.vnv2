@@ -80,20 +80,24 @@ struct ChatDetailView: View {
     /// gắn mọi bong bóng là rác thị giác). Nhóm/kênh không có nhãn ở v1. Tin đang upload/hỏng
     /// cũng không: trạng thái của nó là chuyện của bong bóng (spinner/Gửi lại), chưa tới lượt
     /// chuyện đọc.
-    private func statusLabelMessageId(in rows: [MessageRow]) -> UUID? {
-        guard store.channel(id: channelId)?.kind == "dm",
-              let last = rows.last(where: { $0.userId == store.currentUserId }),
-              store.pending(for: last.id) == nil,
-              !store.isQueued(last.id) else { return nil }
-        return last.id
-    }
 
     /// Vạch chưa đọc: tin ĐẦU TIÊN của người khác mới hơn mốc đọc của MÌNH. `@State` chụp
     /// một lần trong `.task` (TRƯỚC markRead — markRead xong thì mốc server đã đổi).
     @State private var unreadDividerId: UUID?
 
-    /// Tin đang chọn kênh để chuyển tiếp — non-nil là sheet mở.
-    @State private var forwardingMessage: MessageRow?
+    /// Tin đang chọn kênh để chuyển tiếp — non-nil là sheet mở. Một hoặc nhiều tin.
+    @State private var forwarding: ForwardPayload?
+
+    // MARK: - Chọn nhiều tin (phase 03)
+
+    /// Đang ở chế độ chọn. Vào bằng mục "Chọn" trong menu giữ-bong-bóng — KHÔNG thêm cử chỉ
+    /// mới: vuốt đã là trả lời, giữ đã là menu, chạm-đôi đã là ☀.
+    @State private var selecting = false
+    @State private var selected: Set<UUID> = []
+
+    /// Trần một lượt. Chuyển tiếp media phải copy từng tệp trên Storage (xem `forward`);
+    /// 50 ảnh một nhát là treo mạng và chặn UI. Chạm trần thì báo thẳng, không âm thầm cắt.
+    private static let selectionLimit = 20
 
     // MARK: - Jump-to-message (phase 18)
 
@@ -197,16 +201,6 @@ struct ChatDetailView: View {
             : String(localized: "Nhiều người đang nhập…")
     }
 
-    /// "Đã xem" = tin không mới hơn mốc đọc của NGƯỜI KIA (`channel_members.last_read_at`,
-    /// nạp ở resolveDMTitles + đổi live qua Realtime 0041). Không bảng read-state per-message.
-    private func seenStatusLabel(for message: MessageRow) -> some View {
-        let seen = store.dmPeerLastRead[channelId].map { $0 >= message.createdAt } ?? false
-        return Text(seen ? String(localized: "Đã xem") : String(localized: "Đã gửi"))
-            .font(NodieTypography.tag)
-            .foregroundStyle(NodieColors.inkFaint)
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.top, 4)
-    }
     /// "Tắt thông báo" không có màn chọn thời hạn — chọn một mốc xa, đồng bộ với
     /// ConversationListView (mỗi file giữ hằng số riêng, tránh kéo thêm phụ thuộc chéo).
     private static var muteHorizon: Date { Date(timeIntervalSinceNow: 60 * 60 * 24 * 365 * 10) }
@@ -223,13 +217,15 @@ struct ChatDetailView: View {
         // khung hình, mà khung hình chạy MỖI PHÍM GÕ. 150 tin trên máy cũ = giật thấy được.
         let rows = messages
         let parentById = Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        let statusId = statusLabelMessageId(in: rows)
         // Chụp một lần MỖI render — cùng lý do với `rows`: dò "tin đầu ngày" trong từng row
         // là quét tin liền trước mỗi lượt, O(n²) mỗi khung hình gõ phím.
         let firstOfDayIds = firstOfDayIds(in: rows)
+        // Cụm ảnh cùng lượt gửi (phase 02). Chụp một lần — dò cụm trong từng row là quét
+        // hàng xóm mỗi lượt, đúng bẫy O(n²) mà `rows` ở trên né.
+        let albums = Self.albumGroups(in: rows)
 
         VStack(spacing: 0) {
-            header
+            if selecting { selectionHeader } else { header }
 
             ScrollViewReader { proxy in
                 ScrollView {
@@ -258,6 +254,22 @@ struct ChatDetailView: View {
                                 unreadDivider.padding(.top, index > 0 ? 12 : 0)
                             }
 
+                            // Ảnh giữa/cuối một cụm: lưới đã vẽ chúng ở tin ĐẦU cụm, ở đây
+                            // không vẽ lại. Vẫn giữ `.id` để jump-to-message và mốc cuộn
+                            // trỏ tới được từng tin.
+                            if albums.followers.contains(message.id) {
+                                Color.clear.frame(height: 0).id(message.id)
+                            } else if let group = albums.byFirstId[message.id] {
+                                albumBubble(group, isMine: isMine, index: index, rows: rows, proxy: proxy)
+                                    .padding(.top, index > 0 ? 10 : 0)
+                                    // Nháy khi tin được nhảy tới nằm BẤT KỲ đâu trong cụm:
+                                    // tìm kiếm khớp chú thích thì đích là tin CUỐI, mà tin
+                                    // cuối đã bị lưới nuốt.
+                                    .listRowFlash(active: flashMessageId.map { id in
+                                        group.contains { $0.id == id }
+                                    } ?? false)
+                                    .id(message.id)
+                            } else {
                             // Tách khỏi thân ForEach: MessageBubbleView nhiều tham số + closure,
                             // để nguyên trong body làm type-checker của SwiftUI quá tải (báo
                             // "unable to type-check in reasonable time").
@@ -267,10 +279,8 @@ struct ChatDetailView: View {
                                 // Nháy nền khi vừa nhảy tới từ tìm kiếm (phase 18).
                                 .listRowFlash(active: flashMessageId == message.id)
                                 .id(message.id)
-
-                            if message.id == statusId {
-                                seenStatusLabel(for: message)
                             }
+
                             // Tin văn bản đang chờ mạng (phase 07) — trạng thái theo TỪNG tin,
                             // không phải chỉ tin cuối như nhãn Đã xem. Bấm được = van xả cho
                             // ca "lỗi xếp loại offline mà NWPath vẫn satisfied" (timeout, host
@@ -373,7 +383,7 @@ struct ChatDetailView: View {
                     .padding(.bottom, 2)
             }
 
-            inputBar
+            if selecting { selectionActionBar } else { inputBar }
         }
         .background(NodieColors.bg)
         // Nạp tin, mở Realtime, đánh dấu đã đọc — theo đúng thứ tự: có tin rồi mới nghe tin
@@ -431,8 +441,8 @@ struct ChatDetailView: View {
             player.stop()
             if state.recording { cancelRecording() }
         }
-        .sheet(item: $forwardingMessage) { message in
-            ForwardMessageSheet(store: store, message: message)
+        .sheet(item: $forwarding) { payload in
+            ForwardMessageSheet(store: store, messages: payload.messages)
         }
         .fullScreenCover(item: $viewingVideo) { ChatVideoViewer(source: $0) }
         // Bắt link nội bộ @nhắc-tên (nodie://mention/{uid}) → mở hồ sơ; link thật (http) để
@@ -525,6 +535,16 @@ struct ChatDetailView: View {
             message: message,
             isMine: isMine,
             maxBubbleWidth: bubbleMaxWidth,
+            delivery: store.deliveryState(for: message),
+            // Tin chưa lên server không cho chọn: xoá/chuyển tiếp hàng loạt một id server
+            // chưa biết là vô nghĩa, và `update … in()` khớp 0 hàng thì hỏng im lặng.
+            selection: (selecting && !store.isQueued(message.id) && store.pending(for: message.id) == nil)
+                ? selected.contains(message.id) : nil,
+            onToggleSelect: { toggleSelect(message.id) },
+            onSelect: (!store.isQueued(message.id) && store.pending(for: message.id) == nil) ? {
+                selecting = true
+                selected = [message.id]
+            } : nil,
             senderLabel: senderLabel(at: index, in: rows),
             replyTarget: target,
             replyTargetIsMine: target?.userId == store.currentUserId,
@@ -544,7 +564,7 @@ struct ChatDetailView: View {
                 Task { await store.toggleReaction(messageId: message.id, channelId: channelId, kind: kind) }
             },
             onForward: (!store.isQueued(message.id) && store.pending(for: message.id) == nil) ? {
-                forwardingMessage = message
+                forwarding = ForwardPayload(messages: [message])
             } : nil,
             onTapReplyQuote: { parentId in
                 withAnimation(motion) { proxy.scrollTo(parentId, anchor: .center) }
@@ -554,6 +574,137 @@ struct ChatDetailView: View {
             onRetryMedia: { Task { await store.retryMedia(messageId: message.id) } },
             onDiscardMedia: { store.discardMedia(messageId: message.id) },
             onOpenMedia: { media in open(media, of: message) }
+        )
+    }
+
+    /// Gom các tin ẢNH LIÊN TIẾP cùng `albumId` và cùng người gửi thành cụm.
+    ///
+    /// "Liên tiếp" là bắt buộc: tin của người khác chen vào giữa thì cụm tách làm đôi —
+    /// đúng thứ tự thời gian, không nhảy cóc để gom cho đẹp.
+    ///
+    /// Trả về hai thứ: cụm tra theo id tin ĐẦU (chỗ vẽ lưới) và tập id các tin theo sau
+    /// (chỗ bỏ qua). Cụm một mục không tính là album — một ảnh thì bong bóng thường đẹp hơn
+    /// và giữ được trích dẫn/cảm xúc như cũ.
+    static func albumGroups(in rows: [MessageRow]) -> (byFirstId: [UUID: [MessageRow]], followers: Set<UUID>) {
+        var byFirstId: [UUID: [MessageRow]] = [:]
+        var followers: Set<UUID> = []
+        var index = 0
+        while index < rows.count {
+            guard let albumId = rows[index].media?.albumId else { index += 1; continue }
+            let sender = rows[index].userId
+            var end = index + 1
+            while end < rows.count,
+                  rows[end].media?.albumId == albumId,
+                  rows[end].userId == sender {
+                end += 1
+            }
+            if end - index >= 2 {
+                let group = Array(rows[index..<end])
+                byFirstId[group[0].id] = group
+                followers.formUnion(group.dropFirst().map(\.id))
+            }
+            index = end
+        }
+        return (byFirstId, followers)
+    }
+
+    /// Một cụm ảnh: lưới + chú thích + giờ + dấu đã gửi/đã xem.
+    ///
+    /// Chú thích nằm ở tin CUỐI cụm (quyết định lúc làm ô chú thích, xem ChatCaptionSheet) —
+    /// mà tin cuối bị lưới nuốt, nên phải lấy ra vẽ lại ở đây. Không làm thì gõ chú thích
+    /// xong gửi ảnh là chữ biến mất.
+    @ViewBuilder
+    private func albumBubble(_ group: [MessageRow], isMine: Bool, index: Int,
+                             rows: [MessageRow], proxy: ScrollViewProxy) -> some View {
+        let caption = group.compactMap { $0.body?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .last(where: { !$0.isEmpty })
+        let last = group[group.count - 1]
+
+        VStack(alignment: isMine ? .trailing : .leading, spacing: 4) {
+            if let label = senderLabel(at: index, in: rows) {
+                Text(label)
+                    .font(NodieTypography.timestampXs.weight(.semibold))
+                    .foregroundStyle(NodieColors.accent)
+                    .padding(.horizontal, NodieSpacing.xs)
+            }
+
+            AlbumBubbleView(
+                items: group,
+                isMine: isMine,
+                maxWidth: bubbleMaxWidth,
+                pending: { store.pending(for: $0) },
+                onOpen: { message in
+                    // Đang chọn thì chạm là chọn, không mở ảnh.
+                    if selecting {
+                        toggleSelect(message.id)
+                    } else if let media = message.media {
+                        open(media, of: message)
+                    }
+                },
+                cellMenu: { message in albumCellMenu(message, isMine: isMine) },
+                reactionSummary: { message in
+                    let counts = message.reactionCounts
+                    let mine = message.myReactions(uid: store.currentUserId)
+                    return ReactionKind.allCases
+                        .filter { (counts[$0] ?? 0) > 0 }
+                        .map { (kind: $0, count: counts[$0] ?? 0, mine: mine.contains($0)) }
+                },
+                selectedIds: selecting ? selected : nil,
+                onRetry: { message in Task { await store.retryMedia(messageId: message.id) } },
+                onDiscard: { message in store.discardMedia(messageId: message.id) }
+            )
+
+            if let caption, !caption.isEmpty {
+                Text(caption)
+                    .font(NodieTypography.body)
+                    .foregroundStyle(NodieColors.ink)
+                    .frame(maxWidth: bubbleMaxWidth, alignment: isMine ? .trailing : .leading)
+                    .padding(.horizontal, NodieSpacing.xs)
+            }
+
+            HStack(spacing: 4) {
+                Text(last.timeLabel)
+                    .font(NodieTypography.timestampXs)
+                    .foregroundStyle(NodieColors.inkFaint)
+                // Trạng thái của tin CUỐI đại diện cho cả cụm: chúng đi cùng một lượt, ai
+                // đọc tới cái cuối là đã đọc hết.
+                if let delivery = store.deliveryState(for: last) {
+                    Image(systemName: delivery == .seen ? "checkmark.circle.fill" : "checkmark")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(delivery == .seen ? NodieColors.accent : NodieColors.inkFaint)
+                        .accessibilityLabel(delivery == .seen ? Text("Đã xem") : Text("Đã gửi"))
+                }
+            }
+            .padding(.horizontal, NodieSpacing.xs)
+        }
+        .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
+    }
+
+    /// Menu giữ một Ô trong lưới — CÙNG menu với bong bóng thường, thao tác áp lên đúng tin
+    /// của ô đó. Gộp album mà mất reply/cảm xúc/chuyển tiếp/xoá là đổi trình bày lấy hồi quy.
+    private func albumCellMenu(_ message: MessageRow, isMine: Bool) -> MessageActionsMenu {
+        MessageActionsMenu(
+            isTextMessage: false,
+            myReactions: message.myReactions(uid: store.currentUserId),
+            onReact: { kind in
+                guard !store.isQueued(message.id) else { return }
+                Task { await store.toggleReaction(messageId: message.id, channelId: channelId, kind: kind) }
+            },
+            onReply: {
+                guard !store.isQueued(message.id) else { return }
+                state.startReply(to: message.id, in: channelId)
+            },
+            onForward: (!store.isQueued(message.id) && store.pending(for: message.id) == nil)
+                ? { forwarding = ForwardPayload(messages: [message]) } : nil,
+            onCopy: nil,
+            onEdit: nil,
+            onDelete: isMine ? {
+                Task { await store.deleteMessage(messageId: message.id, channelId: channelId) }
+            } : nil,
+            onSelect: (!store.isQueued(message.id) && store.pending(for: message.id) == nil) ? {
+                selecting = true
+                selected = [message.id]
+            } : nil
         )
     }
 
@@ -726,6 +877,104 @@ struct ChatDetailView: View {
         .accessibilityLabel("Tuỳ chọn hội thoại")
     }
 
+    // MARK: - Chọn nhiều tin
+
+    private func toggleSelect(_ id: UUID) {
+        if selected.contains(id) {
+            selected.remove(id)
+            // Bỏ chọn cái cuối = thoát chế độ chọn. Ở lại một màn "đang chọn" mà không chọn
+            // gì là bắt người ta tìm nút Xong cho một chế độ họ đã rời khỏi trong đầu.
+            if selected.isEmpty { selecting = false }
+        } else {
+            guard selected.count < Self.selectionLimit else {
+                store.errorMessage = String(localized: "Chọn tối đa \(Self.selectionLimit) tin một lượt.")
+                return
+            }
+            selected.insert(id)
+        }
+    }
+
+    /// Các tin đang chọn, theo đúng thứ tự thời gian trên màn — chuyển tiếp phải giữ mạch.
+    private var selectedMessages: [MessageRow] {
+        messages.filter { selected.contains($0.id) }
+    }
+
+    private func endSelecting() {
+        selecting = false
+        selected = []
+    }
+
+    private var selectionHeader: some View {
+        HStack {
+            Text("Đã chọn \(selected.count)")
+                .font(NodieTypography.chatName)
+                .foregroundStyle(NodieColors.ink)
+            Spacer()
+            Button("Xong") { endSelecting() }
+                .font(NodieTypography.body.weight(.semibold))
+                .foregroundStyle(NodieColors.accent)
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, NodieSpacing.screenTop)
+        .padding(.bottom, NodieSpacing.md)
+        .background(NodieColors.bg)
+        .overlay(alignment: .bottom) { Divider().background(NodieColors.rule) }
+    }
+
+    /// Thanh hành động thay ô nhập khi đang chọn. Nút nào không áp được cho TOÀN BỘ cụm chọn
+    /// thì ẩn hẳn — hiện rồi báo lỗi ở nửa số tin là dắt người dùng đi một vòng vô ích.
+    private var selectionActionBar: some View {
+        let allMine = !selectedMessages.isEmpty
+            && selectedMessages.allSatisfy { $0.userId == store.currentUserId }
+        let allText = !selectedMessages.isEmpty && selectedMessages.allSatisfy { $0.media == nil }
+
+        return HStack(spacing: NodieSpacing.xl) {
+            Button {
+                forwarding = ForwardPayload(messages: selectedMessages)
+                endSelecting()
+            } label: {
+                selectionAction("arrowshape.turn.up.right", "Chuyển tiếp")
+            }
+
+            if allText {
+                Button {
+                    UIPasteboard.general.string = selectedMessages
+                        .compactMap { $0.body }.joined(separator: "\n")
+                    endSelecting()
+                } label: {
+                    selectionAction("doc.on.doc", "Sao chép")
+                }
+            }
+
+            if allMine {
+                Button {
+                    let ids = Array(selected)
+                    endSelecting()
+                    Task { await store.deleteMessages(ids: ids, channelId: channelId) }
+                } label: {
+                    selectionAction("trash", "Xoá", destructive: true)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(selected.isEmpty)
+        .frame(maxWidth: .infinity)
+        .padding(.top, NodieSpacing.md)
+        .padding(.bottom, NodieSpacing.lg)
+        .background(NodieColors.bg)
+        .overlay(alignment: .top) { Divider().background(NodieColors.rule) }
+    }
+
+    private func selectionAction(_ icon: String, _ label: LocalizedStringKey,
+                                 destructive: Bool = false) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon).font(.system(size: 18))
+            Text(label).font(NodieTypography.tag)
+        }
+        .foregroundStyle(destructive ? NodieColors.rec : NodieColors.inkSoft)
+        .frame(minWidth: 60, minHeight: 44)
+    }
+
     @ViewBuilder
     private var inputBar: some View {
         VStack(spacing: 0) {
@@ -890,12 +1139,16 @@ struct ChatDetailView: View {
     /// Gửi cả lượt. Chú thích gắn vào tin CUỐI — xem lý do ở `ChatCaptionSheet`.
     /// Băng "Đang trả lời" gỡ MỘT lần sau cả lượt, không phải mỗi tin một lần.
     private func sendPrepared(_ batch: [PreparedAttachment], caption: String) {
+        // Một mục thì KHÔNG phải album — bong bóng ảnh đơn đẹp hơn và giữ nguyên trích dẫn.
+        let albumId: UUID? = batch.count >= 2 ? UUID() : nil
         var queuedAny = false
         for (index, item) in batch.enumerated() {
             let text = index == batch.count - 1 ? caption : ""
             switch item {
-            case .photo(let encoded): queuedAny = sendPhoto(encoded, caption: text) || queuedAny
-            case .video(let prepared): queuedAny = sendVideo(prepared, caption: text) || queuedAny
+            case .photo(let encoded):
+                queuedAny = sendPhoto(encoded, caption: text, albumId: albumId) || queuedAny
+            case .video(let prepared):
+                queuedAny = sendVideo(prepared, caption: text, albumId: albumId) || queuedAny
             }
         }
         if queuedAny { state.replyingTo[channelId] = nil }
@@ -927,14 +1180,15 @@ struct ChatDetailView: View {
     /// Trả `true` nếu bong bóng lạc quan đã lên màn — caller gộp lại để quyết định có gỡ
     /// băng "Đang trả lời" hay không.
     @discardableResult
-    private func sendVideo(_ prepared: ChatVideoProcessor.Prepared, caption: String = "") -> Bool {
+    private func sendVideo(_ prepared: ChatVideoProcessor.Prepared, caption: String = "",
+                           albumId: UUID? = nil) -> Bool {
         store.sendMedia(
             channelId: channelId, data: prepared.videoData, kind: .video,
             ext: prepared.ext, contentType: prepared.contentType, preview: prepared.poster,
             duration: prepared.duration, width: prepared.width, height: prepared.height,
             size: prepared.videoData.count, caption: caption,
             parentId: state.replyingTo[channelId],
-            posterData: prepared.posterData, posterExt: "jpg"
+            posterData: prepared.posterData, posterExt: "jpg", albumId: albumId
         )
     }
 
@@ -942,12 +1196,13 @@ struct ChatDetailView: View {
     /// sau CẢ lượt — bong bóng đã mang sẵn `parentId`, và upload hỏng thì "Gửi lại" lấy lại
     /// `parentId` từ pending, không cần băng còn trên màn.
     @discardableResult
-    private func sendPhoto(_ encoded: ChatImageProcessor.Encoded, caption: String = "") -> Bool {
+    private func sendPhoto(_ encoded: ChatImageProcessor.Encoded, caption: String = "",
+                           albumId: UUID? = nil) -> Bool {
         store.sendMedia(
             channelId: channelId, data: encoded.data, kind: .photo,
             ext: "jpg", contentType: "image/jpeg", preview: encoded.image,
             width: encoded.width, height: encoded.height, size: encoded.data.count,
-            caption: caption, parentId: state.replyingTo[channelId]
+            caption: caption, parentId: state.replyingTo[channelId], albumId: albumId
         )
     }
 
@@ -1128,6 +1383,76 @@ struct LiveWaveform: View {
 }
 
 /// Nháy nền một tin sau khi nhảy tới nó từ tìm kiếm (phase 18) — accent mờ dần rồi tắt.
+/// Bọc danh sách tin đang chuyển tiếp — `.sheet(item:)` đòi Identifiable, mà `[MessageRow]`
+/// thì không. Danh tính sinh mới mỗi lượt: mở lại sheet với cùng bộ tin vẫn phải là một lượt
+/// mới, không phải "vẫn cái cũ" để SwiftUI bỏ qua.
+struct ForwardPayload: Identifiable {
+    let id = UUID()
+    let messages: [MessageRow]
+}
+
+/// Nội dung menu thao tác trên một tin. Dùng ở HAI chỗ: menu giữ-bong-bóng và menu giữ một
+/// ô ảnh trong lưới album (phase 02) — gộp album mà không dùng chung menu là lấy mất
+/// reply/cảm xúc/chuyển tiếp/xoá của từng ảnh, tức đổi một cải tiến trình bày lấy một hồi quy.
+///
+/// Closure nil = ẩn hẳn mục đó. Không hiện-rồi-disable: nút xám mời người ta bấm để nhận
+/// một câu từ chối.
+struct MessageActionsMenu: View {
+    let isTextMessage: Bool
+    let myReactions: Set<ReactionKind>
+    let onReact: (ReactionKind) -> Void
+    let onReply: () -> Void
+    let onForward: (() -> Void)?
+    let onCopy: (() -> Void)?
+    let onEdit: (() -> Void)?
+    let onDelete: (() -> Void)?
+    /// Vào chế độ chọn nhiều tin, với tin này được chọn sẵn. nil = không cho (tin chưa lên
+    /// server: chuyển tiếp/xoá hàng loạt một id server chưa biết là vô nghĩa).
+    var onSelect: (() -> Void)? = nil
+
+    var body: some View {
+        ForEach(ReactionKind.allCases) { kind in
+            Button {
+                onReact(kind)
+            } label: {
+                Label(kind.label, systemImage: myReactions.contains(kind) ? "checkmark" : "plus")
+            }
+        }
+        Divider()
+        Button { onReply() } label: {
+            Label("Trả lời", systemImage: "arrowshape.turn.up.left")
+        }
+        if let onForward {
+            Button { onForward() } label: {
+                Label("Chuyển tiếp", systemImage: "arrowshape.turn.up.right")
+            }
+        }
+        if isTextMessage, let onCopy {
+            Button { onCopy() } label: {
+                Label("Sao chép", systemImage: "doc.on.doc")
+            }
+        }
+        if let onSelect {
+            Button { onSelect() } label: {
+                Label("Chọn", systemImage: "checkmark.circle")
+            }
+        }
+        if onEdit != nil || onDelete != nil {
+            Divider()
+            if let onEdit {
+                Button(action: onEdit) {
+                    Label("Sửa", systemImage: "pencil")
+                }
+            }
+            if let onDelete {
+                Button(role: .destructive, action: onDelete) {
+                    Label("Xoá", systemImage: "trash")
+                }
+            }
+        }
+    }
+}
+
 /// Chạm hai lần để thả ☀ — đường tắt của IG/Messenger/Zalo cho phản ứng hay dùng nhất.
 ///
 /// CHỈ gắn cho bong bóng CHỮ. Bong bóng ảnh/video/tệp chạm một lần là mở ra xem; thêm bộ
@@ -1245,6 +1570,14 @@ struct MessageBubbleView: View {
     let isMine: Bool
     /// Trần bề rộng bong bóng chữ — 78% khung, tính ở ChatDetailView (xem `bubbleMaxWidth`).
     let maxBubbleWidth: CGFloat
+    /// Trạng thái tin của MÌNH (nil = tin người khác, hoặc chưa rời máy — xem `deliveryState`).
+    let delivery: MessageDeliveryState?
+    /// Chế độ chọn nhiều tin (phase 03): nil = không ở chế độ chọn; true/false = tin này đang
+    /// được chọn hay không.
+    var selection: Bool? = nil
+    var onToggleSelect: () -> Void = {}
+    /// Vào chế độ chọn với tin này chọn sẵn. nil = tin chưa lên server, không cho chọn.
+    var onSelect: (() -> Void)? = nil
     let senderLabel: String?
     /// Tin đang được trả lời — nil nếu tin này không trả lời ai (hoặc tin gốc đã trôi).
     let replyTarget: MessageRow?
@@ -1291,6 +1624,25 @@ struct MessageBubbleView: View {
     private static let linkDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
 
     var body: some View {
+        // Đang chọn: một chế độ, một bộ cử chỉ. Vuốt-trả-lời / chạm-đôi-☀ / menu đều tắt —
+        // để nguyên thì mỗi cú chạm có hai nghĩa và người dùng không đoán được cái nào.
+        if let selection {
+            HStack(spacing: NodieSpacing.sm) {
+                Image(systemName: selection ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 20))
+                    .foregroundStyle(selection ? NodieColors.accent : NodieColors.inkFaint)
+                content.allowsHitTesting(false)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { onToggleSelect() }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(selection ? [.isButton, .isSelected] : .isButton)
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         VStack(alignment: isMine ? .trailing : .leading, spacing: 3) {
             if let senderLabel {
                 Text(senderLabel)
@@ -1324,6 +1676,15 @@ struct MessageBubbleView: View {
                 Text(message.timeLabel)
                     .font(NodieTypography.timestampXs)
                     .foregroundStyle(NodieColors.inkFaint)
+                if let delivery {
+                    // ✓ đã tới server · ✓✓ có người đọc. Dấu chứ không chữ: nó lặp dưới MỌI
+                    // tin của mình, mà "Đã gửi/Đã xem" bằng chữ ở mỗi dòng là một cột chữ
+                    // chạy dọc màn, đọc mệt hơn chính nội dung.
+                    Image(systemName: delivery == .seen ? "checkmark.circle.fill" : "checkmark")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(delivery == .seen ? NodieColors.accent : NodieColors.inkFaint)
+                        .accessibilityLabel(delivery == .seen ? Text("Đã xem") : Text("Đã gửi"))
+                }
             }
             .padding(.horizontal, NodieSpacing.xs)
         }
@@ -1354,47 +1715,22 @@ struct MessageBubbleView: View {
         }
     }
 
-    /// Menu giữ-bong-bóng. Cảm xúc lên trước — đó là thứ được dùng nhiều nhất.
-    /// "Sao chép" chỉ cho tin CHỮ: gắn cho tin ảnh/thoại thì chỉ copy được caption rỗng,
-    /// vô nghĩa. "Sửa"/"Xoá" chỉ hiện khi `onEdit`/`onDelete` non-nil (tin của mình).
+    /// Menu giữ-bong-bóng. Nội dung nằm ở `MessageActionsMenu` — ô ảnh trong lưới album
+    /// (phase 02) dùng CHUNG menu này, nếu không thì gộp album là lấy mất reply/cảm xúc/
+    /// chuyển tiếp/xoá của từng ảnh.
     @ViewBuilder
     private var bubbleMenu: some View {
-        ForEach(ReactionKind.allCases) { kind in
-            Button {
-                onReact(kind)
-            } label: {
-                Label(kind.label, systemImage: myReactions.contains(kind) ? "checkmark" : "plus")
-            }
-        }
-        Divider()
-        Button { onReply() } label: {
-            Label("Trả lời", systemImage: "arrowshape.turn.up.left")
-        }
-        if let onForward {
-            Button { onForward() } label: {
-                Label("Chuyển tiếp", systemImage: "arrowshape.turn.up.right")
-            }
-        }
-        if message.media == nil {
-            Button {
-                UIPasteboard.general.string = message.body
-            } label: {
-                Label("Sao chép", systemImage: "doc.on.doc")
-            }
-        }
-        if onEdit != nil || onDelete != nil {
-            Divider()
-            if let onEdit {
-                Button(action: onEdit) {
-                    Label("Sửa", systemImage: "pencil")
-                }
-            }
-            if let onDelete {
-                Button(role: .destructive, action: onDelete) {
-                    Label("Xoá", systemImage: "trash")
-                }
-            }
-        }
+        MessageActionsMenu(
+            isTextMessage: message.media == nil,
+            myReactions: myReactions,
+            onReact: onReact,
+            onReply: onReply,
+            onForward: onForward,
+            onCopy: message.media == nil ? { UIPasteboard.general.string = message.body } : nil,
+            onEdit: onEdit,
+            onDelete: onDelete,
+            onSelect: onSelect
+        )
     }
 
     /// Vuốt ngang bong bóng để trả lời — WhatsApp/Zalo/Messenger đều là cử chỉ này.

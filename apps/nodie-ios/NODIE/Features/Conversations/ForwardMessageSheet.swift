@@ -1,13 +1,15 @@
 import SwiftUI
 
-/// Chọn kênh đích để chuyển tiếp một tin — mở từ menu bong bóng.
+/// Chọn kênh đích để chuyển tiếp — mở từ menu bong bóng (một tin) hoặc từ chế độ chọn
+/// nhiều tin (phase 03).
 ///
 /// Danh sách = kênh mình ĐĂNG ĐƯỢC (`canPost` — lọc luôn kênh phát một chiều với người
 /// thường), trừ kênh đang đứng. Chọn một là gửi và đóng — forward nhiều kênh một lượt là
 /// pattern spam, IG/Messenger cũng bắt chọn từng nơi có chủ đích.
 struct ForwardMessageSheet: View {
     let store: ConversationStore
-    let message: MessageRow
+    /// Một hoặc nhiều tin, theo thứ tự thời gian — gửi tuần tự để bên nhận đọc đúng mạch.
+    let messages: [MessageRow]
 
     @Environment(\.dismiss) private var dismiss
     /// Kênh đang gửi tới — khoá cả danh sách trong lúc chờ, tránh double-tap ra hai tin.
@@ -18,7 +20,7 @@ struct ForwardMessageSheet: View {
     @State private var errorText: String?
 
     private var targets: [ChannelRow] {
-        store.channels.filter { $0.canPost && $0.id != message.channelId }
+        store.channels.filter { $0.canPost && $0.id != messages.first?.channelId }
     }
 
     var body: some View {
@@ -35,7 +37,14 @@ struct ForwardMessageSheet: View {
                             guard sendingTo == nil else { return }
                             sendingTo = channel.id
                             Task {
-                                if await store.forward(message, to: channel.id) {
+                                // Tuần tự, KHÔNG song song: thứ tự tin là một phần nội dung,
+                                // và media forward phải copy tệp trên Storage — bắn 20 lượt
+                                // cùng lúc là tự dựng cơn bão request.
+                                var ok = true
+                                for message in messages where ok {
+                                    ok = await store.forward(message, to: channel.id)
+                                }
+                                if ok {
                                     dismiss()
                                 } else {
                                     // Lấy lời lỗi về sheet rồi XOÁ ở store — không xoá thì
@@ -67,7 +76,9 @@ struct ForwardMessageSheet: View {
                 }
             }
             .background(NodieColors.bg)
-            .navigationTitle(Text("Chuyển tiếp tới"))
+            .navigationTitle(messages.count > 1
+                             ? Text("Chuyển tiếp \(messages.count) tin")
+                             : Text("Chuyển tiếp tới"))
             .navigationBarTitleDisplayMode(.inline)
             .alert("Lỗi", isPresented: Binding(
                 get: { errorText != nil },

@@ -110,6 +110,18 @@ struct ChannelRow: Codable, Identifiable, Hashable {
     ]
 }
 
+/// Trạng thái một tin của MÌNH trên đường tới người nhận.
+///
+/// Chỉ hai bậc, không có "đã nhận tới máy": muốn biết tin đã nằm trên máy người kia hay
+/// chưa thì phải có ack từ client của họ — một bảng và một đường ghi nữa, chỉ để thêm một
+/// nấc mà người dùng hiếm khi phân biệt được với "đã gửi".
+enum MessageDeliveryState {
+    /// Server đã nhận, chưa ai đọc.
+    case sent
+    /// Ít nhất một người khác trong kênh đã đọc tới mốc này.
+    case seen
+}
+
 /// Không có chip "1-1": DM đã nằm sẵn trong "Tất cả", và lọc riêng ra thì được một danh sách
 /// gần như không đổi — chip tốn chỗ hơn phần nó lọc được.
 ///
@@ -159,6 +171,14 @@ struct MessageMedia: Codable, Hashable {
     /// thumbnail như ảnh: sinh một frame lúc gửi, upload riêng, để bong bóng hiện được ngay
     /// mà không phải tải cả tệp video về. Tin cũ nil.
     let posterPath: String?
+    /// Cùng một LƯỢT gửi nhiều ảnh/video thì mang chung id này — view gộp chúng thành một
+    /// bong bóng lưới thay vì sáu bong bóng rời (phase 02).
+    ///
+    /// Ở `metadata` (jsonb) chứ không thành cột: mỗi ảnh vẫn là một hàng `messages` độc lập,
+    /// giữ nguyên xoá/reply/reaction/forward và hàng đợi offline theo TỪNG ảnh. Gộp chỉ là
+    /// chuyện trình bày, không phải chuyện lưu trữ — nên không đáng một migration.
+    /// Tin cũ nil → hiện y như trước.
+    let albumId: UUID?
 
     /// Tin cũ chỉ có `kind`/`path`/`duration`; mọi field thêm sau đều optional để chúng vẫn
     /// đọc được. Khởi tạo có giá trị mặc định để chỗ gọi chỉ khai thứ nó thật sự có.
@@ -171,7 +191,8 @@ struct MessageMedia: Codable, Hashable {
         size: Int? = nil,
         name: String? = nil,
         waveform: [Float]? = nil,
-        posterPath: String? = nil
+        posterPath: String? = nil,
+        albumId: UUID? = nil
     ) {
         self.kind = kind
         self.path = path
@@ -182,6 +203,7 @@ struct MessageMedia: Codable, Hashable {
         self.name = name
         self.waveform = waveform
         self.posterPath = posterPath
+        self.albumId = albumId
     }
 
     enum Kind: String, Codable, Hashable {
@@ -213,7 +235,7 @@ struct MessageMedia: Codable, Hashable {
     func replacingPath(_ path: String, posterPath: String? = nil) -> MessageMedia {
         MessageMedia(kind: kind, path: path, duration: duration, width: width, height: height,
                      size: size, name: name, waveform: waveform,
-                     posterPath: posterPath ?? self.posterPath)
+                     posterPath: posterPath ?? self.posterPath, albumId: albumId)
     }
 }
 
@@ -306,12 +328,17 @@ struct MessageRow: Codable, Identifiable, Hashable {
     var authorName: String { author?.name ?? String(localized: "Ẩn danh") }
 
     /// Giờ hiển thị trên bong bóng — "14:32". Ngày nằm ở dải phân cách, không lặp vào từng tin.
-    var timeLabel: String {
+    /// Formatter dùng chung: DateFormatter là một trong những thứ đắt nhất của Foundation,
+    /// mà đây chạy cho MỖI bong bóng đang cuộn qua màn — đẻ mới là trả bằng frame-time.
+    /// (Formatter của vạch chia ngày ngay phía trên đã static sẵn; chỗ này sót lại.)
+    private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "vi_VN")
         f.dateFormat = "HH:mm"
-        return f.string(from: createdAt)
-    }
+        return f
+    }()
+
+    var timeLabel: String { Self.timeFormatter.string(from: createdAt) }
 }
 
 /// Payload gửi tin. `id` sinh ở CLIENT chứ không để DB tự cấp: bản lạc quan hiện ngay trên màn

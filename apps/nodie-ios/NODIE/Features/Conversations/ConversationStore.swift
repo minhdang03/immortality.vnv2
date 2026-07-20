@@ -108,7 +108,7 @@ final class ConversationStore {
     var globalRealtimeTasks: [Task<Void, Never>] = []
     /// `last_read_at` của NGƯỜI KIA trong từng DM — nguồn của nhãn "Đã xem" (quy tắc scale #4:
     /// không bảng read-state per-message; đã xem = tin cũ hơn mốc đọc của họ).
-    var dmPeerLastRead: [UUID: Date] = [:]
+    var peerLastRead: [UUID: Date] = [:]
     /// Chat đang MỞ trên màn — tin đến kênh này không bump unread (markRead lo), tin đến kênh
     /// khác thì bump. ChatDetailView set khi vào màn, xoá khi rời.
     var visibleChannelId: UUID?
@@ -226,7 +226,7 @@ final class ConversationStore {
             // tiến chứ không lùi, đừng để dữ liệu cũ trên đường bay kéo nhãn tụt lại.
             for row in rows {
                 if let ts = row.lastReadAt {
-                    dmPeerLastRead[row.channelId] = max(dmPeerLastRead[row.channelId] ?? .distantPast, ts)
+                    peerLastRead[row.channelId] = max(peerLastRead[row.channelId] ?? .distantPast, ts)
                 }
             }
         } catch { /* giữ title cũ */ }
@@ -412,6 +412,7 @@ final class ConversationStore {
     func members(of channelId: UUID) async -> [ChannelMember] {
         struct Row: Decodable {
             let userId: UUID
+            let lastReadAt: Date?
             let member: Name?
             struct Name: Decodable {
                 let displayName: String?
@@ -420,13 +421,23 @@ final class ConversationStore {
             enum CodingKeys: String, CodingKey {
                 case member
                 case userId = "user_id"
+                case lastReadAt = "last_read_at"
             }
         }
         do {
             let rows: [Row] = try await client.from("channel_members")
-                .select("user_id,member:public_profiles!channel_members_user_id_fkey(display_name)")
+                .select("user_id,last_read_at,member:public_profiles!channel_members_user_id_fkey(display_name)")
                 .eq("channel_id", value: channelId)
                 .execute().value
+            // Tiện chuyến: mốc đọc XA NHẤT của người khác — nguồn của dấu ✓✓ trong nhóm.
+            // DM đã có sẵn từ resolveDMTitles; đây là đường cho nhóm/kênh, nơi "đã xem"
+            // nghĩa là ÍT NHẤT MỘT người khác đã đọc (không đếm đầu người — metric trên
+            // NGƯỜI là thứ CLAUDE.md cấm).
+            for row in rows where row.userId != uid {
+                if let ts = row.lastReadAt {
+                    peerLastRead[channelId] = max(peerLastRead[channelId] ?? .distantPast, ts)
+                }
+            }
             return rows.map {
                 ChannelMember(id: $0.userId,
                               displayName: $0.member?.displayName ?? String(localized: "Ẩn danh"))
@@ -436,6 +447,22 @@ final class ConversationStore {
             return []
         }
     }
+    /// Trạng thái một tin CỦA MÌNH, cho dấu ✓/✓✓ dưới bong bóng.
+    ///
+    /// `nil` = không vẽ gì: tin của người khác, hoặc tin chưa rời máy (đang chờ mạng / đang
+    /// tải lên) — hai trạng thái đó đã có nhãn riêng ("Đang chờ mạng…", lớp phủ upload),
+    /// thêm dấu tick nữa là nói cùng một chuyện hai lần.
+    ///
+    /// "Đã xem" đọc từ `peerLastRead` — mốc đọc xa nhất của người khác trong kênh. Không có
+    /// bảng read-state per-message (quy tắc scale #4): với 1000 người dùng, một hàng cho
+    /// mỗi cặp (tin × người đọc) là bảng lớn nhất hệ thống, chỉ để vẽ một dấu tick.
+    func deliveryState(for message: MessageRow) -> MessageDeliveryState? {
+        guard message.userId == uid,
+              !isQueued(message.id), pending(for: message.id) == nil else { return nil }
+        if let read = peerLastRead[message.channelId], read >= message.createdAt { return .seen }
+        return .sent
+    }
+
     func unread(for channelId: UUID) -> Int { unreadByChannel[channelId] ?? 0 }
 
     /// Tổng chưa đọc cho badge tab Chat. Kênh đã tắt thông báo KHÔNG tính — user đã nói
@@ -597,7 +624,8 @@ final class ConversationStore {
         caption: String = "",
         parentId: UUID? = nil,
         posterData: Data? = nil,
-        posterExt: String? = nil
+        posterExt: String? = nil,
+        albumId: UUID? = nil
     ) -> Bool {
         guard let uid else { errorMessage = String(localized: "Cần đăng nhập."); return false }
 
@@ -612,7 +640,8 @@ final class ConversationStore {
         // `path` rỗng: chưa upload nên chưa có. View biết tin này còn ở trong `pendingMedia`
         // thì vẽ từ `Data` local, không đụng tới path.
         let draft = MessageMedia(kind: kind, path: "", duration: duration, width: width,
-                                 height: height, size: size, name: name, waveform: waveform)
+                                 height: height, size: size, name: name, waveform: waveform,
+                                 albumId: albumId)
         let optimistic = MessageRow(id: id, channelId: channelId, userId: uid,
                                     parentId: parentId, body: caption, createdAt: Date(),
                                     editedAt: nil, author: nil,
@@ -934,6 +963,48 @@ final class ConversationStore {
                 .eq("channel_id", value: channelId).eq("user_id", value: uid)
                 .execute()
         } catch { /* badge cục bộ đã về 0; lần mở sau server sẽ đúng */ }
+    }
+
+    /// Xoá mềm NHIỀU tin một lượt (chế độ chọn nhiều — phase 03).
+    ///
+    /// MỘT lệnh `in(id, …)` chứ không lặp `deleteMessage`: 20 lần round-trip tuần tự là vài
+    /// giây nhìn màn hình rụng dần từng tin một, và hỏng giữa chừng để lại trạng thái nửa vời
+    /// khó giải thích. Một lệnh thì hoặc xoá hết hoặc không xoá gì.
+    ///
+    /// Chỉ tin CỦA MÌNH. Caller đã lọc (nút Xoá ẩn khi cụm chọn có tin người khác); RLS
+    /// `messages_update_own` là lớp chắn thứ hai, nhưng nó LỌC IM LẶNG chứ không báo lỗi —
+    /// tin của người khác lọt vào danh sách sẽ biến mất trên máy mình rồi hiện lại sau khi
+    /// nạp lại. Đừng dựa vào RLS để phát hiện nhầm lẫn ở tầng trên.
+    func deleteMessages(ids: [UUID], channelId: UUID) async {
+        guard !ids.isEmpty else { return }
+
+        // Tin CHƯA TỪNG lên server (còn trong hàng đợi offline / đang upload) là chuyện
+        // LOCAL — gỡ khỏi queue, không gọi server. Cùng bất biến với `deleteMessage`: thiếu
+        // nhánh này thì xoá xong mạng về, flush/upload vẫn gửi một tin người dùng tưởng đã
+        // xoá. `update … in(id,…)` khớp 0 hàng nên KHÔNG báo lỗi — hỏng hoàn toàn im lặng.
+        for id in ids where isQueued(id) {
+            queuedTexts.removeAll { $0.payload.id == id }
+        }
+        for id in ids where pendingMedia[id] != nil {
+            pendingMedia[id] = nil
+        }
+        let serverIds = ids.filter { !isQueued($0) && pendingMedia[$0] == nil }
+
+        let backup = messagesByChannel[channelId]
+        messagesByChannel[channelId]?.removeAll { ids.contains($0.id) }
+        guard !serverIds.isEmpty else { return }
+        do {
+            try await client.from("messages")
+                .update(SoftDelete(deletedAt: Date()))
+                .in("id", values: serverIds)
+                .execute()
+            for id in serverIds {
+                Task { await ChatDiskCache.shared.deleteMessage(id: id) }
+            }
+        } catch {
+            messagesByChannel[channelId] = backup
+            errorMessage = ErrorText.localized(error)
+        }
     }
 
     /// Đánh dấu CHƯA đọc — chiều ngược của `markRead`, để dành đọc lại sau.

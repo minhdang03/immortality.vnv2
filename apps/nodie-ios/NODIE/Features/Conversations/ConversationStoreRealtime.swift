@@ -242,8 +242,11 @@ extension ConversationStore {
         }
     }
 
-    /// Người kia vừa đọc tới đâu đó — nguồn live của nhãn "Đã xem" trong DM.
-    /// Chỉ quan tâm DM: nhóm/kênh không có nhãn này (v1), và event của CHÍNH MÌNH bỏ qua.
+    /// Người khác vừa đọc tới đâu đó — nguồn live của dấu ✓✓.
+    ///
+    /// MỌI loại kênh, không riêng DM: trong nhóm "đã xem" nghĩa là ít nhất một người khác đã
+    /// đọc, nên mốc cần giữ là mốc XA NHẤT. Event của CHÍNH MÌNH bỏ qua — tin của mình không
+    /// tự thành đã-xem chỉ vì mình vừa mở kênh.
     @MainActor
     private func handleMemberUpdate(_ record: [String: AnyJSON]) async {
         guard let rawChannel = record["channel_id"]?.stringValue,
@@ -251,10 +254,11 @@ extension ConversationStore {
               let rawUser = record["user_id"]?.stringValue,
               let userId = UUID(uuidString: rawUser),
               userId != currentUserId,
-              channel(id: channelId)?.kind == "dm",
               let ts = record["last_read_at"]?.stringValue.flatMap(Self.parseTimestamp)
         else { return }
-        dmPeerLastRead[channelId] = ts
+        // `max`: hai người đọc gần nhau thì event không đảm bảo về đúng thứ tự — gán thẳng
+        // là mốc tụt lại và dấu ✓✓ nhấp nháy về ✓.
+        peerLastRead[channelId] = max(peerLastRead[channelId] ?? .distantPast, ts)
     }
 
     /// Timestamp trong payload Realtime là chuỗi ISO8601, CÓ THỂ kèm phần lẻ giây tuỳ giá trị
