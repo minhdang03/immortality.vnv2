@@ -106,7 +106,7 @@ struct QuestionListView: View {
                 Button { showCompose = true } label: {
                     Text("＋ Chiếu câu hỏi")
                         .font(NodieTypography.cta)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(NodieColors.onAccent)
                         .padding(.horizontal, NodieSpacing.lg)
                         .padding(.vertical, NodieSpacing.sm)
                         .background(Capsule().fill(NodieColors.accent))

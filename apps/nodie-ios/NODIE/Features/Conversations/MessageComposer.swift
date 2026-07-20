@@ -160,7 +160,7 @@ struct MessageComposer: View {
                 Button { send() } label: {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(NodieColors.onAccent)
                         .frame(width: 44, height: 44)
                         .background(Circle().fill(NodieColors.accent))
                         .expandedHitArea(visual: 44)

@@ -104,7 +104,7 @@ struct LoginView: View {
             if let error = auth.errorMessage {
                 Text(error)
                     .font(NodieTypography.meta)
-                    .foregroundStyle(Color(hex: 0xB3261E))
+                    .foregroundStyle(NodieColors.error)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, NodieSpacing.md)
                     .accessibilityIdentifier("authError")
@@ -118,11 +118,11 @@ struct LoginView: View {
             } label: {
                 ZStack {
                     if auth.isBusy {
-                        ProgressView().tint(.white)
+                        ProgressView().tint(NodieColors.onAccent)
                     } else {
                         (isSignUp ? Text("Đăng ký") : Text("Đăng nhập"))
                             .font(NodieTypography.ctaLg)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(NodieColors.onAccent)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -242,7 +242,7 @@ private struct EmailConfirmationView: View {
             Button(action: onBack) {
                 Text("Quay lại đăng nhập")
                     .font(NodieTypography.ctaLg)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(NodieColors.onAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Capsule().fill(NodieColors.accent))

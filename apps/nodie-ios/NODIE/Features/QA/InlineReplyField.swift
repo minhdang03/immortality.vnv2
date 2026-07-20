@@ -47,11 +47,11 @@ struct InlineReplyField: View {
 
             Button(action: onSend) {
                 Group {
-                    if isSending { ProgressView().tint(.white) }
+                    if isSending { ProgressView().tint(NodieColors.onAccent) }
                     else {
                         Image(systemName: "arrow.up")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(NodieColors.onAccent)
                     }
                 }
                 .frame(width: sendSize, height: sendSize)

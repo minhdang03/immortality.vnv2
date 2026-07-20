@@ -74,8 +74,8 @@ struct ProfileIdentityCard: View {
 
                     Button(action: onSave) {
                         ZStack {
-                            if isBusy { ProgressView().tint(.white) }
-                            else { Text("Lưu").font(NodieTypography.chip).foregroundStyle(.white) }
+                            if isBusy { ProgressView().tint(NodieColors.onAccent) }
+                            else { Text("Lưu").font(NodieTypography.chip).foregroundStyle(NodieColors.onAccent) }
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)

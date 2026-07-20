@@ -58,7 +58,7 @@ struct ProfileView: View {
                     if let error = auth.errorMessage {
                         Text(error)
                             .font(NodieTypography.meta)
-                            .foregroundStyle(Color(hex: 0xB3261E))
+                            .foregroundStyle(NodieColors.error)
                             .padding(.top, NodieSpacing.md)
                     }
 
@@ -133,7 +133,7 @@ struct ProfileView: View {
         } label: {
             Text("Đăng xuất")
                 .font(NodieTypography.chip)
-                .foregroundStyle(Color(hex: 0xB3261E))
+                .foregroundStyle(NodieColors.error)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Capsule().stroke(NodieColors.chipBorder, lineWidth: 1))
@@ -150,7 +150,7 @@ struct ProfileView: View {
         } label: {
             Text("Xoá tài khoản")
                 .font(NodieTypography.meta)
-                .foregroundStyle(Color(hex: 0xB3261E).opacity(0.8))
+                .foregroundStyle(NodieColors.error.opacity(0.8))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
         }

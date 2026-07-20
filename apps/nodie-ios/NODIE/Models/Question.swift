@@ -35,13 +35,6 @@ struct Answer: Identifiable, Hashable {
     let replies: [AnswerReply]
 }
 
-/// Avatar của người đang dùng app — gradient vàng, dùng cho câu trả lời/reply vừa gửi
-/// và cho ô nhập inline. Prototype: linear-gradient(135deg,#ffe6a8,#b8862b).
-enum MyAvatar {
-    static let from = Color(hex: 0xFFE6A8)
-    static let to = Color(hex: 0xB8862B)
-}
-
 struct Question: Identifiable, Hashable {
     let id: String
     let tag: String

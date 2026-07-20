@@ -53,7 +53,7 @@ struct ForgotPasswordSheet: View {
             if let error = auth.errorMessage {
                 Text(error)
                     .font(NodieTypography.meta)
-                    .foregroundStyle(Color(hex: 0xB3261E))
+                    .foregroundStyle(NodieColors.error)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, NodieSpacing.md)
                     .accessibilityIdentifier("authError")
@@ -64,11 +64,11 @@ struct ForgotPasswordSheet: View {
             } label: {
                 ZStack {
                     if auth.isBusy {
-                        ProgressView().tint(.white)
+                        ProgressView().tint(NodieColors.onAccent)
                     } else {
                         Text("Gửi link đặt lại")
                             .font(NodieTypography.ctaLg)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(NodieColors.onAccent)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -117,7 +117,7 @@ struct ForgotPasswordSheet: View {
             if let error = auth.errorMessage {
                 Text(error)
                     .font(NodieTypography.meta)
-                    .foregroundStyle(Color(hex: 0xB3261E))
+                    .foregroundStyle(NodieColors.error)
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.center)
                     .padding(.top, NodieSpacing.md)
@@ -127,7 +127,7 @@ struct ForgotPasswordSheet: View {
             Button { dismiss() } label: {
                 Text("Xong")
                     .font(NodieTypography.ctaLg)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(NodieColors.onAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Capsule().fill(NodieColors.accent))
@@ -182,7 +182,7 @@ struct NewPasswordSheet: View {
                 if let error = auth.errorMessage {
                     Text(error)
                         .font(NodieTypography.meta)
-                        .foregroundStyle(Color(hex: 0xB3261E))
+                        .foregroundStyle(NodieColors.error)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, NodieSpacing.md)
                         .accessibilityIdentifier("authError")
@@ -193,11 +193,11 @@ struct NewPasswordSheet: View {
                 } label: {
                     ZStack {
                         if auth.isBusy {
-                            ProgressView().tint(.white)
+                            ProgressView().tint(NodieColors.onAccent)
                         } else {
                             Text("Lưu mật khẩu")
                                 .font(NodieTypography.ctaLg)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(NodieColors.onAccent)
                         }
                     }
                     .frame(maxWidth: .infinity)

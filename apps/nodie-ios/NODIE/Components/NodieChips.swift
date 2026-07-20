@@ -137,7 +137,7 @@ struct UnreadBadge: View {
     var body: some View {
         Text(count > 99 ? "99+" : "\(count)")
             .font(NodieTypography.unread)
-            .foregroundStyle(.white)
+            .foregroundStyle(NodieColors.onAccent)
             .padding(.horizontal, 6)
             .frame(minWidth: 20, minHeight: 20)
             .background(Capsule().fill(NodieColors.accent))

@@ -15,6 +15,9 @@ if [[ "$#" -ne 1 || "$1" != "3" ]]; then
   exit 64
 fi
 
+# Token design sạch trước đã — grep 1 giây, khỏi tốn 3 vòng UITest rồi mới biết màu drift.
+scripts/check-design-tokens.sh
+
 RUNS=3
 ROOT="$(cd ../.. && pwd)"
 ENV_FILE="${NODIE_UITEST_ENV_FILE:-$ROOT/.env}"

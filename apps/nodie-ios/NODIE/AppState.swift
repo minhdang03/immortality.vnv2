@@ -303,7 +303,7 @@ final class AppState {
             replyTo = nil
             extraReplies[target.answerId, default: []].append(
                 AnswerReply(id: "ur-\(UUID().uuidString)", parent: target.parent, who: Self.myName,
-                            avatarFrom: MyAvatar.from, avatarTo: MyAvatar.to,
+                            avatarFrom: NodieColors.avatarSelfFrom, avatarTo: NodieColors.avatarSelfTo,
                             time: "vừa xong", text: text, litBase: 0)
             )
             return
@@ -311,7 +311,7 @@ final class AppState {
 
         extraAnswers[questionId, default: []].append(
             Answer(id: "ua-\(UUID().uuidString)", who: Self.myName, role: "", time: "vừa xong",
-                   isBest: false, votes: 0, avatarFrom: MyAvatar.from, avatarTo: MyAvatar.to,
+                   isBest: false, votes: 0, avatarFrom: NodieColors.avatarSelfFrom, avatarTo: NodieColors.avatarSelfTo,
                    text: text, litBase: 0, replies: [])
         )
     }

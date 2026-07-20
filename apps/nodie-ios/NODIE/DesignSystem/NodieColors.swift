@@ -44,6 +44,24 @@ enum NodieColors {
     static let rec = Color(hex: 0xC0392B)
     static let recBorder = Color(hex: 0xE5C9C4)
 
+    /// Đỏ lỗi — dòng thông báo lỗi dưới ô nhập (đăng nhập, quên mật khẩu, sửa hồ sơ).
+    /// Ngoài bảng be/mực có chủ đích, cùng lẽ với `rec`: lỗi phải bật khỏi nền kem.
+    /// Đo 6.87:1 trên nền kem 0xFAF7F0 — đạt AA text nhỏ.
+    static let error = Color(hex: 0xB3261E)
+
+    /// Chữ/glyph/spinner đặt TRÊN nền accent đậm (nút gửi, CTA, badge đếm chưa đọc).
+    /// Token riêng thay vì `.white` trần: đổi accent hay thêm nền tối sau này chỉ sửa một
+    /// chỗ. `.white` trần chỉ còn hợp lệ trên media/scrim (ảnh, video, lớp phủ đen).
+    static let onAccent = Color.white
+
+    // Gradient avatar (prototype: linear-gradient 135deg)
+    /// Avatar của chính người dùng — vàng. Dùng cho câu trả lời/reply vừa gửi + ô nhập inline.
+    static let avatarSelfFrom = Color(hex: 0xFFE6A8)
+    static let avatarSelfTo = gold
+    /// Avatar tím — cặp mặc định cho nội dung "hút về" (Feed prototype).
+    static let avatarPurpleFrom = Color(hex: 0xC9B8F5)
+    static let avatarPurpleTo = purple
+
     // Viền
     static let rule = Color(hex: 0xE8DFC9)        // kẻ chia mục
     static let ruleLight = Color(hex: 0xF0E8D6)   // kẻ chia dòng hội thoại

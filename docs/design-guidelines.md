@@ -1,331 +1,132 @@
-# Battudao Mobile — Design Guidelines
+# NODIE (Bất Tử Đạo) — Design Guidelines
 
-**Product:** Battudao (Bất Tử Đạo) — Discord-style chat for a Vietnamese spiritual / cultivation community.
-**Platforms:** iOS + Android (Expo / React Native, mobile-first portrait).
-**Mode:** Dark only.
-**Locale:** Vietnamese-first (`vi`).
+**Sản phẩm:** NODIE — cộng đồng hỏi đáp + chat tâm linh Việt (`apps/nodie-ios`, SwiftUI native, iOS 17+).
+**Ngôn ngữ hình ảnh:** "editorial sacred" — nền kem giấy, mực nâu, accent xanh rừng. Light mode (chưa có dark).
+**Locale:** tiếng Việt trước (`vi`), xcstrings 9 ngôn ngữ.
 
----
-
-## 1. Brand Rationale
-
-The visual language sits between an ancient lacquer (sơn mài) panel and a quiet meditation app. We use a deep midnight base with a violet undertone to evoke the night sky over a temple, then layer two ceremonial pigments: **mystical purple** (`#8b4dff`) for primary action and identity, **gold** (`#c9a86c`) for the user's own voice and sacred markers. Cormorant Garamond carries headings — its high contrast strokes feel literary, scriptural, slow. Inter handles UI density without breaking the calm. Everything else (motion, spacing, iconography) is restrained: no neon, no spring bounce, no mascot. The app should feel like reading at low light in a temple library.
+> ⚠️ **Bản này thay hẳn bản cũ** (dark tím/vàng Cormorant+Inter cho app Expo/RN) — app đó đã gỡ
+> 17/07/2026, mọi giá trị trong bản cũ KHÔNG còn hiệu lực. Cần xem lại thì tra lịch sử git.
 
 ---
 
-## 2. Color System
+## 1. Nguồn sự thật — thứ tự thắng thua
 
-### 2.1 Palette (locked tokens)
+1. **Code token** — `NODIE/DesignSystem/NodieColors.swift`, `NodieTypography.swift` (kèm `NodieSpacing`). Giá trị ở đây là giá trị đang ship, kể cả các chỗ **cố ý lệch prototype** (xem §7).
+2. **Claude Design prototype** — `apps/nodie-ios/design_handoff_nodie_v4/Aion Prototype v3.dc.html` + `README.md` (delta v4). Là nguồn chuẩn về *bố cục & hành vi*; là design reference dựng bằng HTML, **không phải code để copy**.
+3. File này — bản tóm tắt đọc-nhanh cho người/agent mới. Nếu lệch với (1) thì (1) đúng, và sửa file này.
 
-| Token | Hex | Usage |
+**Quy trình màn mới:** tính năng mới → dựng trong Claude Design trước, xuất handoff delta như v4.
+Chưa có prototype mà vẫn phải dựng (banner hệ thống, sheet lỗi…) → **chỉ dùng token sẵn có,
+cấm bịa hex mới trong view**. Thiếu màu thì thêm token vào `NodieColors` kèm chú thích vì sao.
+
+---
+
+## 2. Màu — trích từ `NodieColors.swift`
+
+### 2.1 Nền & mực
+
+| Token | Hex | Dùng cho |
 |---|---|---|
-| `bg.base` | `#0a0612` | App background, channel screen base |
-| `bg.surface` | `#14101e` | Cards, channel rows, message bubbles (other) |
-| `bg.surfaceHover` | `#1d1729` | Pressed / hovered surface, action sheet |
-| `accent.purple` | `#8b4dff` | Primary CTA, active state, send button, focus ring |
-| `accent.purpleSoft` | `rgba(139,77,255,0.16)` | Pressed-bg, badge, unread tint |
-| `accent.gold` | `#c9a86c` | Own message bubble tint, dividers, premium markers |
-| `accent.goldSoft` | `rgba(201,168,108,0.18)` | Own message bg fill |
-| `signal.red` | `#d4234e` | Notification dot, errors, destructive, "live" |
-| `text.primary` | `#f5f1e8` | Body text, headings on dark |
-| `text.secondary` | `#9a8fb8` | Subtitles, timestamps, last-message preview |
-| `text.tertiary` | `#5a5170` | Disabled, captions, placeholders |
-| `border.subtle` | `rgba(255,255,255,0.06)` | Hairline dividers, row separators |
-| `border.strong` | `rgba(255,255,255,0.12)` | Card outline, input outline focused |
-| `overlay.scrim` | `rgba(8,4,16,0.72)` | Modal / action sheet backdrop |
+| `bg` | `#FAF7F0` | Nền app (kem giấy) |
+| `outerBg` | `#EFE9DD` | Nền ngoài khung |
+| `surface` | `#FFFFFF` | Card, ô nhập |
+| `ink` | `#241C10` | Tiêu đề; đồng thời là NỀN của card tối + tab bar |
+| `inkBody` | `#4D4230` | Thân bài |
+| `inkSoft` | `#60533D` | Chữ trên chip *(AA 7.00:1)* |
+| `inkMuted` | `#6F624A` | Meta *(AA 5.57:1)* |
+| `inkFaint` | `#7C7158` | Timestamp *(AA 4.50:1)* |
+| `label` | `#8A6D3F` | Nhãn tiết diện in hoa giãn chữ |
 
-### 2.2 Usage rules
+### 2.2 Accent & tín hiệu
 
-- **Purple = action.** Anything tappable that drives the user forward (send, login, save, primary tab active).
-- **Gold = self / sacred.** Own message bubble fill (low alpha), section accents in profile, divider glints on the login screen. Never compete with purple.
-- **Red = signal.** Unread badge dot, error toast, destructive action ("Đăng xuất", "Xóa"). Never as decoration.
-- **Never** use white surfaces. Never use pure black `#000`.
-- **Contrast minimums:** body text on `bg.base` ≥ 4.5:1 (verified `f5f1e8` on `0a0612` = 14.8:1). Secondary ≥ 4.5:1 on base (verified `9a8fb8` = 6.1:1). Tertiary OK only for ≥18px / non-essential.
-
----
-
-## 3. Typography
-
-### 3.1 Families
-
-- **Display** — `Cormorant Garamond` (Google Fonts, Vietnamese subset). Weights 500 / 600 / 700.
-- **Body & UI** — `Inter` (Google Fonts, Vietnamese subset). Weights 400 / 500 / 600.
-- **Mono / numerics** — `JetBrains Mono`. Weight 400. Timestamps, IDs.
-
-Max **2 families on screen** at any time (Cormorant for headings + Inter for everything else; mono only inside metadata).
-
-### 3.2 Scale
-
-| Name | Size | Line | Letter | Family / weight | Use |
-|---|---|---|---|---|---|
-| `display.xl` | 32 | 38 | -0.02em | Cormorant 600 | Login hero, profile name |
-| `display.lg` | 24 | 30 | -0.01em | Cormorant 600 | Screen titles, category names |
-| `body.lg` | 18 | 26 | 0 | Inter 500 | Channel name in header, message body emphasized |
-| `body.md` | 16 | 24 | 0 | Inter 400 | Default body / messages |
-| `body.sm` | 14 | 20 | 0 | Inter 400 | Last-message preview, secondary labels |
-| `caption` | 12 | 16 | 0.02em | Inter 500 | Timestamps, system messages, badges |
-
-### 3.3 Vietnamese diacritics samples (must render cleanly)
-
-```
-Cormorant 24:   Bất Tử Đạo — Khai Trí, ngộ đạo, tỉnh thức
-Inter 16:       Hôm nay anh đã tập Thái Dương Quyền chưa?
-Inter 14:       "Đường về cõi Niết Bàn — chia sẻ cảm nghiệm sâu sắc."
-Mono 12:        12 thg 4 · 21:47
-```
-
-Always include the Vietnamese subset in Google Fonts URLs:
-`https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap&subset=latin,vietnamese`
-
----
-
-## 4. Spacing & Layout
-
-### 4.1 Spacing scale (4 px base)
-
-`4 / 8 / 12 / 16 / 24 / 32 / 48 / 64`
-
-- `4` micro (icon ↔ label inline)
-- `8` tight (between badge + text)
-- `12` cozy (row internal padding)
-- `16` standard screen padding (left / right)
-- `24` between sections / between message groups
-- `32` top of hero / between major blocks
-- `48` empty-state vertical breathing room
-- `64` reserved for hero composition
-
-### 4.2 Radius scale
-
-| Token | Value | Use |
+| Token | Hex | Dùng cho |
 |---|---|---|
-| `r.sm` | 8 | Inputs, badges |
-| `r.md` | 12 | Buttons, channel rows |
-| `r.lg` | 18 | Message bubbles |
-| `r.xl` | 24 | Bottom sheet, cards |
-| `r.full` | 999 | Avatars, pill chips |
+| `accent` | `#2B7A5E` | Xanh rừng — MỌI hành động chính (nút gửi, CTA, tab active, badge đếm). Prototype cho chọn 4 màu, đã **chốt lục**. |
+| `onAccent` | trắng | Chữ/glyph/spinner đặt TRÊN nền accent. Dùng token này, không `.white` trần. |
+| `accentLight` | `#A894FF` | Tím sáng trên nền tối (chữ nhấn, nhãn AI). Cố định, không đổi theo accent. |
+| `gold` / `goldOnDark` | `#B8862B` / `#CBB98A` | Vàng — dấu ấn "của mình", huy hiệu |
+| `sun` / `sunDim` | `#E8A200` / `#B88713` | Glyph ☀ "thả ánh sáng": nắng khi bật, trầm khi tắt. `sunDim` chỉ cho glyph (non-text 3:1 — xem §7). |
+| `purple` | `#5B43D8` | Tím phụ (gradient avatar, chip expert) |
+| `rec` / `recBorder` | `#C0392B` / `#E5C9C4` | CHỈ trạng thái đang ghi âm |
+| `error` | `#B3261E` | Dòng lỗi dưới ô nhập (auth, hồ sơ) *(AA 6.87:1 trên nền kem)* |
 
-### 4.3 Elevation / shadow (3 levels)
+### 2.3 Viền, nền phụ, trên-nền-tối, avatar
 
-Dark UI elevation is mostly **surface lightness**, not shadow. Shadows only on lifted overlays.
+- Viền: `rule #E8DFC9` · `ruleLight #F0E8D6` · `chipBorder #D9CDB2`
+- Nền phụ: `tagBg #F1E9D8` · `expertBg #ECE7FB` · `bestBg/bestBorder/bestBadgeBg` (khối "Hay nhất")
+- Trên nền tối (card ink/tab bar): họ `cream #FAF7F0` + opacity — `tabDim .5`, `onDarkBody .6`, `onDarkStrong .8`, `onDarkFill .06`, `onDarkTrack .12`, `onDarkBorder .2`
+- Gradient avatar (135°): mình = `avatarSelfFrom #FFE6A8 → avatarSelfTo (gold)`; tím = `avatarPurpleFrom #C9B8F5 → avatarPurpleTo (purple)`; kênh chat lấy màu từ DB (`Color(hexString:)`, có fallback)
 
-- `e.0` — flat, no shadow. Use surface color shift only.
-- `e.1` — `0 1px 2px rgba(0,0,0,0.4)` — channel rows on press, toasts.
-- `e.2` — `0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)` — bottom sheet, modal.
+### 2.4 Luật dùng màu
 
-Never glow on text or icons except the **focus ring**: `0 0 0 2px rgba(139,77,255,0.45)`.
-
----
-
-## 5. Iconography
-
-- **Style:** outline, 1.5 pt stroke, monochrome `text.primary`, single accent `accent.purple` only for active state.
-- **Sizes:** 16 / 20 / 24 px. Tab bar 24 px. Inline 16 px.
-- **Library:** `@expo/vector-icons` → use Lucide or Feather set. No filled / duotone glyphs in MVP.
-
----
-
-## 6. Components
-
-### 6.1 Avatar
-
-| Size | Use | Notes |
-|---|---|---|
-| 24 | inline mention / system row | optional |
-| 36 | message list (other) | default |
-| 64 | channel header member chips | |
-| 96 | profile screen | with optional gold ring |
-
-- Shape: circle (`r.full`).
-- Fallback: initials on `bg.surfaceHover` with `text.primary`, Cormorant 500.
-- Online dot: 8 px, `accent.purple`, bottom-right, 2 px `bg.base` border.
-
-### 6.2 Button
-
-| Variant | Bg | Text | Border | Use |
-|---|---|---|---|---|
-| Primary | `accent.purple` | `text.primary` | none | Send, Login, Save |
-| Secondary (outline) | transparent | `text.primary` | 1px `border.strong` | Edit profile, Cancel |
-| Ghost | transparent | `text.secondary` | none | Tertiary actions |
-| Destructive | transparent | `signal.red` | none | Logout, Delete |
-
-Sizes (height / horiz padding / text):
-- `sm` 36 / 12 / 14
-- `md` 44 / 16 / 16  ← default, meets touch target
-- `lg` 52 / 20 / 16
-
-States: idle / pressed (bg darker by 8%) / disabled (40% opacity, no events) / focused (purple ring `e` 0 0 0 2 rgba(139,77,255,0.45)).
-
-### 6.3 Input field
-
-- Height 48, padding 12 / 16, radius `r.sm`, bg `bg.surface`, border 1px `border.subtle`.
-- Placeholder: `text.tertiary`.
-- Focused: border `accent.purple`, no glow.
-- Error: border `signal.red`, helper text `signal.red` 12 px.
-
-### 6.4 Channel row
-
-- Height 56, horizontal padding 16, radius `r.md` (when pressed, `bg.surfaceHover`).
-- Layout: `# name` (Inter 16/500) → last message preview (Inter 14/400 `text.secondary`, 1 line ellipsis) → optional unread dot 8 px `signal.red` right-aligned.
-- Variants: default / unread (name → `text.primary` + bold weight 600, dot visible) / muted (name → `text.tertiary`, dot hidden).
-
-### 6.5 Category header
-
-- Height 36, padding 16 horizontal, 8 top.
-- Layout: emoji 16 + name (Cormorant 600 / 18) + chevron 16 right.
-- Tap → toggle collapse with 250 ms ease-out.
-
-### 6.6 Message bubble
-
-| Variant | Align | Bg | Text | Radius |
-|---|---|---|---|---|
-| Other | left | `bg.surface` | `text.primary` | `r.lg` (top-left 6) |
-| Own | right | `accent.goldSoft` (over `bg.base`) | `text.primary` | `r.lg` (top-right 6) |
-| System | center | none | `text.tertiary` 12 italic | — |
-| Reply | left/right | as above + 3px `accent.purple` left bar | preview chip on top | `r.lg` |
-
-Padding 10 / 14. Max width 80% of screen width.
-Gold-tint own bubble: bg `rgba(201,168,108,0.18)`, inner 1px border `rgba(201,168,108,0.32)`.
-Author name (other): Inter 13 / 600 `accent.purple` for visual identity (colorless on own).
-Timestamp: mono 11 `text.tertiary`, below or beside the bubble (right-end of group).
-
-### 6.7 Toast
-
-Top-anchored under safe area, 12 px from top. Width — screen − 32 px. Padding 12 / 16. Radius `r.md`. Bg `bg.surface`. Left 3 px bar:
-- success: `accent.purple`
-- error: `signal.red`
-- info: `accent.gold`
-
-Auto-dismiss 4 s. Swipe-up to dismiss.
-
-### 6.8 Bottom sheet (action sheet)
-
-- Backdrop `overlay.scrim` + 12 px backdrop blur.
-- Sheet bg `bg.surfaceHover`, radius `r.xl` top corners only, padding 16, drag handle 36×4 `border.strong` centered top.
-- Rows 56 px tall, 16 padding, icon 20 + label 16. Destructive row text `signal.red`.
-
-### 6.9 Tab bar (2 tabs)
-
-- Height 64 + safe area inset.
-- Bg `bg.surface` with `border.subtle` top border, no shadow.
-- Tabs: `Channels` (chat-bubble icon) / `Profile` (user icon).
-- Active: icon + label `accent.purple`, 2 px purple line top.
-- Inactive: icon + label `text.tertiary`.
+- **Accent = hành động.** Bấm được và đẩy người dùng đi tiếp → accent. Không dùng accent trang trí.
+- **Vàng/☀ = ánh sáng & của mình.** Không cho vàng cạnh tranh với accent trong cùng một khối.
+- **Đỏ = tín hiệu.** `error` cho lỗi, `rec` cho ghi âm. Không đỏ trang trí.
+- **`.white` trần chỉ hợp lệ trên media/scrim** (chữ đè ảnh, nút play trên video, lớp phủ đen). Trên nền accent phải là `onAccent`.
+- **Cấm `Color(hex:)` ngoài `DesignSystem/`** — gate `scripts/check-design-tokens.sh` chặn (ngoại lệ duy nhất: `Models/MockData.swift`, fixture của 2 tab đang ẩn).
+- Không nền trắng tinh tràn màn (surface trắng chỉ cho card/ô nhập trên nền kem); không `#000` thuần.
 
 ---
 
-## 7. Motion
+## 3. Typography — trích từ `NodieTypography.swift`
 
-- **Durations:** micro 150 / standard 300 / pronounced 500 ms. Default 300.
-- **Easing:** `cubic-bezier(0.22, 0.61, 0.36, 1)` (ease-out-expo light). NO spring.
-- **Reduced motion:** if OS pref, fade-only at 150 ms.
+- **Serif** (tiêu đề, câu hỏi, trích dẫn): system serif — New York. **Sans** (thân, meta, nhãn): SF Pro.
+  Prototype dùng Lora + Be Vietnam Pro; đã map sang font hệ thống để phủ dấu tiếng Việt không cần bundle. Muốn khớp 100% chỉ cần sửa 2 hàm `serif`/`sans`.
+- **Dynamic Type bắt buộc:** mọi cỡ đi qua `scaled()` (neo UIFontMetrics theo cỡ gần nhất). View mới không gọi `.font(.system(size:))` cho CHỮ — chỉ chấp nhận cho glyph/icon trang trí.
+- Tối đa 2 họ font trên một màn (serif tiêu đề + sans còn lại).
 
-| Interaction | Spec |
+Vai trò chính (đủ dùng, xem file cho bản đầy đủ): `screenTitle` serif 26 · `detailTitle` 20 · `cardTitle` 18–19 · `cardTitleSm` 16 · `body` 13.5 · `bodySm` 13 · `meta` 12 · `timestamp` 11 · `rowTitle` 14.5 sb · `chatName` 15 b · `chip` 12 sb · `cta` 12.5 sb / `ctaLg` 13.5 b · `eyebrow` 12 sb (tracking 1.6 đặt ở view).
+
+---
+
+## 4. Spacing & layout — `NodieSpacing`
+
+- Thang: `xs 4 · sm 8 · md 12 · lg 16 · xl 20 · xxl 24`
+- `screenH = 22` — lề ngang chuẩn MỌI màn (prototype 22px). `screenTop = 18`.
+- Touch target **≥ 44×44pt** (nút gửi 44, dùng `expandedHitArea` khi visual nhỏ hơn).
+- Tab bar nổi (ẩn khi push detail) — nội dung cuối danh sách chừa đáy 74.
+- Mỗi tab một `NavigationStack` + path riêng trong `AppState` (pattern FB/IG/X); edge-swipe-back của hệ thống, không tự viết.
+
+---
+
+## 5. Thuật ngữ & giọng (copy)
+
+- **"chiếu sáng"**, không bao giờ "phóng". Nút hỏi: "＋ Chiếu câu hỏi"; nút gửi màn hỏi: "Chiếu sáng"; like = "thả ánh sáng", đơn vị "hạt ánh sáng", glyph ☀.
+- Tab: "Hỏi đáp" · "Chat" (không "Hội thoại") · "Bạn bè".
+- Giọng ngang hàng, không bề trên, không ẩn dụ Phật giáo trong UI. Metric nằm trên NỘI DUNG; **không leaderboard giữa người với người** (thống kê hồ sơ cá nhân thì được — quyết định 16/07).
+- Nhãn vai trò (admin/mod) chỉ hiện với admin/mod.
+
+---
+
+## 6. Accessibility (đã đo, đừng phá)
+
+- Text nhỏ ≥ 4.5:1 trên nền kem — `inkSoft/inkMuted/inkFaint/error` đều đã đo đạt (script `contrast.py`, report phase 05).
+- Non-text ≥ 3:1 — `sunDim` 3.01:1, chỉ cho glyph ☀, **không** đẩy lên 4.5 (mất sắc vàng trầm).
+- Mọi phần tử tương tác có `accessibilityLabel`/`accessibilityIdentifier` tiếng Việt; UITest a11y + touch-target nằm trong gate 51 test.
+
+---
+
+## 7. Lệch prototype CÓ CHỦ ĐÍCH — đừng "sửa lại cho giống"
+
+| Chỗ lệch | Vì sao |
 |---|---|
-| Channel row press | bg `surface → surfaceHover`, 150 ms |
-| Channel enter (push) | slide-x 16→0 + fade, 300 ms |
-| Message send | bubble fades-in + slide-y 8→0, 250 ms; haptic `selection` |
-| Typing indicator dots | 3 dots stagger opacity 0.2 → 1 → 0.2, 1.2 s loop |
-| Bottom sheet enter | slide-y 100% → 0, 300 ms; backdrop fade 200 ms |
-| Toast | slide-y -100% → 0 in 250, dwell 4 s, fade out 200 ms |
-| Login hero (mandala) | rotate 0.005 rad/s continuous, opacity drift |
+| `inkSoft/inkMuted/inkFaint` đậm hơn prototype | Prototype rớt WCAG AA; hạ value giữ hue (phase 05, có số đo) |
+| Font hệ thống thay Lora/Be Vietnam Pro | Phủ dấu Việt + Dynamic Type miễn phí, không bundle .ttf |
+| Nút gửi 44pt, safe-area đáy, NavigationStack native | Chuẩn iOS — chính handoff v4 yêu cầu |
+| `sunDim` không đạt 4.5:1 | Glyph non-text, ngưỡng 3:1 là đúng luật |
 
 ---
 
-## 8. Accessibility
+## 8. Gate chống drift
 
-- Touch target **≥ 44×44 pt** for all interactive elements.
-- Body contrast ≥ 4.5:1; large/heading ≥ 3:1 (all locked tokens verified).
-- Screen reader labels in Vietnamese (`accessibilityLabel="Gửi tin nhắn"`).
-- Respect `prefers-reduced-motion`.
-- Dynamic Type: scale display + body up to 130 % without clipping.
-
----
-
-## 9. Tailwind / NativeWind tokens (paste-ready)
-
-```ts
-// theme/tokens.ts
-export const colors = {
-  bg: {
-    base: '#0a0612',
-    surface: '#14101e',
-    surfaceHover: '#1d1729',
-  },
-  accent: {
-    purple: '#8b4dff',
-    purpleSoft: 'rgba(139,77,255,0.16)',
-    gold: '#c9a86c',
-    goldSoft: 'rgba(201,168,108,0.18)',
-  },
-  signal: { red: '#d4234e' },
-  text: {
-    primary: '#f5f1e8',
-    secondary: '#9a8fb8',
-    tertiary: '#5a5170',
-  },
-  border: {
-    subtle: 'rgba(255,255,255,0.06)',
-    strong: 'rgba(255,255,255,0.12)',
-  },
-  overlay: { scrim: 'rgba(8,4,16,0.72)' },
-} as const;
-
-export const spacing = { 1: 4, 2: 8, 3: 12, 4: 16, 6: 24, 8: 32, 12: 48, 16: 64 } as const;
-
-export const radius = { sm: 8, md: 12, lg: 18, xl: 24, full: 9999 } as const;
-
-export const font = {
-  display: 'Cormorant Garamond',
-  body: 'Inter',
-  mono: 'JetBrains Mono',
-} as const;
-
-export const text = {
-  displayXl: { fontFamily: font.display, fontSize: 32, lineHeight: 38, fontWeight: '600', letterSpacing: -0.6 },
-  displayLg: { fontFamily: font.display, fontSize: 24, lineHeight: 30, fontWeight: '600', letterSpacing: -0.2 },
-  bodyLg:    { fontFamily: font.body,    fontSize: 18, lineHeight: 26, fontWeight: '500' },
-  bodyMd:    { fontFamily: font.body,    fontSize: 16, lineHeight: 24, fontWeight: '400' },
-  bodySm:    { fontFamily: font.body,    fontSize: 14, lineHeight: 20, fontWeight: '400' },
-  caption:   { fontFamily: font.body,    fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.2 },
-} as const;
-
-export const motion = {
-  micro: 150, standard: 300, pronounced: 500,
-  ease: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
-} as const;
+```bash
+apps/nodie-ios/scripts/check-design-tokens.sh   # grep Color(hex:) ngoài DesignSystem → fail
 ```
 
-```js
-// tailwind.config.js (NativeWind)
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        bg:        { base: '#0a0612', surface: '#14101e', hover: '#1d1729' },
-        accent:    { purple: '#8b4dff', gold: '#c9a86c' },
-        signal:    { red: '#d4234e' },
-        textc:     { primary: '#f5f1e8', secondary: '#9a8fb8', tertiary: '#5a5170' },
-      },
-      borderRadius: { sm: 8, md: 12, lg: 18, xl: 24 },
-      fontFamily: {
-        display: ['"Cormorant Garamond"', 'serif'],
-        body:    ['Inter', 'sans-serif'],
-        mono:    ['"JetBrains Mono"', 'monospace'],
-      },
-    },
-  },
-};
-```
+Chạy tay lúc dev; tự chạy ở đầu `run-uitest-gate.sh` (release gate). Vi phạm = thêm token vào `NodieColors` rồi dùng token, không allowlist thêm.
 
 ---
 
-## 10. Anti-patterns (do not ship)
+## 9. Phạm vi
 
-- Neon cyan / magenta gradients
-- Mascots, cartoon emoji-as-illustration
-- Pure `#000` backgrounds
-- White / cream surfaces in dark mode
-- Spring physics on chat send
-- Center-aligned multi-line body text
-- Heavy drop shadows on flat UI
-- Two display fonts on the same screen
+File này tả **NODIE iOS**. Web battudao.com (`apps/web`) đang giữ style riêng có trước — chưa hợp nhất; khi làm lại web theo ngôn ngữ Aion thì cập nhật ở đây. Android chưa tồn tại.

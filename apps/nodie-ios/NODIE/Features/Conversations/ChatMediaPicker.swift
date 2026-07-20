@@ -205,7 +205,7 @@ struct PermissionDeniedSheet: View {
             } label: {
                 Text("Mở Cài đặt")
                     .font(NodieTypography.body.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(NodieColors.onAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Capsule().fill(NodieColors.accent))

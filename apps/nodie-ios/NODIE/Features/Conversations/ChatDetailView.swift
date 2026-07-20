@@ -590,7 +590,7 @@ struct ChatDetailView: View {
                 } label: {
                     Text("Thử lại")
                         .font(NodieTypography.chip.weight(.bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(NodieColors.onAccent)
                         .padding(.horizontal, NodieSpacing.lg)
                         .padding(.vertical, 9)
                         .background(Capsule().fill(NodieColors.accent))
@@ -970,7 +970,7 @@ struct ChatDetailView: View {
             } label: {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(NodieColors.onAccent)
                     .frame(width: 38, height: 38)
                     .background(Circle().fill(NodieColors.accent))
                     .expandedHitArea(visual: 44)

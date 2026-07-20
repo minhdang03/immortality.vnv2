@@ -52,7 +52,7 @@ struct ProjectionPromptCard: View {
             } label: {
                 Text("✦ Chiếu sáng & hút nội dung về")
                     .font(NodieTypography.ctaLg)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(NodieColors.onAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(Capsule().fill(NodieColors.accent))

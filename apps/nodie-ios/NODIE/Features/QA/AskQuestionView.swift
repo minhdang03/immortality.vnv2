@@ -209,7 +209,7 @@ struct AskQuestionView: View {
         HStack(spacing: 11) {
             Text("☀")
                 .font(.system(size: 15))
-                .foregroundStyle(.white)
+                .foregroundStyle(NodieColors.onAccent)
                 .frame(width: 32, height: 32)
                 .background(Circle().fill(NodieColors.accent))
 

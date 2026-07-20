@@ -254,8 +254,8 @@ struct QuestionDetailView: View {
 
             Button { Task { await send() } } label: {
                 Group {
-                    if sending { ProgressView().tint(.white) }
-                    else { Text(NodieGlyph.sun).font(.system(size: 17)).foregroundStyle(.white) }
+                    if sending { ProgressView().tint(NodieColors.onAccent) }
+                    else { Text(NodieGlyph.sun).font(.system(size: 17)).foregroundStyle(NodieColors.onAccent) }
                 }
                 .frame(width: 44, height: 44)
                 .background(Circle().fill(canSend ? NodieColors.accent : NodieColors.chipBorder))

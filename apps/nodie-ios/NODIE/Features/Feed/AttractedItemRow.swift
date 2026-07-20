@@ -61,7 +61,7 @@ struct AttractedItemRow: View {
                     if item.hasAvatar {
                         Circle()
                             .fill(LinearGradient(
-                                colors: [Color(hex: 0xC9B8F5), Color(hex: 0x5B43D8)],
+                                colors: [NodieColors.avatarPurpleFrom, NodieColors.avatarPurpleTo],
                                 startPoint: .topLeading, endPoint: .bottomTrailing))
                             .frame(width: 26, height: 26)
                     }

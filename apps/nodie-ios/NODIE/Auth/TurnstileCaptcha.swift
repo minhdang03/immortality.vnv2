@@ -66,7 +66,7 @@ struct CaptchaSheetView: View {
                 } label: {
                     Text("Thử lại")
                         .font(NodieTypography.body.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(NodieColors.onAccent)
                         .padding(.horizontal, 28)
                         .padding(.vertical, 12)
                         .background(Capsule().fill(NodieColors.accent))
