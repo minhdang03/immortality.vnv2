@@ -111,6 +111,23 @@ struct ChatDetailView: View {
     @State private var members: [ConversationStore.ChannelMember] = []
     /// Tên hiển thị → uid, cho MessageBubbleView tô @tên.
     @State private var mentionMap: [String: UUID] = [:]
+
+    /// Ảnh/video đã chuẩn bị xong, đang chờ người dùng gõ chú thích (xem ChatCaptionSheet).
+    /// Rỗng = không có gì chờ; đây cũng là điều kiện mở sheet.
+    @State private var pendingAttachments: [PreparedAttachment] = []
+
+    // MARK: - Bề rộng bong bóng
+
+    /// Bề rộng khung danh sách tin. Prototype khoá bong bóng ở **78% bề rộng khung**, không
+    /// phải một số pt: hằng số chỉ đúng trên đúng một cỡ máy — 260pt vừa mắt trên iPhone 17
+    /// nhưng trên Pro Max để thừa một dải trống bên cạnh và câu dài xuống dòng sớm hơn thiết kế.
+    /// 0 = chưa đo (khung hình đầu) → tạm dùng số cũ thay vì vẽ bong bóng rộng 0.
+    @State private var listWidth: CGFloat = 0
+
+    /// 78% khung, trừ 18pt padding ngang mỗi bên của LazyVStack.
+    private var bubbleMaxWidth: CGFloat {
+        listWidth > 0 ? (listWidth - 36) * 0.78 : 260
+    }
     private var unreadDivider: some View {
         HStack(spacing: 8) {
             Rectangle().fill(NodieColors.rule).frame(height: 1)
@@ -286,6 +303,16 @@ struct ChatDetailView: View {
                     .padding(.horizontal, 18)
                     .padding(.vertical, 14)
                 }
+                // Đo khung để bong bóng bám 78% bề rộng (xem `bubbleMaxWidth`). Đọc ở đây
+                // chứ không `UIScreen.main.bounds`: cái đó là màn hình, không phải khung
+                // được chia cho view này — sai ngay khi có Split View / Stage Manager.
+                .background {
+                    GeometryReader { geo in
+                        Color.clear
+                            .onAppear { listWidth = geo.size.width }
+                            .onChange(of: geo.size.width) { _, width in listWidth = width }
+                    }
+                }
                 // Kéo xuống là bàn phím hạ theo ngón tay — chuẩn iMessage/Messenger.
                 .scrollDismissesKeyboard(.interactively)
                 .onChange(of: messages.count) { old, new in
@@ -447,15 +474,33 @@ struct ChatDetailView: View {
             cameraDenied: $cameraDenied,
             viewingPhoto: $viewingPhoto,
             previewingFile: $previewingFile,
-            onPickedPhotos: { items in await sendPickedPhotos(items) },
+            onPickedPhotos: { items in await preparePickedPhotos(items) },
             onCaptured: { image in
                 guard let encoded = await Task.detached(priority: .userInitiated, operation: {
                     ChatImageProcessor.encode(image)
                 }).value else { return }
-                sendPhoto(encoded)
+                pendingAttachments = [.photo(encoded)]
             },
             onPickedFile: { result in await sendPickedFile(result) }
         ))
+        // Xem lại + gõ chú thích trước khi gửi. Tệp KHÔNG đi đường này: một tệp đính kèm
+        // đã tự mang tên nó, còn ảnh thì không nói được gì nếu không có chỗ gõ.
+        .sheet(isPresented: Binding(
+            get: { !pendingAttachments.isEmpty },
+            // Vuốt xuống để đóng = huỷ lượt gửi. Giữ lại `pendingAttachments` thì sheet
+            // đóng rồi mà ảnh vẫn treo, lần chọn sau nó bật lên lại.
+            set: { if !$0 { pendingAttachments = [] } }
+        )) {
+            ChatCaptionSheet(
+                items: pendingAttachments,
+                onCancel: { pendingAttachments = [] },
+                onSend: { caption in
+                    let batch = pendingAttachments
+                    pendingAttachments = []
+                    sendPrepared(batch, caption: caption)
+                }
+            )
+        }
     }
 
     /// Tin mà `message` đang trả lời — nil nếu không trả lời ai, hoặc tin gốc đã trôi khỏi
@@ -479,6 +524,7 @@ struct ChatDetailView: View {
         return MessageBubbleView(
             message: message,
             isMine: isMine,
+            maxBubbleWidth: bubbleMaxWidth,
             senderLabel: senderLabel(at: index, in: rows),
             replyTarget: target,
             replyTargetIsMine: target?.userId == store.currentUserId,
@@ -817,31 +863,50 @@ struct ChatDetailView: View {
         }
     }
 
-    /// Ảnh từ thư viện: lấy bytes → thu nhỏ → gửi. Mỗi ảnh một tin, như IG/WhatsApp.
+    /// Ảnh từ thư viện: lấy bytes → thu nhỏ → xếp vào hàng CHỜ CHÚ THÍCH (không gửi ngay).
+    /// Mỗi mục vẫn là một tin riêng lúc gửi, như IG/WhatsApp.
     ///
     /// Thu nhỏ chạy ngoài main thread (`Task.detached`): sáu ảnh 4000px vẽ lại trên main
     /// thread là màn hình đứng hình mấy giây.
-    private func sendPickedPhotos(_ items: [PhotosPickerItem]) async {
+    private func preparePickedPhotos(_ items: [PhotosPickerItem]) async {
+        var prepared: [PreparedAttachment] = []
         for item in items {
             // Video hay ảnh? PhotosPickerItem khai loại nó chở — video đi đường riêng
             // (sinh poster + gửi kèm), còn lại xử như ảnh.
             if item.supportedContentTypes.contains(where: { $0.conforms(to: .movie) }) {
-                await sendPickedVideo(item)
+                if let video = await prepareVideo(item) { prepared.append(.video(video)) }
             } else {
                 guard let raw = try? await item.loadTransferable(type: Data.self) else { continue }
                 guard let encoded = await Task.detached(priority: .userInitiated, operation: {
                     ChatImageProcessor.encode(data: raw)
                 }).value else { continue }
-                sendPhoto(encoded)
+                prepared.append(.photo(encoded))
             }
         }
+        guard !prepared.isEmpty else { return }
+        pendingAttachments = prepared
     }
 
-    /// Video: tải bản sao ra đĩa, sinh poster + metadata off-main, rồi gửi (kèm poster upload).
-    private func sendPickedVideo(_ item: PhotosPickerItem) async {
+    /// Gửi cả lượt. Chú thích gắn vào tin CUỐI — xem lý do ở `ChatCaptionSheet`.
+    /// Băng "Đang trả lời" gỡ MỘT lần sau cả lượt, không phải mỗi tin một lần.
+    private func sendPrepared(_ batch: [PreparedAttachment], caption: String) {
+        var queuedAny = false
+        for (index, item) in batch.enumerated() {
+            let text = index == batch.count - 1 ? caption : ""
+            switch item {
+            case .photo(let encoded): queuedAny = sendPhoto(encoded, caption: text) || queuedAny
+            case .video(let prepared): queuedAny = sendVideo(prepared, caption: text) || queuedAny
+            }
+        }
+        if queuedAny { state.replyingTo[channelId] = nil }
+    }
+
+    /// Video: tải bản sao ra đĩa, sinh poster + metadata off-main. Trả bản đã chuẩn bị để
+    /// `preparePickedPhotos` xếp vào hàng chờ chú thích — KHÔNG gửi thẳng.
+    private func prepareVideo(_ item: PhotosPickerItem) async -> ChatVideoProcessor.Prepared? {
         guard let movie = try? await item.loadTransferable(type: PickedMovie.self) else {
             store.errorMessage = String(localized: "Không đọc được video này.")
-            return
+            return nil
         }
         defer { try? FileManager.default.removeItem(at: movie.url) }
         // Chặn quá cỡ NGAY từ metadata tệp — TRƯỚC khi đọc cả video vào RAM: clip 4K vài trăm
@@ -850,33 +915,40 @@ struct ChatDetailView: View {
         let fileSize = (try? movie.url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         guard fileSize <= ChatMediaStorage.maxBytes else {
             store.errorMessage = ChatMediaStorage.UploadError.tooLarge(fileSize).localizedDescription
-            return
+            return nil
         }
         guard let prepared = await ChatVideoProcessor.prepare(url: movie.url) else {
             store.errorMessage = String(localized: "Không đọc được video này.")
-            return
+            return nil
         }
-        let queued = store.sendMedia(
+        return prepared
+    }
+
+    /// Trả `true` nếu bong bóng lạc quan đã lên màn — caller gộp lại để quyết định có gỡ
+    /// băng "Đang trả lời" hay không.
+    @discardableResult
+    private func sendVideo(_ prepared: ChatVideoProcessor.Prepared, caption: String = "") -> Bool {
+        store.sendMedia(
             channelId: channelId, data: prepared.videoData, kind: .video,
             ext: prepared.ext, contentType: prepared.contentType, preview: prepared.poster,
             duration: prepared.duration, width: prepared.width, height: prepared.height,
-            size: prepared.videoData.count, parentId: state.replyingTo[channelId],
+            size: prepared.videoData.count, caption: caption,
+            parentId: state.replyingTo[channelId],
             posterData: prepared.posterData, posterExt: "jpg"
         )
-        if queued { state.replyingTo[channelId] = nil }
     }
 
-    private func sendPhoto(_ encoded: ChatImageProcessor.Encoded) {
-        let queued = store.sendMedia(
+    /// Xem ghi chú ở `sendVideo` về giá trị trả về. Băng "Đang trả lời" do `sendPrepared` gỡ
+    /// sau CẢ lượt — bong bóng đã mang sẵn `parentId`, và upload hỏng thì "Gửi lại" lấy lại
+    /// `parentId` từ pending, không cần băng còn trên màn.
+    @discardableResult
+    private func sendPhoto(_ encoded: ChatImageProcessor.Encoded, caption: String = "") -> Bool {
+        store.sendMedia(
             channelId: channelId, data: encoded.data, kind: .photo,
             ext: "jpg", contentType: "image/jpeg", preview: encoded.image,
             width: encoded.width, height: encoded.height, size: encoded.data.count,
-            parentId: state.replyingTo[channelId]
+            caption: caption, parentId: state.replyingTo[channelId]
         )
-        // Bong bóng đã hiện và đã mang `parentId` — băng "Đang trả lời" xong việc, gỡ ngay
-        // chứ không đợi upload. Upload hỏng thì "Gửi lại" dùng lại `parentId` trong pending,
-        // không cần băng còn trên màn.
-        if queued { state.replyingTo[channelId] = nil }
     }
 
     /// Tệp từ Files. `fileImporter` trả URL có bảo vệ phạm vi — phải xin quyền đọc rồi trả lại,
@@ -1056,6 +1128,25 @@ struct LiveWaveform: View {
 }
 
 /// Nháy nền một tin sau khi nhảy tới nó từ tìm kiếm (phase 18) — accent mờ dần rồi tắt.
+/// Chạm hai lần để thả ☀ — đường tắt của IG/Messenger/Zalo cho phản ứng hay dùng nhất.
+///
+/// CHỈ gắn cho bong bóng CHỮ. Bong bóng ảnh/video/tệp chạm một lần là mở ra xem; thêm bộ
+/// nhận chạm-đôi lên đó khiến iOS phải chờ xem có cú chạm thứ hai không, và cú mở ảnh
+/// bình thường trễ hẳn một nhịp.
+///
+/// Không thay menu giữ-bong-bóng: menu vẫn là chỗ duy nhất có ♥, Trả lời, Sao chép… Đây chỉ
+/// là lối tắt cho cái được dùng nhiều nhất.
+private struct DoubleTapToLight: ViewModifier {
+    let onReact: (ReactionKind) -> Void
+
+    func body(content: Content) -> some View {
+        content.onTapGesture(count: 2) {
+            NodieHaptics.tap()
+            onReact(.lit)
+        }
+    }
+}
+
 /// Modifier riêng để khỏi phải nhồi thêm tham số vào MessageBubbleView (đã rất nhiều).
 private struct ListRowFlash: ViewModifier {
     let active: Bool
@@ -1152,6 +1243,8 @@ struct MessageBubbleView: View {
     /// Tin của CHÍNH MÌNH — so `message.userId` với `store.currentUserId` ở caller
     /// (view này không cầm store để so trực tiếp).
     let isMine: Bool
+    /// Trần bề rộng bong bóng chữ — 78% khung, tính ở ChatDetailView (xem `bubbleMaxWidth`).
+    let maxBubbleWidth: CGFloat
     let senderLabel: String?
     /// Tin đang được trả lời — nil nếu tin này không trả lời ai (hoặc tin gốc đã trôi).
     let replyTarget: MessageRow?
@@ -1249,8 +1342,15 @@ struct MessageBubbleView: View {
     private var bubble: some View {
         if let media = message.media {
             mediaBubble(media)
+        } else if let emoji = jumboEmoji {
+            Text(emoji)
+                .font(.system(size: 44))
+                // Không nền, không viền: chính chỗ trống quanh nó làm nó đọc như một cử chỉ.
+                .padding(.vertical, 2)
+                .frame(maxWidth: maxBubbleWidth, alignment: isMine ? .trailing : .leading)
+                .modifier(DoubleTapToLight(onReact: onReact))
         } else {
-            textBubble
+            textBubble.modifier(DoubleTapToLight(onReact: onReact))
         }
     }
 
@@ -1357,6 +1457,25 @@ struct MessageBubbleView: View {
     /// Tin thoại dùng chung bong bóng chữ — chưa phát được thì nó đúng là một dòng chữ.
     private var bubbleText: String { message.previewText }
 
+    /// Tin CHỈ có emoji (tối đa 3) → vẽ to, không bong bóng. Messenger/Zalo/iMessage đều vậy:
+    /// một cái 👍 trả lời nhanh là cử chỉ, không phải câu nói — nhốt nó trong bong bóng viền
+    /// làm nó trông như một câu dài đúng một ký tự.
+    ///
+    /// Trần 3 ký tự để không biến một dòng emoji dài thành bức tường: quá 3 thì nó đang là
+    /// nội dung, đọc như chữ.
+    private var jumboEmoji: String? {
+        guard message.media == nil, replyTarget == nil else { return nil }
+        let text = bubbleText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, text.count <= 3 else { return nil }
+        // `isEmoji` một mình bắt cả chữ số ("1️⃣" và "1" cùng có emoji scalar) — phải đi kèm
+        // `isEmojiPresentation` hoặc ký tự nhiều scalar, không thì "123" cũng thành jumbo.
+        let allEmoji = text.allSatisfy { char in
+            char.unicodeScalars.contains { $0.properties.isEmojiPresentation }
+                || char.unicodeScalars.count > 1 && char.unicodeScalars.first?.properties.isEmoji == true
+        }
+        return allEmoji ? text : nil
+    }
+
     /// URL trong tin thành link bấm được. Không gạch chân: SwiftUI đã tô link bằng `.tint`,
     /// thêm gạch chân nữa là hai tín hiệu cho một việc (iMessage/WhatsApp cũng chỉ tô màu).
     private var attributedBody: AttributedString {
@@ -1439,7 +1558,7 @@ struct MessageBubbleView: View {
         .padding(.vertical, 10)
         .background(bubbleShape.fill(isMine ? NodieColors.ink : NodieColors.surface))
         .overlay(bubbleShape.stroke(isMine ? NodieColors.ink : NodieColors.rule, lineWidth: 1))
-        .frame(maxWidth: 260, alignment: isMine ? .trailing : .leading)
+        .frame(maxWidth: maxBubbleWidth, alignment: isMine ? .trailing : .leading)
     }
 
     /// Trích dẫn trong bong bóng — bấm vào là nhảy về tin gốc, như mọi messenger.

@@ -82,12 +82,24 @@ struct ConversationListView: View {
                         .tint(NodieColors.inkMuted)
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                        Button {
-                            Task { await store.markRead(channelId: channel.id) }
-                        } label: {
-                            Label("Đã đọc", systemImage: "envelope.open")
+                        // Một nút, hai chiều — theo trạng thái hiện tại của kênh, như Mail/
+                        // Messenger. Bày cả "Đã đọc" lẫn "Chưa đọc" cùng lúc thì một trong hai
+                        // luôn là nút vô nghĩa (đọc lại cái đã đọc).
+                        if store.unread(for: channel.id) > 0 {
+                            Button {
+                                Task { await store.markRead(channelId: channel.id) }
+                            } label: {
+                                Label("Đã đọc", systemImage: "envelope.open")
+                            }
+                            .tint(NodieColors.accent)
+                        } else {
+                            Button {
+                                Task { await store.markUnread(channelId: channel.id) }
+                            } label: {
+                                Label("Chưa đọc", systemImage: "envelope.badge")
+                            }
+                            .tint(NodieColors.accent)
                         }
-                        .tint(NodieColors.accent)
                     }
                     // Cùng ba việc của hai cụm vuốt trên, mở bằng cách giữ. Vuốt là cử chỉ
                     // GIẤU: không có gì trên màn hình nói nó tồn tại. Ai không biết vuốt —

@@ -936,6 +936,39 @@ final class ConversationStore {
         } catch { /* badge cục bộ đã về 0; lần mở sau server sẽ đúng */ }
     }
 
+    /// Đánh dấu CHƯA đọc — chiều ngược của `markRead`, để dành đọc lại sau.
+    ///
+    /// Không có cột "đã đánh dấu chưa đọc": số chưa đọc do `nodie_unread_counts` đếm tin có
+    /// `created_at > last_read_at`. Nên đánh dấu chưa đọc = đẩy `last_read_at` LÙI về ngay
+    /// trước tin mới nhất — đúng một tin lọt lại, badge hiện 1. Cùng cơ chế với mọi chỗ khác,
+    /// không phải một nguồn sự thật thứ hai để rồi phải giữ đồng bộ.
+    ///
+    /// Kênh chưa có tin nào thì không có gì để chưa đọc — trả về luôn.
+    func markUnread(channelId: UUID) async {
+        guard let uid, let lastAt = channel(id: channelId)?.lastMessageAt else { return }
+        // Lùi một mili giây: `>` chứ không `>=` nên phải đứng TRƯỚC tin đó, bằng nhau là đếm ra 0.
+        let mark = lastAt.addingTimeInterval(-0.001)
+        unreadByChannel[channelId] = max(unread(for: channelId), 1)
+        // Xoá dấu throttle của markRead: không xoá thì lần mở kênh kế tiếp bị coi là "vừa
+        // báo đọc rồi", và kênh kẹt ở trạng thái chưa đọc.
+        lastMarkReadSentAt[channelId] = nil
+        let counts = unreadByChannel
+        Task { await ChatDiskCache.shared.saveUnread(counts) }
+        struct ReadUpdate: Encodable {
+            let lastReadAt: Date
+            enum CodingKeys: String, CodingKey { case lastReadAt = "last_read_at" }
+        }
+        do {
+            try await client.from("channel_members")
+                .update(ReadUpdate(lastReadAt: mark))
+                .eq("channel_id", value: channelId).eq("user_id", value: uid)
+                .execute()
+        } catch {
+            // Ghi hỏng thì badge cục bộ đang nói dối — kéo nó về đúng bằng số của server.
+            await loadUnreadCounts()
+        }
+    }
+
     /// Tắt thông báo tới `until` (nil = bật lại).
     func setMuted(channelId: UUID, until: Date?) async {
         guard let uid else { return }

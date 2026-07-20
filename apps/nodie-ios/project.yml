@@ -91,6 +91,11 @@ targets:
         # Quyền micro — hỏi lúc bấm nút mic lần đầu. Cùng bẫy INFOPLIST_FILE như hai key trên;
         # thiếu chuỗi này thì iOS giết app ngay khi AVAudioRecorder xin quyền.
         NSMicrophoneUsageDescription: Cho phép NODIE dùng micro để bạn ghi và gửi tin nhắn thoại.
+        # Quyền THÊM ảnh vào thư viện — nút "Lưu ảnh" trong trình xem ảnh. Chỉ `AddUsage`,
+        # KHÔNG `NSPhotoLibraryUsageDescription`: đọc thư viện đã do PhotosPicker lo (picker
+        # chạy ngoài tiến trình app nên không cần quyền nào), app này không có việc gì phải
+        # tự đọc ảnh sẵn có. Cùng bẫy INFOPLIST_FILE như ba key trên.
+        NSPhotoLibraryAddUsageDescription: Cho phép NODIE lưu ảnh từ trò chuyện về thư viện ảnh của bạn.
         # Supabase gọi lại app qua scheme này sau khi user bấm link trong mail (đặt lại
         # mật khẩu / xác nhận đăng ký). Custom scheme chứ không Universal Links: khỏi phải
         # dựng apple-app-site-association trên battudao.com — đổi lại iOS chen một nhịp

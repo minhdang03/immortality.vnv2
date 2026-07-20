@@ -1,3 +1,4 @@
+import Photos
 import QuickLook
 import SwiftUI
 import UIKit
@@ -39,6 +40,13 @@ struct ChatPhotoViewer: View {
     @State private var dismissDrag: CGSize = .zero
     @State private var image: UIImage?
     @State private var failed = false
+    /// Đã lưu xong → nút đổi thành dấu ✓ vài giây. Lưu ảnh là việc không có phản hồi tự nhiên
+    /// nào (ảnh vẫn nằm y đó trên màn), im lặng thì người dùng bấm lần nữa cho chắc.
+    @State private var justSaved = false
+    /// Từ chối quyền ghi thư viện — iOS không hỏi lại lần hai, phải tự chỉ đường ra Cài đặt.
+    @State private var saveDenied = false
+    /// Ghi hỏng (đĩa đầy, thư viện lỗi) — khác `saveDenied`: đây không phải chuyện quyền.
+    @State private var saveFailed = false
 
     /// Mờ dần theo tay kéo — người dùng thấy được mình đang đóng nó, và kéo nhẹ rồi thả thì
     /// nó quay lại chứ không đóng oan.
@@ -86,6 +94,46 @@ struct ChatPhotoViewer: View {
         }
         .task { await loadImage() }
         .statusBarHidden()
+        // Cùng khuôn với máy ảnh (xem `tapAttach`): đã từ chối thì iOS im lặng mãi mãi,
+        // nên phải tự nói và chỉ đường ra Cài đặt.
+        .sheet(isPresented: $saveDenied) {
+            PermissionDeniedSheet(
+                title: "Cần quyền thư viện ảnh",
+                message: "Bật quyền thêm ảnh trong Cài đặt để lưu ảnh từ trò chuyện về máy."
+            )
+        }
+        .alert("Không lưu được ảnh", isPresented: Binding(
+            get: { saveFailed },
+            set: { if !$0 { saveFailed = false } }
+        )) {
+            Button("OK") { saveFailed = false }
+        } message: {
+            Text("Thử lại, hoặc dùng nút chia sẻ bên cạnh.")
+        }
+    }
+
+    /// Ghi ảnh vào thư viện. Xin quyền `.addOnly` — chỉ THÊM, không đọc: app này không có
+    /// việc gì phải xem ảnh sẵn có của người dùng, và quyền hẹp thì hộp thoại iOS cũng nói
+    /// đúng như vậy.
+    private func save(_ image: UIImage) async {
+        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        guard status == .authorized || status == .limited else {
+            saveDenied = true
+            return
+        }
+        do {
+            try await PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }
+            NodieHaptics.tap()
+            justSaved = true
+            // Trả nút về trạng thái cũ — dấu ✓ đứng mãi thì lần sau mở ảnh khác vẫn thấy
+            // "đã lưu" dù chưa lưu gì.
+            try? await Task.sleep(for: .seconds(2))
+            justSaved = false
+        } catch {
+            saveFailed = true
+        }
     }
 
     private var closeAndShareBar: some View {
@@ -106,6 +154,24 @@ struct ChatPhotoViewer: View {
                 Spacer()
 
                 if let image {
+                    // Lưu về máy MỘT CHẠM. Share sheet cũng lưu được, nhưng đó là ba bước và
+                    // phải biết trước rằng "Lưu ảnh" nấp trong đó — Zalo/Messenger đều để nút
+                    // riêng vì đây là việc hay làm nhất với một tấm ảnh người khác gửi.
+                    Button {
+                        Task { await save(image) }
+                    } label: {
+                        Image(systemName: justSaved ? "checkmark" : "arrow.down.to.line")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 36, height: 36)
+                            .background(Circle().fill(.black.opacity(0.45)))
+                            .expandedHitArea(visual: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(justSaved)
+                    .accessibilityLabel(justSaved ? "Đã lưu ảnh" : "Lưu ảnh về máy")
+                    .accessibilityIdentifier("savePhoto")
+
                     // `Image` của SwiftUI là Transferable sẵn — không phải tự dựng
                     // UIActivityViewController. Không hand-roll thứ hệ thống đã cho.
                     ShareLink(item: Image(uiImage: image),
