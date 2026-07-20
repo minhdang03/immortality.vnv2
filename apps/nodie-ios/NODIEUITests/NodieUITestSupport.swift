@@ -38,7 +38,11 @@ enum NodieTestAuth {
     @discardableResult
     static func signIn(_ app: XCUIApplication) throws -> Account {
         let account = try credentials()
-        app.launchArguments += ["--uitest-reset-auth", "--uitest-auto-login"]
+        // `--uitest-show-qa`: tab Hỏi đáp đang khoá với role='user' ngoài prod, mà toàn bộ
+        // suite lại phải chạy bằng tài khoản THƯỜNG (admin ngắn mạch RLS — bẫy đã trả giá).
+        // Cờ chỉ mở HIỂN THỊ tab; mọi truy vấn vẫn đi qua RLS của user thường.
+        // Gate "user thường không thấy tab" có test riêng: QATabGateUITests.
+        app.launchArguments += ["--uitest-reset-auth", "--uitest-auto-login", "--uitest-show-qa"]
         app.launchEnvironment["NODIE_TEST_EMAIL"] = account.email
         app.launchEnvironment["NODIE_TEST_PASSWORD"] = account.password
         app.launchVietnamese()
@@ -62,7 +66,9 @@ enum NodieTestAuth {
     /// thấy gì — đó là lý do bộ test xanh trên máy dev mà đỏ trên máy sạch/CI. Không dùng
     /// `addUIInterruptionMonitor`: monitor chỉ chạy khi test chạm vào app, mà ở đây test đang
     /// CHỜ chứ chưa chạm gì.
-    private static func dismissPushPermissionAlert() {
+    /// Không `private`: QATabGateUITests tự dựng đường đăng nhập riêng (không qua `signIn`
+    /// vì cần VẮNG cờ `--uitest-show-qa`) nhưng vẫn phải né hộp thoại quyền push như mọi test.
+    static func dismissPushPermissionAlert() {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         // Nhãn theo ngôn ngữ HỆ THỐNG, không theo -AppleLanguages của app: springboard là
         // tiến trình khác, cờ ngôn ngữ của app không với tới nó.

@@ -27,6 +27,12 @@ struct RootTabView: View {
     /// Đã từng xuống hẳn `.background` chưa — xem chú thích ở `.onChange(of: scenePhase)`.
     @State private var wasInBackground = false
 
+    /// Tab bar theo role: Hỏi đáp tạm khoá, chỉ dev (admin/mod) thấy —
+    /// xem chú thích ở `NodieTab.visibleTabs(role:)`.
+    private var visibleTabs: [NodieTab] {
+        NodieTab.visibleTabs(role: auth.profile?.role)
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             NodieColors.bg.ignoresSafeArea()
@@ -93,7 +99,7 @@ struct RootTabView: View {
             .padding(.bottom, state.showsTabBar ? 74 : 0)
 
             if state.showsTabBar {
-                NodieTabBar(selection: state.tab, unreadCount: chat.totalUnread) {
+                NodieTabBar(selection: state.tab, tabs: visibleTabs, unreadCount: chat.totalUnread) {
                     NodieHaptics.tap()
                     state.selectTab($0)
                 }
@@ -150,7 +156,16 @@ struct RootTabView: View {
         // Nhớ tab qua lần giết app (#20). Đặt SAU `.id(dynamicTypeSize)`: nằm trước thì mỗi
         // lần đổi cỡ chữ cây bị dựng lại, `.task` của modifier chạy lại và kéo user về tab
         // đã lưu — đang đứng ở Chat mà chỉnh cỡ chữ lại bị ném về Hỏi đáp.
-        .nodieRestoresTab(state: state)
+        .nodieRestoresTab(state: state, role: auth.profile?.role)
+        // Không được đứng ở tab đã khoá. `initial: true` đỡ lúc mở app: default của
+        // AppState là .qa mà user thường không có tab đó → đá về tab đầu tiên còn mở
+        // (Chat) ngay nhịp dựng đầu. Khi profile về muộn hơn (role đổi nil → admin),
+        // tab đang đứng vẫn hợp lệ nên không bị đá đi đâu — chỉ có thêm nút Hỏi đáp.
+        .onChange(of: auth.profile?.role, initial: true) {
+            if !visibleTabs.contains(state.tab), let fallback = visibleTabs.first {
+                state.tab = fallback
+            }
+        }
         // Bấm push → mở đúng kênh.
         //
         // Phải có CẢ HAI, không bỏ cái nào:

@@ -20,8 +20,10 @@ final class AuthUITests: XCTestCase {
     private func credentials() throws -> NodieTestAuth.Account { try NodieTestAuth.credentials() }
 
     /// Mở app với session đã xoá, DỪNG ở màn Login — cho test soi trạng thái chưa đăng nhập.
+    /// Kèm `--uitest-show-qa` vì `testSignInFormLetsUserIn` đăng nhập từ màn này rồi chốt
+    /// "vào được app" bằng tab Hỏi đáp — tab đó đang khoá với role='user' khi thiếu cờ.
     private func launchSignedOut() {
-        app.launchArguments.append("--uitest-reset-auth")
+        app.launchArguments += ["--uitest-reset-auth", "--uitest-show-qa"]
         app.launchVietnamese()
         XCTAssertTrue(
             app.textFields["Email"].waitForExistence(timeout: 25),

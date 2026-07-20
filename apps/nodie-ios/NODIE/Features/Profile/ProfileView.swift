@@ -65,8 +65,13 @@ struct ProfileView: View {
                     ProfileStatsGrid(stats: stats)
                         .padding(.top, NodieSpacing.xl)
 
-                    ProfileContributionSection()
-                        .padding(.top, NodieSpacing.xl)
+                    // "Đóng góp của bạn" (câu hỏi/trả lời/đã lưu) là nội dung Q&A — trốn
+                    // cùng gate với tab Hỏi đáp. User thường chưa mở Q&A thì ba mục này rỗng
+                    // và vô nghĩa; chỉ dev (admin/mod) thấy. Xem `NodieTab.qaUnlocked`.
+                    if NodieTab.qaUnlocked(role: auth.profile?.role) {
+                        ProfileContributionSection()
+                            .padding(.top, NodieSpacing.xl)
+                    }
 
                     ProfileSettingsSection(
                         onOpenBlockedUsers: { showBlockedUsers = true },
