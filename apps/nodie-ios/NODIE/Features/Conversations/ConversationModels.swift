@@ -29,6 +29,9 @@ struct ChannelRow: Codable, Identifiable, Hashable {
     let emoji: String?
     let avatarHex: String?
     let badgeHex: String?
+    /// Người tạo nhóm = chủ nhóm (0043). Quyết định ai thấy nút "Chuyển giao chủ nhóm".
+    /// nil với kênh cũ / DM (create_dm không đặt).
+    let createdBy: UUID?
 
     /// Hàng `channel_members` của mình — nil nghĩa là CHƯA tham gia (kênh public đọc được
     /// nhưng chưa join). Quyết định được cả unread lẫn quyền đăng.
@@ -52,12 +55,16 @@ struct ChannelRow: Codable, Identifiable, Hashable {
         case lastMessageAt = "last_message_at"
         case avatarHex = "avatar_hex"
         case badgeHex = "badge_hex"
+        case createdBy = "created_by"
         case membership = "channel_members"
     }
 
     var me: Membership? { membership.first }
     var isMember: Bool { me != nil }
     var isMod: Bool { me?.role == "mod" }
+    /// Chủ nhóm — người tạo. Chỉ chủ thấy nút chuyển giao. So bằng caller vì `createdBy`
+    /// một mình không biết "mình" là ai.
+    func isOwner(_ uid: UUID?) -> Bool { createdBy != nil && createdBy == uid }
 
     /// Chỉ mod/admin đăng được vào kênh phát một chiều. RLS `messages_insert` (0017) mới là
     /// thứ chặn thật — chỗ này chỉ để ẩn ô nhập cho khỏi mời người ta gõ rồi báo lỗi.
@@ -262,6 +269,9 @@ struct MessageRow: Codable, Identifiable, Hashable {
     /// Mọi thả của MỌI người trên tin này (`message_reactions`, 0027). Nhúng cả `user_id`
     /// để suy ra được "mình đã thả chưa" mà không cần query thứ hai.
     let reactions: [ReactionRow]?
+    /// Non-nil = tin đang được ghim (0045). Chỉ quản trị nhóm đặt được, qua RPC set_pinned.
+    var pinnedAt: Date? = nil
+    var pinnedBy: UUID? = nil
 
     struct ReactionRow: Codable, Hashable {
         let kind: String
@@ -279,10 +289,13 @@ struct MessageRow: Codable, Identifiable, Hashable {
         case parentId = "parent_id"
         case createdAt = "created_at"
         case editedAt = "edited_at"
+        case pinnedAt = "pinned_at"
+        case pinnedBy = "pinned_by"
     }
 
     var media: MessageMedia? { metadata?.media }
     var isEdited: Bool { editedAt != nil }
+    var isPinned: Bool { pinnedAt != nil }
 
     /// Đếm theo loại, gồm cả của mình — khớp `count(*)` trên `message_reactions`.
     var reactionCounts: [ReactionKind: Int] {
@@ -305,7 +318,16 @@ struct MessageRow: Codable, Identifiable, Hashable {
     func replacingReactions(_ rows: [ReactionRow]) -> MessageRow {
         MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
                    body: body, createdAt: createdAt, editedAt: editedAt,
-                   author: author, metadata: metadata, reactions: rows)
+                   author: author, metadata: metadata, reactions: rows,
+                   pinnedAt: pinnedAt, pinnedBy: pinnedBy)
+    }
+
+    /// Bản sao với trạng thái ghim khác — cho Realtime vá tại chỗ khi quản trị ghim/gỡ.
+    func replacingPin(at pinnedAt: Date?, by pinnedBy: UUID?) -> MessageRow {
+        MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
+                   body: body, createdAt: createdAt, editedAt: editedAt,
+                   author: author, metadata: metadata, reactions: reactions,
+                   pinnedAt: pinnedAt, pinnedBy: pinnedBy)
     }
 
     /// Bản sao với nội dung đã sửa — cho Realtime vá tại chỗ khi NGƯỜI KHÁC sửa tin
@@ -313,7 +335,8 @@ struct MessageRow: Codable, Identifiable, Hashable {
     func replacingBody(_ body: String?, editedAt: Date?) -> MessageRow {
         MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
                    body: body, createdAt: createdAt, editedAt: editedAt,
-                   author: author, metadata: metadata, reactions: reactions)
+                   author: author, metadata: metadata, reactions: reactions,
+                   pinnedAt: pinnedAt, pinnedBy: pinnedBy)
     }
 
     /// Gắn đính kèm đã có đường dẫn thật vào bản lạc quan, sau khi upload xong.
@@ -322,7 +345,8 @@ struct MessageRow: Codable, Identifiable, Hashable {
     func replacingMedia(_ media: MessageMedia) -> MessageRow {
         MessageRow(id: id, channelId: channelId, userId: userId, parentId: parentId,
                    body: body, createdAt: createdAt, editedAt: editedAt,
-                   author: author, metadata: MessageMetadata(media: media), reactions: reactions)
+                   author: author, metadata: MessageMetadata(media: media), reactions: reactions,
+                   pinnedAt: pinnedAt, pinnedBy: pinnedBy)
     }
 
     var authorName: String { author?.name ?? String(localized: "Ẩn danh") }

@@ -13,7 +13,9 @@ final class NewMessageUITests: XCTestCase {
     }
 
     private func openPicker() {
-        app.buttons["Soạn tin nhắn mới"].tap()
+        // Nút ✎ giờ là Menu (Tin nhắn mới / Tạo nhóm) — bấm rồi chọn mục đầu.
+        app.buttons["Soạn tin nhắn hoặc tạo nhóm"].tap()
+        app.buttons["Tin nhắn mới"].tap()
         XCTAssertTrue(app.staticTexts["TIN NHẮN MỚI"].waitForExistence(timeout: 5),
                       "Nút ✎ phải mở màn chọn người")
     }

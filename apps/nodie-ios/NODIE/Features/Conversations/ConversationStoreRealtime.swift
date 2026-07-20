@@ -85,6 +85,25 @@ extension ConversationStore {
                     await self.handleMemberUpdate(event.record)
                 }
             },
+            // Quan sát trạng thái kênh để bắt cú RỚT-RỒI-NỐI-LẠI giữa lúc app đang mở
+            // (wifi→LTE, thang máy). supabase-swift tự nối lại socket và re-join kênh:
+            // `resetForReconnect` đưa kênh `.subscribed` → `.unsubscribed` rồi rejoin, nên
+            // status quay lại `.subscribed` LẦN NỮA. Không quan sát thì mọi tin đến trong lúc
+            // rớt chỉ xuất hiện khi user xuống nền rồi mở lại / kéo-refresh — mất tin trên UX.
+            //
+            // Lần `.subscribed` ĐẦU là subscription vừa lập (list/.task vừa nạp xong) — bỏ
+            // qua. Mỗi lần `.subscribed` SAU đó = một lần nối lại → chạy đúng catch-up của
+            // `resumeFromForeground`. `statusChange` là AsyncValueSubject: observer mới nhận
+            // ngay giá trị hiện tại, nên `.subscribed` đương nhiệm tính là "lần đầu".
+            Task { [weak self] in
+                var sawSubscribed = false
+                for await status in realtime.statusChange {
+                    guard let self, !Task.isCancelled else { return }
+                    guard case .subscribed = status else { continue }
+                    if sawSubscribed { await self.catchUp() }
+                    sawSubscribed = true
+                }
+            },
         ]
     }
 
@@ -116,6 +135,18 @@ extension ConversationStore {
         // KHÔNG phải trigger duy nhất đáng tin — lỗi timeout/cannotConnectToHost cũng xếp
         // loại .offline mà path thì vẫn satisfied, chỉ chờ onChange là kẹt vô hạn.
         await flushQueued()
+        await catchUp()
+    }
+
+    /// Nạp bù những gì đã bỏ lỡ khi socket vắng mặt: danh sách kênh (+ title DM + unread) và
+    /// phần đuôi của chat đang mở. TÁCH RIÊNG vì có HAI trigger dùng chung nó — về foreground
+    /// (`resumeFromForeground`) và socket tự nối lại giữa lúc app đang mở (observer status
+    /// trong `startRealtime`). Con trỏ của `fetchNewMessages` bám thời gian server nên bù
+    /// đúng, không lệ thuộc device có lệch giờ hay không.
+    ///
+    /// Lần sync ĐẦU của phiên do ConversationListView lo — ở đây chỉ chạy khi đã từng sync.
+    @MainActor
+    func catchUp() async {
         guard hasSyncedChannels else { return }
         await loadChannels()
         if let visible = visibleChannelId {
@@ -204,10 +235,15 @@ extension ConversationStore {
 
         guard let index = messagesByChannel[channelId]?.firstIndex(where: { $0.id == messageId })
         else { return }
-        let updated = messagesByChannel[channelId]![index].replacingBody(
-            record["body"]?.stringValue,
-            editedAt: record["edited_at"]?.stringValue.flatMap(Self.parseTimestamp)
-        )
+        // UPDATE trên messages là sửa body HOẶC ghim/gỡ — áp cả hai. Ghim đổi `pinned_at`
+        // mà không đụng body, nên phải đọc riêng, không suy từ body.
+        let updated = messagesByChannel[channelId]![index]
+            .replacingBody(
+                record["body"]?.stringValue,
+                editedAt: record["edited_at"]?.stringValue.flatMap(Self.parseTimestamp))
+            .replacingPin(
+                at: record["pinned_at"]?.stringValue.flatMap(Self.parseTimestamp),
+                by: record["pinned_by"]?.stringValue.flatMap { UUID(uuidString: $0) })
         messagesByChannel[channelId]![index] = updated
         Task { await ChatDiskCache.shared.insertMessages([updated]) }
     }
@@ -283,7 +319,10 @@ extension ConversationStore {
     /// `messagesByChannel` trong khi main thread đang đọc để vẽ.
     @MainActor
     func fetchNewMessages(channelId: UUID) async {
-        let after = messagesByChannel[channelId]?.last?.createdAt
+        // Con trỏ theo thời gian SERVER, KHÔNG theo đuôi `messagesByChannel` (xem
+        // `serverCursor`): đuôi có thể là bong bóng lạc quan đóng dấu giờ máy, device lệch
+        // giờ thì `gt` nhảy qua tin peer trong khoảng lệch — mất tin vĩnh viễn.
+        let after = serverCursor[channelId]
         do {
             var query = client.from("messages")
                 .select(ConversationStore.messageSelect)
@@ -294,6 +333,11 @@ extension ConversationStore {
             let rows: [MessageRow] = try await query
                 .order("created_at", ascending: true).limit(50)
                 .execute().value
+
+            // Đẩy con trỏ TRƯỚC khi lọc trùng: echo tin của chính mình bị dedup (fresh rỗng)
+            // nhưng vẫn mang `created_at` server thật — không đẩy con trỏ thì lần sau fetch
+            // lại đúng lô đó mãi. Dùng lô server thô, không dùng đuôi lạc quan.
+            advanceServerCursor(channelId, from: rows)
 
             let existing = Set((messagesByChannel[channelId] ?? []).map(\.id))
             // Người bị chặn vẫn gửi được và RLS không biết chuyện đó — lọc ở client.

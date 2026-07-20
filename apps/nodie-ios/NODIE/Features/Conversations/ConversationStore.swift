@@ -42,6 +42,12 @@ final class ConversationStore {
     /// và bong bóng kẹt "hỏng" vĩnh viễn cho một tin ĐÃ gửi được.
     private var uploadsInFlight: Set<UUID> = []
 
+    /// Task upload đang chạy, khoá theo id tin. Giữ HANDLE để huỷ được thật: xoá một tin
+    /// đang upload phải chặn INSERT (uploadPending kiểm `Task.isCancelled` ngay trước khi
+    /// ghi tin). Không giữ handle thì `discardMedia` chỉ quên `Data` còn task vẫn chạy tiếp
+    /// và INSERT một tin người dùng tưởng đã xoá — tin "sống lại" tới cả người nhận.
+    private var uploadTasks: [UUID: Task<Void, Never>] = [:]
+
     struct PendingMedia {
         enum Phase { case uploading, failed }
         var phase: Phase
@@ -76,6 +82,21 @@ final class ConversationStore {
     /// Cũng không `private(set)` — Realtime (file khác) bump unread khi tin đến kênh đang đóng.
     var unreadByChannel: [UUID: Int] = [:]
 
+    /// Mốc `created_at` SERVER mới nhất đã thấy cho mỗi kênh — con trỏ catch-up của
+    /// `fetchNewMessages`. KHÔNG lấy từ đuôi `messagesByChannel`: bong bóng lạc quan của
+    /// chính mình đóng dấu GIỜ MÁY (`send`/`sendMedia` dùng `Date()`), device lệch giờ vài
+    /// giây thì `gt(created_at, đuôi)` nhảy QUA tin peer trong khoảng lệch. `created_at`
+    /// server (DB đóng băng, client không sửa được) là nguồn thời gian tin cậy duy nhất.
+    /// Không `private`: `fetchNewMessages` ở ConversationStoreRealtime.swift đọc/ghi nó.
+    var serverCursor: [UUID: Date] = [:]
+
+    /// Ghi nhận mốc server mới nhất từ một lô tin SERVER vừa nạp. `max` nên jump-to-message
+    /// (nạp cửa sổ giữa lịch sử) không kéo con trỏ TỤT về quá khứ.
+    func advanceServerCursor(_ channelId: UUID, from rows: [MessageRow]) {
+        guard let newest = rows.map(\.createdAt).max() else { return }
+        serverCursor[channelId] = max(serverCursor[channelId] ?? .distantPast, newest)
+    }
+
     /// Người mình đã chặn — lọc ở accessor, giống QAStore.
     var blockedUserIds: Set<UUID> = []
 
@@ -84,7 +105,7 @@ final class ConversationStore {
     var currentUserId: UUID? { uid }
 
     private static let channelSelect =
-        "id,slug,title,kind,is_broadcast,last_message_at,emoji,avatar_hex,badge_hex,channel_members(role,last_read_at,muted_until)"
+        "id,slug,title,kind,is_broadcast,last_message_at,emoji,avatar_hex,badge_hex,created_by,channel_members(role,last_read_at,muted_until)"
     /// Không `private`: ConversationStoreRealtime.swift (file khác) phải dựng CÙNG shape khi
     /// nạp lại tin Realtime vừa đẩy về. Hai bản select lệch nhau là decode nổ — cùng lý do
     /// với `QAStore.questionSelect`.
@@ -98,7 +119,7 @@ final class ConversationStore {
     // vẫn "thành công" — ảnh/thoại chỉ sống qua Realtime, mở lại chat là thành bong bóng rỗng.
     // Bug im lặng tuyệt đối, đã dính một lần (17/07).
     static let messageSelect =
-        "id,channel_id,user_id,parent_id,body,created_at,edited_at,metadata,author:public_profiles!messages_user_id_fkey(display_name),reactions:message_reactions(kind,user_id)"
+        "id,channel_id,user_id,parent_id,body,created_at,edited_at,pinned_at,pinned_by,metadata,author:public_profiles!messages_user_id_fkey(display_name),reactions:message_reactions(kind,user_id)"
 
     /// Kênh Realtime TOÀN CỤC — một subscription cho cả bảng `messages` + `message_reactions`
     /// + `channel_members`, không phải mỗi khung chat một cái. Không `private`:
@@ -259,7 +280,11 @@ final class ConversationStore {
 
     /// 50 tin mới nhất, hoặc 50 tin trước `before` (keyset — KHÔNG offset, quy tắc scale #2).
     /// Trả về theo thứ tự cũ→mới để view append thẳng.
-    func loadMessages(channelId: UUID, before: Date? = nil) async {
+    ///
+    /// Trả SỐ tin server lấy được — phân trang cuộn-lên dùng nó để biết đã chạm đáy lịch sử
+    /// (0 tin) và ngừng gọi. `@discardableResult`: mọi caller cũ vẫn gọi như thường, không đổi.
+    @discardableResult
+    func loadMessages(channelId: UUID, before: Date? = nil) async -> Int {
         messageLoadErrors[channelId] = nil
         do {
             var query = client.from("messages")
@@ -274,6 +299,9 @@ final class ConversationStore {
                 .execute().value
 
             let older = page.reversed().filter { !isBlocked($0.userId) }
+            // Con trỏ catch-up bám thời gian SERVER, không bám bong bóng lạc quan (xem
+            // `serverCursor`). Lô này là dữ liệu server thật nên đủ tư cách đẩy con trỏ.
+            advanceServerCursor(channelId, from: older)
             if before == nil {
                 messagesByChannel[channelId] = older
                 // Trang đầu THAY cả mảng → nuốt luôn bong bóng đang upload. Trả chúng về.
@@ -285,10 +313,16 @@ final class ConversationStore {
                 messagesByChannel[channelId] = older + (messagesByChannel[channelId] ?? [])
                 Task { await ChatDiskCache.shared.insertMessages(older) }
             }
+            // Đếm theo lô SERVER thô (`page`), không theo `older` đã lọc chặn: một trang toàn
+            // tin của người bị chặn vẫn nghĩa là "còn lịch sử phía trước", đừng kết luận hết.
+            return page.count
         } catch {
             // Chỉ CHẶN màn khi kênh chưa có tin nào — refresh/phân trang hỏng lúc đã có tin
             // thì giữ nguyên tin cũ, không đá người dùng ra khỏi cuộc trò chuyện đang đọc dở.
             if messages(for: channelId).isEmpty { messageLoadErrors[channelId] = NodieErrorKind.of(error) }
+            // Hỏng (thường là offline): trả -1 để phân trang KHÔNG nhầm là "hết lịch sử" mà
+            // đóng cửa vĩnh viễn — 0 dành riêng cho "server nói không còn tin nào".
+            return -1
         }
     }
 
@@ -326,6 +360,9 @@ final class ConversationStore {
             let filtered = window.filter { !isBlocked($0.userId) }
             guard filtered.contains(where: { $0.id == messageId }) else { return false }
             messagesByChannel[channelId] = filtered
+            // `max` bên trong: cửa sổ này có thể nằm GIỮA lịch sử (nhảy tới tin cũ), đừng để
+            // nó kéo con trỏ catch-up tụt về sau đuôi thật.
+            advanceServerCursor(channelId, from: filtered)
             reattachPendingRows(in: channelId)
             // KHÔNG ghi đĩa: cache đĩa (phase 01) giữ 200 tin MỚI NHẤT; đè bằng một lát cắt
             // giữa lịch sử thì lần mở nguội sau hiện nhầm khúc cũ ở vị trí "mới nhất" cho tới
@@ -404,6 +441,9 @@ final class ConversationStore {
     struct ChannelMember: Identifiable, Hashable {
         let id: UUID
         let displayName: String
+        /// 'member' | 'mod'. Cho GroupInfoView hiện nhãn quản trị + biết ai được phong/gỡ.
+        var role: String = "member"
+        var isMod: Bool { role == "mod" }
     }
 
     /// Thành viên của kênh. RLS `members_read` cho mọi thành viên thấy nhau trong kênh
@@ -412,6 +452,7 @@ final class ConversationStore {
     func members(of channelId: UUID) async -> [ChannelMember] {
         struct Row: Decodable {
             let userId: UUID
+            let role: String
             let lastReadAt: Date?
             let member: Name?
             struct Name: Decodable {
@@ -419,14 +460,14 @@ final class ConversationStore {
                 enum CodingKeys: String, CodingKey { case displayName = "display_name" }
             }
             enum CodingKeys: String, CodingKey {
-                case member
+                case member, role
                 case userId = "user_id"
                 case lastReadAt = "last_read_at"
             }
         }
         do {
             let rows: [Row] = try await client.from("channel_members")
-                .select("user_id,last_read_at,member:public_profiles!channel_members_user_id_fkey(display_name)")
+                .select("user_id,role,last_read_at,member:public_profiles!channel_members_user_id_fkey(display_name)")
                 .eq("channel_id", value: channelId)
                 .execute().value
             // Tiện chuyến: mốc đọc XA NHẤT của người khác — nguồn của dấu ✓✓ trong nhóm.
@@ -440,7 +481,8 @@ final class ConversationStore {
             }
             return rows.map {
                 ChannelMember(id: $0.userId,
-                              displayName: $0.member?.displayName ?? String(localized: "Ẩn danh"))
+                              displayName: $0.member?.displayName ?? String(localized: "Ẩn danh"),
+                              role: $0.role)
             }
         } catch {
             errorMessage = String(localized: "Không tải được danh sách thành viên.")
@@ -652,7 +694,8 @@ final class ConversationStore {
                                         channelId: channelId, caption: caption,
                                         parentId: parentId, row: optimistic,
                                         posterData: posterData, posterExt: posterExt)
-        Task { await uploadPending(messageId: id) }
+        // Giữ handle để `discardMedia`/xoá-tin huỷ được task này TRƯỚC khi nó kịp INSERT.
+        uploadTasks[id] = Task { await uploadPending(messageId: id) }
         return true
     }
 
@@ -751,6 +794,9 @@ final class ConversationStore {
         guard !uploadsInFlight.contains(messageId) else { return false }
         uploadsInFlight.insert(messageId)
         defer { uploadsInFlight.remove(messageId) }
+        // Quên handle khi task kết thúc (mọi đường ra) — không thì dict phình dần vì
+        // handle của các upload ĐÃ xong. Trùng với discardMedia niling cũng vô hại.
+        defer { uploadTasks[messageId] = nil }
 
         var working = pending
         working.phase = .uploading
@@ -770,6 +816,11 @@ final class ConversationStore {
                     ext: posterExt, contentType: "image/jpeg", client: client
                 )
             }
+            // Người dùng đã XOÁ tin trong lúc upload chạy → KHÔNG INSERT. Để tệp vừa lên
+            // thành file mồ côi (dọn sau) còn hơn dựng lại một tin họ tưởng đã xoá. Kiểm cả
+            // `Task.isCancelled` (discardMedia gọi `cancel()`) lẫn `pendingMedia` biến mất
+            // (đường xoá hàng loạt quên `Data` trực tiếp) — hai cửa cùng nghĩa "đừng ghi".
+            guard !Task.isCancelled, pendingMedia[messageId] != nil else { return false }
             let media = pending.media.replacingPath(path, posterPath: posterPath)
             let payload = NewMessage(id: messageId, channelId: pending.channelId, userId: uid,
                                      body: pending.caption, parentId: pending.parentId,
@@ -798,6 +849,10 @@ final class ConversationStore {
             Task { await ChatDiskCache.shared.insertMessages([confirmed]) }
             return true
         } catch {
+            // Bị HUỶ giữa chừng (người dùng xoá tin đang upload) → tin đã biến mất khỏi màn,
+            // đừng dựng lại một pending "hỏng" cho tin không còn tồn tại (sẽ là bong bóng ma
+            // giữ tới 25MB `Data`). Cùng nghĩa khi `pendingMedia` đã bị quên ở đường xoá khác.
+            if Task.isCancelled || pendingMedia[messageId] == nil { return false }
             // KHÔNG gỡ tin ra và KHÔNG bắn `errorMessage`: lỗi thuộc về đúng một bong bóng,
             // nó tự hiện trạng thái hỏng + nút Gửi lại. Alert ở gốc màn cho một ảnh lỗi là
             // đúng thứ audit gọi là error UX tệ.
@@ -817,12 +872,20 @@ final class ConversationStore {
     /// Gửi lại một đính kèm hỏng — `Data` gốc còn nằm trong `pendingMedia` nên không phải
     /// chọn ảnh lần nữa.
     func retryMedia(messageId: UUID) async {
-        await uploadPending(messageId: messageId)
+        // Giữ handle như lần gửi đầu — retry cũng phải huỷ được nếu người dùng xoá tin
+        // ngay khi nó đang gửi lại.
+        let task = Task { _ = await uploadPending(messageId: messageId) }
+        uploadTasks[messageId] = task
+        await task.value
     }
 
-    /// Bỏ hẳn một đính kèm hỏng: gỡ bong bóng + quên `Data`.
+    /// Bỏ hẳn một đính kèm hỏng (hoặc đang upload): huỷ task + gỡ bong bóng + quên `Data`.
     func discardMedia(messageId: UUID) {
         guard let pending = pendingMedia[messageId] else { return }
+        // Huỷ TRƯỚC khi quên pending: task còn sống sẽ INSERT một tin vừa bị xoá ("tin sống
+        // lại"). uploadPending kiểm `Task.isCancelled` ngay trước INSERT nên cancel là đủ chặn.
+        uploadTasks[messageId]?.cancel()
+        uploadTasks[messageId] = nil
         messagesByChannel[pending.channelId]?.removeAll { $0.id == messageId }
         pendingMedia[messageId] = nil
     }
@@ -927,6 +990,14 @@ final class ConversationStore {
             messagesByChannel[channelId]?.removeAll { $0.id == messageId }
             return
         }
+        // Tin đang UPLOAD media = server CHƯA có row (INSERT xảy ra SAU khi upload xong).
+        // Xoá là chuyện local: huỷ task upload + gỡ bubble, KHÔNG gọi server. Thiếu nhánh
+        // này thì soft-delete khớp 0 hàng (vô hại) nhưng task upload chạy tiếp và INSERT một
+        // tin người dùng tưởng đã xoá — cùng bất biến với đường xoá hàng loạt bên dưới.
+        if pendingMedia[messageId] != nil {
+            discardMedia(messageId: messageId)
+            return
+        }
         struct SoftDelete: Encodable {
             let deletedAt: Date
             enum CodingKeys: String, CodingKey { case deletedAt = "deleted_at" }
@@ -985,8 +1056,10 @@ final class ConversationStore {
         for id in ids where isQueued(id) {
             queuedTexts.removeAll { $0.payload.id == id }
         }
+        // `discardMedia` chứ không chỉ quên `Data`: nó HUỶ task upload nữa. Quên `Data` một
+        // mình để task chạy tiếp và INSERT một tin vừa xoá — đúng bug "tin sống lại".
         for id in ids where pendingMedia[id] != nil {
-            pendingMedia[id] = nil
+            discardMedia(messageId: id)
         }
         let serverIds = ids.filter { !isQueued($0) && pendingMedia[$0] == nil }
 
@@ -1004,6 +1077,50 @@ final class ConversationStore {
         } catch {
             messagesByChannel[channelId] = backup
             errorMessage = ErrorText.localized(error)
+        }
+    }
+
+    // MARK: - Ghim tin (phase 06)
+
+    /// Tin đang ghim của một kênh — nguồn của băng ghim. Query RIÊNG, không lọc từ
+    /// `messagesByChannel`: tin ghim có thể đã trôi khỏi 50 tin đang nạp, mà băng vẫn phải
+    /// hiện nó. Mới ghim lên trước.
+    func pinnedMessages(in channelId: UUID) async -> [MessageRow] {
+        do {
+            return try await client.from("messages")
+                .select(Self.messageSelect)
+                .eq("channel_id", value: channelId)
+                .not("pinned_at", operator: .is, value: "null")
+                .is("deleted_at", value: nil)
+                .order("pinned_at", ascending: false)
+                .execute().value
+        } catch {
+            errorMessage = ErrorText.localized(error)
+            return []
+        }
+    }
+
+    /// Ghim/gỡ ghim — RPC `set_pinned` (security definer, 0045). RPC tự kiểm caller là quản
+    /// trị nhóm và trần 3 tin; Swift chỉ gọi và bắt lỗi (báo "tối đa 3 tin" nếu chạm trần).
+    ///
+    /// KHÔNG mutate lạc quan `pinned_at`: băng ghim đọc từ `pinnedMessages` (query riêng), và
+    /// Realtime UPDATE messages sẽ vá `pinned_at` trên bong bóng. Trả `true` để view nạp lại băng.
+    @discardableResult
+    func setPinned(messageId: UUID, pinned: Bool) async -> Bool {
+        struct Params: Encodable {
+            let messageId: UUID
+            let pinned: Bool
+            enum CodingKeys: String, CodingKey {
+                case messageId = "p_message_id"
+                case pinned = "p_pinned"
+            }
+        }
+        do {
+            try await client.rpc("set_pinned", params: Params(messageId: messageId, pinned: pinned)).execute()
+            return true
+        } catch {
+            errorMessage = ErrorText.localized(error)
+            return false
         }
     }
 
@@ -1066,9 +1183,15 @@ final class ConversationStore {
             channels.removeAll { $0.id == channelId }
             messagesByChannel[channelId] = nil
             unreadByChannel[channelId] = nil
+            serverCursor[channelId] = nil
             // Bỏ luôn đính kèm đang gửi của kênh vừa rời: policy Storage đòi còn là thành viên,
             // nên upload của chúng chắc chắn hỏng từ đây. Không dọn thì chúng nằm lại giữ
-            // `Data` (tới 25MB/tệp) mà không còn màn nào hiện ra để bấm bỏ.
+            // `Data` (tới 25MB/tệp) mà không còn màn nào hiện ra để bấm bỏ. Huỷ task upload
+            // trước — nếu không nó vẫn chạy tới INSERT vào kênh mình vừa rời.
+            for (id, media) in pendingMedia where media.channelId == channelId {
+                uploadTasks[id]?.cancel()
+                uploadTasks[id] = nil
+            }
             pendingMedia = pendingMedia.filter { $0.value.channelId != channelId }
             // Text đang chờ mạng của kênh vừa rời cũng bỏ — cùng lý do với pendingMedia ở trên.
             queuedTexts.removeAll { $0.channelId == channelId }

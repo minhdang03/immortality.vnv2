@@ -15,6 +15,9 @@ struct ConversationListView: View {
     let follow: FollowStore
     @State private var filter: ConversationFilter = .all
     @State private var showNewMessage = false
+    @State private var showNewGroup = false
+    /// Nhóm vừa tạo — mở thẳng vào (giống openOrCreateDM). Đặt path sau khi sheet đóng.
+    @State private var openGroupAfterCreate: UUID?
 
     /// Tìm kiếm (phase 12): kênh lọc local, tin nhắn hỏi server (ILIKE, debounce 300ms).
     @State private var searchText = ""
@@ -179,6 +182,20 @@ struct ConversationListView: View {
         // sheet được (khác màn Chiếu câu hỏi dùng fullScreenCover): chọn người là thao tác
         // một chạm, vuốt xuống đóng nhầm cũng không mất gì đang gõ dở.
         .sheet(isPresented: $showNewMessage) { NewMessageView(state: state, store: store, follow: follow) }
+        .sheet(isPresented: $showNewGroup) {
+            GroupComposeView(mode: .create, store: store, follow: follow) { title, memberIds in
+                Task {
+                    if let channelId = await store.createGroup(title: title, memberIds: memberIds) {
+                        openGroupAfterCreate = channelId
+                    }
+                }
+            }
+        }
+        .onChange(of: openGroupAfterCreate) { _, channelId in
+            guard let channelId else { return }
+            openGroupAfterCreate = nil
+            state.openChat(channelId)
+        }
     }
 
     /// Tắt thông báo tới bao giờ. Prototype không có màn chọn thời hạn nên chọn một mốc xa —
@@ -376,8 +393,17 @@ struct ConversationListView: View {
                     .font(NodieTypography.screenTitle)
                     .foregroundStyle(NodieColors.ink)
                 Spacer()
-                Button {
-                    showNewMessage = true
+                Menu {
+                    Button {
+                        showNewMessage = true
+                    } label: {
+                        Label("Tin nhắn mới", systemImage: "bubble.left")
+                    }
+                    Button {
+                        showNewGroup = true
+                    } label: {
+                        Label("Tạo nhóm", systemImage: "person.3")
+                    }
                 } label: {
                     Image(systemName: "square.and.pencil")
                         .font(.system(size: 15))
@@ -385,8 +411,7 @@ struct ConversationListView: View {
                         .frame(width: 36, height: 36)
                         .background(Circle().fill(NodieColors.ink))
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Soạn tin nhắn mới")
+                .accessibilityLabel("Soạn tin nhắn hoặc tạo nhóm")
             }
 
             FilterChipRow(options: ConversationFilter.allCases, selection: $filter)

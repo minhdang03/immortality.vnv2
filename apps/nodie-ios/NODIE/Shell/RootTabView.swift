@@ -17,6 +17,9 @@ struct RootTabView: View {
     /// "đang theo ai" — hai instance riêng sẽ lệch nhau ngay khi follow ở màn này rồi mở
     /// màn kia.
     @State private var follow = FollowStore()
+    /// Cờ tính năng (Supabase `app_config`). Ở ĐÂY vì tab bar cần biết Hỏi đáp có mở không
+    /// kể cả khi đứng tab khác, và màn Cá nhân (push từ tab khác) cũng đọc cùng cờ.
+    @State private var flags = FeatureFlagStore()
 
     /// Cỡ chữ hệ thống. Đọc ở đây để cả cây view dựng lại khi user đổi cỡ chữ —
     /// font trong NodieTypography là giá trị đã tính sẵn, không tự biết mình cũ.
@@ -30,7 +33,7 @@ struct RootTabView: View {
     /// Tab bar theo role: Hỏi đáp tạm khoá, chỉ dev (admin/mod) thấy —
     /// xem chú thích ở `NodieTab.visibleTabs(role:)`.
     private var visibleTabs: [NodieTab] {
-        NodieTab.visibleTabs(role: auth.profile?.role)
+        NodieTab.visibleTabs(role: auth.profile?.role, qaPublic: flags.qaPublic)
     }
 
     var body: some View {
@@ -46,7 +49,7 @@ struct RootTabView: View {
                             .navigationDestination(for: FeedRoute.self) { route in
                                 switch route {
                                 case .profile:
-                                    ProfileView(auth: auth, qa: qa).nodieDetailScreen()
+                                    ProfileView(auth: auth, qa: qa, qaPublic: flags.qaPublic).nodieDetailScreen()
                                 }
                             }
                     }
@@ -72,7 +75,7 @@ struct RootTabView: View {
                                     MemberProfileView(state: state, follow: follow, conversations: chat, memberId: id)
                                         .nodieDetailScreen()
                                 case .groupInfo(let channelId):
-                                    GroupInfoView(state: state, store: chat, channelId: channelId)
+                                    GroupInfoView(state: state, store: chat, follow: follow, channelId: channelId)
                                         .nodieDetailScreen()
                                 }
                             }
@@ -86,7 +89,7 @@ struct RootTabView: View {
                             .navigationDestination(for: FriendsRoute.self) { route in
                                 switch route {
                                 case .profile:
-                                    ProfileView(auth: auth, qa: qa).nodieDetailScreen()
+                                    ProfileView(auth: auth, qa: qa, qaPublic: flags.qaPublic).nodieDetailScreen()
                                 case .member(let id):
                                     MemberProfileView(state: state, follow: follow, conversations: chat, memberId: id)
                                         .nodieDetailScreen()
@@ -156,7 +159,7 @@ struct RootTabView: View {
         // Nhớ tab qua lần giết app (#20). Đặt SAU `.id(dynamicTypeSize)`: nằm trước thì mỗi
         // lần đổi cỡ chữ cây bị dựng lại, `.task` của modifier chạy lại và kéo user về tab
         // đã lưu — đang đứng ở Chat mà chỉnh cỡ chữ lại bị ném về Hỏi đáp.
-        .nodieRestoresTab(state: state, role: auth.profile?.role)
+        .nodieRestoresTab(state: state, role: auth.profile?.role, qaPublic: flags.qaPublic)
         // Không được đứng ở tab đã khoá. `initial: true` đỡ lúc mở app: default của
         // AppState là .qa mà user thường không có tab đó → đá về tab đầu tiên còn mở
         // (Chat) ngay nhịp dựng đầu. Khi profile về muộn hơn (role đổi nil → admin),
@@ -190,6 +193,10 @@ struct RootTabView: View {
             // danh sách Hỏi đáp chỉ cần có mặt khi user đứng ở tab đó.
             await qa.warmFromDisk()
             await chat.startRealtime()
+            // Cờ tính năng đọc MỘT lần ở đây: RootTabView chỉ tồn tại khi đã signedIn nên
+            // `.task` này chạy đúng một lần lúc đăng nhập. Cuối chuỗi vì nó chỉ đổi hiển thị
+            // tab, không cấp bách như badge/realtime; lỗi/offline giữ default (ẩn Q&A).
+            await flags.load()
         }
         .onChange(of: auth.profile?.displayName) { _, name in
             chat.myDisplayName = name

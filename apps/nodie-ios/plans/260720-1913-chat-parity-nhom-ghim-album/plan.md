@@ -19,12 +19,16 @@ phải trả lời, ngược nguyên tắc sản phẩm.
 
 | # | Việc | Migration | Model | Trạng thái |
 |---|---|---|---|---|
-| 01 | Trạng thái gửi từng tin (mục 8) | không | Opus (fast) | ☐ |
-| 02 | Gộp album nhiều ảnh (mục 11) | không | Opus (fast) | ☐ |
-| 03 | Chọn nhiều tin (mục 10) | không | Opus (fast) | ☐ |
-| 04 | Nền quyền nhóm: vai trò + tạo nhóm + RLS (mục 7a) | **có** | **Fable** | ☐ |
-| 05 | UI quản trị nhóm (mục 7b) | không | Opus (fast) | ☐ |
-| 06 | Ghim tin nhắn (mục 6) | **có** | **Fable** | ☐ |
+| 01 | Trạng thái gửi từng tin (mục 8) | không | Opus (fast) | ✅ committed `350606c` |
+| 02 | Gộp album nhiều ảnh (mục 11) | không | Opus (fast) | ✅ committed `350606c` |
+| 03 | Chọn nhiều tin (mục 10) | không | Opus (fast) | ✅ committed `350606c` |
+| 04 | Nền quyền nhóm: vai trò + tạo nhóm + RLS (mục 7a) | **0043 + 0044** | **Fable** | ✅ prod applied + ma trận verified 21/07 (uncommitted) |
+| 05 | UI quản trị nhóm (mục 7b) | không | Opus (fast) | ✅ built + compiles (chưa runtime-test) (uncommitted) |
+| 06 | Ghim tin nhắn (mục 6) | **0045** (0044 đã bị guard chiếm) | **Fable** | ☐ chưa bắt đầu — mục DUY NHẤT còn lại |
+
+> **0044 ngoài kế hoạch:** Fable phát hiện + vá lỗ tự-phong-mod (RLS không bó theo cột) bằng
+> trigger `trg_guard_member_role`, kiểu `nodie_clamp_last_read_at` (0042). Đã verified prod.
+> ⇒ migration ghim tin của phase 06 giờ là **0045**, không phải 0044.
 
 **Tư vấn model:** phase 01–03, 05 là việc cơ khí có spec rõ, `sendMedia`/`MessageBubbleView`
 đã có khuôn — Opus (fast) đủ. Phase 04 và 06 đụng **RLS trên prod**, đúng vùng đã trả giá 4

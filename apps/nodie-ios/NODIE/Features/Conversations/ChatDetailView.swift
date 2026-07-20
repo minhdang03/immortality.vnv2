@@ -33,6 +33,7 @@ struct ChatDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     /// Đang ở sát đáy hay không — quyết định tin mới được cuộn tới hay chỉ báo bằng nút.
     /// Mặc định `true`: mở chat là đang ở đáy (xem `.onAppear` bên dưới).
@@ -109,6 +110,17 @@ struct ChatDetailView: View {
     /// loadWindow đổ mảng vào (atBottom mặc định true). Không dựa vào thứ tự onChange nữa.
     @State private var jumpingToTarget = false
 
+    // MARK: - Phân trang cuộn-lên (nạp tin cũ hơn)
+
+    /// Đã nạp xong trang đầu và cuộn về đáy chưa. Cổng cho cảm biến đầu danh sách: layout
+    /// dựng ban đầu có thể realize cảm biến một nhịp trước khi cuộn xuống đáy — chưa qua
+    /// cổng này thì không nạp trang cũ, tránh kích nạp oan lúc mở màn.
+    @State private var didInitialLoad = false
+    /// Đang nạp trang cũ hơn — chống gọi chồng khi cảm biến đầu danh sách chớp nhiều lần.
+    @State private var isLoadingOlder = false
+    /// Đã chạm đáy lịch sử: trang cũ trả về 0 tin mới → thôi gọi, khỏi vòng lặp vô hạn.
+    @State private var reachedOldest = false
+
     // MARK: - Nhắc tên @ (phase 17)
 
     /// Thành viên kênh, nạp một lần khi vào chat — nguồn của gợi ý @ và bản đồ tô đậm.
@@ -121,6 +133,21 @@ struct ChatDetailView: View {
     @State private var pendingAttachments: [PreparedAttachment] = []
 
     // MARK: - Bề rộng bong bóng
+
+    // MARK: - Ghim tin (phase 06)
+
+    /// Tin đang ghim của kênh — nguồn băng ghim. Nạp khi vào màn + mỗi lần ghim/gỡ + khi
+    /// Realtime báo có tin đổi pin.
+    @State private var pinned: [MessageRow] = []
+    /// Ẩn băng ghim (chạm ✕). Nhớ theo id ghim mới nhất: có tin ghim MỚI thì băng hiện lại.
+    @State private var dismissedPinId: UUID?
+
+    /// Mình có quyền ghim ở kênh này không — quản trị của NHÓM hoặc KÊNH.
+    ///
+    /// Không gate `kind == "group"`: use case mở đầu của ghim là KÊNH THÔNG BÁO (kind=public),
+    /// nơi mod ghim nội quy lên đầu. `is_channel_mod` phía server (0045) cũng không gate kind.
+    /// DM không có mod nên `isMod` tự false ở đó — không cần loại tay.
+    private var canPin: Bool { channel?.isMod ?? false }
 
     /// Bề rộng khung danh sách tin. Prototype khoá bong bóng ở **78% bề rộng khung**, không
     /// phải một số pt: hằng số chỉ đúng trên đúng một cỡ máy — 260pt vừa mắt trên iPhone 17
@@ -226,10 +253,26 @@ struct ChatDetailView: View {
 
         VStack(spacing: 0) {
             if selecting { selectionHeader } else { header }
+            if !selecting, let banner = visiblePin { pinBanner(banner) }
 
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 0) {
+                        // Cảm biến ĐẦU danh sách: LazyVStack chỉ dựng nó khi cuộn tới sát đầu,
+                        // nên onAppear ở đây CHÍNH LÀ tín hiệu "gần đầu" → nạp trang cũ hơn
+                        // (cùng kiểu cảm biến đáy). Chỉ sau `didInitialLoad` để layout mở màn
+                        // không kích nạp oan.
+                        Color.clear
+                            .frame(height: 1)
+                            .onAppear {
+                                guard didInitialLoad, !isLoadingOlder, !reachedOldest else { return }
+                                loadOlder(proxy)
+                            }
+                        if isLoadingOlder {
+                            ProgressView()
+                                .padding(.vertical, 8)
+                                .frame(maxWidth: .infinity)
+                        }
                         ForEach(Array(rows.enumerated()), id: \.element.id) { index, message in
                             let isMine = message.userId == store.currentUserId
                             let target = message.parentId.flatMap { parentById[$0] }
@@ -328,6 +371,9 @@ struct ChatDetailView: View {
                 .onChange(of: messages.count) { old, new in
                     // Đang nhảy tới một tin cụ thể → đừng cuộn xuống đáy khi cửa sổ vừa đổ về.
                     guard !jumpingToTarget else { return }
+                    // Đang nạp trang CŨ (chèn vào ĐẦU) → không phải tin mới đến. Không chặn thì
+                    // nhánh dưới đếm nhầm vào "N tin mới" và cuộn sai. loadOlder tự neo vị trí.
+                    guard !isLoadingOlder else { return }
                     guard let last = messages.last else { return }
                     // Đang ở đáy → theo tin mới. Đang đọc ngược lên → ĐỨNG YÊN, chỉ đếm.
                     // Giật màn hình của người đang đọc là cách nhanh nhất làm họ mất chỗ.
@@ -338,6 +384,7 @@ struct ChatDetailView: View {
                         withAnimation(motion) { unseen += new - old }
                     }
                 }
+                .onChange(of: pinSignature) { Task { await loadPinned() } }
                 .onAppear {
                     // Mở chat phải thấy NGAY tin mới nhất, không phải tự cuộn xuống.
                     // Không animation: đây là vị trí xuất phát, không phải chuyển động.
@@ -394,6 +441,13 @@ struct ChatDetailView: View {
             // cấp store (mở từ RootTabView) — màn này chỉ cần khai "tôi đang hiện kênh này"
             // để tin đến không bump unread mà đi thẳng markRead.
             store.visibleChannelId = channelId
+            // Deep-link/push mở THẲNG màn này có thể xảy ra TRƯỚC khi danh sách kênh nạp
+            // xong. Chưa có kênh mà cũng chưa sync thì tự nạp — nếu không, băng quyền dưới ô
+            // nhập không có dữ liệu để phân biệt "chưa biết" với "không có quyền" và hiện sai
+            // "🔒 chỉ quản trị viên" cho chính chủ. (Xem `inputBar`.)
+            if store.channel(id: channelId) == nil, !store.hasSyncedChannels {
+                await store.loadChannels()
+            }
             // Vào từ tìm kiếm với một tin đích → nạp cửa sổ QUANH nó thay vì trang đáy, rồi
             // báo onChange cuộn tới. Đọc-rồi-xoá để quay lại kênh sau không nhảy lại chỗ cũ.
             if let target = state.pendingScrollTarget[channelId] {
@@ -402,7 +456,13 @@ struct ChatDetailView: View {
                 if await store.loadWindow(around: target, channelId: channelId) {
                     pendingScrollId = target
                 } else {
+                    // Không tới được tin đích (đã xoá / ngoài trang / lỗi mạng) → ĐỪNG để màn
+                    // trắng câm. Báo ngắn rồi rơi về đáy hội thoại như mở bình thường; nếu
+                    // offline thì loadMessages dựng luôn trạng thái lỗi + nút Thử lại.
                     jumpingToTarget = false
+                    store.errorMessage = String(localized: "Không mở được tin đã chọn.")
+                    await store.loadCachedMessages(channelId: channelId)
+                    await store.loadMessages(channelId: channelId)
                 }
             } else {
                 await store.loadCachedMessages(channelId: channelId)
@@ -428,8 +488,22 @@ struct ChatDetailView: View {
             await store.startTyping(in: channelId)
             // Thành viên cho @nhắc-tên (phase 17) — một query, giữ để tô đậm + gợi ý.
             members = await store.members(of: channelId)
+            await loadPinned()
             mentionMap = Dictionary(members.map { ($0.displayName, $0.id) },
                                     uniquingKeysWith: { first, _ in first })
+            // Mở cổng phân trang cuộn-lên SAU khi trang đầu đã nạp + màn đã ổn định — không
+            // để cảm biến đầu danh sách kích nạp trong lúc layout còn đang dựng.
+            didInitialLoad = true
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // App xuống NỀN khi đang ghi âm: AVAudioSession bị hệ thống ngắt, recorder dừng
+            // mà không ai xử lý → đoạn ghi mất im lặng. Chốt lại đoạn đã ghi và đẩy đi (đường
+            // lạc quan + hàng đợi offline lo phần còn lại) thay vì để nó rơi. <1s vẫn bỏ như
+            // finishRecording thường (bấm nhầm). Chỉ `.background` — `.inactive` là thoáng qua
+            // (trung tâm điều khiển, kéo thông báo) không đáng cắt ngang.
+            if phase == .background, state.recording {
+                finishRecording()
+            }
         }
         .onDisappear {
             // Chỉ xoá nếu vẫn là MÌNH: push có thể đã điều hướng sang chat khác và màn kia
@@ -573,7 +647,24 @@ struct ChatDetailView: View {
             onDelete: onDelete,
             onRetryMedia: { Task { await store.retryMedia(messageId: message.id) } },
             onDiscardMedia: { store.discardMedia(messageId: message.id) },
-            onOpenMedia: { media in open(media, of: message) }
+            onOpenMedia: { media in open(media, of: message) },
+            // Ghim chỉ hiện với quản trị nhóm, và chỉ cho tin ĐÃ lên server (không ghim một
+            // id server chưa biết). nil = ẩn mục.
+            onPin: (canPin && !store.isQueued(message.id) && store.pending(for: message.id) == nil) ? {
+                let wantPin = !message.isPinned
+                // Trần 3 kiểm ở client TRƯỚC: dữ liệu đã có sẵn trong `pinned`, và lỗi 23514
+                // từ server rơi vào nhánh .unknown ("thử lại") — mời retry một việc luôn fail.
+                if wantPin && pinned.count >= 3 {
+                    store.errorMessage = String(localized: "Mỗi kênh chỉ ghim tối đa 3 tin. Gỡ bớt trước.")
+                    return
+                }
+                Task {
+                    if await store.setPinned(messageId: message.id, pinned: wantPin) {
+                        await loadPinned()
+                    }
+                }
+            } : nil,
+            isPinned: message.isPinned
         )
     }
 
@@ -803,6 +894,102 @@ struct ChatDetailView: View {
         .background(NodieColors.bg)
     }
 
+    /// Chữ ký trạng thái ghim của các tin đang hiện — đổi nghĩa là Realtime vừa ghim/gỡ một
+    /// tin trong khung (người khác thao tác). Băng nạp lại theo tín hiệu này. Tin ghim NGOÀI
+    /// khung của người xem thì băng chỉ mới lại ở lần mở kênh sau — chấp nhận được (băng ghim
+    /// của Telegram cũng trễ kiểu này).
+    private var pinSignature: Set<UUID> {
+        Set(messages.filter(\.isPinned).map(\.id))
+    }
+
+    /// Ghim đang HIỂN THỊ trên băng — cái mới nhất chưa bị ẩn. nil = không vẽ băng.
+    private var visiblePin: MessageRow? {
+        guard let newest = pinned.first, newest.id != dismissedPinId else { return nil }
+        return newest
+    }
+
+    /// Băng ghim dưới header. Nhiều ghim thì hiện cái mới nhất + đếm; chạm nhảy tới tin gốc,
+    /// chạm ✕ ẩn tới khi có ghim mới. Dùng lại jump-to-message (loadWindow) — tin ghim có
+    /// thể đã trôi khỏi 50 tin đang nạp.
+    private func pinBanner(_ message: MessageRow) -> some View {
+        Button {
+            Task { await jumpTo(messageId: message.id) }
+        } label: {
+            HStack(spacing: NodieSpacing.sm) {
+                Image(systemName: "pin.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(NodieColors.accent)
+                    .rotationEffect(.degrees(45))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(pinned.count > 1 ? "\(pinned.count) tin đã ghim" : "Tin đã ghim")
+                        .font(NodieTypography.timestampXs.weight(.semibold))
+                        .foregroundStyle(NodieColors.accent)
+                    Text(message.previewText)
+                        .font(NodieTypography.bodyXs)
+                        .foregroundStyle(NodieColors.inkMuted)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Button {
+                    dismissedPinId = pinned.first?.id
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(NodieColors.inkFaint)
+                        .frame(width: 32, height: 32)
+                }
+                .accessibilityLabel("Ẩn băng ghim")
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, NodieSpacing.sm)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(NodieColors.surface)
+        .overlay(alignment: .bottom) { Divider().background(NodieColors.rule) }
+        .accessibilityHint("Chạm để tới tin đã ghim")
+    }
+
+    /// Nạp lại băng ghim. Gọi khi vào màn, sau khi ghim/gỡ, và khi Realtime báo pin đổi.
+    private func loadPinned() async {
+        pinned = await store.pinnedMessages(in: channelId)
+    }
+
+    /// Nhảy tới một tin — dùng lại đúng cơ chế của tìm kiếm (loadWindow + pendingScrollId):
+    /// tin ghim có thể đã trôi khỏi 50 tin đang nạp, `scrollTo` một id không có trong mảng
+    /// thì không đi đâu cả.
+    private func jumpTo(messageId: UUID) async {
+        if messages.contains(where: { $0.id == messageId }) {
+            pendingScrollId = messageId
+            return
+        }
+        jumpingToTarget = true
+        if await store.loadWindow(around: messageId, channelId: channelId) {
+            pendingScrollId = messageId
+        } else {
+            jumpingToTarget = false
+        }
+    }
+
+    /// Nạp trang tin CŨ hơn khi cuộn tới đầu (keyset — 50 tin trước tin cũ nhất đang giữ).
+    /// Giữ nguyên vị trí cuộn: neo về tin vốn đang ở đầu, không animation (đừng nhảy màn).
+    private func loadOlder(_ proxy: ScrollViewProxy) {
+        guard !isLoadingOlder, !reachedOldest else { return }
+        // Neo = tin đang ở ĐẦU danh sách; cũng là mốc keyset để nạp trang trước nó.
+        guard let anchorId = messages.first?.id,
+              let before = store.oldestLoaded(in: channelId) else { return }
+        isLoadingOlder = true
+        Task {
+            let fetched = await store.loadMessages(channelId: channelId, before: before)
+            // Trang cũ chèn vào ĐẦU → neo giữ đúng tin người dùng đang xem tại chỗ.
+            proxy.scrollTo(anchorId, anchor: .top)
+            // 0 = server nói hết lịch sử → thôi gọi (khỏi vòng lặp vô hạn). -1 = lỗi/offline
+            // → giữ cửa mở để lần cuộn sau thử lại, đừng đóng oan.
+            if fetched == 0 { reachedOldest = true }
+            isLoadingOlder = false
+        }
+    }
+
     private var header: some View {
         HStack(spacing: NodieSpacing.md) {
             CircleIconButton(systemName: "arrow.left") { dismiss() }
@@ -978,45 +1165,66 @@ struct ChatDetailView: View {
     @ViewBuilder
     private var inputBar: some View {
         VStack(spacing: 0) {
-            if channel?.canPost == true {
-                if state.recording {
-                    recordingBar
-                } else {
-                    if let targetId = state.replyingTo[channelId],
-                       let target = messages.first(where: { $0.id == targetId }) {
-                        replyBanner(target).padding(.bottom, NodieSpacing.sm)
+            // BA trạng thái, không phải hai. Bản cũ gộp `channel == nil` (chưa biết) vào
+            // nhánh từ chối → deep-link/push mở thẳng chat lúc kênh chưa nạp là hiện sai
+            // "🔒 chỉ quản trị viên" cho chính chủ. Chỉ từ chối khi đã sync xong và thật sự
+            // không thấy kênh; còn đang tải thì im (hoặc spinner), không kết tội sớm.
+            if let channel {
+                if channel.canPost {
+                    if state.recording {
+                        recordingBar
+                    } else {
+                        if let targetId = state.replyingTo[channelId],
+                           let target = messages.first(where: { $0.id == targetId }) {
+                            replyBanner(target).padding(.bottom, NodieSpacing.sm)
+                        }
+                        if state.attachOpen { attachTray.padding(.bottom, NodieSpacing.md) }
+                        // Ô soạn tin TÁCH RIÊNG — chữ đang gõ nằm ở @State cục bộ của nó, không
+                        // ghi vào AppState mỗi phím, nên gõ chỉ vẽ lại ô này chứ không phải cả
+                        // danh sách tin (xem MessageComposer). `id(channelId)`: đổi kênh là ô nhập
+                        // mới, khôi phục đúng draft của kênh đó.
+                        MessageComposer(
+                            initialDraft: state.draft(in: channelId),
+                            members: members,
+                            currentUserId: store.currentUserId,
+                            onAttach: { state.toggleAttach() },
+                            onTyping: { store.broadcastTyping(channelId: channelId) },
+                            onSend: { body in
+                                let parentId = state.replyingTo[channelId]
+                                let ok = await store.send(channelId: channelId, body: body, parentId: parentId)
+                                if ok {
+                                    state.drafts[channelId] = ""
+                                    state.replyingTo[channelId] = nil
+                                }
+                                return ok
+                            },
+                            onStartRecording: { Task { await startRecording() } },
+                            persistDraft: { state.drafts[channelId] = $0 }
+                        )
+                        .id(channelId)
                     }
-                    if state.attachOpen { attachTray.padding(.bottom, NodieSpacing.md) }
-                    // Ô soạn tin TÁCH RIÊNG — chữ đang gõ nằm ở @State cục bộ của nó, không
-                    // ghi vào AppState mỗi phím, nên gõ chỉ vẽ lại ô này chứ không phải cả
-                    // danh sách tin (xem MessageComposer). `id(channelId)`: đổi kênh là ô nhập
-                    // mới, khôi phục đúng draft của kênh đó.
-                    MessageComposer(
-                        initialDraft: state.draft(in: channelId),
-                        members: members,
-                        currentUserId: store.currentUserId,
-                        onAttach: { state.toggleAttach() },
-                        onTyping: { store.broadcastTyping(channelId: channelId) },
-                        onSend: { body in
-                            let parentId = state.replyingTo[channelId]
-                            let ok = await store.send(channelId: channelId, body: body, parentId: parentId)
-                            if ok {
-                                state.drafts[channelId] = ""
-                                state.replyingTo[channelId] = nil
-                            }
-                            return ok
-                        },
-                        onStartRecording: { Task { await startRecording() } },
-                        persistDraft: { state.drafts[channelId] = $0 }
-                    )
-                    .id(channelId)
+                } else {
+                    // Kênh phát: client chỉ ẩn ô nhập — chặn thật phải ở RLS.
+                    (Text("🔒 Chỉ quản trị viên có thể đăng trong kênh này · ")
+                        .foregroundColor(NodieColors.inkMuted)
+                     + Text("Bật thông báo").foregroundColor(NodieColors.purple).bold())
+                        .font(NodieTypography.meta)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, NodieSpacing.sm)
                 }
+            } else if !store.hasSyncedChannels {
+                // CHƯA BIẾT: danh sách kênh chưa nạp xong (mở thẳng từ deep-link/push).
+                // `.task` đã kích loadChannels — chờ nó, đừng vẽ băng từ chối oan.
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, NodieSpacing.sm)
             } else {
-                // Kênh phát: client chỉ ẩn ô nhập — chặn thật phải ở RLS.
-                (Text("🔒 Chỉ quản trị viên có thể đăng trong kênh này · ")
-                    .foregroundColor(NodieColors.inkMuted)
-                 + Text("Bật thông báo").foregroundColor(NodieColors.purple).bold())
+                // Đã sync mà vẫn không thấy kênh = thật sự không có quyền / không còn là
+                // thành viên. Câu trung tính, không đổ cho "kênh phát".
+                Text("Không mở được cuộc trò chuyện này.")
                     .font(NodieTypography.meta)
+                    .foregroundColor(NodieColors.inkMuted)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, NodieSpacing.sm)
@@ -1409,6 +1617,9 @@ struct MessageActionsMenu: View {
     /// Vào chế độ chọn nhiều tin, với tin này được chọn sẵn. nil = không cho (tin chưa lên
     /// server: chuyển tiếp/xoá hàng loạt một id server chưa biết là vô nghĩa).
     var onSelect: (() -> Void)? = nil
+    /// Ghim/gỡ. nil = không phải quản trị nhóm (ẩn mục). `isPinned` quyết định nhãn.
+    var onPin: (() -> Void)? = nil
+    var isPinned: Bool = false
 
     var body: some View {
         ForEach(ReactionKind.allCases) { kind in
@@ -1435,6 +1646,12 @@ struct MessageActionsMenu: View {
         if let onSelect {
             Button { onSelect() } label: {
                 Label("Chọn", systemImage: "checkmark.circle")
+            }
+        }
+        if let onPin {
+            Button { onPin() } label: {
+                Label(isPinned ? "Bỏ ghim" : "Ghim",
+                      systemImage: isPinned ? "pin.slash" : "pin")
             }
         }
         if onEdit != nil || onDelete != nil {
@@ -1610,6 +1827,9 @@ struct MessageBubbleView: View {
     let onDiscardMedia: () -> Void
     /// Mở ảnh toàn màn / mở tệp bằng QuickLook — caller giữ state sheet.
     let onOpenMedia: (MessageMedia) -> Void
+    /// Ghim/gỡ ghim. nil = không phải quản trị nhóm (ẩn mục). `isPinned` quyết định nhãn.
+    var onPin: (() -> Void)? = nil
+    var isPinned: Bool = false
 
     /// Bong bóng trượt theo ngón khi vuốt trả lời. Thuần hiệu ứng — thả tay là về 0.
     @State private var dragX: CGFloat = 0
@@ -1673,6 +1893,13 @@ struct MessageBubbleView: View {
                         .font(NodieTypography.timestampXs)
                         .foregroundStyle(NodieColors.inkFaint)
                 }
+                if isPinned {
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: 8))
+                        .foregroundStyle(NodieColors.inkFaint)
+                        .rotationEffect(.degrees(45))
+                        .accessibilityLabel("Đã ghim")
+                }
                 Text(message.timeLabel)
                     .font(NodieTypography.timestampXs)
                     .foregroundStyle(NodieColors.inkFaint)
@@ -1729,7 +1956,9 @@ struct MessageBubbleView: View {
             onCopy: message.media == nil ? { UIPasteboard.general.string = message.body } : nil,
             onEdit: onEdit,
             onDelete: onDelete,
-            onSelect: onSelect
+            onSelect: onSelect,
+            onPin: onPin,
+            isPinned: isPinned
         )
     }
 
