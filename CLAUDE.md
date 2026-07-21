@@ -13,18 +13,16 @@ immortality-vn/  (pnpm monorepo root)
 ├── apps/
 │   ├── web/              ← Vite + React 18 SPA + PWA  ← Vercel build cái này
 │   └── nodie-ios/        ← NODIE, SwiftUI native (XcodeGen, không CocoaPods)
-├── api/                  ← Vercel serverless functions (OG render, upload R2, agent CMS)
+├── api/                  ← Vercel serverless functions (OG render, upload R2, chat 503, live geo)
 ├── workers/
-│   ├── api/              ← Hono REST API
-│   ├── realtime/         ← Durable Objects WebSocket chat
-│   └── notion/           ← Notion sync cron + Claude AI hỏi ngược
+│   └── api/              ← Hono, chỉ còn plane agent /v1 (realtime + notion đã XOÁ 21/07)
 ├── supabase/
 │   ├── migrations/       ← NGUỒN SỰ THẬT của schema. Áp bằng psql TAY (xem dưới)
 │   └── functions/        ← Edge Functions (push-on-message)
-├── scripts/              ← Seed/migration + set-push-secrets.sh
-├── functions/            ← Firebase Functions v2 (ogRenderer — legacy, còn deploy)
+├── scripts/              ← Migration Firestore→Supabase + set-push-secrets.sh
 ├── vercel.json           ← buildCommand: pnpm --filter @btd/web build
 └── CLAUDE.md             ← FILE NÀY
+# (functions/ Firebase ogRenderer đã XOÁ 21/07 — OG giờ ở api/og.js)
 ```
 
 **Main Stack:** Vite 5 + React 18 (web) · SwiftUI iOS 17 (NODIE) · Supabase · Cloudflare Workers · pnpm workspaces.
@@ -89,62 +87,73 @@ nhiều quản trị được, chuyển giao chủ nhóm được (migration 004
 
 ---
 
-## Backend (workers/)
+## Backend
 
-Cloudflare Workers + Durable Objects multi-workspace architecture.
+**FIREBASE ĐÃ GỠ HẲN (21/07/2026).** Web + iOS đều chạy Supabase (Postgres + Auth + Realtime +
+Storage). Không còn Firestore, Firebase Auth, Firebase Hosting, FCM. Tài liệu/plan cũ nào tả
+"Firestore collections", "Firebase Auth token", "ogRenderer Cloud Function" là **mô tả kiến trúc
+đã bị xoá** — xem plan `apps/plans/260721-1355-firebase-to-supabase-full-cutover/` + memory
+[[project_web_firebase_to_supabase_cutover]].
 
-### workers/api/ — REST API (Hono)
-- **Endpoints:** Profiles (GET, PATCH), Questions (GET, POST), Answers (POST, DELETE), Votes (POST), Comments (GET, POST)
-- **Auth:** Firebase Auth token validation, custom claims for admin/mods
-- **Data:** Firestore REST client (no SDKs), R2 for media (shared bucket with project key prefix)
-- **CORS:** Allow mobile + web origins, strict host check
+Đã xoá trong cutover: `workers/realtime` (Firebase WS — chưa từng deploy), `workers/notion`
+(cron sync Notion→Firestore), `functions/` (ogRenderer), `firebase.json`, `.firebaserc`,
+`firestore.rules`, plane Firebase trong `workers/api`.
 
-### workers/realtime/ — WebSocket Chat (Durable Objects)
-- **Protocol:** JSON messages, slow-mode (rate-limit 1msg/2sec), presence broadcast (anon user ID)
-- **TTL:** 5-minute idle auto-close, no persistence (ephemeral chat only)
-- **Use case:** Live "đối thoại sâu" threads, typing indicators, presence count
+### workers/api/ — agent plane (Hono, Cloudflare Workers)
+- **Chỉ còn `/v1/*`** — cho agent (goclaw) publish content. Auth = API key `btd_<hex>` (SHA-256
+  hash lookup trong `public.api_keys`), scope enforcement, audit log `agent_audit_log`, zod
+  validation, CORS allowlist. service_role bypass RLS by design.
+- **Media:** R2 (shared bucket, project key prefix).
+- Plane Firebase cũ (`/api/profiles|questions|votes|comments` với Firebase token + Firestore)
+  đã bị cắt — iOS dùng thẳng Supabase, không qua worker.
 
-### workers/notion/ — Notion Sync + AI
-- **Cron:** Daily sync from Notion database → Firestore articles + metadata
-- **AI:** Claude API (skill btd-comment-facebook v0.2) — hỏi ngược on comments, auto-suggest responses
-- **Flow:** Notion → Parse → Claude prompt → Firestore write
+### api/ (Vercel serverless)
+- `api/og.js` — OG meta cho crawler, đọc `public.content` (Supabase REST, anon key) theo
+  slug/id, cache `s-maxage=3600`. Thay `ogRenderer` Firebase.
+- `api/upload-file.js`, `api/upload-from-url.js` — upload R2, auth API key `btd_`, SSRF defense.
+- `api/chat.js` — **tắt tạm (trả 503)** 21/07: GoClaw proxy không auth = lỗ đốt quota. Bật lại
+  khi có auth + rate-limit.
+- `api/live-location.js` — coarse geo cho tính năng `/live` (live-visitors).
+
+### Realtime chat
+Chat NODIE chạy **Supabase Realtime** (không còn Durable Objects). Push qua Edge Function
+`push-on-message` (pg_net → APNs) — xem `scripts/set-push-secrets.sh` (nhớ `--no-verify-jwt`).
 
 ---
 
-## Firebase
+## Supabase — nguồn sự thật dữ liệu
 
 | Key | Value |
 |---|---|
-| Project ID | `immortalityvn` |
-| Auth Domain | `immortalityvn.firebaseapp.com` |
-| Storage Bucket | `immortalityvn.firebasestorage.app` |
-| Messaging Sender ID | `204809901558` |
-| App ID | `1:204809901558:web:169a7b3168a9d3d3a623d7` |
-| Measurement ID | `G-NZ6ZX0RN4L` |
+| Project ref | `dzctvmrlsxwkcuidsqzk` |
+| Analytics | GA4 giữ lại (gtag.js, id ở `VITE_FIREBASE_MEASUREMENT_ID`=`G-NZ6ZX0RN4L` — env cũ, chỉ dùng cho GA4) |
 
-Services: **Firestore** (with IndexedDB persistent cache), **Auth** (Email/Password — admin login), **Analytics** (GA4).
+Auth = Supabase Auth (email/password). Role ở `public.profiles.role` ('user'/'mod'/'admin');
+đổi role bằng RPC `set_user_role` (admin-only, 0051) — KHÔNG sửa cột `role` trực tiếp (trigger chặn).
 
-### Firestore Collections
+### Bảng chính (public schema)
 
-| Collection | Mô tả | Public read | Write |
+| Bảng | Mô tả | Đọc | Ghi |
 |---|---|---|---|
-| `articles` | Bài viết chính | ✅ | admin |
-| `stories` | 37 câu chuyện | ✅ | admin |
-| `khaitri` | Hỏi đáp Khai Trí | ✅ | admin |
-| `topics` | Chủ đề/tags | ✅ | admin |
-| `teachings` | Nội dung trang Giới Thiệu | ✅ | admin |
-| `practices` | Thái Dương Quyền | ✅ | admin |
-| `translations/{lang}` | i18n strings | ✅ | admin |
-| `settings` | Site settings (theme, nav, home cards, donation channels…) | ✅ | admin |
-| `comments` | Comments | ✅ | public create, admin update/delete |
-| `contacts` | Form liên hệ | admin only read | public create |
-| `donations` | Ủng hộ — chỉ `status='approved'` public-readable | ✅ approved only | public create pending, admin moderate |
-| `donation_contacts` | PII của donor (email/phone/realName) | admin only | public create |
+| `content` | Bài viết/story/khaitri (phân loại bằng cột `type`) | published: public | admin / agent `/v1` |
+| `categories`, `translations`, `settings` | taxonomy, i18n, site config | public | admin |
+| `comments` | Bình luận | `status='visible'` | anon tạo (ép `status='pending'`, 0051), admin duyệt |
+| `contacts` | Form liên hệ | admin | anon tạo |
+| `donations` | Ủng hộ | `status='approved'` | anon tạo pending, admin duyệt |
+| `donation_contacts` | PII donor | admin | anon tạo |
+| `newsletter_signups` | Đăng ký nhận tin (0051) | admin | anon tạo (dedupe unique `lower(email)`) |
+| `agent_audit_log` | Log agent `/v1` | admin (0051) | service_role |
+| `profiles` / `public_profiles` | Hồ sơ — `profiles` self-only RLS, `public_profiles` view đọc cross-user | | |
 
-### Security model
+### Security model (RLS)
 
-- "Admin" hiện chỉ check `request.auth != null` — bất kỳ ai login Firebase Auth đều là admin (TODO: tighten bằng custom claims).
-- `firestore.rules` **KHÔNG được auto-deploy**: `firebase.json` không có section `firestore`. Phải copy/paste thủ công vào Firebase Console → Firestore → Rules. Hoặc thêm `"firestore": { "rules": "firestore.rules" }` vào `firebase.json` để bật CLI deploy.
+- **RLS bật trên mọi bảng public**, default-deny. `is_admin()` (SECURITY DEFINER) đọc
+  `profiles.role`. Migration là nguồn sự thật, áp bằng psql tay (xem mục Supabase migrations).
+- **Bẫy đã trả giá:** query hồ sơ NGƯỜI KHÁC phải dùng `public_profiles` (view), không `profiles`
+  (self-only) — nếu không user thường thấy rỗng còn admin ngắn mạch RLS nên giấu lỗi.
+- **Anon insert KHÔNG chain `.select()`**: RETURNING đòi hàng qua SELECT policy, mà comments/
+  donations/contacts rows không anon-readable → RLS violation dù insert được phép.
+- Bảng anon-insert có flood guard (0051) + `tg_rate_limit` (0046, bảng NODIE).
 
 ---
 
@@ -152,15 +161,15 @@ Services: **Firestore** (with IndexedDB persistent cache), **Auth** (Email/Passw
 
 SPA routing tự code bằng History API trong `src/App.jsx`. Page registry: `src/config/pages.js` (single source of truth — thêm page mới chỉ cần thêm 1 entry).
 
-Pages hiện có: `home`, `articles`, `article/:slug`, `stories`, `khaitri`, `topic/:id`, `about`, `practice`, `contact`, `ungho`, `search`, `admin`, `privacy`, `terms` (2 trang pháp lý cho App Store — thêm 18/07, Terms phải khớp từng chữ `TermsOfUseView.swift` trong NODIE).
+Pages hiện có: `home`, `articles`, `article/:slug`, `stories`, `khaitri`, `topic/:id`, `about`, `practice`, `contact`, `ungho`, `search`, `live`, `admin`, `privacy`, `terms` (2 trang pháp lý cho App Store — thêm 18/07, Terms phải khớp từng chữ `TermsOfUseView.swift` trong NODIE).
 
-### OG meta (Cloud Function `ogRenderer`)
+### OG meta (`api/og.js` trên Vercel)
 
-Crawler (Facebook, Twitter, Zalo, Telegram, WhatsApp, Slack, Discord, Google, Bing…) bị `firebase.json` rewrite → `ogRenderer` function tại `functions/index.js`. Function fetch Firestore, render full OG meta HTML, trả non-crawler về `spa.html` (copy của `dist/index.html` lúc build — xem `npm run build` script).
-
-Routes có OG render: `/article/**`, `/topic/**`, `/stories`, `/khaitri`, `/about`, `/practice`, `/articles`, `/contact`, `/search`.
-
-`vercel.json` có alt setup dùng `/api/og` — dành cho khi host trên Vercel thay vì Firebase Hosting.
+Crawler (Facebook, Twitter, Zalo, Telegram, WhatsApp, Slack, Discord, Google, Bing…) bị
+`vercel.json` rewrite các route `/story/*`, `/khaitri/*`, `/article/*`, `/articles/:slug`, `/live`
+→ `api/og.js`. Function query `public.content` (Supabase, anon key) theo slug → render full OG meta
+HTML; non-crawler trả `apps/web/dist/index.html`. `slug_redirects` lo link cũ đổi slug.
+(`ogRenderer` Firebase cũ đã xoá — nó chỉ chạy trên `*.firebaseapp.com`, mà prod là Vercel.)
 
 ---
 
@@ -169,16 +178,16 @@ Routes có OG render: `/article/**`, `/topic/**`, `/stories`, `/khaitri`, `/abou
 `.env` ở root (gitignored). Vite expose vars có prefix `VITE_`:
 
 ```
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=immortalityvn.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=immortalityvn
-VITE_FIREBASE_STORAGE_BUCKET=immortalityvn.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=204809901558
-VITE_FIREBASE_APP_ID=1:204809901558:web:169a7b3168a9d3d3a623d7
-VITE_FIREBASE_MEASUREMENT_ID=G-NZ6ZX0RN4L
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+VITE_FIREBASE_MEASUREMENT_ID=G-NZ6ZX0RN4L   # CHỈ còn dùng cho GA4 (gtag.js), không phải Firebase SDK
 ```
 
-Admin SDK key (`*firebase-adminsdk*.json`) dùng cho scripts/seed — gitignored. Hiện có tại `src/immortalityvn-firebase-adminsdk-fbsvc-a75c1f4b0e.json` (đặt sai chỗ về mặt convention — nên ở `scripts/` chứ không trong `src/`, nhưng đã ignored nên không leak).
+Server-side (Vercel functions / workers / scripts): `SUPABASE_DB_URL`, `SUPABASE_SECRET_KEY`
+(service role), `SUPABASE_ACCESS_TOKEN`, `SUPABASE_JWKS_URL`. Không còn Firebase admin SDK key.
+
+Các biến `VITE_FIREBASE_*` khác (API_KEY, AUTH_DOMAIN, PROJECT_ID…) đã hết tác dụng sau cutover
+21/07 — có thể còn trong `.env` cũ nhưng code không đọc nữa (trừ MEASUREMENT_ID cho GA4).
 
 ---
 
@@ -216,24 +225,24 @@ nhầm. Lock file duy nhất: `pnpm-lock.yaml`.
 
 **Chưa tồn tại.** Không có lệnh nào. Xem mục "Nền tảng".
 
-### Workers (workers/api, workers/realtime, workers/notion)
+### Workers (workers/api — chỉ còn plane agent /v1)
 
 | Cmd | Mô tả |
 |---|---|
-| `pnpm -F @btd/workers-api run dev` | Wrangler dev, port 8787 |
-| `pnpm -F @btd/workers-api run deploy` | Deploy to CF |
-| `pnpm -F @btd/workers-realtime run dev` | Durable Objects dev |
+| `pnpm -F @btd/api run dev` | Wrangler dev, port 8787 |
+| `pnpm -F @btd/api run typecheck` | `tsc --noEmit` |
+| `pnpm -F @btd/api run deploy` | Deploy to CF |
 
 ### Supabase — migrations
 
-**KHÔNG có `supabase_migrations.schema_migrations`.** CLI không theo dõi gì cả; migration áp bằng psql
-TAY. ⇒ **Số thứ tự file không chứng minh nó đã chạy trên prod.** Muốn biết prod có gì thì hỏi prod:
+Migration áp bằng **psql TAY** (CLI không tự theo dõi). Có bảng ledger `public._applied_migrations`
+(ghi tay khi commit) — nhưng **số thứ tự file vẫn không chứng minh đã chạy**; muốn chắc thì hỏi prod:
 ```bash
 psql "$SUPABASE_DB_URL" -c "select ... from pg_policies/pg_proc/pg_tables ..."
+psql "$SUPABASE_DB_URL" -c "select filename from public._applied_migrations order by filename"
 ```
 Luôn dry-run trong `begin; ... rollback;` trước khi `commit;`. Migration phải chạy lại được (idempotent).
-
-**Firestore rules:** KHÔNG deploy bằng CLI. Phải paste vào Console.
+Sau khi apply, `insert into public._applied_migrations(filename, note) ... on conflict do nothing`.
 
 ---
 
@@ -259,17 +268,16 @@ App có SW precache. Khi đổi assets có thể cần bump cache name. Conventi
 - AI Hỏi Ngược: 99K/tháng, Claude-powered reflection
 - 1-on-1 with Đăng: 2-5tr (Khoá học deferred)
 
-### Layer 3 — Backend
-- **REST:** Cloudflare Workers (Hono), Firestore REST client (no JS SDK in Workers)
-- **WebSocket:** Durable Objects ephemeral chat (5min idle TTL, no persistence)
-- **Cron:** Notion sync + Claude AI hỏi ngược (daily)
-- **Media:** R2 with project key prefix (shared bucket)
-- **Auth:** Firebase Auth tokens → custom claims (admin, mod)
+### Layer 3 — Backend (Supabase-first sau cutover 21/07)
+- **Data + Auth:** Supabase (Postgres + RLS + Auth + Realtime + Storage). Web + iOS đọc/ghi thẳng.
+- **Agent plane:** Cloudflare Worker `/v1/*` (Hono) — goclaw publish content, API key `btd_`.
+- **OG/upload:** Vercel functions (`api/og.js` đọc Supabase, `api/upload-*` → R2).
+- **Push:** Supabase Edge Function `push-on-message` (pg_net → APNs).
+- **Media:** R2 with project key prefix (shared bucket).
 
 ### Layer 4 — Source of Truth
-- **Content:** Firestore collections (articles, teachings, Q&A)
-- **Config:** Notion database (synced daily to Firestore)
-- **AI:** Claude API (skill btd-comment-facebook v0.2)
+- **Content:** Supabase `public.content` (phân loại bằng cột `type`).
+- **AI content pipeline:** goclaw qua Telegram → `/v1/content` → Supabase (xem memory [[project_content_pipeline_via_goclaw_telegram]]).
 
 **Anti-patterns rejected:**
 - No Buddhist metaphor in UI (tone is peer-to-peer)
@@ -301,13 +309,12 @@ App có SW precache. Khi đổi assets có thể cần bump cache name. Conventi
 
 ## Known caveats
 
-1. **Firestore rules không auto-deploy** — dễ quên update prod khi sửa `firestore.rules`. Cân nhắc thêm section `firestore` vào `firebase.json`.
-2. **"Admin" check quá lỏng** — bất kỳ user nào login Firebase Auth đều có quyền write toàn bộ collections. Cần custom claim `admin=true` trước khi mở public sign-up.
-3. **Admin SDK key trong `src/`** — không leak (gitignored) nhưng nên move sang `scripts/` cho đúng convention.
+1. **Supabase migrations áp bằng psql tay** — file tồn tại ≠ đã chạy trên prod. Hỏi prod bằng psql. Dry-run trong `begin; … rollback;` trước. Migration phải idempotent. (Xem mục Supabase migrations.)
+2. **Admin role qua RPC** — đổi `profiles.role` bằng `set_user_role` (admin-only), không UPDATE cột trực tiếp (trigger `tg_profiles_guard_role` chặn; bản 0051 đã sửa nó non-secdef để psql bootstrap được admin đầu tiên).
+3. **`/api/chat` tắt tạm** — trả 503 (đóng lỗ GoClaw proxy không auth). Bật lại cần auth + rate-limit.
 4. **pnpm only** — never `npm install`. Lock file is `pnpm-lock.yaml`, not `package-lock.json`.
 5. **iOS IAP deferred** — App Store in-app purchases not yet integrated; subscription payment via web/SePay for now.
 6. **Video provider TBD** — audio transcriptions + video hosting not chosen; placeholder for future.
-7. **PWA icons placeholder** — `public/manifest.json` has stub icon paths; replace with actual before app store submission.
-8. **Durable Objects costs** — realtime chat scales with users; test quota limits on production.
-9. **Notion sync credentials** — Notion API key stored in Cloudflare env (not .env); ensure CF dashboard has correct key.
-10. **WebView HTTPS only** — mobile WebView won't load http:// articles; dev environment must use https or localhost:3000.
+7. **PWA icons** — kiểm `public/manifest.json` trước khi submit store (caveat placeholder cũ có thể đã cũ — icons đã có ở `public/icons/`).
+8. **Không staging / backup** — dev + UITest seed chạy thẳng prod Supabase (1 project). Free tier chưa chắc có PITR. Ưu tiên tách staging + backup trước khi user tăng (xem audit 21/07).
+9. **iOS chat/push** — Supabase Realtime + Edge Function `push-on-message`. Redeploy function PHẢI kèm `--no-verify-jwt` (trigger chỉ gửi `x-push-secret`), thiếu là push chết im lặng.
