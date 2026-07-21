@@ -102,6 +102,13 @@ final class QAStore {
             questionsLoadFailed = false
         } catch {
             _ = await blockedFetch
+            let ns = error as NSError
+            // SwiftUI huỷ `.task` khi tab/view rời cây. Đây là vòng đời bình thường, không
+            // phải lỗi mạng; biến nó thành alert gốc sẽ báo sai ngay trên tab kế tiếp.
+            if Task.isCancelled || (ns.domain == NSURLErrorDomain && ns.code == NSURLErrorCancelled) {
+                isLoading = false
+                return
+            }
             questionsLoadFailed = true
             errorMessage = ErrorText.localized(error)
         }
@@ -402,19 +409,26 @@ final class QAStore {
         defer { reactionsInFlight.remove(flightKey) }
 
         let active = self[keyPath: keyPath].contains(targetId)
+        // Lạc quan: đổi trạng thái + đếm NGAY rồi mới gọi mạng, revert nếu server từ chối
+        // (mẫu `toggleSave`). ▲/☀ chờ round-trip mới nhích thì thấy lag rõ trên mạng thật.
+        if active { self[keyPath: keyPath].remove(targetId); applyDelta(-1) }
+        else { self[keyPath: keyPath].insert(targetId); applyDelta(1) }
         do {
             if active {
                 try await client.from("answer_reactions").delete()
                     .eq("user_id", value: uid).eq("target_type", value: targetType)
                     .eq("target_id", value: targetId).eq("kind", value: kind).execute()
-                self[keyPath: keyPath].remove(targetId); applyDelta(-1)
             } else {
                 try await client.from("answer_reactions")
                     .insert(NewReaction(userId: uid, targetType: targetType, targetId: targetId, kind: kind))
                     .execute()
-                self[keyPath: keyPath].insert(targetId); applyDelta(1)
             }
-        } catch { errorMessage = ErrorText.localized(error) }
+        } catch {
+            // Rollback về đúng trạng thái trước khi bấm.
+            if active { self[keyPath: keyPath].insert(targetId); applyDelta(1) }
+            else { self[keyPath: keyPath].remove(targetId); applyDelta(-1) }
+            errorMessage = ErrorText.localized(error)
+        }
     }
 
     private func mutateAnswer(_ id: UUID, in questionId: UUID, _ transform: (AnswerRow) -> AnswerRow) {

@@ -6,7 +6,7 @@ struct BlockedUsersView: View {
     @Bindable var qa: QAStore
     @Environment(\.dismiss) private var dismiss
 
-    @State private var profiles: [UserProfile] = []
+    @State private var profiles: [PublicProfile] = []
     @State private var isLoading = true
 
     var body: some View {
@@ -54,9 +54,9 @@ struct BlockedUsersView: View {
         .overlay(alignment: .bottom) { Divider().background(NodieColors.rule) }
     }
 
-    private func row(_ profile: UserProfile) -> some View {
+    private func row(_ profile: PublicProfile) -> some View {
         HStack(spacing: NodieSpacing.md) {
-            InitialAvatar(initial: profile.initial, size: 34)
+            InitialAvatar(initial: String(profile.name.prefix(1)).uppercased(), size: 34)
 
             Text(verbatim: profile.displayName?.nilIfEmpty ?? String(localized: "Ẩn danh"))
                 .font(NodieTypography.bodySm)

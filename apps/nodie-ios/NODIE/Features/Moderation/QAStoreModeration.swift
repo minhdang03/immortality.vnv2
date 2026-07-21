@@ -104,13 +104,19 @@ extension QAStore {
 
     /// Hồ sơ những người đã chặn — cho màn quản lý. blocks trỏ auth.users (không phải
     /// profiles) nên PostgREST không nhúng được, đành hai query.
-    func blockedProfiles() async -> [UserProfile] {
+    ///
+    /// Đọc `public_profiles` chứ KHÔNG `profiles`: `profiles` có RLS self-only (chỉ đọc được
+    /// hàng của chính mình), nên query id NGƯỜI KHÁC trả rỗng với user thường → danh sách
+    /// chặn hiện "Chưa chặn ai" dù đang chặn thật. Tài khoản admin ngắn mạch RLS nên giấu lỗi
+    /// này (cùng bẫy `ProfileStatsGrid` đã đổi sang public_profiles). `nil`-vs-`[]` giữ nguyên
+    /// ở caller: hỏng thì trả rỗng + errorMessage như cũ.
+    func blockedProfiles() async -> [PublicProfile] {
         await loadBlockedIds()
         let ids = Array(blockedUserIds)
         guard !ids.isEmpty else { return [] }
         do {
-            return try await client.from("profiles")
-                .select("id, role, display_name, bio")
+            return try await client.from("public_profiles")
+                .select("id, display_name, bio")
                 .in("id", values: ids)
                 .execute().value
         } catch {
