@@ -66,6 +66,8 @@ struct ChatDetailView: View {
     @State private var viewingVideo: ChatVideoSource?
     /// Cụm ảnh đang xem toàn màn (lật ngang) — mở từ một ô trong lưới album.
     @State private var viewingAlbum: ChatAlbumSource?
+    /// Tin đang xem "Đã xem bởi ai" (nhóm) — non-nil là sheet mở.
+    @State private var seenByMessage: MessageRow?
     /// Tệp đã tải về thư mục tạm, sẵn sàng cho QuickLook.
     @State private var previewingFile: URL?
     /// Đang tải tệp về để mở — chặn chạm hai lần vào cùng một bong bóng.
@@ -584,6 +586,9 @@ struct ChatDetailView: View {
             onPickedFile: { result in await sendPickedFile(result) }
         ))
         .fullScreenCover(item: $viewingAlbum) { ChatAlbumViewer(source: $0) }
+        .sheet(item: $seenByMessage) { message in
+            SeenBySheet(message: message, store: store, channelId: channelId)
+        }
         // Xem lại + gõ chú thích trước khi gửi. Tệp KHÔNG đi đường này: một tệp đính kèm
         // đã tự mang tên nó, còn ảnh thì không nói được gì nếu không có chỗ gõ.
         .sheet(isPresented: Binding(
@@ -681,7 +686,12 @@ struct ChatDetailView: View {
                     }
                 }
             } : nil,
-            isPinned: message.isPinned
+            isPinned: message.isPinned,
+            // "Đã xem bởi ai" — CHỈ tin của mình trong NHÓM đã lên server. DM giữ nhãn ✓✓
+            // "Đã xem" (một người, không cần danh sách).
+            onSeenBy: (channel?.kind == "group" && message.userId == store.currentUserId
+                       && !store.isQueued(message.id) && store.pending(for: message.id) == nil)
+                ? { seenByMessage = message } : nil
         )
     }
 
@@ -1690,6 +1700,7 @@ struct MessageActionsMenu: View {
     /// Ghim/gỡ. nil = không phải quản trị nhóm (ẩn mục). `isPinned` quyết định nhãn.
     var onPin: (() -> Void)? = nil
     var isPinned: Bool = false
+    var onSeenBy: (() -> Void)? = nil
 
     var body: some View {
         ForEach(ReactionKind.allCases) { kind in
@@ -1711,6 +1722,11 @@ struct MessageActionsMenu: View {
         if isTextMessage, let onCopy {
             Button { onCopy() } label: {
                 Label("Sao chép", systemImage: "doc.on.doc")
+            }
+        }
+        if let onSeenBy {
+            Button { onSeenBy() } label: {
+                Label("Đã xem bởi", systemImage: "eye")
             }
         }
         if let onSelect {
@@ -1900,6 +1916,8 @@ struct MessageBubbleView: View {
     /// Ghim/gỡ ghim. nil = không phải quản trị nhóm (ẩn mục). `isPinned` quyết định nhãn.
     var onPin: (() -> Void)? = nil
     var isPinned: Bool = false
+    /// Xem "Đã xem bởi ai" (nhóm, tin của mình). nil = ẩn mục.
+    var onSeenBy: (() -> Void)? = nil
 
     /// Bong bóng trượt theo ngón khi vuốt trả lời. Thuần hiệu ứng — thả tay là về 0.
     @State private var dragX: CGFloat = 0
@@ -2028,7 +2046,8 @@ struct MessageBubbleView: View {
             onDelete: onDelete,
             onSelect: onSelect,
             onPin: onPin,
-            isPinned: isPinned
+            isPinned: isPinned,
+            onSeenBy: onSeenBy
         )
     }
 

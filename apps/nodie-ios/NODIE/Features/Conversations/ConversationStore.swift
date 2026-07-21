@@ -507,6 +507,8 @@ final class ConversationStore {
         let displayName: String
         /// 'member' | 'mod'. Cho GroupInfoView hiện nhãn quản trị + biết ai được phong/gỡ.
         var role: String = "member"
+        /// Mốc đọc của người này — cho "Đã xem bởi ai" trong nhóm. members(of:) đã fetch sẵn.
+        var lastReadAt: Date? = nil
         var isMod: Bool { role == "mod" }
     }
 
@@ -546,7 +548,7 @@ final class ConversationStore {
             return rows.map {
                 ChannelMember(id: $0.userId,
                               displayName: $0.member?.displayName ?? String(localized: "Ẩn danh"),
-                              role: $0.role)
+                              role: $0.role, lastReadAt: $0.lastReadAt)
             }
         } catch {
             errorMessage = String(localized: "Không tải được danh sách thành viên.")
@@ -577,6 +579,21 @@ final class ConversationStore {
         channels.filter { !$0.isMuted }.reduce(0) { $0 + unread(for: $1.id) }
     }
     func isBlocked(_ userId: UUID?) -> Bool { userId.map(blockedUserIds.contains) ?? false }
+
+    /// Ai trong NHÓM đã đọc tin này — "Đã xem bởi ai" (Zalo/Messenger). Lọc từ `members`
+    /// (caller nạp bằng `members(of:)`), giữ người có `last_read_at >= createdAt`, TRỪ chính
+    /// mình (mình đọc là hiển nhiên) và tác giả (không tự-xem tin mình).
+    ///
+    /// KHÔNG đếm-đầu-người-thành-điểm-số: chỉ liệt kê tên (anti-pattern CLAUDE.md — metric
+    /// trên NỘI DUNG, không xếp hạng NGƯỜI). Số "N người đã xem" chỉ là độ dài danh sách,
+    /// không phải điểm của ai.
+    func seenBy(_ message: MessageRow, members: [ChannelMember]) -> [ChannelMember] {
+        members.filter { m in
+            m.id != currentUserId
+                && m.id != message.userId
+                && (m.lastReadAt.map { $0 >= message.createdAt } ?? false)
+        }
+    }
 
     /// Tin cũ nhất đang giữ — con trỏ để nạp trang trước đó.
     func oldestLoaded(in channelId: UUID) -> Date? { messagesByChannel[channelId]?.first?.createdAt }
@@ -688,8 +705,19 @@ final class ConversationStore {
 
         while let item = queuedTexts.first {
             do {
+                // Lấy created_at server về vá vào bản lạc quan (như send()): tin xếp hàng lúc
+                // offline giữ createdAt=Date() MÁY, mà ✓✓ và "Đã xem bởi" so nó với mốc đọc
+                // server — lệch đồng hồ là đã-xem sai. nil khi trùng khoá (đã trên server,
+                // giờ đúng về ở loadMessages sau).
+                var serverCreatedAt: Date?
                 do {
-                    try await client.from("messages").insert(item.payload).execute()
+                    struct Inserted: Decodable {
+                        let createdAt: Date
+                        enum CodingKeys: String, CodingKey { case createdAt = "created_at" }
+                    }
+                    let inserted: Inserted = try await client.from("messages")
+                        .insert(item.payload).select("created_at").single().execute().value
+                    serverCreatedAt = inserted.createdAt
                 } catch {
                     // Trùng khoá = đợt flush trước ĐÃ lên tới nơi mà response lạc giữa đường
                     // — coi như xong, đừng báo hỏng một tin người ta đã nhận (cùng bài học
@@ -697,7 +725,12 @@ final class ConversationStore {
                     guard Self.isDuplicateKey(error) else { throw error }
                 }
                 queuedTexts.removeFirst()
-                if let row = messagesByChannel[item.channelId]?.first(where: { $0.id == item.payload.id }) {
+                if let i = messagesByChannel[item.channelId]?.firstIndex(where: { $0.id == item.payload.id }) {
+                    if let serverCreatedAt {
+                        messagesByChannel[item.channelId]![i] =
+                            messagesByChannel[item.channelId]![i].replacingCreatedAt(serverCreatedAt)
+                    }
+                    let row = messagesByChannel[item.channelId]![i]
                     Task { await ChatDiskCache.shared.insertMessages([row]) }
                 }
             } catch {
