@@ -1,30 +1,38 @@
 /**
- * Public hook: read approved donations for donor wall.
- * Reads from `donations` collection where status == 'approved', sorted recent first.
- * Sensitive contact info lives in separate `donation_contacts` collection (admin-only).
+ * Public donations: read approved rows for the donor wall + submit new donation.
+ * Sensitive contact info lives in `donation_contacts` (admin-only read).
  */
-import { useFirestoreSWR } from './useFirestoreSWR'
-import { db } from '../firebase'
-import {
-  collection, query, where, orderBy, limit, onSnapshot,
-  addDoc, doc, writeBatch, serverTimestamp,
-} from 'firebase/firestore'
+import { useSupabaseSWR } from './useSupabaseSWR'
+import { supabase } from '../lib/supabase-client'
+
+/** Map a donations row → shape the wall/admin UI expects. */
+export function adaptDonation(row) {
+  return {
+    id: row.id,
+    amount: typeof row.amount === 'string' ? Number(row.amount) : row.amount,
+    channel: row.channel ?? null,
+    displayName: row.donor_name || '',       // empty → wall renders anonymous label
+    isAnonymous: !row.donor_name,
+    message: row.message ?? null,
+    status: row.status,
+    createdAt: row.created_at ?? null,
+    approvedAt: row.status === 'approved' ? (row.created_at ?? null) : null,
+  }
+}
 
 export function useDonations(maxItems = 50) {
-  const { data: donations, loading } = useFirestoreSWR(
+  const { data: donations, loading } = useSupabaseSWR(
     `cached_donations_approved_${maxItems}`,
-    (onData, onError) => {
-      const q = query(
-        collection(db, 'donations'),
-        where('status', '==', 'approved'),
-        orderBy('approvedAt', 'desc'),
-        limit(maxItems),
-      )
-      return onSnapshot(
-        q,
-        (snap) => onData(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-        onError,
-      )
+    async () => {
+      if (!supabase) return []
+      const { data, error } = await supabase
+        .from('donations')
+        .select('*')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(maxItems)
+      if (error) throw error
+      return (data ?? []).map(adaptDonation)
     },
     [],
   )
@@ -33,41 +41,33 @@ export function useDonations(maxItems = 50) {
 }
 
 /**
- * Submit donation: writes 2 docs atomically (public-safe + private contact).
- * Uses writeBatch to ensure both succeed or fail together.
+ * Submit a donation: public (non-PII) row + private contact row, linked by a
+ * client-generated id. Both are plain inserts (rows are not anon-readable).
  */
-export async function submitDonation({
-  name, isAnonymous, message, amount, email, phone,
-}) {
+export async function submitDonation({ name, isAnonymous, message, amount, email, phone }) {
   const trimmedName = (name || '').trim()
   if (!trimmedName) throw new Error('Name is required')
   if (!Number.isFinite(amount) || amount <= 0) throw new Error('Invalid amount')
+  if (!supabase) throw new Error('Supabase not configured')
 
-  // Pre-allocate id so both docs share it
-  const publicRef = doc(collection(db, 'donations'))
-  const id = publicRef.id
-  const privateRef = doc(db, 'donation_contacts', id)
+  const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `don-${Date.now()}`
 
-  const batch = writeBatch(db)
-
-  batch.set(publicRef, {
-    displayName: isAnonymous ? '' : trimmedName,  // empty → wall renders "anonymous label"
-    isAnonymous: !!isAnonymous,
-    message: (message || '').trim() || null,
+  const { error: dErr } = await supabase.from('donations').insert({
+    id,
     amount: Number(amount),
-    status: 'pending',
-    createdAt: serverTimestamp(),
-    approvedAt: null,
+    channel: null,
+    donor_name: isAnonymous ? '' : trimmedName,
+    message: (message || '').trim() || null,
   })
+  if (dErr) throw dErr
 
-  batch.set(privateRef, {
-    realName: trimmedName,
+  const { error: cErr } = await supabase.from('donation_contacts').insert({
+    donation_id: id,
+    real_name: trimmedName,
     email: (email || '').trim() || null,
     phone: (phone || '').trim() || null,
-    adminNote: null,
-    createdAt: serverTimestamp(),
   })
+  if (cErr) throw cErr
 
-  await batch.commit()
   return id
 }

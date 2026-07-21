@@ -1,4 +1,4 @@
-/* Default translations (fallback khi Firestore chưa có data) */
+/* Default translations (fallback khi backend chưa có data) */
 export const DEFAULT_T = {
   vi: {
     siteName: 'Bất Tử Đạo',

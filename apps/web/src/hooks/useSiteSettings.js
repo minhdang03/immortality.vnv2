@@ -1,11 +1,6 @@
-import { useFirestoreSWR } from './useFirestoreSWR'
 import { useSupabaseSWR } from './useSupabaseSWR'
 import { supabase } from '../supabase'
-import { db } from '../firebase'
-import { doc, onSnapshot } from 'firebase/firestore'
 import { DEFAULT_HOME_CARDS, DEFAULT_NAV_ITEMS } from '../config/pages'
-
-const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
 
 async function fetchSupabaseSettings() {
   const { data, error } = await supabase
@@ -39,8 +34,8 @@ function migrateSettings(data) {
     migrated.navItems = migrated.navItems.map(item =>
       item.id === 'revelations' ? { ...item, id: 'khaitri', labelVi: item.labelVi === 'Khai Thị' ? 'Khai Trí' : item.labelVi, labelEn: item.labelEn === 'Revelations' ? 'Khai Trí' : item.labelEn } : item
     )
-    // Trang mới thêm vào registry sau khi settings đã lưu trên Firestore
-    // (vd nang-luong): tự merge vào cuối nav, admin vẫn ẩn/sắp xếp được như thường.
+    // Trang mới thêm vào registry sau khi settings đã lưu: tự merge vào cuối nav,
+    // admin vẫn ẩn/sắp xếp được như thường.
     const saved = new Set(migrated.navItems.map(i => i.id))
     DEFAULT_NAV_ITEMS.forEach(def => {
       if (!saved.has(def.id)) migrated.navItems.push({ ...def })
@@ -59,7 +54,7 @@ function migrateSettings(data) {
 }
 
 export function useSiteSettings() {
-  const supaResult = useSupabaseSWR(
+  const { data: settings, loading } = useSupabaseSWR(
     'cached_site_settings',
     async () => {
       const raw = await fetchSupabaseSettings()
@@ -68,22 +63,14 @@ export function useSiteSettings() {
     DEFAULT_SETTINGS
   )
 
-  const fsResult = useFirestoreSWR(
-    'cached_site_settings',
-    (onData, onError) => {
-      return onSnapshot(doc(db, 'settings', 'site'), (snap) => {
-        onData(snap.exists() ? migrateSettings(snap.data()) : DEFAULT_SETTINGS)
-      }, onError)
-    },
-    DEFAULT_SETTINGS
-  )
-
-  const { data: settings, loading } = USE_SUPABASE ? supaResult : fsResult
-
-  // Writes stay on Firestore for this phase
+  // Merge-upsert the site settings blob (admin only via RLS).
   const updateSettings = async (data) => {
-    const { setDoc } = await import('firebase/firestore')
-    await setDoc(doc(db, 'settings', 'site'), data, { merge: true })
+    if (!supabase) return
+    const current = (await fetchSupabaseSettings()) || {}
+    const { error } = await supabase
+      .from('settings')
+      .upsert({ key: 'site', value: { ...current, ...data }, updated_at: new Date().toISOString() })
+    if (error) throw error
   }
 
   return { settings, loading, updateSettings }

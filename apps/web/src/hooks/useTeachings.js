@@ -1,20 +1,16 @@
-import useCRUD from './useCRUD'
 import { useSupabaseSWR } from './useSupabaseSWR'
-import { fetchContentByType } from './_supabase-content'
-
-const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
+import { fetchContentByType, createContent, updateContent, deleteContent } from './_supabase-content'
 
 export function useTeachings() {
-  const { data: supaItems, loading: supaLoading } = useSupabaseSWR(
+  const { data: teachings, loading } = useSupabaseSWR(
     'cached_teachings',
     () => fetchContentByType('teaching', { orderCol: 'order_index', ascending: true }),
     []
   )
 
-  const { items, loading: fsLoading, add, update, remove } = useCRUD('teachings')
+  const addTeaching = (item) => createContent('teaching', item)
+  const updateTeaching = (id, data) => updateContent(id, 'teaching', data)
+  const deleteTeaching = (id) => deleteContent(id)
 
-  const teachings = USE_SUPABASE ? supaItems : items
-  const loading = USE_SUPABASE ? supaLoading : fsLoading
-
-  return { teachings, loading, addTeaching: add, updateTeaching: update, deleteTeaching: remove }
+  return { teachings, loading, addTeaching, updateTeaching, deleteTeaching }
 }

@@ -104,7 +104,7 @@ export default function Header({ t, lang, dark, page, menuOpen, navigate, toggle
               aria-label={dark ? t.lightMode : t.darkMode}>
               <span aria-hidden="true">{dark ? '☀' : '☾'}</span>
             </button>
-            <button className="lang-btn" onClick={() => setLang(l => l === 'vi' ? 'en' : 'vi')}
+            <button className="lang-btn" onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}
               aria-label={lang === 'vi' ? 'Switch to English' : 'Chuyển sang tiếng Việt'}>
               {lang === 'vi' ? 'EN' : 'VI'}
             </button>

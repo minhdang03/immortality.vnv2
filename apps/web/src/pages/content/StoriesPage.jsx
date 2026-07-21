@@ -5,13 +5,13 @@ import StoryDetail from '../../components/stories/StoryDetail'
 import StoryList from '../../components/stories/StoryList'
 import { DetailSkeleton } from '../../components/shared/Skeleton'
 
-export default function StoriesPage({ t, lang, firestoreStories, fresh, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateStory }) {
+export default function StoriesPage({ t, lang, stories, fresh, navigate, fontSize, onFontIncrease, onFontDecrease, onFontReset, user, onUpdateStory }) {
   const [selected, setSelected] = useState(null)
   const [filter, setFilter] = useState('all')
 
   const allStories = useMemo(() =>
-    (firestoreStories || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-    [firestoreStories]
+    (stories || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    [stories]
   )
 
   // Sync selected from URL pathname — re-runs when stories grow + on browser back/forward.
@@ -72,7 +72,7 @@ export default function StoriesPage({ t, lang, firestoreStories, fresh, navigate
     )
   }
 
-  // Deep-link refresh: hold skeleton until Firestore confirms a fresh snapshot,
+  // Deep-link refresh: hold skeleton until the backend confirms a fresh fetch,
   // otherwise a stale SWR cache (length > 0, missing the new slug) flashes the list.
   const isDeepLink = typeof window !== 'undefined' && window.location.pathname.startsWith('/story/')
   if (isDeepLink && !fresh) return <DetailSkeleton />

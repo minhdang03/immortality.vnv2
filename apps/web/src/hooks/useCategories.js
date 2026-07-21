@@ -1,6 +1,5 @@
 /**
- * useCategories — Supabase path: full CRUD on public.categories.
- * Firestore path: thin stub returning empty list (topics collection was empty).
+ * useCategories — full CRUD on public.categories.
  *
  * Return shape mirrors useTopics for drop-in compatibility:
  *   { categories, loading, addCategory, updateCategory, deleteCategory }
@@ -10,8 +9,6 @@
  */
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase-client'
-
-const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
 
 /** Build a slug from a Vietnamese name (simple, no external dep). */
 function slugify(str) {
@@ -82,10 +79,9 @@ async function fetchCategories() {
 
 export function useCategories() {
   const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(USE_SUPABASE)
+  const [loading, setLoading] = useState(true)
 
   const reload = useCallback(async () => {
-    if (!USE_SUPABASE) return
     setLoading(true)
     try {
       const data = await fetchCategories()

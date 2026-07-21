@@ -1,8 +1,6 @@
 /**
  * useReadingTracker — per-paragraph reading analytics via IntersectionObserver.
  *
- * Only active when VITE_DATA_BACKEND === 'supabase'. No-ops on Firestore path.
- *
  * Behaviour:
  *  - Observes all [data-para] elements within `containerRef`.
  *  - Records first-seen timestamp per paragraph; on leave computes dwell_ms.
@@ -19,8 +17,6 @@
 import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase-client'
 import { getReadingSessionId } from '../lib/reading-session'
-
-const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
 
 /** Flush the buffer to Supabase. Fire-and-forget; errors logged, not thrown. */
 async function flushEvents(buffer, contentId) {
@@ -52,7 +48,7 @@ export function useReadingTracker(contentId, containerRef) {
   useEffect(() => { contentIdRef.current = contentId }, [contentId])
 
   useEffect(() => {
-    if (!USE_SUPABASE || !contentId) return
+    if (!contentId) return
 
     // Reset state for new content
     bufferRef.current = []

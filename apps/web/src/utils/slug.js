@@ -34,7 +34,7 @@ export function articleSlug(article) {
 }
 
 /**
- * Return { viSlug, enSlug } fields for Firestore — enables O(1) crawler lookup
+ * Return { viSlug, enSlug } fields for Supabase — enables O(1) crawler lookup
  */
 export function articleSlugFields(article) {
   return {

@@ -140,6 +140,15 @@ const PAGES = [
     icon: '🔍',
   },
   {
+    id: 'live',
+    path: 'live',
+    labelVi: 'Trực Tiếp', labelEn: 'Live',
+    titleVi: 'Khách Đang Xem', titleEn: 'Live Visitors',
+    descVi: 'Xem hoạt động ẩn danh đang diễn ra trên Bất Tử Đạo theo thời gian thực.',
+    descEn: 'See anonymous activity happening across Bất Tử Đạo in real time.',
+    icon: '◉',
+  },
+  {
     id: 'category',
     path: 'category',
     labelVi: 'Danh Mục', labelEn: 'Categories',
@@ -173,7 +182,7 @@ export const NAV_ICONS = Object.fromEntries(
   PAGES.filter(p => p.icon).map(p => [p.id, p.icon])
 )
 
-// Default nav items (Firestore fallback)
+// Default nav items (Supabase fallback)
 export const DEFAULT_NAV_ITEMS = PAGES
   .filter(p => p.navDefault)
   .map(p => ({ id: p.id, labelVi: p.labelVi, labelEn: p.labelEn, ...p.navDefault }))

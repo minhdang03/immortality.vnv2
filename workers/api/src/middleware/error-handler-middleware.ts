@@ -7,7 +7,6 @@
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
-import { FirestoreError } from "../lib/firestore-rest-client.js";
 import type { Env } from "../cloudflare-worker-env.js";
 
 type ErrorResponse = {
@@ -56,19 +55,6 @@ export function globalErrorHandler(
       ),
       400
     );
-  }
-
-  // Firestore REST errors
-  if (err instanceof FirestoreError) {
-    if (err.status === 404) {
-      return c.json(buildErrorResponse("NOT_FOUND", "Resource not found"), 404);
-    }
-    if (err.status === 409) {
-      return c.json(buildErrorResponse("CONFLICT", "Resource already exists"), 409);
-    }
-    // Don't expose Firestore internals in production
-    const message = isDev ? err.message : "Database error";
-    return c.json(buildErrorResponse("DB_ERROR", message), 500);
   }
 
   // Auth errors

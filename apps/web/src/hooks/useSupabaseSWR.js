@@ -1,19 +1,14 @@
 /**
- * SWR hook for Supabase: show cached data instantly, revalidate via one-shot select().
- * Mirrors the useFirestoreSWR(cacheKey, subscribe, fallback) contract so hooks can
- * swap implementations behind the VITE_DATA_BACKEND flag without touching callers.
+ * SWR hook for Supabase: show cached data instantly, revalidate via one-shot fetcher.
  *
- * Difference: `fetcher` is an async () => data[] instead of (onData, onError) => unsub.
- */
-import { useState, useEffect } from 'react'
-import { readCache, writeCache } from './useFirestoreSWR'
-
-/**
  * @param {string} cacheKey - localStorage key (e.g. 'cached_articles')
  * @param {() => Promise<any>} fetcher - async fn that returns the data
  * @param {*} fallback - default value when no cache exists
  * @returns {{ data, loading, fresh }}
  */
+import { useState, useEffect } from 'react'
+import { readCache, writeCache } from '../lib/swr-cache'
+
 export function useSupabaseSWR(cacheKey, fetcher, fallback) {
   const [cached] = useState(() => readCache(cacheKey))
   const [data, setData] = useState(cached?.data ?? fallback)

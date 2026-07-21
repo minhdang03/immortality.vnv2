@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
-import { db } from '../../firebase'
+import { supabase } from '../../lib/supabase-client'
 import SunIcon from '../../components/shared/SunIcon'
 import PageHero from '../../components/shared/PageHero'
 
@@ -15,26 +14,26 @@ export default function ContactPage({ t }) {
     const name = form.name.trim()
     const email = form.email.trim()
     const message = form.message.trim()
-    // Match server-side regex from firestore.rules
+    // Basic client-side validation before the anon insert.
     if (name.length < 2 || message.length < 5) { setStatus('error'); setTimeout(() => setStatus('idle'), 4000); return }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setStatus('error'); setTimeout(() => setStatus('idle'), 4000); return }
     setStatus('sending')
-    try {
-      await addDoc(collection(db, 'contacts'), {
-        name: name.slice(0, 100),
-        email: email.slice(0, 200),
-        message: message.slice(0, 4000),
-        status: 'new',
-        createdAt: serverTimestamp(),
-      })
-      setForm({ name: '', email: '', message: '' })
-      setStatus('sent')
-      setTimeout(() => setStatus('idle'), 4000)
-    } catch (err) {
-      console.error('contact submit failed', err)
+    if (!supabase) { setStatus('error'); setTimeout(() => setStatus('idle'), 4000); return }
+    // Plain insert (contacts are admin-only read).
+    const { error } = await supabase.from('contacts').insert({
+      name: name.slice(0, 100),
+      email: email.slice(0, 200),
+      message: message.slice(0, 4000),
+    })
+    if (error) {
+      console.error('contact submit failed', error)
       setStatus('error')
       setTimeout(() => setStatus('idle'), 4000)
+      return
     }
+    setForm({ name: '', email: '', message: '' })
+    setStatus('sent')
+    setTimeout(() => setStatus('idle'), 4000)
   }
 
   return (

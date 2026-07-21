@@ -1,17 +1,15 @@
 /**
  * CategoryBrowsePage — /category/:slug
  * Shows a category (and its children) with all matching content.
- * Supabase path: queries content where category_id IN subtree of slug.
- * Firestore path: falls back to showing all articles (no category_id on Firestore docs).
+ * Queries content where category_id IN the subtree of slug.
  */
 import { useState, useEffect, useMemo } from 'react'
 import { useCategories, buildTree } from '../../hooks/useCategories'
+import { adaptContentRow } from '../../hooks/_supabase-content'
 import CategoryTree from '../../components/category-tree'
 import ArticleCard from '../../components/shared/ArticleCard'
 import SunIcon from '../../components/shared/SunIcon'
 import { supabase } from '../../lib/supabase-client'
-
-const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
 
 /** Collect all category ids in the subtree rooted at `rootId`. */
 function subtreeIds(rootId, childrenOf) {
@@ -29,25 +27,16 @@ async function fetchContentByCategory(categoryIds) {
   if (!supabase) return []
   const { data, error } = await supabase
     .from('content')
-    .select('id, type, slug, vi, en, content_date, category_id, image, tag')
+    .select('*')
     .in('category_id', categoryIds)
     .eq('status', 'published')
     .order('content_date', { ascending: false })
     .limit(100)
   if (error) throw error
-  return (data ?? []).map(row => ({
-    id: row.id,
-    type: row.type,
-    topic: row.category_id,
-    date: row.content_date,
-    image: row.image,
-    tag: row.tag,
-    vi: row.vi,
-    en: row.en,
-  }))
+  return (data ?? []).map(adaptContentRow)
 }
 
-export default function CategoryBrowsePage({ lang, t, slug, navigate, articles: firestoreArticles }) {
+export default function CategoryBrowsePage({ lang, t, slug, navigate }) {
   const { categories, loading: catsLoading } = useCategories()
   const [content, setContent] = useState([])
   const [contentLoading, setContentLoading] = useState(false)
@@ -68,7 +57,7 @@ export default function CategoryBrowsePage({ lang, t, slug, navigate, articles: 
 
   // Load content for selected category subtree
   useEffect(() => {
-    if (!USE_SUPABASE || !selectedId) return
+    if (!selectedId) return
     const ids = subtreeIds(selectedId, childrenOf)
     setContentLoading(true)
     fetchContentByCategory(ids)
@@ -80,8 +69,7 @@ export default function CategoryBrowsePage({ lang, t, slug, navigate, articles: 
   const selectedCat = categories.find(c => c.id === selectedId)
   const catName = selectedCat ? (lang === 'vi' ? selectedCat.vi_name : (selectedCat.en_name || selectedCat.vi_name)) : ''
 
-  // Firestore fallback: just show all articles (no category filtering)
-  const displayItems = USE_SUPABASE ? content : (firestoreArticles || [])
+  const displayItems = content
 
   if (catsLoading) {
     return (

@@ -16,8 +16,8 @@ const DEFAULT_MOVES = [
   { order: 10, titleVi: 'Thái Dương Đại Pháp — Hoàn Thiện Năng Lượng', titleEn: 'Grand Solar Method — Energy Completion', descVi: '', descEn: '' },
 ]
 
-function mergeMoves(firestorePractices) {
-  if (firestorePractices && firestorePractices.length > 0) return firestorePractices
+function mergeMoves(practices) {
+  if (practices && practices.length > 0) return practices
   return DEFAULT_MOVES
 }
 

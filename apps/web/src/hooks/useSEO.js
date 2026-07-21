@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { PAGE_MAP } from '../config/pages'
 
 function getSiteUrl() {
   return typeof window !== 'undefined' ? window.location.origin : 'https://battudao.com'
@@ -88,7 +89,15 @@ export function useSEO(page, selectedArticle, selectedTopic, lang, topics) {
         })
       }
     } else {
-      updateOGMeta({ url: canonical })
+      const meta = PAGE_MAP[page]
+      const pageTitle = lang === 'en' ? meta?.titleEn : meta?.titleVi
+      const pageDescription = lang === 'en' ? meta?.descEn : meta?.descVi
+      const siteName = isImmortality() ? 'Immortality' : 'Bất Tử Đạo'
+      updateOGMeta({
+        title: pageTitle ? `${pageTitle} | ${siteName}` : undefined,
+        description: pageDescription,
+        url: canonical,
+      })
     }
 
     // Update hreflang (vi/en)

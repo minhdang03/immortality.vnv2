@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { logEvent } from '../firebase'
+import { logEvent } from '../lib/ga4-analytics'
 
 /**
  * Track page views when page/article changes

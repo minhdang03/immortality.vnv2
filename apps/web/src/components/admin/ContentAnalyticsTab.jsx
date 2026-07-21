@@ -9,8 +9,6 @@ import { supabase } from '../../lib/supabase-client'
 import ParagraphDropoffChart from './paragraph-dropoff-chart'
 import { formatDwell } from './format-dwell'
 
-const USE_SUPABASE = import.meta.env.VITE_DATA_BACKEND === 'supabase'
-
 // The RPC only knows content_id; titles live in `content`, so resolve them in a
 // second query rather than widening the function signature.
 async function fetchTopArticles(lang) {
@@ -60,7 +58,7 @@ export default function ContentAnalyticsTab({ lang }) {
 
   // Load cross-article comparison on mount, and re-resolve titles when lang flips
   useEffect(() => {
-    if (!USE_SUPABASE || !supabase) return
+    if (!supabase) return
     setTopLoading(true)
     fetchTopArticles(lang)
       .then(setTopArticles)
@@ -78,16 +76,6 @@ export default function ContentAnalyticsTab({ lang }) {
       .catch(e => setDetailError(e.message))
       .finally(() => setDetailLoading(false))
   }, [selectedId])
-
-  if (!USE_SUPABASE) {
-    return (
-      <div style={{ color: 'var(--text-dim)', padding: 32 }}>
-        {lang === 'vi'
-          ? 'Phân tích nội dung chỉ khả dụng khi VITE_DATA_BACKEND=supabase.'
-          : 'Content analytics requires VITE_DATA_BACKEND=supabase.'}
-      </div>
-    )
-  }
 
   return (
     <div>

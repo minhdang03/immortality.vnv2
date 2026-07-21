@@ -1,56 +1,60 @@
 /**
- * Admin hook: read all donations (any status) + actions.
- * Used by admin DonationsTab.
+ * Admin donations: read all rows (any status) + moderate. Used by DonationsTab.
+ * Contact PII (donation_contacts) is fetched lazily per row (admin-only read).
  */
-import { useEffect, useState } from 'react'
-import { db } from '../firebase'
-import {
-  collection, query, orderBy, onSnapshot,
-  doc, getDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp,
-} from 'firebase/firestore'
+import { useEffect, useState, useCallback } from 'react'
+import { supabase } from '../lib/supabase-client'
+import { adaptDonation } from './useDonations'
 
 export function useAdminDonations() {
   const [donations, setDonations] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const q = query(collection(db, 'donations'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q, (snap) => {
-      setDonations(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-      setLoading(false)
-    }, () => setLoading(false))
-    return unsub
+  const reload = useCallback(async () => {
+    if (!supabase) { setLoading(false); return }
+    const { data, error } = await supabase
+      .from('donations')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (!error) setDonations((data ?? []).map(adaptDonation))
+    setLoading(false)
   }, [])
 
+  useEffect(() => { reload() }, [reload])
+
   const fetchContact = async (id) => {
-    const snap = await getDoc(doc(db, 'donation_contacts', id))
-    return snap.exists() ? snap.data() : null
+    if (!supabase) return null
+    const { data, error } = await supabase
+      .from('donation_contacts')
+      .select('real_name, email, phone')
+      .eq('donation_id', id)
+      .maybeSingle()
+    if (error || !data) return null
+    return { realName: data.real_name, email: data.email, phone: data.phone }
   }
 
   const approve = async (id) => {
-    await updateDoc(doc(db, 'donations', id), {
-      status: 'approved',
-      approvedAt: serverTimestamp(),
-    })
+    if (!supabase) return
+    await supabase.from('donations').update({ status: 'approved' }).eq('id', id)
+    reload()
   }
 
   const reject = async (id) => {
-    await updateDoc(doc(db, 'donations', id), {
-      status: 'rejected',
-      approvedAt: null,
-    })
+    if (!supabase) return
+    await supabase.from('donations').update({ status: 'rejected' }).eq('id', id)
+    reload()
   }
 
   const remove = async (id) => {
-    const batch = writeBatch(db)
-    batch.delete(doc(db, 'donations', id))
-    batch.delete(doc(db, 'donation_contacts', id))
-    await batch.commit()
+    if (!supabase) return
+    // donation_contacts cascade-deletes via FK.
+    await supabase.from('donations').delete().eq('id', id)
+    reload()
   }
 
-  const updateAdminNote = async (id, note) => {
-    await updateDoc(doc(db, 'donation_contacts', id), { adminNote: note })
-  }
+  // No adminNote column in the Supabase schema — kept as a no-op so the note UI
+  // doesn't throw. (Contract mismatch: donation_contacts has no admin_note field.)
+  const updateAdminNote = async () => {}
 
   return { donations, loading, fetchContact, approve, reject, remove, updateAdminNote }
 }

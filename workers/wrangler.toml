@@ -3,23 +3,6 @@ main = "api/src/index.ts"
 compatibility_date = "2026-05-01"
 compatibility_flags = ["nodejs_compat"]
 
-# ── Cron triggers ─────────────────────────────────────────────────────────────
-# 18:00 UTC = 01:00 ICT (+7) — after Workers AI free-tier neuron reset (00:00 UTC)
-# so the embed-backfill drain has the full daily budget.
-[triggers]
-crons = ["0 18 * * *"]
-
-# ── KV Namespaces ─────────────────────────────────────────────────────────────
-# Create via: wrangler kv namespace create KV_JWKS
-[[kv_namespaces]]
-binding = "KV_JWKS"
-id = "REPLACE_WITH_KV_JWKS_ID"
-
-# Create via: wrangler kv namespace create KV_CACHE
-[[kv_namespaces]]
-binding = "KV_CACHE"
-id = "REPLACE_WITH_KV_CACHE_ID"
-
 # ── D1 (content replica + FTS5 search + api_keys + audit) ───────────────────
 # Create via: wrangler d1 create btd-content
 # Migrate:    pnpm -F @btd/api run d1:migrate:local  (or :remote)
@@ -54,8 +37,6 @@ CORS_ORIGINS = "http://localhost:8081,http://localhost:5173,http://localhost:300
 SUPABASE_URL = "https://dzctvmrlsxwkcuidsqzk.supabase.co"
 
 # ── Secrets (set via CLI, never in toml) ─────────────────────────────────────
-# wrangler secret put FIREBASE_PROJECT_ID
-# wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON   (full JSON string)
 # wrangler secret put ANTHROPIC_API_KEY               (enrich: taxonomy + SEO meta)
 # wrangler secret put R2_PUBLIC_BASE_URL              (e.g. https://media.battudao.com)
 #
@@ -72,17 +53,6 @@ SUPABASE_URL = "https://dzctvmrlsxwkcuidsqzk.supabase.co"
 [env.staging]
 name = "btd-api-staging"
 vars = { ENV = "staging", CORS_ORIGINS = "https://staging.battudao.com,http://localhost:8081,http://localhost:5173", SUPABASE_URL = "https://dzctvmrlsxwkcuidsqzk.supabase.co" }
-
-[env.staging.triggers]
-crons = ["0 18 * * *"]
-
-[[env.staging.kv_namespaces]]
-binding = "KV_JWKS"
-id = "REPLACE_WITH_KV_JWKS_STAGING_ID"
-
-[[env.staging.kv_namespaces]]
-binding = "KV_CACHE"
-id = "REPLACE_WITH_KV_CACHE_STAGING_ID"
 
 [[env.staging.d1_databases]]
 binding = "DB"
@@ -105,17 +75,6 @@ binding = "AI"
 [env.production]
 name = "btd-api-production"
 vars = { ENV = "production", CORS_ORIGINS = "https://battudao.com,https://immortality.vn", SUPABASE_URL = "https://dzctvmrlsxwkcuidsqzk.supabase.co" }
-
-[env.production.triggers]
-crons = ["0 18 * * *"]
-
-[[env.production.kv_namespaces]]
-binding = "KV_JWKS"
-id = "REPLACE_WITH_KV_JWKS_PRODUCTION_ID"
-
-[[env.production.kv_namespaces]]
-binding = "KV_CACHE"
-id = "REPLACE_WITH_KV_CACHE_PRODUCTION_ID"
 
 [[env.production.d1_databases]]
 binding = "DB"

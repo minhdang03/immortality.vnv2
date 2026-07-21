@@ -70,7 +70,7 @@ export default function AgentLogTab({ lang }) {
                 </span>
                 {e.actor && <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{e.actor}</span>}
                 <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: 'var(--text-dim)' }}>
-                  {e.timestamp?.toDate ? e.timestamp.toDate().toLocaleString() : '(pending)'}
+                  {e.timestamp ? new Date(e.timestamp).toLocaleString() : '(pending)'}
                 </span>
               </div>
               {e.params && Object.keys(e.params).length > 0 && (

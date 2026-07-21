@@ -81,12 +81,12 @@ export default function ArticlesTab({ t, lang, articles, topics, onAdd, onUpdate
                 <input
                   value={form.image}
                   onChange={e => setField('image', e.target.value)}
-                  placeholder="https://firebasestorage.googleapis.com/.../article-hero.png"
+                  placeholder="https://cdn.battudao.com/.../article-hero.png"
                 />
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: 4 }}>
                   {lang === 'vi'
-                    ? 'AI agent có thể tự generate + upload Firebase Storage rồi điền URL. Hoặc dán URL bất kỳ.'
-                    : 'AI agent can generate + upload to Firebase Storage and stamp URL. Or paste any URL.'}
+                    ? 'AI agent có thể tự generate + upload R2 rồi điền URL. Hoặc dán URL bất kỳ.'
+                    : 'AI agent can generate + upload to R2 and stamp URL. Or paste any URL.'}
                 </div>
               </div>
               {form.image && (

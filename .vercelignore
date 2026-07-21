@@ -6,3 +6,13 @@
 scripts/migrate/.dump
 plans
 docs
+
+# Dependencies are installed remotely; non-web clients are outside this deployment.
+**/node_*
+apps/nodie-ios
+apps/mobile
+ios
+.claude
+.firebase
+tests
+tools

@@ -10,7 +10,7 @@
 //
 // Request:
 //   POST /api/upload-file
-//   Authorization: Bearer <firebase id token>
+//   Authorization: Bearer btd_<32hex>  (agent API key; scope media:write)
 //   Content-Type:  image/png | image/jpeg | image/webp | image/gif
 //   X-Intent:      article | khaitri
 //   X-Slug:        optional kebab-case slug for the filename (e.g. "bai-hoc-reset")

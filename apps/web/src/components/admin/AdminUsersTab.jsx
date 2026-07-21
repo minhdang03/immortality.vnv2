@@ -5,7 +5,7 @@ export default function AdminUsersTab({ lang, currentUser }) {
   const { admins, loading, grantAdmin, revokeAdmin } = useAdmins()
   const [uid, setUid] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState('mod-articles')
+  const [role, setRole] = useState('mod')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
 
@@ -17,8 +17,8 @@ export default function AdminUsersTab({ lang, currentUser }) {
     if (!uid.trim()) { setMsg(vi ? 'UID không được trống' : 'UID required'); return }
     setBusy(true)
     try {
-      await grantAdmin(uid, email, currentUser?.uid, role)
-      setUid(''); setEmail(''); setRole('mod-articles')
+      await grantAdmin(uid, email, currentUser?.id, role)
+      setUid(''); setEmail(''); setRole('mod')
       setMsg(vi ? `✓ Đã cấp quyền ${role}` : `✓ ${role} granted`)
     } catch (err) {
       setMsg(`✗ ${err?.message || 'Failed'}`)
@@ -27,7 +27,7 @@ export default function AdminUsersTab({ lang, currentUser }) {
   }
 
   const handleRevoke = async (a) => {
-    if (a.id === currentUser?.uid) {
+    if (a.id === currentUser?.id) {
       setMsg(vi ? 'Không thể tự xoá quyền của chính mình' : 'Cannot revoke own admin')
       return
     }
@@ -51,8 +51,8 @@ export default function AdminUsersTab({ lang, currentUser }) {
         <div className="admin-form" style={{ padding: '16px 18px' }}>
           <p className="admin-settings-hint" style={{ marginBottom: 12 }}>
             {vi
-              ? 'Lấy UID từ Firebase Console → Authentication → Users → cột User UID. Email là tuỳ chọn (chỉ để dễ nhận diện).'
-              : 'Get UID from Firebase Console → Authentication → Users → User UID column. Email is optional (display only).'}
+              ? 'Lấy UID từ Supabase → Authentication → Users → cột User UID. Email là tuỳ chọn (chỉ để dễ nhận diện).'
+              : 'Get UID from Supabase → Authentication → Users → User UID column. Email is optional (display only).'}
           </p>
           <form onSubmit={handleGrant} style={{ display: 'grid', gap: 8 }}>
             <input
@@ -71,9 +71,7 @@ export default function AdminUsersTab({ lang, currentUser }) {
             />
             <select value={role} onChange={e => setRole(e.target.value)} disabled={busy}>
               <option value="admin">{vi ? 'Admin (toàn quyền)' : 'Admin (full access)'}</option>
-              <option value="agent">{vi ? 'Agent (đăng cả articles + khai trí)' : 'Agent (post articles + khaitri)'}</option>
-              <option value="mod-articles">{vi ? 'Mod Articles (chỉ articles + comments)' : 'Mod Articles only'}</option>
-              <option value="mod-khaitri">{vi ? 'Mod Khai Trí (chỉ hỏi đáp)' : 'Mod Khai Trí only'}</option>
+              <option value="mod">{vi ? 'Mod (kiểm duyệt nội dung)' : 'Mod (content moderation)'}</option>
             </select>
             <button type="submit" className="btn-read" disabled={busy || !uid.trim()}>
               {busy ? '...' : (vi ? 'Cấp quyền' : 'Grant')}
@@ -100,8 +98,8 @@ export default function AdminUsersTab({ lang, currentUser }) {
                   : 'The form above won\'t work because rules require you to already be admin. Bootstrap the first admin via one of:'}
               </div>
               <ul style={{ marginTop: 6, fontSize: '0.85rem', paddingLeft: 20 }}>
-                <li>{vi ? 'Firebase Console → Firestore → tạo doc' : 'Firebase Console → Firestore → create doc'} <code>/admins/{'<your-uid>'}</code> {vi ? 'với field' : 'with field'} <code>{'{ role: "admin" }'}</code></li>
-                <li>{vi ? 'CLI script:' : 'CLI script:'} <code>node functions/scripts/bootstrap-agent.js --email you@x.com --password ... --role admin</code></li>
+                <li>{vi ? 'Supabase → Table editor → profiles → sửa dòng của bạn, đặt' : 'Supabase → Table editor → profiles → edit your row, set'} <code>role = 'admin'</code></li>
+                <li>{vi ? 'Hoặc chạy SQL:' : 'Or run SQL:'} <code>{"update profiles set role='admin' where id='<your-uid>';"}</code></li>
               </ul>
             </div>
           )}

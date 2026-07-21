@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react'
-import { db } from '../../firebase'
-import {
-  collection, onSnapshot, orderBy, query, doc, updateDoc, deleteDoc,
-} from 'firebase/firestore'
+import { supabase } from '../../lib/supabase-client'
 
 const STATUS_LABELS = {
   new: { vi: 'Mới', en: 'New' },
@@ -23,23 +20,32 @@ export default function ContactsTab({ lang = 'vi' }) {
   const [filter, setFilter] = useState('all')
 
   useEffect(() => {
-    const q = query(collection(db, 'contacts'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q, (snap) => {
-      setContacts(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-      setLoading(false)
-    }, (err) => {
-      console.error('contacts load failed', err)
-      setLoading(false)
-    })
-    return unsub
+    if (!supabase) { setLoading(false); return }
+    let cancelled = false
+    supabase
+      .from('contacts')
+      .select('id, name, email, message, created_at')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) console.error('contacts load failed', error)
+        // No `status` column in Supabase — track moderation state locally per session.
+        else setContacts((data ?? []).map(c => ({ ...c, createdAt: c.created_at, status: 'new' })))
+        setLoading(false)
+      })
+    return () => { cancelled = true }
   }, [])
 
-  const setStatus = async (id, status) => {
-    try { await updateDoc(doc(db, 'contacts', id), { status }) } catch (e) { console.error(e) }
+  // Status is local-only (no backing column); persists for the current session.
+  const setStatus = (id, status) => {
+    setContacts(cs => cs.map(c => (c.id === id ? { ...c, status } : c)))
   }
   const remove = async (id) => {
     if (!window.confirm(lang === 'vi' ? 'Xoá tin nhắn này?' : 'Delete this message?')) return
-    try { await deleteDoc(doc(db, 'contacts', id)) } catch (e) { console.error(e) }
+    if (!supabase) return
+    const { error } = await supabase.from('contacts').delete().eq('id', id)
+    if (error) { console.error(error); return }
+    setContacts(cs => cs.filter(c => c.id !== id))
   }
 
   const counts = contacts.reduce((acc, c) => {

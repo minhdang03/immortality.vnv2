@@ -49,4 +49,5 @@ SQL
 echo "→ Kiểm tra"
 psql "$SUPABASE_DB_URL" -tAc "select '  vault: '||name from vault.decrypted_secrets where name like 'push_%' order by name;"
 echo "  function: $FN_URL"
-echo "Xong. Đừng quên: supabase functions deploy push-on-message --project-ref $PROJECT_REF"
+echo "Xong. Đừng quên: supabase functions deploy push-on-message --no-verify-jwt --project-ref $PROJECT_REF"
+echo "  (BẮT BUỘC --no-verify-jwt: trigger pg_net chỉ gửi x-push-secret, không có JWT — thiếu cờ là 401 và push chết IM LẶNG, lỗi chỉ nằm trong net._http_response vài giờ rồi tự xoá)"

@@ -128,8 +128,8 @@ For those who want freedom from disease and immortality, there is only one path:
   },
 ]
 
-function mergeSections(firestoreTeachings) {
-  if (firestoreTeachings && firestoreTeachings.length > 0) return firestoreTeachings
+function mergeSections(teachings) {
+  if (teachings && teachings.length > 0) return teachings
   return DEFAULT_SECTIONS
 }
 

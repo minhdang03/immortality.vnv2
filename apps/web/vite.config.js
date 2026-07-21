@@ -13,9 +13,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Firebase core (app + firestore + auth) loads with first paint.
-          // Analytics is dynamic-imported in firebase.js → Rollup auto-splits it.
-          firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth'],
           react: ['react', 'react-dom'],
         }
       }

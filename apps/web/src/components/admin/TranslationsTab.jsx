@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { DEFAULT_T, TRANSLATION_GROUPS } from '../../data/translations'
 
-export default function TranslationsTab({ lang, firestoreVi, firestoreEn, onUpdate }) {
+export default function TranslationsTab({ lang, viStrings, enStrings, onUpdate }) {
   const allKeys = Object.keys(DEFAULT_T.vi)
   const initForm = {}
   allKeys.forEach(k => {
-    initForm[`vi_${k}`] = firestoreVi?.[k] || DEFAULT_T.vi[k] || ''
-    initForm[`en_${k}`] = firestoreEn?.[k] || DEFAULT_T.en[k] || ''
+    initForm[`vi_${k}`] = viStrings?.[k] || DEFAULT_T.vi[k] || ''
+    initForm[`en_${k}`] = enStrings?.[k] || DEFAULT_T.en[k] || ''
   })
 
   const [form, setForm] = useState(initForm)

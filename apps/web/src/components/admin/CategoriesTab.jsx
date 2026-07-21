@@ -1,6 +1,5 @@
 /**
  * CategoriesTab — admin CRUD for public.categories.
- * Supabase-gated: only rendered when VITE_DATA_BACKEND === 'supabase'.
  * Follows TopicsTab patterns (same form layout, same action buttons).
  */
 import { useState } from 'react'

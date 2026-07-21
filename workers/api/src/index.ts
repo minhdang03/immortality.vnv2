@@ -1,20 +1,12 @@
 /**
  * Bất Tử Đạo — Cloudflare Workers API entry point.
  *
- * Stack: Hono + Firebase Auth (jose JWKS) + Firestore REST + Supabase (agent write plane)
+ * Stack: Hono + Supabase (agent write plane). Firebase Auth + Firestore plane
+ * removed 21/07/2026 — community reads/writes moved to the Supabase-backed apps.
  * Deployed to: api.battudao.com
  *
  * Route map:
  *   GET   /api/health
- *   GET   /api/profiles/:uid
- *   POST  /api/profiles
- *   PATCH /api/profiles/me
- *   GET   /api/questions
- *   POST  /api/questions
- *   GET   /api/questions/:id
- *   POST  /api/questions/:id/answers
- *   PATCH /api/questions/:id/chosen-answer
- *   POST  /api/votes
  *
  *   -- Agent write plane (btd_ key auth, service_role → Supabase) --
  *   GET   /v1/content          list/search (filters: id, source_ref, type, slug, q=title)
@@ -29,9 +21,6 @@ import { secureHeaders } from "hono/secure-headers";
 import type { Env } from "./cloudflare-worker-env.js";
 import { globalErrorHandler } from "./middleware/error-handler-middleware.js";
 import { requireApiKeyScope } from "./middleware/api-key-auth-middleware.js";
-import { profilesRouter } from "./routes/profiles-route-handler.js";
-import { questionsRouter } from "./routes/questions-route-handler.js";
-import { votesRouter } from "./routes/votes-route-handler.js";
 import { contentWriteRouter } from "./routes/content-write-route-handler.js";
 import { contentReadRouter } from "./routes/content-read-route-handler.js";
 
@@ -64,12 +53,6 @@ app.get("/api/health", (c) => {
     ts: new Date().toISOString(),
   });
 });
-
-// ── Legacy API routes (Firebase Auth + Firestore) ─────────────────────────────
-
-app.route("/api/profiles", profilesRouter);
-app.route("/api/questions", questionsRouter);
-app.route("/api/votes", votesRouter);
 
 // ── Agent plane (/v1 — btd_ key auth, Supabase service_role) ──────────────────
 //

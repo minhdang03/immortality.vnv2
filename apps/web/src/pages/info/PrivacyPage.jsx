@@ -15,6 +15,7 @@ const SECTIONS = [
       'Tài khoản: email và mật khẩu (qua Supabase Auth), tên hiển thị, giới thiệu ngắn về bạn.',
       'Nội dung bạn đăng: câu hỏi, câu trả lời, bình luận, tin nhắn, ảnh, tệp và tin nhắn thoại bạn gửi trong app.',
       'Thiết bị: mã thiết bị (device token) do Apple cấp, chỉ dùng để gửi thông báo đẩy.',
+      'Khi bạn đang mở battudao.com, trang Trực Tiếp dùng một mã ngẫu nhiên theo tab, đường dẫn đang xem, mã quốc gia và vị trí làm tròn theo vùng 10 độ để đếm lượt đang kết nối. Dữ liệu này chỉ tồn tại trong kết nối trực tiếp; chúng mình không lưu IP, thành phố hay lịch sử vị trí.',
     ],
   },
   {
@@ -80,7 +81,7 @@ export default function PrivacyPage({ lang = 'vi' }) {
       subtitle={c.subtitle}
       note={c.note}
       sections={SECTIONS}
-      updated="Cập nhật: 17/07/2026"
+      updated="Cập nhật: 21/07/2026"
     />
   )
 }

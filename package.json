@@ -1,20 +1,17 @@
 {
   "name": "@btd/monorepo",
   "private": true,
+  "type": "module",
   "version": "1.0.0",
   "packageManager": "pnpm@9.14.2",
   "scripts": {
     "dev:web": "pnpm --filter @btd/web dev",
     "build:web": "pnpm --filter @btd/web build",
     "preview:web": "pnpm --filter @btd/web preview",
-    "deploy": "firebase deploy --only hosting,functions",
-    "deploy:hosting": "firebase deploy --only hosting",
-    "deploy:functions": "firebase deploy --only functions:ogRenderer"
+    "test:live": "node --test tests/live-visitors.test.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1043.0",
-    "firebase": "^12.10.0",
-    "firebase-admin": "^13.8.0"
+    "@aws-sdk/client-s3": "^3.1043.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0"

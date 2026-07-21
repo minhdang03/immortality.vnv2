@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { clearAllCaches } from '../hooks/useFirestoreSWR'
+import { clearAllCaches } from '../lib/swr-cache'
 import { ADMIN_TABS } from '../config/pages'
 import ArticlesTab from './admin/ArticlesTab'
 import TopicsTab from './admin/TopicsTab'
@@ -18,16 +18,13 @@ import CategoriesTab from './admin/CategoriesTab'
 import ContentAnalyticsTab from './admin/ContentAnalyticsTab'
 
 // Tabs each non-admin role may access. Admin sees everything (no entry needed).
-// Legacy 'moderator' = 'mod-articles' for backward compat.
+// Supabase profiles.role is 3-tier: 'admin' | 'mod' | 'user'. Mods moderate content.
 const ROLE_TABS = {
-  'mod-articles': new Set(['articles']),
-  'moderator':    new Set(['articles']),  // legacy alias
-  'mod-khaitri':  new Set(['khaitri']),
-  'agent':        new Set(['articles', 'khaitri']),  // shared goclaw agent identity
+  'mod': new Set(['articles', 'khaitri', 'stories', 'contacts', 'ungho']),
 }
 
 export default function AdminPanel({
-  t, lang, user, userRole, articles, topics, stories, firestoreVi, firestoreEn,
+  t, lang, user, userRole, articles, topics, stories, viStrings, enStrings,
   khaitri, teachings, practices,
   onAddArticle, onUpdateArticle, onDeleteArticle,
   onAddTopic, onUpdateTopic, onDeleteTopic,
@@ -37,7 +34,7 @@ export default function AdminPanel({
   onAddPractice, onUpdatePractice, onDeletePractice,
   onUpdateTranslations,
   siteSettings, onUpdateSettings,
-  // Supabase auth helpers — non-null when VITE_DATA_BACKEND === 'supabase'
+  // Supabase auth helpers.
   supabaseSignIn, supabaseSignOut,
 }) {
   const [email, setEmail] = useState('')
@@ -52,16 +49,8 @@ export default function AdminPanel({
     e.preventDefault()
     setError('')
     try {
-      if (supabaseSignIn) {
-        // Supabase path: flag === 'supabase'
-        const { error } = await supabaseSignIn(email, password)
-        if (error) setError(t.loginError)
-      } else {
-        // Firebase path: flag === 'firestore' (original behaviour, unchanged)
-        const { auth } = await import('../firebase')
-        const { signInWithEmailAndPassword } = await import('firebase/auth')
-        await signInWithEmailAndPassword(auth, email, password)
-      }
+      const { error } = await supabaseSignIn(email, password)
+      if (error) setError(t.loginError)
     } catch {
       setError(t.loginError)
     }
@@ -138,13 +127,7 @@ export default function AdminPanel({
             <span className="admin-sidebar-email">{user.email}</span>
             <button className="admin-sidebar-signout" onClick={async () => {
               clearAllCaches()
-              if (supabaseSignOut) {
-                await supabaseSignOut()  // clearAllCaches also called via onAuthStateChange
-              } else {
-                const { auth } = await import('../firebase')
-                const { signOut } = await import('firebase/auth')
-                await signOut(auth)
-              }
+              await supabaseSignOut()  // clearAllCaches also called via onAuthStateChange
             }}>
               {t.adminSignOut}
             </button>
@@ -187,7 +170,7 @@ export default function AdminPanel({
           {effectiveTab === 'teachings' && <TeachingsTab t={t} lang={lang} items={teachings} onAdd={onAddTeaching} onUpdate={onUpdateTeaching} onDelete={onDeleteTeaching} />}
           {effectiveTab === 'practices' && <PracticesTab t={t} lang={lang} items={practices} onAdd={onAddPractice} onUpdate={onUpdatePractice} onDelete={onDeletePractice} />}
           {effectiveTab === 'topics' && <TopicsTab t={t} lang={lang} topics={topics} onAdd={onAddTopic} onUpdate={onUpdateTopic} onDelete={onDeleteTopic} />}
-          {effectiveTab === 'translations' && <TranslationsTab lang={lang} firestoreVi={firestoreVi} firestoreEn={firestoreEn} onUpdate={onUpdateTranslations} />}
+          {effectiveTab === 'translations' && <TranslationsTab lang={lang} viStrings={viStrings} enStrings={enStrings} onUpdate={onUpdateTranslations} />}
           {effectiveTab === 'homepage' && <HomeSettingsTab lang={lang} settings={siteSettings} onUpdate={onUpdateSettings} />}
           {effectiveTab === 'ungho' && <DonationsTab t={t} lang={lang} />}
           {effectiveTab === 'contacts' && <ContactsTab lang={lang} />}

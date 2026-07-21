@@ -4,13 +4,11 @@
  * Exposes: { user, role, loading, signIn, signOut }
  *
  * role is sourced from public.profiles.role (gated by RLS + is_admin()).
- * On SIGNED_OUT → clearAllCaches() (parity with Firebase sign-out behavior).
- *
- * Used ONLY when VITE_DATA_BACKEND === 'supabase'. Firebase Auth path unchanged.
+ * On SIGNED_OUT → clearAllCaches() so cached admin-visible data cannot leak.
  */
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase-client'
-import { clearAllCaches } from './useFirestoreSWR'
+import { clearAllCaches } from '../lib/swr-cache'
 
 /**
  * Fetch the role for a given user id from public.profiles.

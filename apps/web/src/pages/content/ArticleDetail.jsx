@@ -8,6 +8,7 @@ import InlineEdit from '../../components/shared/InlineEdit'
 import { ReadingProgress, ReadingTime, FontSizeControls } from '../../components/shared/ReadingHelpers'
 import { articleSlug } from '../../utils/slug'
 import { cdnImage } from '../../utils/image-cdn'
+import { formatLocaleDate } from '../../utils/date'
 
 function TableOfContents({ body, lang }) {
   const paragraphs = useMemo(() => {
@@ -53,7 +54,6 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
   useArticleAnalytics(article, lang)
   const bodyRef = useRef(null)
   // Supabase micro-analytics: track per-paragraph dwell + completion.
-  // No-op when VITE_DATA_BACKEND !== 'supabase'. GA4 macro events unchanged.
   useReadingTracker(article?.id ?? null, bodyRef)
   // Fallback to other lang when current lang has no body — prevents blank page
   // for articles only authored in one language.
@@ -110,12 +110,12 @@ export default function ArticleDetail({ t, lang, article, articles, topics, navi
         {/* Article meta */}
         <div className="detail-meta">
           {article.tag?.[lang] && <span className="article-tag">{article.tag[lang]}</span>}
-          <span className="article-date">{article.date}</span>
+          <span className="article-date">{formatLocaleDate(article.date, lang)}</span>
           <ReadingTime text={d?.body} lang={lang} />
         </div>
 
         <h1 className="detail-title">{d?.title}</h1>
-        <div className="detail-question">{d?.question}</div>
+        {d?.question?.trim() && <div className="detail-question">{d.question}</div>}
 
         {/* Toolbar: Font size + Share */}
         <div className="detail-toolbar">

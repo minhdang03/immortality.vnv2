@@ -1,6 +1,6 @@
 # Deploy TỐI THIỂU — chỉ agent write plane (/v1/content) cho goclaw publisher.
-# Không D1/KV/Vectorize/R2/cron: các route legacy (/api/profiles...) vẫn deploy nhưng
-# sẽ lỗi runtime nếu gọi (thiếu Firestore secrets) — chấp nhận, agent không gọi chúng.
+# Không D1/KV/Vectorize/R2/cron. Plane Firebase (/api/profiles, /api/questions,
+# /api/votes) đã gỡ hẳn 21/07/2026 — worker giờ chỉ còn /api/health + /v1/content.
 # Bản SP1 đầy đủ ở ./wrangler.toml — dùng khi đã tạo đủ resources.
 #
 # Deploy:  npx wrangler deploy --config wrangler-minimal.toml          (từ workers/)

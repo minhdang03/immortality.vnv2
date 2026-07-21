@@ -9,7 +9,7 @@ import { formatLocaleDate } from '../../utils/date'
 import { articleSlug, humanizeSlug } from '../../utils/slug'
 import { cdnImage } from '../../utils/image-cdn'
 
-// Best label for a topic — prefer Firestore vi/en field, fallback to other lang, then humanize slug.
+// Best label for a topic — prefer stored vi/en field, fallback to other lang, then humanize slug.
 function topicLabel(tp, lang) {
   return (lang === 'vi' ? tp?.vi : tp?.en) || tp?.vi || tp?.en || humanizeSlug(tp?.id)
 }

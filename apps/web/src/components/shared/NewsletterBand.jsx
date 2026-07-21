@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { db } from '../../firebase'
-import { collection, addDoc, query, where, getDocs, limit, serverTimestamp } from 'firebase/firestore'
+import { supabase } from '../../lib/supabase-client'
 
 const COPY = {
   vi: {
@@ -39,20 +38,18 @@ export default function NewsletterBand({ lang = 'vi', source = 'home' }) {
     const clean = email.trim().toLowerCase()
     if (!clean || !/^\S+@\S+\.\S+$/.test(clean)) return
     setState('sending')
-    try {
-      const dup = await getDocs(query(collection(db, 'newsletter_signups'), where('email', '==', clean), limit(1)))
-      if (!dup.empty) { setState('dup'); return }
-      await addDoc(collection(db, 'newsletter_signups'), {
-        email: clean,
-        timestamp: serverTimestamp(),
-        source, lang,
-        status: 'pending',
-      })
-      setState('done')
-      setEmail('')
-    } catch {
-      setState('error')
+    if (!supabase) { setState('error'); return }
+    // Plain insert (write-only table). Unique-violation on email = already subscribed = success.
+    const { error } = await supabase
+      .from('newsletter_signups')
+      .insert({ email: clean, lang, source })
+    if (error) {
+      if (error.code === '23505') { setState('dup') }
+      else { setState('error') }
+      return
     }
+    setState('done')
+    setEmail('')
   }
 
   return (

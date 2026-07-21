@@ -1,9 +1,9 @@
 /**
  * Canonical Supabase JS client — anon key only.
- * service_role NEVER goes in client bundles; it lives in the Worker secret (phase-05).
+ * service_role NEVER goes in client bundles; it lives in the Worker secret.
  *
- * Shared by all hooks (auth, content, analytics). Import `supabase` from here, not
- * from the legacy src/supabase.js (which remains for backward compat during migration).
+ * Shared by all hooks (auth, content, analytics). Import `supabase` from here
+ * (src/supabase.js re-exports this same instance for the historical import path).
  */
 import { createClient } from '@supabase/supabase-js'
 
@@ -11,7 +11,7 @@ const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (typeof window !== 'undefined' && (!url || !key)) {
-  // Non-fatal: hooks fall back to Firestore when VITE_DATA_BACKEND !== 'supabase'.
+  // Non-fatal, but the app cannot read/write data without these.
   console.warn('[supabase-client] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set')
 }
 

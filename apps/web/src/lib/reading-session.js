@@ -1,5 +1,5 @@
 /**
- * reading-session.js — ephemeral anonymous session id for reading analytics.
+ * Ephemeral anonymous tab id shared by reading analytics and live presence.
  *
  * session_id is stored in sessionStorage (cleared on tab close).
  * It carries NO user identity or PII — it's a random UUID used only to
@@ -21,8 +21,8 @@ function generateId() {
   })
 }
 
-/** Get or create the anonymous session id for this tab. */
-export function getReadingSessionId() {
+/** Get or create the anonymous session id for this browser tab. */
+export function getAnonymousTabId() {
   try {
     let sid = sessionStorage.getItem(SESSION_KEY)
     if (!sid) {
@@ -35,3 +35,6 @@ export function getReadingSessionId() {
     return generateId()
   }
 }
+
+/** Historical reading-analytics name retained for compatibility. */
+export const getReadingSessionId = getAnonymousTabId

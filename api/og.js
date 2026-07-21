@@ -1,23 +1,16 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { initializeApp, getApps } from 'firebase/app'
-import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore'
 
-const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  appId: process.env.VITE_FIREBASE_APP_ID,
-}
-
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
-const db = getFirestore(app)
+// OG meta renderer for crawlers. Data source: Supabase `public.content` (single
+// indexed query on slug/id, status=published). Firebase/Firestore removed 21/07/2026.
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
 const SITE_NAME = 'Bất Tử Đạo - Immortality'
 const CANONICAL_URL = 'https://battudao.com'
 const DEFAULT_IMAGE = `${CANONICAL_URL}/og-image.png`
 const DEFAULT_DESC = 'Khám phá ánh sáng bên trong bạn — hành trình chữa lành từ trí tuệ Việt Nam ngàn đời.'
+const LIVE_DESC = 'Xem hoạt động ẩn danh đang diễn ra trên Bất Tử Đạo theo thời gian thực.'
 
 function escapeHtml(str) {
   if (!str) return ''
@@ -81,62 +74,55 @@ function renderOgPage({ title, description, image, url, siteUrl }) {
 </html>`
 }
 
-// Vietnamese slug helper (matches client-side toSlug)
-const VIET_MAP = 'àáạảãâầấậẩẫăằắặẳẵ:a,èéẹẻẽêềếệểễ:e,ìíịỉĩ:i,òóọỏõôồốộổỗơờớợởỡ:o,ùúụủũưừứựửữ:u,ỳýỵỷỹ:y,đ:d'
-const charMap = {}
-VIET_MAP.split(',').forEach(g => {
-  const [chars, rep] = g.split(':')
-  chars.split('').forEach(c => { charMap[c] = rep })
-})
-function toSlug(str) {
-  if (!str) return ''
-  return str.toLowerCase().split('').map(c => charMap[c] || c).join('')
-    .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+const CONTENT_SELECT = 'id,type,vi_title,en_title,vi_summary,en_summary,vi_body,en_body,thumbnail_url'
+
+async function sbGet(path) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) throw new Error('Supabase env missing')
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      Accept: 'application/json',
+    },
+  })
+  if (!res.ok) throw new Error(`Supabase ${res.status}`)
+  return res.json()
 }
 
-async function findStory(slug) {
-  const q = query(collection(db, 'stories'), orderBy('order', 'asc'))
-  const snap = await getDocs(q)
-  for (const d of snap.docs) {
-    const data = d.data()
-    const num = String(data.order || 1).padStart(2, '0')
-    const title = data.titleVi || data.titleEn || ''
-    const s = toSlug(title)
-    const storySlug = s ? `${num}-${s}` : num
-    if (storySlug === slug || String(data.order) === slug) {
-      return { id: d.id, ...data }
-    }
+// Look up one published content row by slug or Firestore id (with numeric
+// order_index fallback for legacy numbered routes), scoped to a content type.
+// slug_redirects covers old shared links whose slug changed.
+async function findContent(slug, type) {
+  const s = encodeURIComponent(slug)
+  const numeric = /^\d+$/.test(slug)
+  const or = [
+    `vi_slug.eq.${s}`,
+    `en_slug.eq.${s}`,
+    `id.eq.${s}`,
+    ...(numeric ? [`order_index.eq.${slug}`] : []),
+  ].join(',')
+
+  const rows = await sbGet(
+    `content?type=eq.${type}&status=eq.published&or=(${or})&select=${CONTENT_SELECT}&limit=1`
+  )
+  if (rows && rows.length) return rows[0]
+
+  // Fallback: legacy slug redirect → content id
+  const redir = await sbGet(`slug_redirects?old_slug=eq.${s}&select=content_id&limit=1`)
+  if (redir && redir.length) {
+    const byId = await sbGet(
+      `content?id=eq.${encodeURIComponent(redir[0].content_id)}&type=eq.${type}&status=eq.published&select=${CONTENT_SELECT}&limit=1`
+    )
+    if (byId && byId.length) return byId[0]
   }
   return null
 }
 
-async function findArticle(slug) {
-  const snap = await getDocs(collection(db, 'articles'))
-  for (const d of snap.docs) {
-    const data = d.data()
-    const title = data.vi?.title || data.en?.title || ''
-    const s = toSlug(title) || d.id
-    if (s === slug || d.id === slug) {
-      return { id: d.id, ...data }
-    }
-  }
-  return null
-}
-
-async function findKhaiTri(slug) {
-  const q = query(collection(db, 'khaitri'), orderBy('order', 'asc'))
-  const snap = await getDocs(q)
-  for (const d of snap.docs) {
-    const data = d.data()
-    const num = String(data.order || 1).padStart(2, '0')
-    const title = data.vi?.title || data.en?.title || ''
-    const s = toSlug(title)
-    const itemSlug = s ? `${num}-${s}` : num
-    if (itemSlug === slug || String(data.order) === slug || d.id === slug) {
-      return { id: d.id, ...data }
-    }
-  }
-  return null
+function summarize(row) {
+  const summary = row.vi_summary || row.en_summary || ''
+  if (summary) return summary
+  const body = row.vi_body || row.en_body || ''
+  return body.slice(0, 160).replace(/\n/g, ' ') + (body.length > 160 ? '...' : '')
 }
 
 export default async function handler(req, res) {
@@ -147,19 +133,30 @@ export default async function handler(req, res) {
   // Non-crawlers: serve the SPA directly so URL stays clean
   if (!isCrawler(req)) return serveApp(res)
 
+  if (p === '/live') {
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600')
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    return res.send(renderOgPage({
+      title: `Khách Đang Xem | ${SITE_NAME}`,
+      description: LIVE_DESC,
+      url: `${SITE_URL}/live`,
+      siteUrl: SITE_URL,
+    }))
+  }
+
   try {
     // /story/{slug}
     const storyMatch = p.match(/^\/story\/(.+)$/)
     if (storyMatch) {
-      const story = await findStory(storyMatch[1])
-      if (story) {
-        const title = story.titleVi || story.titleEn || ''
-        const content = story.contentVi || story.contentEn || ''
-        const desc = content.slice(0, 160).replace(/\n/g, ' ') + (content.length > 160 ? '...' : '')
+      const row = await findContent(storyMatch[1], 'story')
+      if (row) {
+        const title = row.vi_title || row.en_title || ''
+        res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
         return res.send(renderOgPage({
           title: `${title} | ${SITE_NAME}`,
-          description: desc,
+          description: summarize(row),
+          image: row.thumbnail_url || undefined,
           url: `${SITE_URL}/story/${storyMatch[1]}`,
           siteUrl: SITE_URL,
         }))
@@ -169,16 +166,15 @@ export default async function handler(req, res) {
     // /article/{slug} or /articles/{slug} (plural alias)
     const articleMatch = p.match(/^\/articles?\/(.+)$/)
     if (articleMatch) {
-      const article = await findArticle(articleMatch[1])
-      if (article) {
-        const title = article.vi?.title || article.en?.title || ''
-        const summary = article.vi?.summary || article.en?.summary || ''
-        const desc = summary || (article.vi?.body || '').slice(0, 160).replace(/\n/g, ' ')
+      const row = await findContent(articleMatch[1], 'article')
+      if (row) {
+        const title = row.vi_title || row.en_title || ''
+        res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
         return res.send(renderOgPage({
           title: `${title} | ${SITE_NAME}`,
-          description: desc,
-          image: article.image || undefined,
+          description: summarize(row),
+          image: row.thumbnail_url || undefined,
           url: `${SITE_URL}/article/${articleMatch[1]}`,
           siteUrl: SITE_URL,
         }))
@@ -188,16 +184,15 @@ export default async function handler(req, res) {
     // /khaitri/{slug}
     const khaitriMatch = p.match(/^\/khaitri\/(.+)$/)
     if (khaitriMatch) {
-      const item = await findKhaiTri(khaitriMatch[1])
-      if (item) {
-        const title = item.vi?.title || item.en?.title || ''
-        const summary = item.vi?.summary || item.en?.summary || ''
-        const desc = summary || (item.vi?.body || '').slice(0, 160).replace(/\n/g, ' ')
+      const row = await findContent(khaitriMatch[1], 'khaitri')
+      if (row) {
+        const title = row.vi_title || row.en_title || ''
+        res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
         return res.send(renderOgPage({
           title: `${title} | Khai Trí`,
-          description: desc,
-          image: item.image || undefined,
+          description: summarize(row),
+          image: row.thumbnail_url || undefined,
           url: `${SITE_URL}/khaitri/${khaitriMatch[1]}`,
           siteUrl: SITE_URL,
         }))
@@ -207,7 +202,8 @@ export default async function handler(req, res) {
     console.error('OG handler error:', e)
   }
 
-  // Fallback
+  // Fallback — cache ngắn thôi: có thể là lỗi Supabase thoáng qua, đừng đóng đinh card mặc định 1h
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600')
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.send(renderOgPage({ url: SITE_URL, siteUrl: SITE_URL }))
 }

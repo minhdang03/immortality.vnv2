@@ -199,7 +199,7 @@
   border: 1px solid rgba(201,168,108,0.35);
 }
 
-/* Deep-link shimmer while Firestore resolves the slug */
+/* Deep-link shimmer while Supabase resolves the slug */
 .khaitri-detail-skeleton { padding: 24px 0; max-width: 720px; }
 .skeleton-line {
   height: 16px; border-radius: 6px; margin-bottom: 14px;
