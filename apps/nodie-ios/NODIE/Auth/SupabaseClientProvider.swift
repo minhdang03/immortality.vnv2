@@ -24,6 +24,22 @@ enum SupabaseClientProvider {
                 Chạy: ./scripts/generate-secrets-xcconfig.sh && xcodegen generate
                 """)
         }
-        return SupabaseClient(supabaseURL: url, supabaseKey: anonKey)
+        // emitLocalSessionAsInitialSession: phát NGAY session đang lưu trong Keychain làm
+        // `.initialSession`, refresh token chạy nền — KHÔNG chờ mạng trước khi phát.
+        //
+        // Mặc định của SDK (false) làm ngược lại: session hết hạn thì nó gọi refresh qua
+        // mạng TRƯỚC khi phát `.initialSession`. Token sống 1 giờ nên gần như lần mở nào
+        // cũng phải refresh; iPhone thật mạng chập là cú đó treo, `.initialSession` không
+        // tới, RootView kẹt ở `.restoring` = spinner quay mãi (bug "mở app spinner vòng
+        // vòng" trên máy admin). Bật true khớp chuẩn WhatsApp/IG: tin phiên cũ trước,
+        // refresh ngầm; refresh hỏng thật (revoke) thì SDK phát `.signedOut` đá về Login.
+        // Đây cũng là hành vi mặc định của major kế tiếp (xem note deprecate trong SDK).
+        return SupabaseClient(
+            supabaseURL: url,
+            supabaseKey: anonKey,
+            options: SupabaseClientOptions(
+                auth: .init(emitLocalSessionAsInitialSession: true)
+            )
+        )
     }()
 }

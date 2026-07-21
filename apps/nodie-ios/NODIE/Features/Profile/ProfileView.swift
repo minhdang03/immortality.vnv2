@@ -21,6 +21,10 @@ struct ProfileView: View {
     @Bindable var auth: AuthStore
     /// Cho màn "Người đã chặn" — danh sách chặn sống trong QAStore vì nó lọc nội dung Q&A.
     @Bindable var qa: QAStore
+    /// Cờ Hỏi đáp công khai (feature flag) — truyền xuống dạng Bool thay vì cả store để ít
+    /// khớp nối (KISS): màn này chỉ cần biết có hiện khối "Đóng góp" hay không. RootTabView
+    /// giữ `FeatureFlagStore` và bơm `flags.qaPublic` vào đây.
+    var qaPublic: Bool = false
     @Environment(\.dismiss) private var dismiss
 
     @State private var stats = ProfileStatsStore()
@@ -68,7 +72,7 @@ struct ProfileView: View {
                     // "Đóng góp của bạn" (câu hỏi/trả lời/đã lưu) là nội dung Q&A — trốn
                     // cùng gate với tab Hỏi đáp. User thường chưa mở Q&A thì ba mục này rỗng
                     // và vô nghĩa; chỉ dev (admin/mod) thấy. Xem `NodieTab.qaUnlocked`.
-                    if NodieTab.qaUnlocked(role: auth.profile?.role) {
+                    if NodieTab.qaUnlocked(role: auth.profile?.role, qaPublic: qaPublic) {
                         ProfileContributionSection()
                             .padding(.top, NodieSpacing.xl)
                     }

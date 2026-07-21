@@ -644,6 +644,9 @@
         }
       }
     },
+    "%lld mục" : {
+
+    },
     "%lld ngày trước" : {
       "localizations" : {
         "de" : {
@@ -2175,6 +2178,9 @@
         }
       }
     },
+    "Ảnh sắp gửi" : {
+
+    },
     "Ảnh, chạm để xem" : {
       "localizations" : {
         "de" : {
@@ -2853,6 +2859,58 @@
         }
       }
     },
+    "Bạn thao tác quá nhanh, chờ chút nhé." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du machst das zu schnell — warte einen Moment."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're doing that too fast. Give it a moment."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vas demasiado rápido — espera un momento."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous allez trop vite — patientez un instant."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作が速すぎます。少し待ってください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "너무 빨라요 — 잠시만 기다려 주세요."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слишком быстро — подождите немного."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作太快了，请稍等片刻。"
+          }
+        }
+      }
+    },
     "Bạn: " : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3270,6 +3328,9 @@
           }
         }
       }
+    },
+    "Bật quyền thêm ảnh trong Cài đặt để lưu ảnh từ trò chuyện về máy." : {
+
     },
     "Bật thông báo" : {
       "localizations" : {
@@ -4157,6 +4218,9 @@
           }
         }
       }
+    },
+    "Cần quyền thư viện ảnh" : {
+
     },
     "Cập nhật: 16/07/2026" : {
       "extractionState" : "manual",
@@ -5723,6 +5787,9 @@
         }
       }
     },
+    "Chưa đọc" : {
+
+    },
     "Chưa lưu câu hỏi nào. Bấm ◍ ở một câu hỏi để đọc lại sau." : {
       "localizations" : {
         "de" : {
@@ -6347,6 +6414,9 @@
           }
         }
       }
+    },
+    "Đã lưu ảnh" : {
+
     },
     "Đã xác minh" : {
       "extractionState" : "stale",
@@ -8650,6 +8720,9 @@
         }
       }
     },
+    "Gửi ảnh" : {
+
+    },
     "Gửi câu trả lời" : {
       "localizations" : {
         "de" : {
@@ -10219,6 +10292,9 @@
         }
       }
     },
+    "Không lưu được ảnh" : {
+
+    },
     "Không mở được câu hỏi này." : {
       "localizations" : {
         "de" : {
@@ -11105,6 +11181,9 @@
           }
         }
       }
+    },
+    "Lưu ảnh về máy" : {
+
     },
     "Lưu câu hỏi" : {
       "localizations" : {
@@ -14023,6 +14102,9 @@
         }
       }
     },
+    "Thêm chú thích…" : {
+
+    },
     "Theo dõi" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -14392,6 +14474,9 @@
           }
         }
       }
+    },
+    "Thử lại, hoặc dùng nút chia sẻ bên cạnh." : {
+
     },
     "Tiếp tục viết" : {
       "localizations" : {
@@ -15650,6 +15735,9 @@
           }
         }
       }
+    },
+    "Video sắp gửi" : {
+
     },
     "Video, chạm để xem" : {
       "localizations" : {

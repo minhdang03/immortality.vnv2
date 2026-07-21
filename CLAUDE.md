@@ -71,6 +71,12 @@ supabase-swift qua SPM.
 không leaderboard giữa người với người. Metric nằm trên NỘI DUNG, không trên NGƯỜI.
 Đăng = ngang hàng, không phải bề trên.
 
+**Nhóm chat (Đăng ĐẢO quyết định 20/07/2026):** user thường **tạo được nhóm** — mô hình
+Telegram/Zalo. Người tạo là quản trị (`channels.created_by` + `channel_members.role='mod'`),
+nhiều quản trị được, chuyển giao chủ nhóm được (migration 0043: RPC `create_group`,
+`transfer_group_owner`). Kênh `public`/`feed` vẫn chỉ admin tạo. Tài liệu/memory cũ nào ghi
+"chỉ admin tạo nhóm" là quyết định đã bị đảo.
+
 **Bẫy đã trả giá — đọc trước khi sửa iOS:**
 - **Test bằng admin = không test gì.** 29 policy RLS có nhánh `or is_admin()`. Tài khoản admin ngắn
   mạch toàn bộ phân quyền và đã giấu 4 bug P0 (17/07). `NODIE_TEST_*` **phải** là tài khoản role='user'.

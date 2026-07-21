@@ -257,15 +257,22 @@ struct FlatReply: Identifiable {
 /// Định dạng thời gian tương đối — dùng chung Q&A + chat.
 /// Chuỗi qua String Catalog (kèm số nhiều cho en/ru/…); ngày cũ theo locale hệ thống.
 enum RelativeTime {
+    /// Dùng chung thay vì đẻ mới cho mọi item cũ hơn 7 ngày — danh sách Hỏi đáp và
+    /// hội thoại cuộn qua hàng chục dòng, mỗi DateFormatter mới là một khoản đắt vô ích.
+    /// `Locale.current` chốt lúc dùng lần đầu là đủ: đổi ngôn ngữ trên iOS khởi động lại app.
+    private static let dayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale.current
+        f.setLocalizedDateFormatFromTemplate("d MMM")
+        return f
+    }()
+
     static func format(_ date: Date) -> String {
         let secs = Date().timeIntervalSince(date)
         if secs < 60 { return String(localized: "vừa xong") }
         if secs < 3600 { return String(localized: "\(Int(secs / 60)) phút trước") }
         if secs < 86_400 { return String(localized: "\(Int(secs / 3600)) giờ trước") }
         if secs < 604_800 { return String(localized: "\(Int(secs / 86_400)) ngày trước") }
-        let f = DateFormatter()
-        f.locale = Locale.current
-        f.setLocalizedDateFormatFromTemplate("d MMM")
-        return f.string(from: date)
+        return dayFormatter.string(from: date)
     }
 }

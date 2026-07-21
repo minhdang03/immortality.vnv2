@@ -10,6 +10,10 @@ private struct MyContentScaffold<Content: View>: View {
     let title: String
     let isLoading: Bool
     let isEmpty: Bool
+    /// Lần nạp gần nhất hỏng (và chưa có gì để hiện). Tách khỏi `isEmpty` vì "rỗng thật" và
+    /// "lỗi mạng" là hai chuyện: rỗng thì mời tạo nội dung, lỗi thì mời thử lại. Gộp lại là
+    /// nói dối — báo "chưa có gì" trong khi thật ra không tải được.
+    let loadFailed: Bool
     let emptyText: LocalizedStringKey
     let onRefresh: () async -> Void
     @ViewBuilder let rows: () -> Content
@@ -31,7 +35,9 @@ private struct MyContentScaffold<Content: View>: View {
                 // ("mình vừa lưu mà, sao chưa thấy?"). Để `.refreshable` trong nhánh
                 // có-dữ-liệu thì đúng lúc cần nhất lại không kéo được.
                 ScrollView {
-                    if isEmpty {
+                    if isEmpty && loadFailed {
+                        errorState
+                    } else if isEmpty {
                         // `containerRelativeFrame` lấy đúng chiều cao khung cuộn → chữ nằm
                         // giữa như hồi còn kẹp hai `Spacer()`. Chiều cao cứng thì chữ dính
                         // lên đỉnh, mà lấy số nào cũng sai trên máy khác cỡ.
@@ -54,6 +60,31 @@ private struct MyContentScaffold<Content: View>: View {
         .background(NodieColors.bg)
     }
 
+    /// Lỗi mạng lúc chưa có gì để hiện: nói thẳng + nút thử lại. Vẫn nằm trong ScrollView nên
+    /// kéo-làm-mới cũng chạy — nút chỉ là đường tắt cho cùng một `onRefresh`.
+    private var errorState: some View {
+        VStack(spacing: NodieSpacing.sm) {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 30))
+                .foregroundStyle(NodieColors.inkFaint)
+            Text("Không tải được. Kiểm tra mạng giúp mình nhé.")
+                .font(NodieTypography.body)
+                .foregroundStyle(NodieColors.inkMuted)
+                .multilineTextAlignment(.center)
+            Button("Thử lại") { Task { await onRefresh() } }
+                .font(NodieTypography.cta)
+                .foregroundStyle(NodieColors.onAccent)
+                .padding(.horizontal, NodieSpacing.lg)
+                .padding(.vertical, NodieSpacing.sm)
+                .background(Capsule().fill(NodieColors.accent))
+                .buttonStyle(.plain)
+                .padding(.top, NodieSpacing.sm)
+        }
+        .padding(.horizontal, NodieSpacing.xxl)
+        .frame(maxWidth: .infinity)
+        .containerRelativeFrame(.vertical)
+    }
+
     private var header: some View {
         HStack(spacing: NodieSpacing.md) {
             CircleIconButton(systemName: "arrow.left") { dismiss() }
@@ -73,14 +104,16 @@ struct MyQuestionsView: View {
     @Bindable var qa: QAStore
     @State private var rows: [QuestionRow] = []
     @State private var isLoading = true
-    /// Câu đang chờ xác nhận xoá — vuốt chỉ ĐÁNH DẤU, một confirmationDialog dùng chung
+    /// Lần nạp gần nhất hỏng — xem `MyContentScaffold.loadFailed`.
+    @State private var loadFailed = false
+    /// Câu đang chờ xác nhận xoá — chạm giữ chỉ ĐÁNH DẤU, một confirmationDialog dùng chung
     /// cho cả danh sách mới thật sự xoá. `myQuestions()` chỉ trả bài CỦA MÌNH nên không
     /// cần kiểm `isMine` ở đây như ModerationMenu.
     @State private var pendingDelete: QuestionRow?
 
     var body: some View {
         MyContentScaffold(title: "Câu hỏi của tôi", isLoading: isLoading,
-                          isEmpty: rows.isEmpty,
+                          isEmpty: rows.isEmpty, loadFailed: loadFailed,
                           emptyText: "Bạn chưa chiếu câu hỏi nào.",
                           onRefresh: reload) {
             ForEach(rows) { question in
@@ -88,7 +121,10 @@ struct MyQuestionsView: View {
                     QuestionRowContent(question: question)
                 }
                 .buttonStyle(.plain)
-                .swipeActions(edge: .trailing) {
+                // Chạm giữ, KHÔNG vuốt: màn này là ScrollView (xem MyContentScaffold), mà
+                // `.swipeActions` chỉ sống trong `List` — gắn vào đây là nút chết, không bao
+                // giờ hiện. contextMenu chạy trong ScrollView và không đụng layout.
+                .contextMenu {
                     Button(role: .destructive) { pendingDelete = question } label: {
                         Label("Xoá", systemImage: "trash")
                     }
@@ -116,8 +152,9 @@ struct MyQuestionsView: View {
     /// Fetch hỏng (`nil`) thì GIỮ danh sách đang hiện. Gán `[]` là thay bài của người ta bằng
     /// câu "bạn chưa chiếu câu hỏi nào" — cùng một loại nói dối với việc xoá nháp khi gửi fail.
     private func reload() async {
-        guard let fetched = await qa.myQuestions() else { return }
-        rows = fetched
+        let fetched = await qa.myQuestions()
+        loadFailed = fetched == nil
+        if let fetched { rows = fetched }
     }
 
     private func confirmDelete() async {
@@ -135,10 +172,12 @@ struct SavedQuestionsView: View {
     @Bindable var qa: QAStore
     @State private var rows: [QuestionRow] = []
     @State private var isLoading = true
+    /// Lần nạp gần nhất hỏng — xem `MyContentScaffold.loadFailed`.
+    @State private var loadFailed = false
 
     var body: some View {
         MyContentScaffold(title: "Đã lưu", isLoading: isLoading,
-                          isEmpty: rows.isEmpty,
+                          isEmpty: rows.isEmpty, loadFailed: loadFailed,
                           emptyText: "Chưa lưu câu hỏi nào. Bấm ◍ ở một câu hỏi để đọc lại sau.",
                           onRefresh: reload) {
             ForEach(rows) { question in
@@ -159,8 +198,9 @@ struct SavedQuestionsView: View {
 
     /// Hỏng thì giữ danh sách đang hiện — xem ghi chú ở `MyQuestionsView.reload`.
     private func reload() async {
-        guard let fetched = await qa.savedQuestions() else { return }
-        rows = fetched
+        let fetched = await qa.savedQuestions()
+        loadFailed = fetched == nil
+        if let fetched { rows = fetched }
     }
 }
 
@@ -170,12 +210,14 @@ struct MyAnswersView: View {
     @Bindable var qa: QAStore
     @State private var rows: [MyAnswerRow] = []
     @State private var isLoading = true
+    /// Lần nạp gần nhất hỏng — xem `MyContentScaffold.loadFailed`.
+    @State private var loadFailed = false
     /// Xem ghi chú ở `MyQuestionsView.pendingDelete` — cùng cơ chế, khác kiểu hàng.
     @State private var pendingDelete: MyAnswerRow?
 
     var body: some View {
         MyContentScaffold(title: "Trả lời của tôi", isLoading: isLoading,
-                          isEmpty: rows.isEmpty,
+                          isEmpty: rows.isEmpty, loadFailed: loadFailed,
                           emptyText: "Bạn chưa trả lời câu nào.",
                           onRefresh: reload) {
             ForEach(rows) { answer in
@@ -193,7 +235,8 @@ struct MyAnswersView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .swipeActions(edge: .trailing) {
+                // Chạm giữ, KHÔNG vuốt — xem ghi chú ở MyQuestionsView (ScrollView, không List).
+                .contextMenu {
                     Button(role: .destructive) { pendingDelete = answer } label: {
                         Label("Xoá", systemImage: "trash")
                     }
@@ -217,8 +260,9 @@ struct MyAnswersView: View {
 
     /// Hỏng thì giữ danh sách đang hiện — xem ghi chú ở `MyQuestionsView.reload`.
     private func reload() async {
-        guard let fetched = await qa.myAnswers() else { return }
-        rows = fetched
+        let fetched = await qa.myAnswers()
+        loadFailed = fetched == nil
+        if let fetched { rows = fetched }
     }
 
     private func confirmDelete() async {

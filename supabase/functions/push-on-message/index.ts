@@ -85,11 +85,15 @@ Deno.serve(async (req) => {
   )
 
   // Thành viên kênh, trừ người gửi và người đang tắt thông báo.
+  // `.limit` tường minh: PostgREST mặc định cắt ở 1000 dòng — im lặng. Kênh cộng đồng đông
+  // hơn thế thì thành viên thứ 1001 trở đi không bao giờ nhận push mà không có lỗi nào báo.
+  // 10000 là khoảng đệm cho mốc ~1000 user; vượt nữa phải phân trang (chưa cần, YAGNI).
   const { data: members } = await db
     .from('channel_members')
     .select('user_id, muted_until')
     .eq('channel_id', msg.channel_id)
     .neq('user_id', msg.user_id)
+    .limit(10000)
 
   const now = Date.now()
   let targets = (members ?? [])
@@ -108,7 +112,7 @@ Deno.serve(async (req) => {
   if (targets.length === 0) return new Response('tất cả đã chặn người gửi', { status: 200 })
 
   const [{ data: tokens }, { data: sender }, { data: channel }] = await Promise.all([
-    db.from('device_tokens').select('token, user_id, apns_env').in('user_id', targets),
+    db.from('device_tokens').select('token, user_id, apns_env').in('user_id', targets).limit(10000),
     db.from('profiles').select('display_name').eq('id', msg.user_id).single(),
     db.from('channels').select('title, kind').eq('id', msg.channel_id).single(),
   ])
@@ -126,7 +130,10 @@ Deno.serve(async (req) => {
   const body = channel?.kind === 'dm' ? preview : `${who}: ${preview}`
 
   const jwt = await apnsJWT()
-  const results = await Promise.all(
+  // `allSettled`, KHÔNG `all`: một fetch ném (DNS chập, TLS timeout tới APNs) mà dùng `all`
+  // thì cả lô reject — không ai được push, không dòng nào ghi sổ hỏng. Mỗi token là một
+  // đích độc lập; hỏng một đích không được kéo theo phần còn lại.
+  const settled = await Promise.allSettled(
     tokens.map(async (t) => {
       const host = APNS_HOST[t.apns_env] ?? APNS_HOST.production
       const res = await fetch(`${host}/3/device/${t.token}`, {
@@ -145,18 +152,25 @@ Deno.serve(async (req) => {
           message_id: msg.id,
         }),
       })
-      // 410 = app đã bị gỡ khỏi máy đó. Không dọn thì token chết nằm lại mãi và mỗi tin
-      // nhắn lại tốn một lần gọi APNs vô ích.
-      if (res.status === 410) {
+      const reason = res.ok ? null : ((await res.json().catch(() => ({}))).reason ?? null)
+      // Token chết cần DỌN, không chỉ 410:
+      //   410 Unregistered   — app đã gỡ khỏi máy.
+      //   400 BadDeviceToken — token của môi trường khác (sandbox↔production) hoặc rác.
+      // Cả hai để lại thì mỗi tin nhắn tốn một lần gọi APNs vô ích mãi mãi.
+      if (res.status === 410 || reason === 'Unregistered' || reason === 'BadDeviceToken') {
         await db.from('device_tokens').delete().eq('token', t.token)
       }
-      return {
-        status: res.status,
-        env: t.apns_env,
-        userId: t.user_id as string,
-        reason: res.ok ? null : (await res.json()).reason,
-      }
+      return { status: res.status, env: t.apns_env, userId: t.user_id as string, reason }
     }),
+  )
+
+  // Chuẩn hoá: promise reject (fetch ném trước khi có response) cũng thành một bản ghi hỏng
+  // để ghi sổ, không biến mất.
+  const results = settled.map((s, i) =>
+    s.status === 'fulfilled'
+      ? s.value
+      : { status: 0, env: tokens[i].apns_env, userId: tokens[i].user_id as string,
+          reason: String((s as PromiseRejectedResult).reason).slice(0, 200) },
   )
 
   // Push hỏng phải ĐỂ LẠI DẤU VẾT (bảng 0036) — trước đây results tính xong rồi vứt,

@@ -37,7 +37,10 @@ struct QuestionDetailView: View {
 
             if let question {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
+                    // Lazy: câu hỏi hot có 40+ trả lời, mỗi trả lời còn kéo theo cây reply.
+                    // VStack thường dựng hết cùng lúc lúc mở màn VÀ vẽ lại hết mỗi lần state
+                    // đổi — kể cả khi chỉ có một ký tự vừa gõ vào ô soạn ở dưới.
+                    LazyVStack(alignment: .leading, spacing: 0) {
                         if let topic = question.topic, !topic.isEmpty {
                             TopicTagView(label: topic).frame(maxWidth: .infinity, alignment: .leading)
                         }

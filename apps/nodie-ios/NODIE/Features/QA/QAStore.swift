@@ -4,12 +4,20 @@ import Supabase
 /// Nguồn dữ liệu Hỏi đáp — đọc/ghi Supabase qua RLS (0017 + 0018).
 /// Engagement (▲ vote ☀ lit / Hay nhất / reply lồng) chạy thật trên Supabase (handoff v4).
 /// Tách khỏi `AppState` (còn chạy prototype cho Bảng tin/Hành trình) để wire độc lập.
+///
+/// `@MainActor` cùng lý do với FollowStore: SwiftUI đọc các biến này lúc dựng body, còn hàm
+/// async ghi chúng sau `await` mà không kế thừa main actor (SE-0338).
+@MainActor
 @Observable
 final class QAStore {
     /// Không `private(set)`: QAStoreOwnContent.swift (sửa/xoá nội dung của mình, file khác)
     /// phải viết/xoá thẳng vào cache khi lưu thành công — cùng lý do với `savedQuestionIds`.
     var questions: [QuestionRow] = []
     private(set) var isLoading = false
+    /// Lần nạp danh sách gần nhất có hỏng không. Để `QuestionListView` phân biệt "rỗng thật"
+    /// với "lỗi mạng" — rỗng thì mời chiếu câu hỏi, lỗi thì hiện nút thử lại. Thiếu nó thì
+    /// mất mạng lúc cold-start hiện y như cộng đồng chưa có câu nào.
+    private(set) var questionsLoadFailed = false
     /// Không `private(set)` như mấy cái dưới: `private` trong Swift bó theo FILE, mà
     /// QAStoreModeration.swift (report/block ở file khác) cũng phải báo lỗi qua đây.
     /// Cùng lý do với `blockedUserIds`. View chỉ đọc + gọi `clearError()`.
@@ -18,7 +26,10 @@ final class QAStore {
     /// Không `private(set)` — cùng lý do với `questions`: QAStoreOwnContent.swift cần gỡ/thay
     /// hàng sau khi sửa/xoá thành công, không đợi round-trip refetch.
     var answersByQuestion: [UUID: [AnswerRow]] = [:]
-    var repliesByAnswer: [UUID: [ReplyRow]] = [:]
+    /// `didSet` là CHỐT DUY NHẤT dựng lại cây phẳng. Cache này bị ghi ở 11 chỗ rải qua 4 file
+    /// (QAStore/Undo/OwnContent/Moderation) — gọi rebuild tay ở từng chỗ thì sót một chỗ là
+    /// reply đứng hình. Mọi lối ghi, kể cả `subscript` và `append`, đều đi qua setter.
+    var repliesByAnswer: [UUID: [ReplyRow]] = [:] { didSet { rebuildFlatReplies() } }
 
     /// Mọi câu hỏi ĐÃ THẤY, khoá theo id — kể cả câu không nằm trong `questions`.
     /// Màn Đã lưu / Câu hỏi của tôi mở được câu cũ hơn 50 câu mới nhất, mà nhét chúng vào
@@ -38,9 +49,16 @@ final class QAStore {
     private(set) var votedAnswers: Set<UUID> = []
     private(set) var litItems: Set<UUID> = []
 
+    /// Reaction đang bay, khoá theo "kind:id". Bấm đúp ▲/☀ mà không chặn thì INSERT và
+    /// DELETE đua nhau trên server — đếm lệch, hoặc INSERT thứ hai đụng khoá chính trả 409.
+    /// Khoá KÈM kind để ▲ và ☀ trên cùng một mục không chặn nhau (khác việc khoá theo id trần).
+    /// Optimistic UI giữ nguyên, đây chỉ chặn lời gọi chồng.
+    private var reactionsInFlight: Set<String> = []
+
     /// Người MÌNH đã chặn — nội dung của họ bị lọc khỏi mọi accessor bên dưới.
     /// Nạp cùng loadQuestions; đổi trong QAStoreModeration (block/unblock).
-    var blockedUserIds: Set<UUID> = []
+    /// Cũng dựng lại cây phẳng: chặn/bỏ chặn đổi tập reply nhìn thấy được.
+    var blockedUserIds: Set<UUID> = [] { didSet { rebuildFlatReplies() } }
 
     /// Lần xoá vừa rồi, còn hoàn tác được. Ghi ở QAStoreOwnContent, đọc ở QAStoreUndo,
     /// hiện ra bằng banner gắn ở RootTabView (gốc cây — xoá câu hỏi xong là màn chi tiết
@@ -81,8 +99,10 @@ final class QAStore {
             questions = rows.filter { !isBlocked($0.authorId) }
             cache(questions)
             persistQuestions()
+            questionsLoadFailed = false
         } catch {
             _ = await blockedFetch
+            questionsLoadFailed = true
             errorMessage = ErrorText.localized(error)
         }
         isLoading = false
@@ -173,7 +193,12 @@ final class QAStore {
                 .is("deleted_at", value: nil)       // xem ghi chú ở loadQuestions
                 .order("created_at", ascending: true)
                 .execute().value
-            for a in answers { repliesByAnswer[a.id] = replies.filter { $0.answerId == a.id } }
+            // Gom rồi GHI MỘT LẦN. Ghi từng answer một thì mỗi lần ghi là một lần
+            // dựng lại cây phẳng + một lần báo view vẽ lại — thread 40 trả lời trả giá 40 lần.
+            var grouped: [UUID: [ReplyRow]] = [:]
+            for a in answers { grouped[a.id] = [] }     // answer không có reply vẫn phải dọn cache cũ
+            for r in replies { grouped[r.answerId, default: []].append(r) }
+            repliesByAnswer.merge(grouped) { _, new in new }
 
             await loadMyReactions(answerIds: answerIds, replyIds: replies.map(\.id))
         } catch { errorMessage = ErrorText.localized(error) }
@@ -221,14 +246,45 @@ final class QAStore {
         persistQuestions()
     }
 
-    /// Làm phẳng cây reply kèm độ sâu (DFS: cha rồi tới con).
+    /// Cây reply đã làm phẳng, dựng sẵn lúc GHI. View chỉ tra dict.
+    ///
+    /// Trước đây đây là hàm chạy DFS + cấp phát dictionary NGAY TRONG `body` của mỗi
+    /// AnswerCardView — nghĩa là gõ một ký tự vào ô soạn trả lời thì cả thread chạy lại
+    /// O(số answer × số reply). Đổi chiều: tính mỗi lần DỮ LIỆU đổi (hiếm, theo sự kiện
+    /// mạng) thay vì mỗi lần VẼ (liên tục, theo từng phím).
+    ///
+    /// PHẢI quan sát được (đừng gắn `@ObservationIgnored`): memo hoá xong thì view KHÔNG còn
+    /// đọc `repliesByAnswer` nữa, nên đây là nguồn phụ thuộc duy nhất của nó. Bỏ quan sát là
+    /// reply về tới nơi mà màn hình đứng im — UITest reply lồng bắt đúng lỗi này.
+    /// Ghi chỉ xảy ra trong `didSet` (đường DỮ LIỆU), không phải trong `body`, nên không có
+    /// vòng lặp vẽ lại.
+    private var flatRepliesByAnswer: [UUID: [FlatReply]] = [:]
+
     func flatReplies(for answerId: UUID) -> [FlatReply] {
-        let all = replies(for: answerId)
+        flatRepliesByAnswer[answerId] ?? []
+    }
+
+    /// Làm phẳng cây reply kèm độ sâu (DFS: cha rồi tới con), cho mọi answer đang giữ.
+    private func rebuildFlatReplies() {
+        var next: [UUID: [FlatReply]] = [:]
+        next.reserveCapacity(repliesByAnswer.count)
+        for answerId in repliesByAnswer.keys {
+            next[answerId] = Self.flatten(replies(for: answerId))
+        }
+        flatRepliesByAnswer = next
+    }
+
+    private static func flatten(_ all: [ReplyRow]) -> [FlatReply] {
         var childrenOf: [UUID?: [ReplyRow]] = [:]
         for r in all { childrenOf[r.parentId, default: []].append(r) }
         var out: [FlatReply] = []
+        out.reserveCapacity(all.count)
+        // Dữ liệu vòng (A là cha B, B là cha A — do lỗi ghi hay tấn công) làm đệ quy chạy mãi
+        // tới khi tràn stack và app CHẾT. Mỗi reply chỉ được thăm một lần: dùng `visited` cắt
+        // vòng và đảm bảo dừng. Vòng lồng lên chính nó cũng không quay lại được node đã in.
+        var visited = Set<UUID>()
         func walk(_ parent: UUID?, _ depth: Int) {
-            for r in (childrenOf[parent] ?? []) {
+            for r in (childrenOf[parent] ?? []) where visited.insert(r.id).inserted {
                 out.append(FlatReply(reply: r, depth: depth))
                 walk(r.id, depth + 1)
             }
@@ -317,12 +373,19 @@ final class QAStore {
     func hasVoted(_ answerId: UUID) -> Bool { votedAnswers.contains(answerId) }
     func hasLit(_ id: UUID) -> Bool { litItems.contains(id) }
 
-    /// Chọn "Hay nhất" — RPC kiểm tra caller là tác giả câu hỏi.
+    /// Chọn / BỎ "Hay nhất" — RPC kiểm tra caller là tác giả câu hỏi.
+    ///
+    /// RPC là TOGGLE (migration 0048): bấm lại đúng câu đang Hay nhất thì server GỠ hết. Client
+    /// phải soi ngược đúng vậy — set vô điều kiện thì bấm "bỏ đánh dấu" server gỡ mà UI vẫn sáng,
+    /// server/UI lệch pha theo chẵn/lẻ tới khi refetch mới lộ.
     func setBest(answerId: UUID, questionId: UUID) async {
+        let wasBest = answersByQuestion[questionId]?.first { $0.id == answerId }?.isBest ?? false
         do {
             try await client.rpc("set_best_answer", params: ["p_answer_id": answerId.uuidString]).execute()
-            // Cập nhật cục bộ: đúng 1 câu là Hay nhất.
-            answersByQuestion[questionId] = answersByQuestion[questionId]?.map { $0.settingBest($0.id == answerId) }
+            // Đang Hay nhất → toggle off (không câu nào). Chưa → đúng câu này là Hay nhất.
+            answersByQuestion[questionId] = answersByQuestion[questionId]?.map {
+                $0.settingBest(wasBest ? false : $0.id == answerId)
+            }
         } catch { errorMessage = ErrorText.localized(error) }
     }
 
@@ -332,6 +395,12 @@ final class QAStore {
                                 set keyPath: ReferenceWritableKeyPath<QAStore, Set<UUID>>,
                                 applyDelta: @escaping (Int) -> Void) async {
         guard let uid else { errorMessage = String(localized: "Cần đăng nhập."); return }
+        // Nhát bấm thứ hai lúc nhát đầu chưa về thì bỏ qua — không xếp hàng đảo trạng thái.
+        let flightKey = "\(kind):\(targetId.uuidString)"
+        guard !reactionsInFlight.contains(flightKey) else { return }
+        reactionsInFlight.insert(flightKey)
+        defer { reactionsInFlight.remove(flightKey) }
+
         let active = self[keyPath: keyPath].contains(targetId)
         do {
             if active {

@@ -20,7 +20,9 @@ struct QuestionListView: View {
                 if qa.isLoading && qa.questions.isEmpty {
                     loading
                 } else if visible.isEmpty {
-                    emptyState
+                    // Lỗi mạng lúc cold-start (chưa kịp warm từ đĩa) khác hẳn "cộng đồng chưa
+                    // có câu nào" — nói thẳng + cho thử lại, đừng để trống mà đổ tại người dùng.
+                    if qa.questionsLoadFailed { errorState } else { emptyState }
                 } else {
                     list
                 }
@@ -92,6 +94,28 @@ struct QuestionListView: View {
             (filter == .unanswered ? Text("Chưa có câu nào đang chờ.") : Text("Chưa có câu hỏi nào."))
                 .font(NodieTypography.body).foregroundStyle(NodieColors.inkMuted)
             Text("Chiếu câu hỏi đầu tiên đi.").font(NodieTypography.metaSm).foregroundStyle(NodieColors.inkFaint)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Nạp hỏng lúc chưa có gì để hiện: nói thẳng + nút thử lại (gọi lại chính `loadQuestions`).
+    private var errorState: some View {
+        VStack(spacing: NodieSpacing.sm) {
+            Image(systemName: "wifi.slash").font(.system(size: 30)).foregroundStyle(NodieColors.inkFaint)
+            Text("Không tải được câu hỏi.")
+                .font(NodieTypography.body).foregroundStyle(NodieColors.inkMuted)
+            Text("Kiểm tra mạng giúp mình nhé.")
+                .font(NodieTypography.metaSm).foregroundStyle(NodieColors.inkFaint)
+            Button { Task { await qa.loadQuestions() } } label: {
+                Text("Thử lại")
+                    .font(NodieTypography.cta)
+                    .foregroundStyle(NodieColors.onAccent)
+                    .padding(.horizontal, NodieSpacing.lg)
+                    .padding(.vertical, NodieSpacing.sm)
+                    .background(Capsule().fill(NodieColors.accent))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, NodieSpacing.sm)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

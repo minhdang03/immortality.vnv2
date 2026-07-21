@@ -19,6 +19,8 @@ enum NodieErrorKind: Equatable {
     case notFound
     /// Trigger slow-mode 2s/tin. Chờ một nhịp là gửi được.
     case slowMode
+    /// Server chặn flood (rate limit) — thao tác quá nhanh trong khoảng ngắn. Chờ chút là gửi được.
+    case rateLimited
     /// Lỗi phía server (5xx) — thường tự khỏi, mời thử lại.
     case server
     case unknown
@@ -41,6 +43,7 @@ enum NodieErrorKind: Equatable {
         }
 
         let raw = "\(error)".lowercased()
+        if raw.contains("rate_limit") { return .rateLimited }
         if raw.contains("slow_mode") { return .slowMode }
         if raw.contains("jwt") || raw.contains("expired") || raw.contains("not authenticated")
             || raw.contains("invalid_token") || raw.contains("401") {
@@ -68,6 +71,8 @@ enum NodieErrorKind: Equatable {
             return String(localized: "Nội dung này không còn nữa.")
         case .slowMode:
             return String(localized: "Chậm lại chút — chờ 2 giây giữa các tin nhé.")
+        case .rateLimited:
+            return String(localized: "Bạn thao tác quá nhanh, chờ chút nhé.")
         case .server:
             return String(localized: "Máy chủ đang trục trặc. Thử lại sau một chút nhé.")
         case .unknown:
@@ -79,7 +84,7 @@ enum NodieErrorKind: Equatable {
     /// mời là hứa suông.
     var isRetryable: Bool {
         switch self {
-        case .offline, .slowMode, .server, .unknown: return true
+        case .offline, .slowMode, .rateLimited, .server, .unknown: return true
         case .auth, .permission, .notFound: return false
         }
     }

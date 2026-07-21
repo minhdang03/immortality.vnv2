@@ -32,6 +32,27 @@
 
 ---
 
+## Kim Cương Distill Reliability — COMPLETE (2026-07-20)
+
+**Status:** ✅ DONE
+**Scope:** Repo-root tool `tools/kim-cuong-distill/`; no app relocation or reconnect behavior change.
+
+### Delivered
+- Stable digest batches with matching ACK before commit; delivery remains **at-least-once**, so a crash between Telegram receipt and persisted ACK can resend the same `batch_id`.
+- Source-independent committed message IDs prevent already committed messages from re-entering later batches when inbox/session sources overlap.
+- Automated extraction only creates `candidate` Q&A; human verification/rejection is stored per question-answer pair.
+- Local and end-to-end health gates cover database/daemon/artifact state and require a real committed digest receipt.
+- macOS launchd keeps inbox, message, and digest artifacts synchronized through the existing auto-sync loop.
+
+### Validation
+- [x] Unit/state/pairing tests: 12/12
+- [x] Pipeline pending queue empty
+- [x] Local health: 15/15
+- [x] End-to-end health: 18/18
+- [x] Real batch `1a969dfb9159fcad` acknowledged and committed; Docker services healthy
+
+---
+
 ## Phase 2: Production Deploy Blockers — IN PLANNING
 
 **Status:** 🔄 NEXT  

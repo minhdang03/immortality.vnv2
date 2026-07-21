@@ -100,6 +100,9 @@ struct RootView: View {
         // Captcha lười: AuthStore chỉ gọi tới đây khi server ĐÒI captcha (xem runWithCaptcha).
         // Captcha còn tắt trên Supabase thì sheet này không bao giờ hiện.
         .onAppear {
+            // Cắm PushManager (do AppDelegate sở hữu) vào AuthStore: đăng xuất/xoá tài khoản
+            // phải gỡ được device_token của máy này khi session còn sống.
+            auth.pushManager = push
             auth.captchaTokenProvider = { [weak captcha] in
                 await captcha?.requestToken()
             }

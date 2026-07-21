@@ -18,18 +18,20 @@ enum NodieTab: String, CaseIterable, Identifiable {
     ///   "employee-only" — dữ liệu và RLS phía Supabase không đổi. UITests chạy bằng
     ///   tài khoản role='user' (bắt buộc, admin ngắn mạch RLS) nên mở lại tab bằng cờ
     ///   `--uitest-show-qa`; cờ chỉ đổi hiển thị, phân quyền vẫn là của user thường.
-    static func visibleTabs(role: String?) -> [NodieTab] {
+    static func visibleTabs(role: String?, qaPublic: Bool = false) -> [NodieTab] {
         var tabs: [NodieTab] = [.conversations, .friends]
-        if qaUnlocked(role: role) { tabs.insert(.qa, at: 0) }
+        if qaUnlocked(role: role, qaPublic: qaPublic) { tabs.insert(.qa, at: 0) }
         return tabs
     }
 
-    /// Hỏi đáp mở khi: tài khoản dev (admin/mod), hoặc UITest bật cờ. Một hàm cho cả tab
-    /// bar LẪN khối "Đóng góp của bạn" ở màn Cá nhân — hai chỗ phải trốn/hiện đồng bộ,
-    /// tách rule ra đây để không lệch nhau khi sau này đổi điều kiện (vd chuyển sang
-    /// feature flag đọc từ Supabase).
-    static func qaUnlocked(role: String?) -> Bool {
-        role == "admin" || role == "mod"
+    /// Hỏi đáp mở khi: cờ `qa_public` bật (feature flag Supabase), HOẶC tài khoản dev
+    /// (admin/mod), HOẶC UITest bật cờ. Một hàm cho cả tab bar LẪN khối "Đóng góp của bạn"
+    /// ở màn Cá nhân — hai chỗ phải trốn/hiện đồng bộ, tách rule ra đây để không lệch nhau.
+    ///
+    /// `qaPublic` bơm từ `FeatureFlagStore` ở call-site (RootTabView/ProfileView). Default
+    /// false giữ hàm THUẦN + hành vi cũ: gọi không truyền cờ = như chưa từng có feature flag.
+    static func qaUnlocked(role: String?, qaPublic: Bool = false) -> Bool {
+        qaPublic || role == "admin" || role == "mod"
             || ProcessInfo.processInfo.arguments.contains("--uitest-show-qa")
     }
 

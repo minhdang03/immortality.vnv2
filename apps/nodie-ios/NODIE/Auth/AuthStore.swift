@@ -6,6 +6,10 @@ import Supabase
 ///
 /// Session do supabase-swift tự lưu vào Keychain và tự refresh token —
 /// không tự làm lại (xem memory: không hand-roll thứ SDK đã cho).
+///
+/// `@MainActor` cùng lý do với FollowStore/ProfileStatsStore: SwiftUI đọc `phase`/`profile`
+/// lúc dựng body, còn các hàm async ghi chúng sau `await` mà không kế thừa main actor (SE-0338).
+@MainActor
 @Observable
 final class AuthStore {
     enum Phase: Equatable {
@@ -43,7 +47,14 @@ final class AuthStore {
     private static let confirmURL = URL(string: "nodie://email-confirmed")!
 
     private let client = SupabaseClientProvider.shared
-    private var authTask: Task<Void, Never>?
+    /// `nonisolated(unsafe)` vì `deinit` (nonisolated) cần cancel; chỉ ghi từ main actor,
+    /// còn `Task.cancel()` tự nó thread-safe nên đọc từ deinit không đua.
+    nonisolated(unsafe) private var authTask: Task<Void, Never>?
+
+    /// Gỡ `device_tokens` của máy này khi đăng xuất/xoá tài khoản. `weak` vì PushManager do
+    /// AppDelegate sở hữu (sống suốt đời app); RootView cắm vào lúc `.onAppear`.
+    /// nil (chưa kịp cắm, hoặc bản preview) → bỏ qua bước gỡ token, đăng xuất vẫn chạy.
+    weak var pushManager: PushManager?
 
     init() {
         #if DEBUG
@@ -183,16 +194,36 @@ final class AuthStore {
     }
 
     func signOut() async {
-        await run {
-            try await self.client.auth.signOut()
+        // Gỡ token TRƯỚC khi thu hồi session: DELETE trên `device_tokens` cần session còn
+        // sống mới qua RLS. Gọi sau signOut là xoá hụt im lặng ⇒ người đăng nhập sau trên
+        // cùng máy vẫn nhận push nội dung tin của người trước. Offline thì bước này hụt
+        // (chấp nhận — token cũ hết hạn tự nhiên phía APNs), nhưng máy vẫn phải sạch local.
+        await pushManager?.removeToken()
+
+        isBusy = true
+        errorMessage = nil
+        do {
+            try await client.auth.signOut()
+        } catch {
+            // Mất mạng thì signOut(.global mặc định) ném lỗi VÀ để session dưới Keychain còn
+            // nguyên → user kẹt trong phiên, bấm "đăng xuất" mà không ra được. Đăng xuất là
+            // hành động local, phải luôn thành công: rơi về .local để chắc chắn quên session,
+            // kể cả khi không thu hồi được phía server.
+            try? await client.auth.signOut(scope: .local)
         }
-        // Quên mọi thứ đã ký/tải của phiên vừa thoát.
-        //
-        // Hôm nay chưa rò rỉ được sang tài khoản khác (RootTabView và ConversationStore bị
-        // dựng lại khi đăng xuất, còn cache thì khoá theo đường dẫn bucket mà RLS mới quyết
-        // ai đọc được). Nhưng URL đã ký LÀ chứng chỉ vào tệp, còn hạn tới một giờ, và tệp
-        // tải về nằm nguyên trên đĩa — giữ chúng sau khi người dùng bấm "đăng xuất" là sai
-        // về nguyên tắc, và chỉ cần một đường code mới tin vào cache là thành lỗ thật.
+        isBusy = false
+
+        await wipeLocalCaches()
+    }
+
+    /// Quên mọi thứ đã ký/tải của phiên vừa thoát — dùng CHUNG cho đăng xuất lẫn xoá tài khoản.
+    ///
+    /// Hôm nay chưa rò rỉ được sang tài khoản khác (RootTabView và ConversationStore bị dựng
+    /// lại khi đăng xuất, còn cache thì khoá theo đường dẫn bucket mà RLS mới quyết ai đọc
+    /// được). Nhưng URL đã ký LÀ chứng chỉ vào tệp, còn hạn tới một giờ, và tệp tải về nằm
+    /// nguyên trên đĩa — giữ chúng sau khi người dùng bấm "đăng xuất" là sai về nguyên tắc,
+    /// và chỉ cần một đường code mới tin vào cache là thành lỗ thật.
+    private func wipeLocalCaches() async {
         await SignedURLCache.shared.clear()
         ChatImageCache.clear()
         ChatFileDownloader.clear()
@@ -282,12 +313,20 @@ final class AuthStore {
     /// SECURITY DEFINER xoá auth.users của chính caller; cascade ẩn danh hoá nội dung.
     /// Sau đó chỉ cần dọn Keychain cục bộ: user server-side đã không còn để thu hồi gì thêm.
     func deleteAccount() async {
+        // KHÔNG gỡ token thủ công ở đây: `device_tokens.user_id` FK tới `auth.users` với
+        // ON DELETE CASCADE (0017), mà `delete_account` xoá chính `auth.users` → token tự bay.
+        // Gọi removeToken trước RPC còn HẠI ở đường lỗi: RPC fail thì user vẫn đăng nhập nhưng
+        // token đã mất, không nhận push tới lần khởi động nguội sau. (signOut mới cần removeToken
+        // vì nó KHÔNG xoá user, cascade không kích hoạt.)
         await run {
             try await self.client.rpc("delete_account").execute()
             try? await self.client.auth.signOut(scope: .local)
             self.profile = nil
             self.phase = .signedOut
         }
+        // Cùng bước dọn đĩa với đăng xuất — trước đây xoá tài khoản bỏ sót, để lại URL đã ký
+        // + tệp tải + snapshot Hỏi đáp đã lọc theo block của người vừa xoá.
+        await wipeLocalCaches()
     }
 
     func updateProfile(displayName: String, bio: String) async {

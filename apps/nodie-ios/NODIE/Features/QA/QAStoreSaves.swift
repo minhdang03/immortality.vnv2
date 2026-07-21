@@ -72,7 +72,12 @@ extension QAStore {
         struct Row: Decodable { let question: QuestionRow? }
         do {
             let rows: [Row] = try await client.from("question_saves")
-                .select("created_at, question:questions(\(Self.questionSelect))")
+                // 0034 cho tác giả đọc lại bài đã xoá mềm CỦA MÌNH → câu mình lưu rồi tự xoá
+                // vẫn về qua embed và "sống lại" trong tab Đã lưu. `!inner` + lọc deleted_at
+                // loại thẳng hàng save trỏ tới câu đã xoá (inner join bỏ parent khi embed
+                // không khớp). Đây là embed DUY NHẤT của query nên không đụng PGRST201.
+                .select("created_at, question:questions!inner(\(Self.questionSelect))")
+                .is("question.deleted_at", value: nil)
                 .order("created_at", ascending: false)
                 .execute().value
             let all = rows.compactMap(\.question)
@@ -124,6 +129,11 @@ extension QAStore {
                 .select("id, body, created_at, lit_count, is_best, question_id, question:questions(title,author_id)")
                 .eq("author_id", value: uid)
                 .is("deleted_at", value: nil)       // xem ghi chú ở myQuestions
+                // Lọc CÂU HỎI đã xoá của chính mình (0034 vẫn trả về): KHÔNG `!inner` ở đây —
+                // muốn giữ dòng trả lời nhưng để embed null → `MyAnswerRow.isOrphaned` hiện
+                // "Câu hỏi gốc đã xoá" thay vì tiêu đề của bài đã biến mất. Câu hỏi của NGƯỜI
+                // KHÁC đã bị RLS ẩn sẵn (author≠mình + deleted).
+                .is("question.deleted_at", value: nil)
                 .order("created_at", ascending: false)
                 .execute().value
             return rows.filter { !isBlocked($0.question?.authorId) }

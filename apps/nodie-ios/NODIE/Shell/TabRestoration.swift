@@ -13,6 +13,10 @@ private struct TabRestoringModifier: ViewModifier {
     /// nên tab Hỏi đáp lưu từ phiên dev sẽ không khôi phục được. Chấp nhận: default
     /// của AppState vốn là .qa, dev thấy lại tab ngay khi profile về.
     let role: String?
+    /// Cờ Hỏi đáp công khai (feature flag) — cùng cặp (role, qaPublic) với `visibleTabs` để
+    /// không khôi phục vào tab đã khoá. Lúc `.task` chạy cờ có thể chưa về (default false):
+    /// chấp nhận, khi cờ về muộn `RootTabView.onChange` không đá đi đâu, tab chỉ mở thêm.
+    let qaPublic: Bool
 
     /// Lưu `rawValue` — `NodieTab: String` có rawValue là chuỗi nguồn cố định ("Hỏi đáp"…),
     /// KHÔNG dịch theo máy, nên user đổi ngôn ngữ không làm hỏng giá trị đã lưu.
@@ -28,7 +32,7 @@ private struct TabRestoringModifier: ViewModifier {
                 // dung giả — hoặc "Hỏi đáp" đang khoá với user thường. Khôi phục mù sẽ mở
                 // app thẳng vào đúng màn ta cố ý giấu, và tab bar không có nút nào sáng lên
                 // để chỉ đường ra.
-                guard NodieTab.visibleTabs(role: role).contains(tab) else { return }
+                guard NodieTab.visibleTabs(role: role, qaPublic: qaPublic).contains(tab) else { return }
                 state.tab = tab
             }
             .onChange(of: state.tab) { _, new in
@@ -41,7 +45,7 @@ extension View {
     /// Khôi phục tab đang đứng sau khi app bị giết. Chỉ nhớ TAB, không nhớ ngăn xếp điều hướng:
     /// `feedPath`/`friendsPath` là `NavigationPath`, muốn lưu phải cho `FeedRoute`/`FriendsRoute`/
     /// `ChatRoute` theo `Codable` — chưa ai xin mở lại app rơi đúng màn detail, không đáng nợ.
-    func nodieRestoresTab(state: AppState, role: String?) -> some View {
-        modifier(TabRestoringModifier(state: state, role: role))
+    func nodieRestoresTab(state: AppState, role: String?, qaPublic: Bool) -> some View {
+        modifier(TabRestoringModifier(state: state, role: role, qaPublic: qaPublic))
     }
 }
