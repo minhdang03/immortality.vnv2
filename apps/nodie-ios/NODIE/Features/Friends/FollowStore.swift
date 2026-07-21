@@ -9,11 +9,14 @@ struct PublicProfile: Codable, Identifiable, Hashable {
     let id: UUID
     let displayName: String?
     let bio: String?
+    /// Lần cuối mở app (0052). nil = chưa từng (tài khoản cũ) hoặc không đọc cột này.
+    var lastSeenAt: Date? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
         case displayName = "display_name"
         case bio
+        case lastSeenAt = "last_seen_at"
     }
 
     /// Tên hiển thị, có phương án dự phòng — hồ sơ chưa đặt tên vẫn phải gọi được là gì đó.

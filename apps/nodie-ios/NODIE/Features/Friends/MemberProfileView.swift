@@ -75,7 +75,7 @@ struct MemberProfileView: View {
         do {
             let profile: PublicProfile = try await SupabaseClientProvider.shared
                 .from("public_profiles")
-                .select("id,display_name,bio")
+                .select("id,display_name,bio,last_seen_at")
                 .eq("id", value: memberId)
                 .single()
                 .execute().value
@@ -119,12 +119,24 @@ struct MemberProfileView: View {
             CircleIconButton(systemName: "arrow.left", onDark: true) { dismiss() }
 
             HStack(spacing: 15) {
-                InitialAvatar(initial: String(profile.name.prefix(1)).uppercased(), size: 72)
+                ZStack(alignment: .bottomTrailing) {
+                    InitialAvatar(initial: String(profile.name.prefix(1)).uppercased(), size: 72)
+                    if PresenceStatus.of(profile.lastSeenAt).isOnline {
+                        OnlineDot(size: 16).offset(x: 2, y: 2)
+                    }
+                }
 
-                Text(profile.name)
-                    .font(NodieTypography.memberName)
-                    .foregroundStyle(NodieColors.cream)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(profile.name)
+                        .font(NodieTypography.memberName)
+                        .foregroundStyle(NodieColors.cream)
+                    if let label = PresenceStatus.of(profile.lastSeenAt).label {
+                        Text(label)
+                            .font(NodieTypography.bodySm)
+                            .foregroundStyle(NodieColors.onDarkStrong)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.top, NodieSpacing.lg)
 

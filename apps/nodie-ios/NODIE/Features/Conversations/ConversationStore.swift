@@ -131,6 +131,11 @@ final class ConversationStore {
     /// không bảng read-state per-message; đã xem = tin cũ hơn mốc đọc của họ).
     var peerLastRead: [UUID: Date] = [:]
 
+    /// `last_seen_at` của NGƯỜI KIA trong từng DM (0052) — nguồn của "đang hoạt động /
+    /// hoạt động X phút trước" ở header DM. Khoá theo channelId (DM 1-1 nên một peer/kênh).
+    /// Nạp cùng resolveDMTitles.
+    var dmPeerLastSeen: [UUID: Date] = [:]
+
     /// Lần xoá tin vừa rồi, còn hoàn tác được (khuôn giống QAStore.pendingUndo). Giữ nguyên
     /// các MessageRow đã gỡ để khôi phục cục bộ không phải refetch — và chỉ chứa tin ĐÃ lên
     /// server (xoá mềm), không chứa tin hàng-đợi/đang-upload (chúng bị gỡ hẳn, không có gì
@@ -232,7 +237,11 @@ final class ConversationStore {
             let member: Name?
             struct Name: Decodable {
                 let displayName: String?
-                enum CodingKeys: String, CodingKey { case displayName = "display_name" }
+                let lastSeenAt: Date?
+                enum CodingKeys: String, CodingKey {
+                    case displayName = "display_name"
+                    case lastSeenAt = "last_seen_at"
+                }
             }
             enum CodingKeys: String, CodingKey {
                 case member
@@ -242,7 +251,7 @@ final class ConversationStore {
         }
         do {
             let rows: [Row] = try await client.from("channel_members")
-                .select("channel_id,last_read_at,member:public_profiles!channel_members_user_id_fkey(display_name)")
+                .select("channel_id,last_read_at,member:public_profiles!channel_members_user_id_fkey(display_name,last_seen_at)")
                 .in("channel_id", values: dmIds)
                 .neq("user_id", value: uid)
                 .execute().value
@@ -260,8 +269,52 @@ final class ConversationStore {
                 if let ts = row.lastReadAt {
                     peerLastRead[row.channelId] = max(peerLastRead[row.channelId] ?? .distantPast, ts)
                 }
+                // Mốc "lần cuối thấy" của người kia — cho header DM (mục 9).
+                if let seen = row.member?.lastSeenAt {
+                    dmPeerLastSeen[row.channelId] = seen
+                }
             }
         } catch { /* giữ title cũ */ }
+
+    }
+
+    /// Làm mới "lần cuối thấy" của người kia trong MỘT DM — gọi khi mở khung chat, để header
+    /// đúng ngay cả khi loadChannels đã lâu. Một query nhỏ, lỗi nuốt im.
+    func refreshDMPresence(channelId: UUID) async {
+        guard let uid, channel(id: channelId)?.kind == "dm" else { return }
+        struct Row: Decodable {
+            let member: Member?
+            struct Member: Decodable {
+                let lastSeenAt: Date?
+                enum CodingKeys: String, CodingKey { case lastSeenAt = "last_seen_at" }
+            }
+        }
+        do {
+            let rows: [Row] = try await client.from("channel_members")
+                .select("member:public_profiles!channel_members_user_id_fkey(last_seen_at)")
+                .eq("channel_id", value: channelId)
+                .neq("user_id", value: uid)
+                .execute().value
+            if let seen = rows.first?.member?.lastSeenAt {
+                dmPeerLastSeen[channelId] = seen
+            }
+        } catch { /* giữ mốc cũ */ }
+    }
+
+    /// Đập nhịp "tôi đang online" — cập nhật `profiles.last_seen_at` của MÌNH (0052). Gọi khi
+    /// app vào foreground + định kỳ (RootTabView). Trigger `tg_profiles_guard_role` revert cột
+    /// role nếu ai lén đổi kèm; đây chỉ đụng last_seen nên qua sạch. Lỗi nuốt im — trễ một
+    /// nhịp online không đáng làm phiền ai.
+    func heartbeat() async {
+        guard let uid else { return }
+        struct SeenUpdate: Encodable {
+            let lastSeenAt: Date
+            enum CodingKeys: String, CodingKey { case lastSeenAt = "last_seen_at" }
+        }
+        try? await client.from("profiles")
+            .update(SeenUpdate(lastSeenAt: Date()))
+            .eq("id", value: uid)
+            .execute()
     }
 
     /// Đếm chưa đọc = `messages` mới hơn `last_read_at` (quy tắc scale #4: không bảng

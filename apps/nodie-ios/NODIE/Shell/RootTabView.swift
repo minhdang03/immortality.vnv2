@@ -195,6 +195,9 @@ struct RootTabView: View {
             // danh sách Hỏi đáp chỉ cần có mặt khi user đứng ở tab đó.
             await qa.warmFromDisk()
             await chat.startRealtime()
+            // "Đang hoạt động" (mục 9): đập nhịp ngay + mỗi 45s khi app còn mở. Vòng lặp này
+            // chết theo `.task` khi RootTabView biến mất (đăng xuất) — không rò task.
+            await chat.heartbeat()
             // Cờ tính năng đọc MỘT lần ở đây: RootTabView chỉ tồn tại khi đã signedIn nên
             // `.task` này chạy đúng một lần lúc đăng nhập. Cuối chuỗi vì nó chỉ đổi hiển thị
             // tab, không cấp bách như badge/realtime; lỗi/offline giữ default (ẩn Q&A).
@@ -203,6 +206,15 @@ struct RootTabView: View {
         .onChange(of: auth.profile?.displayName) { _, name in
             chat.myDisplayName = name
             qa.currentUserInitial = auth.profile?.initial ?? "?"
+        }
+        // Nhịp online lặp — .task riêng, tự huỷ khi RootTabView rời cây (đăng xuất). Ngủ
+        // TRƯỚC rồi đập: cú đập đầu đã do .task chính lo, đây chỉ giữ nhịp tiếp theo.
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(45))
+                guard !Task.isCancelled else { break }
+                await chat.heartbeat()
+            }
         }
         // Socket không sống qua background. Về active: đập đi mở lại + fetch bù những gì
         // đến trong lúc vắng mặt — không có nhánh này thì tin đến khi app ở nền "mất tích"
@@ -222,6 +234,7 @@ struct RootTabView: View {
                 if wasInBackground {
                     wasInBackground = false
                     Task { await chat.resumeFromForeground() }
+                    Task { await chat.heartbeat() }
                 }
             default: break
             }

@@ -39,6 +39,11 @@ enum NodieColors {
     static let sunDim = Color(hex: 0xB88713)
     static let purple = Color(hex: 0x5B43D8)
 
+    /// Chấm "đang hoạt động" — xanh lá, chỉ cho chấm online ở góc avatar (non-text).
+    /// Ngoài bảng be/mực có chủ đích, cùng lẽ với `rec`: tín hiệu trạng thái phải nhảy ra
+    /// khỏi nền kem. Xanh hơi trầm để không chói trên nền sáng.
+    static let online = Color(hex: 0x2FA84F)
+
     /// Ghi âm — đỏ báo động, chỉ dùng cho chấm nhấp nháy + viền thanh ghi âm.
     /// Nằm ngoài bảng be/mực có chủ đích: đang thu tiếng là trạng thái phải nhảy ra khỏi nền.
     static let rec = Color(hex: 0xC0392B)

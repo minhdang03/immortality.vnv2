@@ -504,6 +504,7 @@ struct ChatDetailView: View {
             // Thành viên cho @nhắc-tên (phase 17) — một query, giữ để tô đậm + gợi ý.
             members = await store.members(of: channelId)
             await loadPinned()
+            await store.refreshDMPresence(channelId: channelId)
             mentionMap = Dictionary(members.map { ($0.displayName, $0.id) },
                                     uniquingKeysWith: { first, _ in first })
             // Mở cổng phân trang cuộn-lên SAU khi trang đầu đã nạp + màn đã ổn định — không
@@ -1011,19 +1012,34 @@ struct ChatDetailView: View {
         }
     }
 
+    /// Trạng thái hoạt động của người kia — CHỈ DM. Kênh/nhóm nhiều người không có "online
+    /// của một ai", và group member list hiện chấm cho từng người là đúng thứ tạo áp lực.
+    private var dmPresence: PresenceStatus {
+        guard channel?.kind == "dm" else { return .unknown }
+        return PresenceStatus.of(store.dmPeerLastSeen[channelId])
+    }
+
     private var header: some View {
         HStack(spacing: NodieSpacing.md) {
             CircleIconButton(systemName: "arrow.left") { dismiss() }
 
             if let channel {
-                ConversationAvatar(channel: channel, size: 40, fontSize: 18)
+                ZStack(alignment: .bottomTrailing) {
+                    ConversationAvatar(channel: channel, size: 40, fontSize: 18)
+                    if dmPresence.isOnline { OnlineDot(size: 12).offset(x: 2, y: 2) }
+                }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(channel.displayTitle)
                         .font(NodieTypography.chatName)
                         .foregroundStyle(NodieColors.ink)
                         .lineLimit(1)
-                    // DM không có nhãn (đã đủ biết "là ai" qua tên) — chỉ kênh/nhóm mới hiện.
-                    if let kindLabel = channel.kindLabel {
+                    // DM: "đang hoạt động / X phút trước". Kênh/nhóm: nhãn loại.
+                    if let presenceLabel = dmPresence.label {
+                        Text(presenceLabel)
+                            .font(NodieTypography.metaSm)
+                            .foregroundStyle(dmPresence.isOnline ? NodieColors.online : NodieColors.inkMuted)
+                            .lineLimit(1)
+                    } else if let kindLabel = channel.kindLabel {
                         Text(kindLabel)
                             .font(NodieTypography.metaSm)
                             .foregroundStyle(NodieColors.inkMuted)
