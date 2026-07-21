@@ -44,7 +44,7 @@ struct GroupInfoView: View {
                              store: store, follow: follow) { _, memberIds in
                 Task {
                     await store.addMembers(memberIds, to: channelId)
-                    await load()
+                    await load(showSpinner: false)
                 }
             }
         }
@@ -59,7 +59,7 @@ struct GroupInfoView: View {
                 title: Text("Chuyển quyền chủ nhóm?"),
                 message: Text("\(target.displayName) sẽ thành chủ nhóm. Bạn vẫn là quản trị nhưng không lấy lại quyền chủ được."),
                 primaryButton: .destructive(Text("Chuyển giao")) {
-                    Task { await store.transferOwner(of: channelId, to: target.id); await load() }
+                    Task { await store.transferOwner(of: channelId, to: target.id); await load(showSpinner: false) }
                 },
                 secondaryButton: .cancel(Text("Huỷ"))
             )
@@ -189,11 +189,11 @@ struct GroupInfoView: View {
                 Menu {
                     if member.isMod {
                         Button("Gỡ quản trị") {
-                            Task { await store.setRole("member", for: member.id, in: channelId); await load() }
+                            Task { await store.setRole("member", for: member.id, in: channelId); await load(showSpinner: false) }
                         }
                     } else {
                         Button("Phong quản trị") {
-                            Task { await store.setRole("mod", for: member.id, in: channelId); await load() }
+                            Task { await store.setRole("mod", for: member.id, in: channelId); await load(showSpinner: false) }
                         }
                     }
                     // Chuyển giao chủ nhóm: chỉ CHỦ thấy.
@@ -201,7 +201,7 @@ struct GroupInfoView: View {
                         Button("Chuyển quyền chủ nhóm") { transferTarget = member }
                     }
                     Button("Xoá khỏi nhóm", role: .destructive) {
-                        Task { await store.removeMember(member.id, from: channelId); await load() }
+                        Task { await store.removeMember(member.id, from: channelId); await load(showSpinner: false) }
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -230,8 +230,11 @@ struct GroupInfoView: View {
             .background(Capsule().fill(NodieColors.accent.opacity(0.12)))
     }
 
-    private func load() async {
-        loading = true
+    /// `showSpinner=false` khi NẠP LẠI sau thao tác quản trị: đã có danh sách trên màn rồi,
+    /// bật spinner là cả danh sách nháy trắng một nhịp cho một thay đổi một dòng. Chỉ lần
+    /// vào màn đầu (chưa có gì) mới cần spinner.
+    private func load(showSpinner: Bool = true) async {
+        if showSpinner && members.isEmpty { loading = true }
         var all = await store.members(of: channelId)
         // Mình đứng đầu — khuôn quen của Zalo/WhatsApp, và khỏi phải đi tìm chính mình.
         if let meIndex = all.firstIndex(where: { $0.id == store.currentUserId }) {

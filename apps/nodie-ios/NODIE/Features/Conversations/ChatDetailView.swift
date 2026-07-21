@@ -147,7 +147,10 @@ struct ChatDetailView: View {
     /// Realtime báo có tin đổi pin.
     @State private var pinned: [MessageRow] = []
     /// Ẩn băng ghim (chạm ✕). Nhớ theo id ghim mới nhất: có tin ghim MỚI thì băng hiện lại.
-    @State private var dismissedPinId: UUID?
+    /// Đã ẩn băng cho lần ghim NÀO (id + thời điểm ghim). Ghim lại cùng tin sinh `pinnedAt`
+    /// mới → khác cặp → băng hiện lại; nhớ mỗi `id` thì ghim-lại vẫn ẩn (L1).
+    @State private var dismissedPin: PinKey?
+    private struct PinKey: Equatable { let id: UUID; let at: Date }
 
     /// Mình có quyền ghim ở kênh này không — quản trị của NHÓM hoặc KÊNH.
     ///
@@ -917,8 +920,9 @@ struct ChatDetailView: View {
 
     /// Ghim đang HIỂN THỊ trên băng — cái mới nhất chưa bị ẩn. nil = không vẽ băng.
     private var visiblePin: MessageRow? {
-        guard let newest = pinned.first, newest.id != dismissedPinId else { return nil }
-        return newest
+        guard let newest = pinned.first else { return nil }
+        let key = newest.pinnedAt.map { PinKey(id: newest.id, at: $0) }
+        return key == dismissedPin ? nil : newest
     }
 
     /// Băng ghim dưới header. Nhiều ghim thì hiện cái mới nhất + đếm; chạm nhảy tới tin gốc,
@@ -944,7 +948,9 @@ struct ChatDetailView: View {
                 }
                 Spacer()
                 Button {
-                    dismissedPinId = pinned.first?.id
+                    dismissedPin = pinned.first.flatMap { row in
+                        row.pinnedAt.map { PinKey(id: row.id, at: $0) }
+                    }
                 } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 12, weight: .semibold))

@@ -18,6 +18,9 @@ struct ForwardMessageSheet: View {
     /// bung nó lên trên: route qua store.errorMessage là forward hỏng trông như "bấm không
     /// ăn", alert chỉ nhảy ra lạc lõng sau khi đóng sheet.
     @State private var errorText: String?
+    /// Đã forward tin nào tới kênh nào. Retry cùng kênh sau khi hỏng GIỮA CHỪNG bỏ qua phần
+    /// đã sang — không thì #1-2 đã tới rồi lại gửi lần nữa (nhân đôi). Đổi kênh thì reset.
+    @State private var forwarded: (channel: UUID, ids: Set<UUID>)?
 
     private var targets: [ChannelRow] {
         store.channels.filter { $0.canPost && $0.id != messages.first?.channelId }
@@ -36,19 +39,22 @@ struct ForwardMessageSheet: View {
                         Button {
                             guard sendingTo == nil else { return }
                             sendingTo = channel.id
+                            // Đổi kênh → mẻ mới; cùng kênh (retry) → giữ phần đã sang.
+                            var done = forwarded?.channel == channel.id ? forwarded!.ids : []
                             Task {
                                 // Tuần tự, KHÔNG song song: thứ tự tin là một phần nội dung,
                                 // và media forward phải copy tệp trên Storage — bắn 20 lượt
-                                // cùng lúc là tự dựng cơn bão request.
+                                // cùng lúc là tự dựng cơn bão request. Bỏ qua tin ĐÃ sang kênh
+                                // này ở lần thử trước (chống nhân đôi khi retry).
                                 var ok = true
-                                for message in messages where ok {
+                                for message in messages where ok && !done.contains(message.id) {
                                     ok = await store.forward(message, to: channel.id)
+                                    if ok { done.insert(message.id) }
                                 }
                                 if ok {
                                     dismiss()
                                 } else {
-                                    // Lấy lời lỗi về sheet rồi XOÁ ở store — không xoá thì
-                                    // alert gốc cây bung thêm lần nữa ngay khi sheet đóng.
+                                    forwarded = (channel.id, done)
                                     errorText = store.errorMessage
                                         ?? String(localized: "Không gửi được. Thử lại.")
                                     store.clearError()

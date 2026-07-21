@@ -853,8 +853,18 @@ final class ConversationStore {
             let payload = NewMessage(id: messageId, channelId: pending.channelId, userId: uid,
                                      body: pending.caption, parentId: pending.parentId,
                                      metadata: MessageMetadata(media: media))
+            // Giờ SERVER của tin — vá vào bản lạc quan để ✓✓ so cùng đồng hồ (như send text,
+            // xem replacingCreatedAt). nil khi trùng khoá: tin đã có sẵn trên server, giờ
+            // đúng của nó sẽ về ở lần loadMessages sau.
+            var serverCreatedAt: Date?
             do {
-                try await client.from("messages").insert(payload).execute()
+                struct Inserted: Decodable {
+                    let createdAt: Date
+                    enum CodingKeys: String, CodingKey { case createdAt = "created_at" }
+                }
+                let row: Inserted = try await client.from("messages")
+                    .insert(payload).select("created_at").single().execute().value
+                serverCreatedAt = row.createdAt
             } catch {
                 // Trùng khoá chính = tin NÀY đã nằm trên server rồi: lần trước INSERT xong
                 // nhưng phản hồi lạc mất giữa đường, nên ta tưởng hỏng. Báo hỏng lần nữa là
@@ -887,12 +897,14 @@ final class ConversationStore {
             // làm ngược lại thì có một khoảnh khắc view không còn `Data` local mà cũng chưa
             // có path — bong bóng chớp thành khung trống.
             if let i = messagesByChannel[pending.channelId]?.firstIndex(where: { $0.id == messageId }) {
-                messagesByChannel[pending.channelId]![i] =
-                    messagesByChannel[pending.channelId]![i].replacingMedia(media)
+                var row = messagesByChannel[pending.channelId]![i].replacingMedia(media)
+                if let serverCreatedAt { row = row.replacingCreatedAt(serverCreatedAt) }
+                messagesByChannel[pending.channelId]![i] = row
             }
             pendingMedia[messageId] = nil
             // Đã lên server (INSERT xong hoặc trùng khoá = đã có) → giờ mới đáng ghi đĩa.
-            let confirmed = pending.row.replacingMedia(media)
+            var confirmed = pending.row.replacingMedia(media)
+            if let serverCreatedAt { confirmed = confirmed.replacingCreatedAt(serverCreatedAt) }
             Task { await ChatDiskCache.shared.insertMessages([confirmed]) }
             return true
         } catch {
