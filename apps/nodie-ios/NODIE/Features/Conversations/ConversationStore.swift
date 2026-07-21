@@ -104,8 +104,10 @@ final class ConversationStore {
     private var uid: UUID? { client.auth.currentUser?.id }
     var currentUserId: UUID? { uid }
 
+    private static let previewSelect =
+        "id,channel_id,user_id,body,created_at,metadata,author:public_profiles!messages_user_id_fkey(display_name)"
     private static let channelSelect =
-        "id,slug,title,kind,is_broadcast,last_message_at,emoji,avatar_hex,badge_hex,created_by,channel_members(role,last_read_at,muted_until)"
+        "id,slug,title,kind,is_broadcast,last_message_at,emoji,avatar_hex,badge_hex,created_by,channel_members(role,last_read_at,muted_until),latest_messages:messages(\(previewSelect))"
     /// Không `private`: ConversationStoreRealtime.swift (file khác) phải dựng CÙNG shape khi
     /// nạp lại tin Realtime vừa đẩy về. Hai bản select lệch nhau là decode nổ — cùng lý do
     /// với `QAStore.questionSelect`.
@@ -203,8 +205,11 @@ final class ConversationStore {
                 .select(Self.channelSelect)
                 .eq("channel_members.user_id", value: uid)
                 .order("last_message_at", ascending: false, nullsFirst: false)
+                .order("created_at", ascending: false, referencedTable: "latest_messages")
+                .limit(1, referencedTable: "latest_messages")
                 .execute().value
             channels = rows
+            seedPreviewCursors(from: rows)
             // Danh sách HIỆN từ đây — tên DM và badge là trang trí vá vào sau, không được
             // bắt cả màn chờ chúng. Đo 18/07: kênh về sau 330ms mà spinner đứng ~3s vì
             // chuỗi cũ chờ đếm chưa đọc tuần tự xong mới tắt.
@@ -573,6 +578,40 @@ final class ConversationStore {
 
     func unread(for channelId: UUID) -> Int { unreadByChannel[channelId] ?? 0 }
 
+    /// Tin nhắn nhúng trong channel là mốc server thật. Seed cursor để event Realtime kế
+    /// tiếp chỉ fetch phần mới hơn, không kéo nhầm 50 tin cũ nhất khi chat chưa từng mở.
+    private func seedPreviewCursors(from rows: [ChannelRow]) {
+        for channel in rows {
+            guard let preview = channel.latestPreview else { continue }
+            serverCursor[channel.id] = max(serverCursor[channel.id] ?? .distantPast,
+                                           preview.createdAt)
+        }
+    }
+
+    /// Làm mới riêng preview của một kênh khi Realtime báo INSERT/UPDATE/DELETE mà lịch sử
+    /// kênh chưa nằm trong RAM. Một query giới hạn 1 dòng; không reload title + unread.
+    @MainActor
+    func refreshLatestPreview(channelId: UUID) async {
+        do {
+            let rows: [ConversationPreview] = try await client.from("messages")
+                .select(Self.previewSelect)
+                .eq("channel_id", value: channelId)
+                .is("deleted_at", value: nil)
+                .order("created_at", ascending: false)
+                .limit(1)
+                .execute().value
+            guard let index = channels.firstIndex(where: { $0.id == channelId }) else { return }
+            channels[index].latestMessages = rows
+            if let preview = rows.first {
+                serverCursor[channelId] = max(serverCursor[channelId] ?? .distantPast,
+                                              preview.createdAt)
+            }
+            let snapshot = channels
+            let counts = unreadByChannel
+            Task { await ChatDiskCache.shared.saveChannels(snapshot, unread: counts) }
+        } catch { /* Realtime chỉ là tín hiệu; pull-to-refresh/server sync sẽ tự vá. */ }
+    }
+
     /// Tổng chưa đọc cho badge tab Chat. Kênh đã tắt thông báo KHÔNG tính — user đã nói
     /// "đừng réo tôi về chỗ này" thì badge cũng phải im.
     var totalUnread: Int {
@@ -611,6 +650,7 @@ final class ConversationStore {
         guard channels.isEmpty, !cached.channels.isEmpty else { return }
         channels = cached.channels
         unreadByChannel = cached.unread
+        seedPreviewCursors(from: cached.channels)
     }
 
     /// Tin từ đĩa cho một kênh — CHỈ khi RAM chưa có gì; không clobber dữ liệu mới bằng đĩa cũ
@@ -1317,24 +1357,23 @@ final class ConversationStore {
     ///
     /// Kênh chưa có tin nào thì không có gì để chưa đọc — trả về luôn.
     func markUnread(channelId: UUID) async {
-        guard let uid, let lastAt = channel(id: channelId)?.lastMessageAt else { return }
-        // Lùi một mili giây: `>` chứ không `>=` nên phải đứng TRƯỚC tin đó, bằng nhau là đếm ra 0.
-        let mark = lastAt.addingTimeInterval(-0.001)
+        guard uid != nil else { return }
         unreadByChannel[channelId] = max(unread(for: channelId), 1)
         // Xoá dấu throttle của markRead: không xoá thì lần mở kênh kế tiếp bị coi là "vừa
         // báo đọc rồi", và kênh kẹt ở trạng thái chưa đọc.
         lastMarkReadSentAt[channelId] = nil
         let counts = unreadByChannel
         Task { await ChatDiskCache.shared.saveUnread(counts) }
-        struct ReadUpdate: Encodable {
-            let lastReadAt: Date
-            enum CodingKeys: String, CodingKey { case lastReadAt = "last_read_at" }
+        // RPC, KHÔNG update trực tiếp: trigger clamp 0042 ép mọi last_read_at của client về
+        // now() (chống lệch đồng hồ cho markRead), nên đẩy mốc LÙI bằng update thường bị vô
+        // hiệu. RPC security definer (0053) tính mốc = ngay trước tin mới nhất phía SERVER và
+        // đặt trực tiếp, không đi qua clamp. Không truyền thời gian từ client.
+        struct Params: Encodable {
+            let channelId: UUID
+            enum CodingKeys: String, CodingKey { case channelId = "p_channel_id" }
         }
         do {
-            try await client.from("channel_members")
-                .update(ReadUpdate(lastReadAt: mark))
-                .eq("channel_id", value: channelId).eq("user_id", value: uid)
-                .execute()
+            try await client.rpc("mark_unread", params: Params(channelId: channelId)).execute()
         } catch {
             // Ghi hỏng thì badge cục bộ đang nói dối — kéo nó về đúng bằng số của server.
             await loadUnreadCounts()

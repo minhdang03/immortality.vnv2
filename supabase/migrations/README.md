@@ -37,12 +37,13 @@ Lưu ý: **0043/0044 áp TRƯỚC 0041/0042** — số file không phản ánh t
 0049_group_edge_guards.sql                       20/07 15:16
 0050_guard_reply_reaction_immutable_columns.sql  20/07 15:18
 0051_web_cutover_supabase_only.sql               21/07 04:06
-0052_last_seen_presence.sql                       21/07 04:10
+0052_last_seen_presence.sql                      21/07 04:10
+0053_mark_unread_rpc.sql                         21/07 (clamp chỉ authenticated + RPC mark_unread)
 ```
 
 ## Migration tiếp theo
 
-Số kế tiếp SẠCH = **0053** (không đụng số nào ở trên). Trước khi lấy số, kiểm ledger prod —
+Số kế tiếp SẠCH = **0054** (không đụng số nào ở trên). Trước khi lấy số, kiểm ledger prod —
 đừng tin thư mục. Mọi migration phải idempotent (`create or replace` / `if not exists`),
 dry-run trong `begin; … rollback;`, và test vùng RLS bằng tài khoản `role='user'` (giả JWT),
 KHÔNG bằng admin (is_admin ngắn mạch policy).
