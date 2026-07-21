@@ -1,0 +1,25 @@
+{
+  "name": "kim-cuong-distill",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync-from-goclaw.mjs",
+    "build-qa": "node scripts/build-qa.mjs",
+    "ui": "node scripts/serve-ui.mjs",
+    "sync-inbox": "node scripts/sync-to-agent-inbox.mjs",
+    "pipeline": "node scripts/sync-to-agent-inbox.mjs && node scripts/build-qa.mjs",
+    "auto-sync": "node scripts/auto-sync-loop.mjs",
+    "auto-sync:once": "ONCE=1 node scripts/auto-sync-loop.mjs",
+    "zalo-watch": "node scripts/zalo-reconnect-watch.mjs",
+    "zalo-watch:test": "FORCE_ALERT=1 ONCE=1 node scripts/zalo-reconnect-watch.mjs",
+    "zalo-watch:test-reconnected": "FORCE_RECONNECTED=1 ONCE=1 node scripts/zalo-reconnect-watch.mjs",
+    "test": "node --test test/*.test.mjs",
+    "health:local": "node scripts/health-check.mjs",
+    "health:e2e": "node scripts/health-check.mjs --e2e",
+    "install-daemon": "bash scripts/install-macos-launchd.sh"
+  },
+  "dependencies": {
+    "pg": "^8.13.1",
+    "ws": "^8.18.0"
+  }
+}

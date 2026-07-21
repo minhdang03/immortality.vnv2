@@ -69,3 +69,6 @@ scripts/migrate/.dump/
 
 # Trạng thái tạm của Supabase CLI (project ref đã link) — máy nào của máy nấy, không chia sẻ.
 supabase/.temp/
+
+# Kim-cương distill: dữ liệu runtime (tin nhắn Zalo thật + config token) — không commit
+tools/kim-cuong-distill/data/

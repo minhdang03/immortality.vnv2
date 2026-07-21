@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kim Cương Bất Tử — Q&A Distill</title>
+  <style>
+    :root {
+      --bg: #f8f3ea;
+      --ink: #14110d;
+      --gold: #d4a76a;
+      --card: #fffdf8;
+      --muted: #6b6358;
+      --line: #e8dfd0;
+      --ok: #2f6b4f;
+      --warn: #9a5b1a;
+      --danger: #8b2e2e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff9ef, var(--bg));
+      position: sticky; top: 0; z-index: 10;
+    }
+    header h1 { margin: 0; font-size: 1.35rem; font-weight: 600; }
+    header p { margin: .25rem 0 0; color: var(--muted); font-size: .9rem; }
+    .layout { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 88px); }
+    aside {
+      border-right: 1px solid var(--line);
+      padding: 1rem;
+      overflow: auto;
+      max-height: calc(100vh - 88px);
+    }
+    main { padding: 1rem 1.25rem 3rem; overflow: auto; max-height: calc(100vh - 88px); }
+    label { display: block; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: .75rem 0 .3rem; }
+    input, select, textarea {
+      width: 100%;
+      padding: .5rem .6rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      font: inherit;
+      color: var(--ink);
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: .75rem; }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: .6rem .7rem;
+    }
+    .stat b { display: block; font-size: 1.2rem; }
+    .stat span { font-size: .75rem; color: var(--muted); }
+    .list { display: flex; flex-direction: column; gap: .4rem; margin-top: .5rem; }
+    .item {
+      text-align: left;
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 10px;
+      padding: .55rem .65rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .item:hover, .item.active { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+    .item .who { font-size: .8rem; color: var(--muted); }
+    .item .q { font-size: .92rem; margin-top: .15rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .badge {
+      display: inline-block;
+      font-size: .7rem;
+      padding: .1rem .4rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .badge.verified { color: var(--ok); border-color: #b7d8c6; background: #eef8f2; }
+    .badge.candidate { color: var(--warn); border-color: #efd2a8; background: #fff6e8; }
+    .badge.rejected { color: var(--danger); border-color: #e8b7b7; background: #fff0f0; }
+    .badge.unanswered { color: var(--warn); border-color: #efd2a8; background: #fff6e8; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 1rem;
+    }
+    .panel h2 { margin: 0 0 .75rem; font-size: 1.05rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .85rem; }
+    button, .btn {
+      appearance: none;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 999px;
+      padding: .45rem .9rem;
+      font: inherit;
+      font-size: .9rem;
+      cursor: pointer;
+    }
+    button.secondary { background: transparent; color: var(--ink); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .empty { color: var(--muted); padding: 2rem 0; text-align: center; }
+    .bubble { border-left: 3px solid var(--gold); padding: .35rem 0 .35rem .75rem; margin: .4rem 0; white-space: pre-wrap; }
+    .bubble.teacher { border-color: var(--ok); }
+    .meta { font-size: .8rem; color: var(--muted); }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { max-height: 40vh; border-right: 0; border-bottom: 1px solid var(--line); }
+      main { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Kim Cương Bất Tử — Q&A Distill</h1>
+    <p>Hỏi đáp học trò → thầy · chắt lọc để đăng / lưu kho tri thức</p>
+  </header>
+  <div class="layout">
+    <aside>
+      <div class="stats">
+        <div class="stat"><b id="stat-total">0</b><span>Tổng Q&A</span></div>
+        <div class="stat"><b id="stat-candidate">0</b><span>Ứng viên</span></div>
+        <div class="stat"><b id="stat-verified">0</b><span>Đã xác minh</span></div>
+        <div class="stat"><b id="stat-open">0</b><span>Chưa đáp</span></div>
+        <div class="stat"><b id="stat-distilled">0</b><span>Đã distill</span></div>
+      </div>
+      <label>Tìm</label>
+      <input id="q" placeholder="Nội dung, tên học trò…" />
+      <label>Trạng thái</label>
+      <select id="status">
+        <option value="all">Tất cả</option>
+        <option value="candidate">Ứng viên máy ghép</option>
+        <option value="verified">Đã xác minh</option>
+        <option value="rejected">Đã loại</option>
+        <option value="unanswered">Chưa đáp</option>
+        <option value="distilled">Đã distill</option>
+      </select>
+      <label>Học trò</label>
+      <select id="student"><option value="all">Tất cả</option></select>
+      <div class="actions">
+        <button type="button" class="secondary" id="btn-reload">Reload</button>
+        <a class="btn secondary" href="/api/export.md" download="kim-cuong-qa.md" style="text-decoration:none">Export verified</a>
+      </div>
+      <div class="list" id="list"></div>
+    </aside>
+    <main>
+      <div id="detail" class="empty">Chọn một câu hỏi bên trái để distill.</div>
+    </main>
+  </div>
+  <script>
+    let items = []
+    let activeId = null
+
+    const $ = (id) => document.getElementById(id)
+
+    async function load() {
+      const res = await fetch('/api/qa')
+      const data = await res.json()
+      items = data.items || []
+      renderList()
+      renderStats()
+      fillStudents()
+      if (activeId) select(activeId)
+    }
+
+    function filtered() {
+      const q = $('q').value.trim().toLowerCase()
+      const st = $('status').value
+      const stu = $('student').value
+      return items.filter((it) => {
+        if (['candidate','verified','rejected'].includes(st) && it.status !== st) return false
+        if (st === 'unanswered' && it.status !== 'unanswered') return false
+        if (st === 'distilled' && !it.distilled) return false
+        if (stu !== 'all' && it.question?.from !== stu) return false
+        if (!q) return true
+        const blob = [it.question?.text, it.answer?.text, it.distilled, it.notes, it.question?.from].join(' ').toLowerCase()
+        return blob.includes(q)
+      })
+    }
+
+    function renderStats() {
+      $('stat-total').textContent = items.length
+      $('stat-candidate').textContent = items.filter(i => i.status === 'candidate').length
+      $('stat-verified').textContent = items.filter(i => i.status === 'verified').length
+      $('stat-open').textContent = items.filter(i => i.status === 'unanswered').length
+      $('stat-distilled').textContent = items.filter(i => i.distilled).length
+    }
+
+    function fillStudents() {
+      const names = [...new Set(items.map(i => i.question?.from).filter(Boolean))].sort()
+      const cur = $('student').value
+      $('student').innerHTML = '<option value="all">Tất cả</option>' + names.map(n => `<option value="${escapeAttr(n)}">${escapeHtml(n)}</option>`).join('')
+      $('student').value = names.includes(cur) ? cur : 'all'
+    }
+
+    function renderList() {
+      const rows = filtered()
+      $('list').innerHTML = rows.length ? rows.map(it => `
+        <button type="button" class="item ${it.id === activeId ? 'active' : ''}" data-id="${escapeAttr(it.id)}">
+          <div class="who">${escapeHtml(it.question?.from || '?')} · <span class="badge ${it.status}">${it.status}</span>
+            ${it.distilled ? '<span class="badge verified">distilled</span>' : ''}
+          </div>
+          <div class="q">${escapeHtml(it.question?.text || '')}</div>
+        </button>
+      `).join('') : '<div class="empty">Không có mục nào. Chạy <code>npm run sync && npm run build-qa</code>.</div>'
+      $('list').querySelectorAll('.item').forEach(el => {
+        el.addEventListener('click', () => select(el.dataset.id))
+      })
+    }
+
+    function select(id) {
+      activeId = id
+      const it = items.find(i => i.id === id)
+      renderList()
+      if (!it) {
+        $('detail').innerHTML = '<div class="empty">Không tìm thấy.</div>'
+        return
+      }
+      $('detail').innerHTML = `
+        <div class="panel">
+          <h2>Hỏi — ${escapeHtml(it.question?.from || '')}</h2>
+          <div class="meta">${escapeHtml(it.question?.ts || '')} · ${escapeHtml(it.question?.uid || '')}</div>
+          <div class="bubble">${escapeHtml(it.question?.text || '')}</div>
+        </div>
+        <div class="panel">
+          <h2>Đáp gốc — ${escapeHtml(it.answer?.from || '—')}</h2>
+          <div class="meta">${escapeHtml(it.answer?.ts || '')}</div>
+          <div class="bubble teacher">${escapeHtml(it.answer?.text || '(chưa có đáp trong cửa sổ ghép)')}</div>
+          ${it.status === 'candidate' ? '<div class="meta">Ứng viên máy ghép — cần người xác minh trước khi dùng làm nguồn.</div>' : ''}
+        </div>
+        <div class="panel">
+          <h2>Distill / biên tập</h2>
+          <label>Bản chắt lọc (đăng site)</label>
+          <textarea id="distilled" placeholder="Viết lại gọn, đúng giọng…">${escapeHtml(it.distilled || '')}</textarea>
+          <div class="row">
+            <div>
+              <label>Tags (phẩy)</label>
+              <input id="tags" value="${escapeAttr((it.tags || []).join(', '))}" placeholder="năng lượng, kim thân…" />
+            </div>
+            <div>
+              <label>Status</label>
+              <select id="edit-status">
+                <option value="candidate" ${it.status==='candidate'?'selected':''}>candidate</option>
+                <option value="verified" ${it.status==='verified'?'selected':''}>verified</option>
+                <option value="rejected" ${it.status==='rejected'?'selected':''}>rejected</option>
+                <option value="unanswered" ${it.status==='unanswered'?'selected':''}>unanswered</option>
+              </select>
+            </div>
+          </div>
+          <label>Notes nội bộ</label>
+          <textarea id="notes" placeholder="Ghi chú biên tập…">${escapeHtml(it.notes || '')}</textarea>
+          <div class="actions">
+            <button type="button" id="btn-save">Lưu</button>
+            <button type="button" class="secondary" id="btn-use-answer">Dùng đáp gốc làm distill</button>
+          </div>
+        </div>
+      `
+      $('btn-save').onclick = () => save(it.id)
+      $('btn-use-answer').onclick = () => {
+        $('distilled').value = it.answer?.text || ''
+      }
+    }
+
+    async function save(id) {
+      const patch = {
+        id,
+        distilled: $('distilled').value.trim() || null,
+        tags: $('tags').value.split(',').map(s => s.trim()).filter(Boolean),
+        notes: $('notes').value,
+        status: $('edit-status').value,
+      }
+      const res = await fetch('/api/qa', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) })
+      const data = await res.json()
+      if (data.ok) {
+        const idx = items.findIndex(i => i.id === id)
+        if (idx >= 0) items[idx] = { ...items[idx], ...data.item }
+        renderStats()
+        renderList()
+        select(id)
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+    }
+    function escapeAttr(s) { return escapeHtml(s).replace(/\n/g, ' ') }
+
+    ;['q','status','student'].forEach(id => $(id).addEventListener('input', () => { renderList() }))
+    $('status').addEventListener('change', renderList)
+    $('student').addEventListener('change', renderList)
+    $('btn-reload').onclick = load
+    load()
+  </script>
+</body>
+</html>
